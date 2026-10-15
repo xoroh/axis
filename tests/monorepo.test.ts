@@ -16,7 +16,8 @@ test("root package declares the Bun workspaces", () => {
 test("the initial core workspace is private and MIT licensed", () => {
   const manifest = readPackage("packages/core/package.json");
 
-  expect(manifest.name).toBe("@axis/core");
+  expect(manifest.name).toBe("@xoroh/axis-core");
   expect(manifest.private).toBe(true);
   expect(manifest.license).toBe("MIT");
+  expect(manifest.publishConfig).toEqual({ access: "public" });
 });

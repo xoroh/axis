@@ -12,6 +12,11 @@
     "packages/*"
   ],
   "scripts": {
+    "changeset": "changeset",
+    "version-packages": "changeset version",
     "test": "bun test"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^3.0.3"
   }
 }

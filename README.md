@@ -10,6 +10,7 @@ Axis is an open-source project by [Xoroh](https://github.com/xoroh), set up as a
 - `packages/*` — reusable packages
 
 Each workspace should have its own `package.json` and a unique package name.
+The initial `@xoroh/axis-core` workspace is only a private placeholder; it has no publishable implementation yet.
 
 ## Getting started
 
@@ -27,6 +28,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and contribution guidance. Plea
 ## Security
 
 Please report vulnerabilities privately. See [SECURITY.md](SECURITY.md).
+
+## Releases
+
+Packages will be versioned and published manually. See [docs/RELEASING.md](docs/RELEASING.md); no workflow publishes packages.
 
 ## License
 
