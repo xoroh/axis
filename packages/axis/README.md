@@ -1011,3 +1011,26 @@ control stays independently operable), `selected?`, `disabled?`,
 Pressable rows carry the button role with selected/disabled
 states. Example: `<SettingsRow title="Wi-Fi"
 description="Home network" onPress={openWifi} />`.
+
+## Fab
+
+Source of truth: `FabProps` in `@xoroh/axis`.
+
+Floating action button: icon-only pressable with the button role
+and disabled/busy states. `onPress?`, `disabled?`, `loading?`
+(announces busy), `size?` (square dp box; caller `style` wins),
+`accessibilityLabel?` (required in practice — icon-only),
+`testID?`, `style?`, `children?` (icon), `ref`. Shape, size
+system, elevation, and color are caller decisions in `style`.
+Example: `<Fab accessibilityLabel="Create" size={56}
+onPress={create} />`.
+
+## Extended Fab
+
+Source of truth: `ExtendedFabProps` in `@xoroh/axis`.
+
+Extended floating action button: leading `icon?` beside visible
+text `children`, same press/disabled/busy semantics as `Fab`.
+The visible text names the control, so `accessibilityLabel?` is
+optional (provide one only when the text is not the name).
+Example: `<ExtendedFab onPress={create}>Create note</ExtendedFab>`.
