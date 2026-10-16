@@ -7,6 +7,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
 
@@ -60,6 +63,15 @@ import { Input } from "./Input";
  * precedent).
  */
 
+export type AutocompleteState = {
+  /** Current text. */
+  value: string;
+  /** Whether the suggestion list is currently open. */
+  open: boolean;
+  /** Whether the whole autocomplete is disabled. */
+  disabled: boolean;
+};
+
 export type AutocompleteProps = {
   /** Suggestion pool, filtered by case-insensitive substring (required). */
   options: ReadonlyArray<string>;
@@ -84,12 +96,19 @@ export type AutocompleteProps = {
   /** Accessible name source for the entry. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root (entry box) style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Root (entry box) style: value or function of autocomplete state. */
+  style?: StateStyle<AutocompleteState, StyleProp<ViewStyle>>;
   /** Suggestion list style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
   /** Entry input style, caller-provided. */
   inputStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the root (entry plus list);
+   * typing, toggle, and commit wiring travel in the props.
+   */
+  render?: RenderProp<AutocompleteState, SlotProps>;
   /** Forwarded to the root host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -135,8 +154,9 @@ export function Autocomplete({
   style,
   listStyle,
   inputStyle,
+  render,
   ref,
-}: AutocompleteProps): React.JSX.Element {
+}: AutocompleteProps): React.ReactNode {
   const [text, setText] = useControllableState<string>(
     value,
     defaultValue,
@@ -208,11 +228,37 @@ export function Autocomplete({
 
   const expanded = isOpen ?? false;
 
+  const state: AutocompleteState = {
+    value: text ?? "",
+    open: expanded,
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      value: text ?? "",
+      onValueChange: changeText,
+      onCommit: commitOption,
+      onSubmit: submit,
+      placeholder,
+      accessibilityLabel,
+      inputStyle,
+      listStyle,
+      options: matches,
+      onDismiss: dismiss,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setHostRef} testID={testID} style={style}>
+    <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
       <Input
         value={text ?? ""}
-        onChangeText={changeText}
+        onValueChange={changeText}
         onSubmitEditing={submit}
         placeholder={placeholder}
         accessibilityLabel={accessibilityLabel}

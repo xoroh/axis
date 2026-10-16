@@ -1,5 +1,7 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * AspectRatio — a container that keeps a width-to-height ratio.
@@ -28,6 +30,13 @@ export type AspectRatioProps = {
   style?: StyleProp<ViewStyle>;
   /** Content sized by the ratio container. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The container carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Forwarded to the root view host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -62,8 +71,9 @@ export function AspectRatio({
   testID,
   style,
   children,
+  render,
   ref,
-}: AspectRatioProps): React.JSX.Element {
+}: AspectRatioProps): React.ReactNode {
   const safeRatio =
     typeof ratio === "number" && Number.isFinite(ratio) && ratio > 0
       ? ratio
@@ -78,6 +88,18 @@ export function AspectRatio({
     },
     [ref],
   );
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: [{ aspectRatio: safeRatio }, style],
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <View

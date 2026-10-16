@@ -6,6 +6,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Button } from "./Button";
 import { Input } from "./Input";
@@ -28,6 +31,13 @@ import { Input } from "./Input";
  * callbacks.
  */
 
+export type NumberFieldState = {
+  /** Current numeric value (`null` = empty). */
+  value: number | null;
+  /** Whether the field is currently disabled. */
+  disabled: boolean;
+};
+
 export type NumberFieldProps = {
   /** Controlled numeric value (`null` = empty). Wins over `defaultValue` when defined. */
   value?: number | null;
@@ -46,12 +56,19 @@ export type NumberFieldProps = {
   /** Accessible name source for the field container. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of field state. */
+  style?: StateStyle<NumberFieldState, StyleProp<ViewStyle>>;
   /** Text-entry style, caller-provided. */
   inputStyle?: StyleProp<TextStyle>;
   /** Stepper button style (both steppers), caller-provided. */
   buttonStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole field (steppers
+   * plus entry).
+   */
+  render?: RenderProp<NumberFieldState, SlotProps>;
   /** Forwarded to the container view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -100,8 +117,9 @@ export function NumberField({
   style,
   inputStyle,
   buttonStyle,
+  render,
   ref,
-}: NumberFieldProps): React.JSX.Element {
+}: NumberFieldProps): React.ReactNode {
   const [numeric, setNumeric] = useControllableState<number | null>(
     value,
     defaultValue,
@@ -138,6 +156,14 @@ export function NumberField({
     stepBy(1);
   }, [stepBy]);
 
+  const changeValue = useCallback(
+    (next: number | null) => {
+      if (disabled) return;
+      setNumeric(next);
+    },
+    [disabled, setNumeric],
+  );
+
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -148,12 +174,30 @@ export function NumberField({
     [ref],
   );
 
+  const state: NumberFieldState = { value: numeric ?? null, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      inputStyle,
+      buttonStyle,
+      onValueChange: changeValue,
+      onDecrement: decrement,
+      onIncrement: increment,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <Button
         accessibilityLabel="Decrement"
@@ -165,7 +209,7 @@ export function NumberField({
       </Button>
       <Input
         value={numeric === null || numeric === undefined ? "" : String(numeric)}
-        onChangeText={handleChangeText}
+        onValueChange={handleChangeText}
         editable={!disabled}
         style={inputStyle}
       />

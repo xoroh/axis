@@ -1,5 +1,7 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { type StyleProp, Text, type TextStyle } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Label — an unstyled text label for associating with a control.
@@ -20,6 +22,13 @@ export type LabelProps = {
   testID?: string;
   /** Label text style, caller-provided. */
   style?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The label carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Forwarded to the `Text` host element. */
   ref?: Ref<ElementRef<typeof Text>>;
 };
@@ -54,8 +63,9 @@ export function Label({
   nativeID,
   testID,
   style,
+  render,
   ref,
-}: LabelProps): React.JSX.Element {
+}: LabelProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -65,6 +75,19 @@ export function Label({
     },
     [ref],
   );
+
+  const substituted = resolveRender(
+    render,
+    {
+      nativeID,
+      testID,
+      style,
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <Text ref={setHostRef} nativeID={nativeID} testID={testID} style={style}>

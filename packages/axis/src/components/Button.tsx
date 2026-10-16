@@ -1,5 +1,8 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Button — an unstyled pressable action.
@@ -11,6 +14,13 @@ import { Pressable, type StyleProp, type ViewStyle } from "react-native";
  * the caller swaps the children to reflect the busy state (no spinner
  * is rendered here). Stateless: no `useControllableState` needed.
  */
+
+export type ButtonState = {
+  /** Whether the button is currently disabled. */
+  disabled: boolean;
+  /** Whether the button is currently busy. */
+  loading: boolean;
+};
 
 export type ButtonProps = {
   /** Fires on press. Suppressed while `disabled` or `loading`. */
@@ -27,10 +37,16 @@ export type ButtonProps = {
   /** Native labelled-by association where the platform supports it. */
   accessibilityLabelledBy?: string;
   testID?: string;
-  /** Root pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of button state, caller-provided. */
+  style?: StateStyle<ButtonState, StyleProp<ViewStyle>>;
   /** Caller-provided content. A button without label content is useless. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ButtonState, SlotProps>;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -69,8 +85,9 @@ export function Button({
   testID,
   style,
   children,
+  render,
   ref,
-}: ButtonProps): React.JSX.Element {
+}: ButtonProps): React.ReactNode {
   const handlePress = useCallback(() => {
     if (disabled || loading) return;
     onPress?.();
@@ -86,6 +103,25 @@ export function Button({
     [ref],
   );
 
+  const state: ButtonState = { disabled, loading };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { disabled, busy: loading },
+      accessibilityLabel,
+      accessibilityLabelledBy,
+      testID,
+      disabled,
+      onPress: handlePress,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       ref={setHostRef}
@@ -96,7 +132,7 @@ export function Button({
       testID={testID}
       disabled={disabled}
       onPress={handlePress}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

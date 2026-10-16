@@ -28,7 +28,7 @@ describe("Textarea on React Native", () => {
       <Textarea
         testID="ta"
         defaultValue=""
-        onChangeText={(t) => seen.push(t)}
+        onValueChange={(t) => seen.push(t)}
       />,
     );
     await act(async () => {

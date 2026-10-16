@@ -1,5 +1,7 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Table — an unstyled tabular structure.
@@ -32,6 +34,11 @@ import { type StyleProp, View, type ViewStyle } from "react-native";
  * first, not flags on this type.
  */
 
+export type TableRowState = {
+  /** Whether this row is a header row. */
+  header: boolean;
+};
+
 export type TableProps = {
   /** Table content: a `TableHeader` followed by body `TableRow`s, in order. */
   children: ReactNode;
@@ -40,6 +47,13 @@ export type TableProps = {
   testID?: string;
   /** Root container style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The table carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Forwarded to the root host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -50,6 +64,12 @@ export type TableHeaderProps = {
   testID?: string;
   /** Header group container style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity). The header
+   * carries no state, so the function form receives an empty state
+   * object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
 };
 
 export type TableRowProps = {
@@ -64,6 +84,12 @@ export type TableRowProps = {
   testID?: string;
   /** Row container style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)` with `{ header }`.
+   */
+  render?: RenderProp<TableRowState, SlotProps>;
 };
 
 export type TableCellProps = {
@@ -72,6 +98,12 @@ export type TableCellProps = {
   testID?: string;
   /** Cell container style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity). The cell
+   * carries no state, so the function form receives an empty state
+   * object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
 };
 
 /**
@@ -104,8 +136,9 @@ export function Table({
   accessibilityLabel,
   testID,
   style,
+  render,
   ref,
-}: TableProps): React.JSX.Element {
+}: TableProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -115,6 +148,19 @@ export function Table({
     },
     [ref],
   );
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style,
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <View
@@ -132,7 +178,15 @@ export function TableHeader({
   children,
   testID,
   style,
-}: TableHeaderProps): React.JSX.Element {
+  render,
+}: TableHeaderProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View testID={testID} style={style}>
       {children}
@@ -145,7 +199,21 @@ export function TableRow({
   header = false,
   testID,
   style,
-}: TableRowProps): React.JSX.Element {
+  render,
+}: TableRowProps): React.ReactNode {
+  const state: TableRowState = { header };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: header ? "header" : undefined,
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       accessibilityRole={header ? "header" : undefined}
@@ -161,7 +229,15 @@ export function TableCell({
   children,
   testID,
   style,
-}: TableCellProps): React.JSX.Element {
+  render,
+}: TableCellProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View testID={testID} style={style}>
       {children}

@@ -8,8 +8,11 @@ import {
   useMemo,
 } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { DropdownMenu } from "./DropdownMenu";
+import { DropdownMenu, type DropdownMenuState } from "./DropdownMenu";
 
 /**
  * Menubar — an unstyled menu-command bar.
@@ -35,6 +38,11 @@ import { DropdownMenu } from "./DropdownMenu";
  * portal/`Modal` host (paints inside the parent's box).
  */
 
+export type MenubarState = {
+  /** Currently open menu value (`null` closed). */
+  openValue: string | null;
+};
+
 export type MenubarProps = {
   /** Controlled open menu value (`null` closed). Wins over `defaultOpenValue`. */
   openValue?: string | null;
@@ -45,10 +53,16 @@ export type MenubarProps = {
   /** Accessible name source for the menu bar. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Bar container style, caller-provided (row layout is default). */
-  style?: StyleProp<ViewStyle>;
+  /** Bar container style: value or function of menubar state (row layout is default). */
+  style?: StateStyle<MenubarState, StyleProp<ViewStyle>>;
   /** `MenubarMenu` elements. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<MenubarState, SlotProps>;
   /** Forwarded to the bar container `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -61,6 +75,11 @@ export type MenubarMenuProps = {
   testID?: string;
   /** Menu content box style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution, forwarded to the menu's
+   * content box (see `DropdownMenuProps.render`).
+   */
+  render?: RenderProp<DropdownMenuState, SlotProps>;
 };
 
 type MenubarDisclosure = {
@@ -105,7 +124,8 @@ export function MenubarMenu({
   children,
   testID,
   style,
-}: MenubarMenuProps): React.JSX.Element | null {
+  render,
+}: MenubarMenuProps): React.ReactNode {
   const disclosure = useContext(MenubarDisclosureContext);
   // Outside a menubar there is no coordinated open state: render
   // nothing rather than an uncoordinated dropdown.
@@ -117,6 +137,7 @@ export function MenubarMenu({
       onOpenChange={(open) => disclosure.report(value, open)}
       testID={testID}
       style={style}
+      render={render}
     >
       {children}
     </DropdownMenu>
@@ -131,8 +152,9 @@ export function Menubar({
   testID,
   style,
   children,
+  render,
   ref,
-}: MenubarProps): React.JSX.Element {
+}: MenubarProps): React.ReactNode {
   const [current, setCurrent] = useControllableState<string | null>(
     openValue,
     defaultOpenValue,
@@ -160,6 +182,22 @@ export function Menubar({
     [ref],
   );
 
+  const state: MenubarState = { openValue: current ?? null };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "menubar",
+      accessibilityLabel,
+      testID,
+      style: [{ flexDirection: "row" }, resolveStyle(style, state)],
+      children,
+      ref: setBarRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setBarRef}
@@ -167,7 +205,7 @@ export function Menubar({
       accessibilityRole="menubar"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={[{ flexDirection: "row" }, style]}
+      style={[{ flexDirection: "row" }, resolveStyle(style, state)]}
     >
       <MenubarDisclosureContext.Provider value={disclosure}>
         {children}

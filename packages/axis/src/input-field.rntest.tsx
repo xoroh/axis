@@ -23,7 +23,7 @@ describe("Input on React Native", () => {
   it("uncontrolled typing reports text", async () => {
     const seen: string[] = [];
     await render(
-      <Input testID="in" defaultValue="" onChangeText={(t) => seen.push(t)} />,
+      <Input testID="in" defaultValue="" onValueChange={(t) => seen.push(t)} />,
     );
     await act(async () => {
       fireEvent.changeText(screen.getByTestId("in"), "Ada");
@@ -40,7 +40,7 @@ describe("Input on React Native", () => {
         <Input
           testID="in"
           value={v}
-          onChangeText={(t) => {
+          onValueChange={(t) => {
             seen.push(t);
             setV(t.toUpperCase());
           }}
@@ -62,7 +62,7 @@ describe("Input on React Native", () => {
         testID="in"
         value="fixed"
         editable={false}
-        onChangeText={() => (calls += 1)}
+        onValueChange={() => (calls += 1)}
       />,
     );
     expect(screen.getByTestId("in").props.editable).toBe(false);

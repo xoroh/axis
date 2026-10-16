@@ -1,5 +1,7 @@
 import type { ElementRef, ReactNode, Ref } from "react";
 import { Text as HostText, type StyleProp, type TextStyle } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Text — an unstyled readable-text host.
@@ -29,6 +31,13 @@ export type TextProps = {
   testID?: string;
   /** Text style, caller-provided. */
   style?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The host carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Ref to the host element. */
   ref?: Ref<ElementRef<typeof HostText>>;
 };
@@ -60,8 +69,26 @@ export function Text({
   selectable,
   testID,
   style,
+  render,
   ref,
-}: TextProps): React.JSX.Element {
+}: TextProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      accessibilityRole,
+      numberOfLines,
+      ellipsizeMode,
+      selectable,
+      testID,
+      style,
+      children,
+      ref,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <HostText
       accessibilityLabel={accessibilityLabel}

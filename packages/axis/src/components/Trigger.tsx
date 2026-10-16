@@ -1,5 +1,8 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Trigger — an unstyled semantics-free press container.
@@ -23,6 +26,11 @@ import { Pressable, type StyleProp, type ViewStyle } from "react-native";
  * a `Button` written the long way — review rejects it.
  */
 
+export type TriggerState = {
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
 export type TriggerProps = {
   /** Fires on press. Suppressed while `disabled`. */
   onPress?: () => void;
@@ -31,10 +39,16 @@ export type TriggerProps = {
   /** Accessible name source. No default — the caller owns naming. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of trigger state, caller-provided. */
+  style?: StateStyle<TriggerState, StyleProp<ViewStyle>>;
   /** Content. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<TriggerState, SlotProps>;
   /** Forwarded to the host pressable element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -71,8 +85,9 @@ export function Trigger({
   testID,
   style,
   children,
+  render,
   ref,
-}: TriggerProps): React.JSX.Element {
+}: TriggerProps): React.ReactNode {
   const handlePress = useCallback(() => {
     if (disabled) return;
     onPress?.();
@@ -88,6 +103,22 @@ export function Trigger({
     [ref],
   );
 
+  const state: TriggerState = { disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: handlePress,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       ref={setHostRef}
@@ -95,7 +126,7 @@ export function Trigger({
       testID={testID}
       disabled={disabled}
       onPress={handlePress}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

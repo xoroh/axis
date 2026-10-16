@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -42,6 +45,20 @@ import { useControllableState } from "../useControllableState";
  * trigger carries the button role.
  */
 
+export type CollapsibleState = {
+  /** Whether the unit is currently open. */
+  open: boolean;
+  /** Whether the whole unit is disabled. */
+  disabled: boolean;
+};
+
+export type CollapsibleTriggerState = {
+  /** Whether the unit is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
 export type CollapsibleProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
@@ -52,10 +69,16 @@ export type CollapsibleProps = {
   /** Terminal: disables the trigger — no toggles, no callbacks. */
   disabled?: boolean;
   testID?: string;
-  /** Root disclosure view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root disclosure view style: value or function of disclosure state. */
+  style?: StateStyle<CollapsibleState, StyleProp<ViewStyle>>;
   /** The disclosure parts (`CollapsibleTrigger`, `CollapsiblePanel`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<CollapsibleState, SlotProps>;
   /** Forwarded to the root disclosure host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -66,10 +89,16 @@ export type CollapsibleTriggerProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Trigger pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger pressable style: value or function of trigger state. */
+  style?: StateStyle<CollapsibleTriggerState, StyleProp<ViewStyle>>;
   /** Trigger content, rendered inside the `Pressable`. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<CollapsibleTriggerState, SlotProps>;
 };
 
 export type CollapsiblePanelProps = {
@@ -78,6 +107,12 @@ export type CollapsiblePanelProps = {
   style?: StyleProp<ViewStyle>;
   /** Panel content, rendered inside a `View` only while open. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The panel still mounts only while open.
+   */
+  render?: RenderProp<CollapsibleState, SlotProps>;
 };
 
 type CollapsibleDisclosure = {
@@ -128,8 +163,9 @@ function CollapsibleRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: CollapsibleProps): React.JSX.Element {
+}: CollapsibleProps): React.ReactNode {
   const [isOpen, setIsOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -156,8 +192,21 @@ function CollapsibleRoot({
     [isOpen, disabled, toggle],
   );
 
+  const state: CollapsibleState = { open: isOpen ?? false, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setHostRef} testID={testID} style={style}>
+    <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
       <CollapsibleDisclosureContext.Provider value={disclosure}>
         {children}
       </CollapsibleDisclosureContext.Provider>
@@ -171,7 +220,8 @@ export function CollapsibleTrigger({
   testID,
   style,
   children,
-}: CollapsibleTriggerProps): React.JSX.Element {
+  render,
+}: CollapsibleTriggerProps): React.ReactNode {
   const disclosure = useContext(CollapsibleDisclosureContext);
   const effectiveDisabled = disabled || (disclosure?.rootDisabled ?? false);
   const expanded = disclosure?.open ?? false;
@@ -180,6 +230,29 @@ export function CollapsibleTrigger({
     if (effectiveDisabled) return;
     disclosure?.toggle();
   }, [effectiveDisabled, disclosure]);
+
+  const state: CollapsibleTriggerState = {
+    open: expanded,
+    disabled: effectiveDisabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: {
+        expanded,
+        disabled: effectiveDisabled,
+      },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: toggleTrigger,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <Pressable
@@ -192,7 +265,7 @@ export function CollapsibleTrigger({
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleTrigger}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -203,9 +276,25 @@ export function CollapsiblePanel({
   testID,
   style,
   children,
-}: CollapsiblePanelProps): React.JSX.Element | null {
+  render,
+}: CollapsiblePanelProps): React.ReactNode {
   const disclosure = useContext(CollapsibleDisclosureContext);
   if (!(disclosure?.open ?? false)) return null;
+  const state: CollapsibleState = {
+    open: true,
+    disabled: disclosure?.rootDisabled ?? false,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View testID={testID} style={style}>
       {children}

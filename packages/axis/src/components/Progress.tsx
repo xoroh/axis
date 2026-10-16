@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Progress — an unstyled determinate/indeterminate progress indicator.
@@ -11,6 +14,13 @@ import { type StyleProp, View, type ViewStyle } from "react-native";
  * Values clamp into `[min, max]`; `max <= min` disables the fill math
  * (announced without a value) rather than dividing by zero.
  */
+
+export type ProgressState = {
+  /** Clamped value, or `undefined` while indeterminate. */
+  value: number | undefined;
+  /** Whether the indicator is currently indeterminate. */
+  indeterminate: boolean;
+};
 
 export type ProgressProps = {
   /** Current value. Default `0`. */
@@ -24,10 +34,16 @@ export type ProgressProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Outer container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Outer container style: value or function of progress state. */
+  style?: StateStyle<ProgressState, StyleProp<ViewStyle>>;
   /** Fill bar style, caller-provided (merged under the fill width). */
   barStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ProgressState, SlotProps>;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -66,8 +82,9 @@ export function Progress({
   testID,
   style,
   barStyle,
+  render,
   ref,
-}: ProgressProps): React.JSX.Element {
+}: ProgressProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -81,6 +98,28 @@ export function Progress({
   const range = max - min;
   const clamped = range > 0 ? Math.min(Math.max(value, min), max) : min;
   const percent = range > 0 ? ((clamped - min) / range) * 100 : 0;
+  const state: ProgressState = {
+    value: indeterminate ? undefined : clamped,
+    indeterminate,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "progressbar",
+      accessibilityState: { busy: indeterminate || undefined },
+      accessibilityValue: indeterminate
+        ? undefined
+        : { min, max, now: clamped },
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -95,7 +134,7 @@ export function Progress({
       }
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <View style={[{ width: `${percent}%` }, barStyle]} />
     </View>

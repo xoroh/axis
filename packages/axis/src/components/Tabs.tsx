@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -30,6 +33,18 @@ import { useControllableState } from "../useControllableState";
  * behavior stays out per the contract's conditional rule.
  */
 
+export type TabsState = {
+  /** Currently selected trigger value (`undefined` for none). */
+  value: string | undefined;
+};
+
+export type TabsTriggerState = {
+  /** Whether this trigger is currently selected. */
+  selected: boolean;
+  /** Whether this trigger is currently disabled. */
+  disabled: boolean;
+};
+
 export type TabsProps = {
   /** Controlled selection (a trigger value). Wins over `defaultValue` when defined. */
   value?: string;
@@ -38,10 +53,16 @@ export type TabsProps = {
   /** Fires with the selected trigger value on every committed selection. */
   onValueChange?: (value: string) => void;
   testID?: string;
-  /** Root container view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root container view style: value or function of tab state. */
+  style?: StateStyle<TabsState, StyleProp<ViewStyle>>;
   /** The tab group content (`TabsList` triggers plus `TabsPanel`s). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<TabsState, SlotProps>;
   /** Forwarded to the root container host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -52,6 +73,13 @@ export type TabsListProps = {
   style?: StyleProp<ViewStyle>;
   /** The list's triggers (`TabsTrigger`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The list carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
 };
 
 export type TabsTriggerProps = {
@@ -62,9 +90,15 @@ export type TabsTriggerProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Trigger pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger pressable style: value or function of trigger state. */
+  style?: StateStyle<TabsTriggerState, StyleProp<ViewStyle>>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<TabsTriggerState, SlotProps>;
 };
 
 export type TabsPanelProps = {
@@ -74,6 +108,13 @@ export type TabsPanelProps = {
   /** Panel view style. */
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The panel still mounts only while
+   * selected.
+   */
+  render?: RenderProp<TabsState, SlotProps>;
 };
 
 type TabsSelection = {
@@ -121,8 +162,9 @@ function TabsRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: TabsProps): React.JSX.Element {
+}: TabsProps): React.ReactNode {
   const [selectedValue, setSelectedValue] = useControllableState<string>(
     value,
     defaultValue,
@@ -155,8 +197,21 @@ function TabsRoot({
   // element claim of its own. The tablist role lives on `TabsList`,
   // the tab role on each `TabsTrigger`; inventing a second group role
   // here would double-announce the control.
+  const state: TabsState = { value: selectedValue };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setHostRef} testID={testID} style={style}>
+    <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
       <TabsSelectionContext.Provider value={selection}>
         {children}
       </TabsSelectionContext.Provider>
@@ -168,7 +223,21 @@ export function TabsList({
   testID,
   style,
   children,
-}: TabsListProps): React.JSX.Element {
+  render,
+}: TabsListProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "tablist",
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       // The list must be an accessibility element for its role to reach
@@ -191,7 +260,8 @@ export function TabsTrigger({
   testID,
   style,
   children,
-}: TabsTriggerProps): React.JSX.Element {
+  render,
+}: TabsTriggerProps): React.ReactNode {
   const group = useContext(TabsSelectionContext);
   const selected = group?.selectedValue === value;
 
@@ -199,6 +269,23 @@ export function TabsTrigger({
     if (disabled) return;
     group?.select(value);
   }, [disabled, group, value]);
+
+  const state: TabsTriggerState = { selected, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "tab",
+      accessibilityState: { selected, disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: selectTab,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <Pressable
@@ -208,7 +295,7 @@ export function TabsTrigger({
       testID={testID}
       disabled={disabled}
       onPress={selectTab}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -220,7 +307,8 @@ export function TabsPanel({
   testID,
   style,
   children,
-}: TabsPanelProps): React.JSX.Element | null {
+  render,
+}: TabsPanelProps): React.ReactNode {
   const group = useContext(TabsSelectionContext);
   // Conditional presence (structural): only the selected panel is in
   // the tree. Unselected panels — including every panel outside a
@@ -228,6 +316,18 @@ export function TabsPanel({
   if (group?.selectedValue !== value) {
     return null;
   }
+  const state: TabsState = { value: group.selectedValue };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View testID={testID} style={style}>
       {children}

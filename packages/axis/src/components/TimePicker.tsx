@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { type StyleProp, Text, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import {
   formatTimeValue,
   minutesForStep,
@@ -29,6 +32,13 @@ import { Input } from "./Input";
  * and all four steppers stop with no callbacks.
  */
 
+export type TimePickerState = {
+  /** Current time (`null` renders as 00:00). */
+  value: TimePickerValue | null;
+  /** Whether the whole picker is disabled. */
+  disabled: boolean;
+};
+
 export type TimePickerProps = {
   /** Controlled time. Wins over `defaultValue` when defined. */
   value?: TimePickerValue | null;
@@ -43,8 +53,15 @@ export type TimePickerProps = {
   /** Accessible name source for the picker container. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of picker state. */
+  style?: StateStyle<TimePickerState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole picker (steppers
+   * plus entries); typing and stepping wiring travel in the props.
+   */
+  render?: RenderProp<TimePickerState, SlotProps>;
   /** Forwarded to the container view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -83,8 +100,9 @@ export function TimePicker({
   accessibilityLabel,
   testID,
   style,
+  render,
   ref,
-}: TimePickerProps): React.JSX.Element {
+}: TimePickerProps): React.ReactNode {
   const handleChange = useCallback(
     (next: TimePickerValue | null) => {
       // `setCurrent` below only ever commits non-null times, so this
@@ -216,12 +234,39 @@ export function TimePicker({
     [ref],
   );
 
+  const state: TimePickerState = { value: current ?? null, disabled };
+  const changeTime = useCallback(
+    (next: TimePickerValue) => {
+      if (disabled) return;
+      commitTime(next);
+    },
+    [commitTime, disabled],
+  );
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      value: current ?? null,
+      onValueChange: changeTime,
+      step,
+      onDecrementHours: decrementHours,
+      onIncrementHours: incrementHours,
+      onDecrementMinutes: decrementMinutes,
+      onIncrementMinutes: incrementMinutes,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <Button
         accessibilityLabel="Decrement hours"
@@ -232,7 +277,7 @@ export function TimePicker({
       </Button>
       <Input
         value={hoursText}
-        onChangeText={handleHoursText}
+        onValueChange={handleHoursText}
         editable={!disabled}
         accessibilityLabel="Hours"
         testID={testID ? `${testID}-hours` : undefined}
@@ -253,7 +298,7 @@ export function TimePicker({
       </Button>
       <Input
         value={minutesText}
-        onChangeText={handleMinutesText}
+        onValueChange={handleMinutesText}
         editable={!disabled}
         accessibilityLabel="Minutes"
         testID={testID ? `${testID}-minutes` : undefined}

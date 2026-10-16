@@ -591,6 +591,7 @@ export function DialogPopup({
     render,
     {
       accessible: true,
+      role: "dialog",
       accessibilityRole: "dialog",
       accessibilityLabel,
       testID,
@@ -606,6 +607,7 @@ export function DialogPopup({
     <View
       ref={setPopupRef}
       accessible
+      role="dialog"
       accessibilityRole="dialog"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
