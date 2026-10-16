@@ -44,6 +44,18 @@ priority. Fixed items stay listed with their PR for traceability.
 
 ## Proposed (needs owner call — not started)
 
+- **Q5 — RESOLVED by owner decision: Base UI naming.** The
+  edge-anchored panel is `Drawer`; `NavigationDrawer` is a
+  warn-once deprecated alias; `Sheet` stays (detents/snap/drag
+  genuinely different). Shipped; alias removal after one minor
+  is the only remainder.
+- **Q15 — README examples are untested prose.** Against the
+  no-doc-errors bar, the tsx blocks (package + root READMEs,
+  component notes) need mechanical accuracy checking
+  (import/specifier/prop-name verification against the barrel).
+  Planned: `check-readme-examples` gate slice. Priority:
+  medium.
+
 - **Q5 — `Sheet` vs Base UI `Drawer` naming.** Base UI has
   `Drawer` (edge panel + snap points + gestures); our `Sheet`
   (bottom detents + drag) overlaps it heavily, and owner
@@ -52,17 +64,18 @@ priority. Fixed items stay listed with their PR for traceability.
   breaks the 1-week-old `Sheet` API pre-1.0); (b) keep both
   (`Sheet` bottom-only, `Drawer` edge-anchored — but then our
   `NavigationDrawer` triple-collides by name). Priority: medium
-  (cheap pre-1.0, expensive after). **Decision required.**
+  (cheap pre-1.0, expensive after). **RESOLVED (owner call this
+  turn): option (b) with `Drawer` canonical — shipped; alias
+  removal pending.**
 - **Q6 — No interactive demo surface.** Docs are prose +
   untested snippets; Base UI/shadcn pattern is live examples and
-  a playground. Proposal: `apps/playground` (Expo) for
-  component demos. A new app is product/architecture scope.
-  Priority: medium. **Decision required.**
-- **Q7 — README single-file scale.** 69 sections and growing
-  ~30 per batch family. Proposal: split to
-  `docs/components/*.md` with README as index at ~1500 lines or
-  when a docs app exists (pairs with Q6). Priority: low.
-  **Decision required.**
+  a playground. Owner decision: no playground in the axis repo;
+  keep ONE runnable Expo example app (`apps/example`) covering
+  every component; interactive docs/playground belongs to
+  Kern's site. Scaffold next. Priority: medium.
+- **Q7 — README single-file scale.** RESOLVED this turn: split
+  shipped (66 notes in `docs/components/`, short READMEs,
+  retargeted gate).
 
 ## Verified OK (no action)
 
