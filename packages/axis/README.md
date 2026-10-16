@@ -145,9 +145,10 @@ public entry).
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `value` | `boolean` | no | — | Controlled state. Wins over `defaultValue` when defined. |
-| `defaultValue` | `boolean` | no | `false` | Uncontrolled initial state. |
-| `onValueChange` | `(value: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
+| `checked` | `boolean` | no | — | Controlled state. Wins over `defaultChecked` when defined. |
+| `defaultChecked` | `boolean` | no | `false` | Uncontrolled initial state. |
+| `onCheckedChange` | `(checked: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
+| `value` / `defaultValue` / `onValueChange` | `boolean` aliases | no | — | Deprecated pre-cutover spellings (warn once; canonical wins; removed after one minor). |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks; announced as disabled. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
@@ -167,8 +168,8 @@ function Setting() {
   const [enabled, setEnabled] = useState(false);
   return (
     <Switch
-      value={enabled}
-      onValueChange={setEnabled}
+      checked={enabled}
+      onCheckedChange={setEnabled}
       accessibilityLabel="Airplane mode"
       trackStyle={{ backgroundColor: enabled ? "green" : "gray" }}
     />
@@ -184,8 +185,8 @@ import { Switch } from "@xoroh/axis";
 function Setting() {
   return (
     <Switch
-      defaultValue
-      onValueChange={(v) => console.log("now", v)}
+      defaultChecked
+      onCheckedChange={(v) => console.log("now", v)}
       accessibilityLabel="Airplane mode"
     />
   );
