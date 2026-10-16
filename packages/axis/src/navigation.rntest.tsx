@@ -227,3 +227,15 @@ describe("NavigationDrawer on React Native", () => {
     expect(ref.current).toBeTruthy();
   });
 });
+
+describe("NavigationRail ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(
+      <NavigationRail ref={ref} testID="r">
+        <NavigationRailItem value="a" label="A" />
+      </NavigationRail>,
+    );
+    expect(ref.current).toBeTruthy();
+  });
+});

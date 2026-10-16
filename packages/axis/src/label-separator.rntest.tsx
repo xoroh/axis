@@ -1,4 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
+import { createRef, type ElementRef } from "react";
+import type { Text, View } from "react-native";
 import { Label, Separator } from "./index";
 
 /**
@@ -28,5 +30,25 @@ describe("Separator on React Native", () => {
     const node = screen.getByTestId("sep");
     expect(node.props.accessible).toBe(false);
     expect(node.props.style).toMatchObject({ height: 1 });
+  });
+});
+
+describe("Label ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof Text>>();
+    await render(
+      <Label ref={ref} testID="l">
+        Name
+      </Label>,
+    );
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Separator ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Separator ref={ref} testID="s" />);
+    expect(ref.current).toBeTruthy();
   });
 });

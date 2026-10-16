@@ -4,7 +4,8 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { act } from "react";
+import { act, createRef, type ElementRef } from "react";
+import type { View } from "react-native";
 import { Toast } from "./index";
 
 /**
@@ -121,5 +122,15 @@ describe("Toast on React Native", () => {
     expect(screen.getByTestId("toast").props.style).toMatchObject({
       opacity: 0.5,
     });
+  });
+});
+
+describe("Toast ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(
+      <Toast ref={ref} testID="t" defaultOpen accessibilityLabel="Saved" />,
+    );
+    expect(ref.current).toBeTruthy();
   });
 });

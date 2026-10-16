@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { act } from "react";
-import { Text } from "react-native";
+import { act, createRef, type ElementRef } from "react";
+import { Text, type View } from "react-native";
 import {
   Card,
   EmptyState,
@@ -155,5 +155,69 @@ describe("Kbd on React Native", () => {
     await render(<Kbd testID="k">⌘K</Kbd>);
     expect(screen.getByText("⌘K")).toBeTruthy();
     expect(screen.getByTestId("k")).toBeTruthy();
+  });
+});
+
+describe("Card ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Card ref={ref} testID="c" />);
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("EmptyState ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<EmptyState ref={ref} testID="e" title="Nothing" />);
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Kbd ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof Text>>();
+    await render(
+      <Kbd ref={ref} testID="k">
+        X
+      </Kbd>,
+    );
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("ListItem ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(
+      <ListItem ref={ref} testID="li">
+        Row
+      </ListItem>,
+    );
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Loader ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Loader ref={ref} testID="l" />);
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Meter ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Meter ref={ref} testID="m" value={3} />);
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Skeleton ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Skeleton ref={ref} testID="s" />);
+    expect(ref.current).toBeTruthy();
   });
 });
