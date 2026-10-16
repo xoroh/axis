@@ -37,6 +37,40 @@ export {
   resolveDir,
 } from "./a11y";
 export {
+  type AttachmentError,
+  type AttachmentLimits,
+  type AttachmentState,
+  type ChatAttachment,
+  updateAttachment,
+  useAttachments,
+  validateAttachment,
+} from "./attachments";
+export {
+  nextBranchIndex,
+  normalizeBranchIndex,
+  previousBranchIndex,
+  shouldHideBranchPicker,
+  useBranch,
+} from "./chatBranch";
+export {
+  type ChatMessage,
+  type ChatRole,
+  isUserMessage,
+  resolveChatMessageLabel,
+  resolveChatMessageSpeaker,
+} from "./chatMessage";
+export {
+  type ChatSource,
+  normalizeChatSources,
+  resolveChatSourceLabel,
+} from "./chatSource";
+export {
+  type ChatStatus,
+  isChatBusy,
+  isChatError,
+  isChatStreaming,
+} from "./chatStatus";
+export {
   Accordion,
   AccordionItem,
   type AccordionItemProps,
@@ -313,6 +347,15 @@ export {
   usePress,
 } from "./press";
 export {
+  type PromptInputSubmitMode,
+  resolveCanSend,
+  resolveComposerHeight,
+  shouldCancelOnEscapeKey,
+  shouldSubmitOnKey,
+  usePromptInput,
+} from "./promptInput";
+export { resolveReasoningOpen } from "./reasoning";
+export {
   type RenderProp,
   resolveRender,
   resolveStyle,
@@ -340,6 +383,12 @@ export {
   type SlotProps,
 } from "./slot";
 export {
+  isAtBottom,
+  resolveScrollButtonVisible,
+  type StickToBottomMetrics,
+  useStickToBottom,
+} from "./stickToBottom";
+export {
   formatTimeValue,
   minutesForStep,
   normalizeTimeValue,
@@ -347,4 +396,13 @@ export {
   type TimePickerValue,
   toTwentyFourHour,
 } from "./time";
+export {
+  isToolCallApproval,
+  isToolCallComplete,
+  isToolCallError,
+  isToolCallRunning,
+  resolveToolCallLabel,
+  type ToolCallState,
+  useToolCall,
+} from "./toolCall";
 export { type StateAction, useControllableState } from "./useControllableState";
