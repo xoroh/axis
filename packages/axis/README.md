@@ -61,6 +61,77 @@ import { useControllableState, normalizeTimeValue } from "@xoroh/axis";
 Only the documented public entry (`.`) is supported. Deep imports are
 not part of the contract.
 
+## Contents
+
+<!-- toc:begin -->
+- [Switch](#switch)
+- [Checkbox](#checkbox)
+- [Radio Group](#radio-group)
+- [Toggle](#toggle)
+- [Button](#button)
+- [Label](#label)
+- [Separator](#separator)
+- [Checkbox Group](#checkbox-group)
+- [Tabs](#tabs)
+- [Accordion](#accordion)
+- [Progress](#progress)
+- [Badge](#badge)
+- [Avatar](#avatar)
+- [Dialog](#dialog)
+- [Toast](#toast)
+- [Input](#input)
+- [Field](#field)
+- [Collapsible](#collapsible)
+- [OTP Field](#otp-field)
+- [Number Field](#number-field)
+- [Textarea](#textarea)
+- [Fieldset](#fieldset)
+- [Tooltip](#tooltip)
+- [Slider](#slider)
+- [Calendar](#calendar)
+- [Time Picker](#time-picker)
+- [Search](#search)
+- [Pagination](#pagination)
+- [Select](#select)
+- [Popover](#popover)
+- [Menu](#menu)
+- [Combobox](#combobox)
+- [Autocomplete](#autocomplete)
+- [ContextMenu](#contextmenu)
+- [Meter](#meter)
+- [Loader](#loader)
+- [Skeleton](#skeleton)
+- [EmptyState](#emptystate)
+- [Card](#card)
+- [List Item](#list-item)
+- [Kbd](#kbd)
+- [Table](#table)
+- [Carousel](#carousel)
+- [Toolbar](#toolbar)
+- [Chip](#chip)
+- [Link Button](#link-button)
+- [Loading Button](#loading-button)
+- [Split Button](#split-button)
+- [Button Group](#button-group)
+- [Toggle Group](#toggle-group)
+- [Icon Button](#icon-button)
+- [Aspect Ratio](#aspect-ratio)
+- [Alert Dialog](#alert-dialog)
+- [Text](#text)
+- [Settings Row](#settings-row)
+- [Fab](#fab)
+- [Extended Fab](#extended-fab)
+- [Trigger](#trigger)
+- [Top App Bar](#top-app-bar)
+- [Navigation Bar](#navigation-bar)
+- [Navigation Rail](#navigation-rail)
+- [Navigation Drawer](#navigation-drawer)
+- [Menubar](#menubar)
+- [Sheet](#sheet)
+- [Dropdown Menu](#dropdown-menu)
+- [Navigation Menu](#navigation-menu)
+<!-- toc:end -->
+
 ## Switch
 
 Unstyled on/off control. Structure only — a `Pressable` carrying the
@@ -184,7 +255,7 @@ function Consent() {
 }
 ```
 
-## RadioGroup
+## Radio Group
 
 Source of truth: `RadioGroupProps`, `RadioGroupItemProps` in `@xoroh/axis`.
 
@@ -313,7 +384,7 @@ prop it cannot honor.
 
 Props: `testID?: string`, `style?: StyleProp<ViewStyle>`. All optional.
 
-## CheckboxGroup
+## Checkbox Group
 
 Source of truth: `CheckboxGroupProps`, `CheckboxGroupItemProps` in `@xoroh/axis`.
 
@@ -479,7 +550,7 @@ state) + `CollapsiblePanel` (mounted only when open). No animation
 (deferred with rationale in-file). All props optional except
 `children` where noted.
 
-## OtpField
+## OTP Field
 
 Source of truth: `OtpFieldProps` in `@xoroh/axis`.
 
@@ -492,7 +563,7 @@ per completion, re-arming after the value drops below full length),
 `accessibilityLabel?`, `testID?` (cells are `${testID}-cell-{i}`),
 `style?`, `cellStyle?`, `textStyle?`, `ref` (container). All optional.
 
-## NumberField
+## Number Field
 
 Source of truth: `NumberFieldProps` in `@xoroh/axis`.
 
@@ -566,7 +637,7 @@ Day cells carry button role + selected/disabled state; header has
 previous/next-month actions. Invalid strings never throw. All
 optional.
 
-## TimePicker
+## Time Picker
 
 Source of truth: `TimePickerProps` in `@xoroh/axis`.
 
@@ -738,7 +809,7 @@ Content container with `header?`, `media?`, `children?`,
 `mediaStyle?`, `actionsStyle?`. No elevation, shape, or padding.
 All optional.
 
-## ListItem
+## List Item
 
 Source of truth: `ListItemProps` in `@xoroh/axis`.
 
@@ -801,7 +872,7 @@ internal toggle), `onRemove?` (remove path only, never toggles),
 `style?`, `removeStyle?`, `children?`, `ref`. Main carries button
 role + selected state. All optional.
 
-## LinkButton
+## Link Button
 
 Source of truth: `LinkButtonProps` in `@xoroh/axis`.
 
@@ -810,7 +881,7 @@ Source of truth: `LinkButtonProps` in `@xoroh/axis`.
 `accessibilityLabelledBy?`, `testID?`, `style?`,
 `children?`, `ref`). All optional.
 
-## LoadingButton
+## Loading Button
 
 Source of truth: `LoadingButtonProps` in `@xoroh/axis`.
 
@@ -818,89 +889,7 @@ Source of truth: `LoadingButtonProps` in `@xoroh/axis`.
 `true`) announces busy and suppresses press; all other `Button`
 props pass through. Content swap is the caller's. All optional.
 
-## SplitButton
-
-Source of truth: `SplitButtonProps` in `@xoroh/axis`.
-
-Primary action + secondary trigger side by side: `onPress?`,
-`onSecondaryPress?`, `disabled?` (shared),
-`secondaryLabel?` (default `"More actions"`),
-`accessibilityLabel?`, `testID?`, `style?`, `secondaryStyle?`,
-`children?` (primary label), `ref`. Two independent press paths.
-All optional.
-
-## ButtonGroup
-
-Source of truth: `ButtonGroupProps` in `@xoroh/axis`.
-
-Honest layout container for buttons: `testID?`, `style?`,
-`children?` (required), `ref`. Role `group`. No behavior theft —
-member buttons keep their own props. All optional except
-`children`.
-
-## Table
-
-Source of truth: `TableProps`, `TableHeaderProps`, `TableRowProps`, `TableCellProps` in `@xoroh/axis`.
-
-Tabular structure: `Table` (container + `ref`), `TableHeader`,
-`TableRow` (`header?` maps to the header role), `TableCell`. Plain
-`View`s — the native role set has no table/row/cell values, so none
-are claimed. No sorting, pagination, or selection. `testID?`/`style?`
-throughout. All optional.
-
-## Carousel
-
-Source of truth: `CarouselProps` in `@xoroh/axis`.
-
-Paged content: `index?`, `defaultIndex?` (default 0),
-`onIndexChange?`, `loop?` (default `false`, wraps at ends),
-`testID?`, `style?`, `children` (pages, required), `ref`. Only the
-active page mounts; Previous/Next controls clamp (or loop) at
-bounds. No swipe — gesture paging deferred. All optional except
-`children`.
-
-## Toolbar
-
-Source of truth: `ToolbarProps` in `@xoroh/axis`.
-
-Control group container: `orientation?: "horizontal" | "vertical"`
-(default `"horizontal"`, applied as structural flex direction),
-`disabled?`, `accessibilityLabel?` (toolbar role asserted via
-props — containers are not accessibility elements, so role queries
-do not match; documented), `testID?`, `style?`, `children`
-(required), `ref`. No roving keyboard (transfer-gated model).
-All optional except `children`.
-
-## Chip
-
-Source of truth: `ChipProps` in `@xoroh/axis`.
-
-Compact select/remove control: outer `View` with sibling main and
-remove `Pressable`s. `selected?`, `defaultSelected?`,
-`onSelectedChange?`, `onPress?` (tap action, fires after the
-internal toggle), `onRemove?` (remove path only, never toggles),
-`disabled?` (blocks all three), `accessibilityLabel?`, `testID?`,
-`style?`, `removeStyle?`, `children?`, `ref`. Main carries button
-role + selected state. All optional.
-
-## LinkButton
-
-Source of truth: `LinkButtonProps` in `@xoroh/axis`.
-
-`Button` with the link role. Same props as `Button`
-(`onPress?`, `disabled?`, `accessibilityLabel?`,
-`accessibilityLabelledBy?`, `testID?`, `style?`,
-`children?`, `ref`). All optional.
-
-## LoadingButton
-
-Source of truth: `LoadingButtonProps` in `@xoroh/axis`.
-
-`Button` forced into loading: `loading?: boolean` (default
-`true`) announces busy and suppresses press; all other `Button`
-props pass through. Content swap is the caller's. All optional.
-
-## SplitButton
+## Split Button
 
 Source of truth: `SplitButtonProps` in `@xoroh/axis`.
 
@@ -912,67 +901,14 @@ Primary action + secondary trigger side by side: `onPress?`,
 `children?` (primary label), `ref` (container). Two independent
 press paths. All optional.
 
-## Meter
+## Button Group
 
-Source of truth: `MeterProps` in `@xoroh/axis`.
+Source of truth: `ButtonGroupProps` in `@xoroh/axis`.
 
-Gauge readout (task progress lives in `Progress`): `value?`
-(default 0), `min?` (default 0), `max?` (default 100),
-`accessibilityLabel?`, `testID?`, `style?`, `fillStyle?`
-(data-driven width merged underneath). Meter role with
-`{min, max, now}` value. All optional.
-
-## Loader
-
-Source of truth: `LoaderProps` in `@xoroh/axis`.
-
-Busy indicator: host `ActivityIndicator` with announced busy
-state. `size?: number | "small" | "large"`, `color?: string`,
-`accessibilityLabel?`, `testID?`, `style?`. All optional.
-
-## Skeleton
-
-Source of truth: `SkeletonProps` in `@xoroh/axis`.
-
-Loading placeholder: silent (`accessible={false}`), no motion.
-`testID?`, `style?` (dimensions live here). All optional.
-
-## EmptyState
-
-Source of truth: `EmptyStateProps` in `@xoroh/axis`.
-
-Nothing-here frame: `title?`, `description?`, `action?` (caller
-slot), `accessibilityLabel?`, `testID?`, `style?`,
-`titleStyle?`, `descriptionStyle?`. No iconography, no copy. All
-optional.
-
-## Card
-
-Source of truth: `CardProps` in `@xoroh/axis`.
-
-Content container with `header?`, `media?`, `children?`,
-`actions?` slots (each rendered only when provided),
-`accessibilityLabel?`, `testID?`, `style?`, `headerStyle?`,
-`mediaStyle?`, `actionsStyle?`. No elevation, shape, or padding.
-All optional.
-
-## ListItem
-
-Source of truth: `ListItemProps` in `@xoroh/axis`.
-
-Row with `leading?`/`children`/`trailing?` slots. With `onPress`
-it is a pressable row (button role, selected/disabled state);
-without, a static `View` (no fake affordance).
-`onPress?`, `selected?` (default `false`), `disabled?` (default
-`false`), `accessibilityLabel?`, `testID?`, `style?`,
-`contentStyle?` (string-children text). All optional.
-
-## Kbd
-
-Source of truth: `KbdProps` in `@xoroh/axis`.
-
-Key-hint display: `children?`, `testID?`, `style?`. Inline
-semantics only — no keyboard handling. All optional.
+Honest layout container for buttons: `testID?`, `style?`,
+`children?` (required), `ref`. Role `group`. No behavior theft —
+member buttons keep their own props. All optional except
+`children`.
 
 ## Toggle Group
 
@@ -1004,7 +940,7 @@ Ratio box: `ratio?: number` (default 1; non-finite and non-positive
 clamp to 1, never throw), `testID?`, `style?`, `children?`,
 `ref`. Merges `{aspectRatio}` under caller style. All optional.
 
-## AlertDialog
+## Alert Dialog
 
 Source of truth: `AlertDialogProps` in `@xoroh/axis`.
 

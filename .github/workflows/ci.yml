@@ -42,6 +42,11 @@ jobs:
         run: |
           bun run --filter @xoroh/axis check:boundary
           bun test packages/axis/scripts/lib/boundary-policy.test.mjs
+      - name: Check README section discipline
+        # Unique ## headers, TOC in sync, every component section
+        # naming its source of truth (batch-appended docs duplicated
+        # fourteen sections before this gate existed).
+        run: bun run --filter @xoroh/axis check:readme
       - name: Build package
         run: bun run --filter @xoroh/axis build
       - name: Check package publishing
