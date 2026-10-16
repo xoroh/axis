@@ -1,61 +1,51 @@
-# Status report — 2026-10-16 (Axis completion program, turn 9)
+# Status report — 2026-10-16 (Axis completion program, turn 10)
 
 ## Done this turn
-- **PR #33 merged** (owner-approved Menu follow-ups): took main
-  in with a clean merge (single README conflict — ported the
-  compound docs into `docs/components/menu.md`, kept main's
-  short README), CI green, squash-merged by agent per approval.
-- **PR #37 OPEN (large — for owner review/merge): Menu
-  selectable parts.** `MenuCheckboxItem` (+`Indicator`, stays
-  open by default) + `MenuRadioGroup`/`MenuRadioItem`
-  (+`Indicator`, closes on select) with controlled-state APIs
-  over the shared activation hook (Item/LinkItem/selectable
-  differ in role only — no duplicated logic). RNTL +7 (full
-  jest 56/416 green locally). Parity rows updated (submenu
-  aliases rejected with rationale; filter parts deferred on
-  the collection transfer, recorded).
-- Turn-8 docs (PR #36) merged after a behind-main race
-  (rebase-free merge-in flow, no `--admin`).
-- Positioning `align`/`alignOffset` verified live through the
-  compound `MenuPositioner` path (unit tests + RNTL suites).
+- **PR #39 OPEN (scaffold — merging below if green, routine
+  infra): Q6 `apps/example` Expo scaffold.** App shell with
+  `useState` navigation (no nav library), demo registry keyed
+  by barrel export names, coverage gate (8/111 demoed,
+  remainder listed; informational until complete, joins CI
+  with the final batch), first demos (Switch, Button, Dialog
+  compound). Verified: bun install resolves (Expo 57 + RN in
+  peer range), axis build, example `tsc` clean, gate runs,
+  lint clean. Private, never published. Demos per family
+  follow in batches.
 
-## Decisions with rationale
-1. **No `value` on checkbox items** (test bug, not type bug).
-   *Rationale: checked state IS the identity; group
-   membership doesn't exist for checkboxes. The test
-   carried a `value` from the radio pattern — removed.*
-2. **Radio `onValueChange` stays `(value: string)`** with a
-   null-swallowing adapter to the hook. *Rationale: null is
-   the empty initial, never a reported transition (no
-   deselect in single-select) — the public type tells the
-   truth about what fires.*
-3. **Submenu aliases rejected (again, finally).**
-   *Rationale: a renamed `DropdownMenu` adds names without
-   behavior; recorded in parity so it stays decided.*
-4. **Filter parts deferred on collection transfer.**
-   *Rationale: filtering without item registration is chrome;
-   the gate (`collection` transfer) is the honest trigger.*
-5. **Q7/Q5 follow-through verified on merged main** (index,
-   Drawer alias, compatibility doc all present post-merge).
-
-## No architecture conflicts escalated
-Nothing this turn needed owner arbitration beyond the queued
-large PR itself.
+## Q6 scope decision with rationale (as mandated)
+- **Scaffold now, coverage in family batches** (not one giant
+  PR): a 60-demo PR is unreviewable; the registry + gate make
+  partial coverage honest and completion mechanical.
+- **No navigation library** (`useState` shell): one fewer
+  dependency to rot for a list→viewer app.
+- **Demos resolve the built barrel** (build-first, documented):
+  proves the shipped artifact, not source layout.
+- **No Kern/token deps in-repo** (plain styles only):
+  the axis repo must not grow Kern coupling; demos prove the
+  unstyled contract instead.
+- **Coverage gate informational until complete** (prints
+  missing, fails only on unknown names): a red-until-done
+  gate trains ignoring; CI wiring lands with the final batch
+  when it can stay green.
+- **`expo start --web` not claimed**: web needs
+  react-native-web (not installed — native first, per plan).
 
 ## Remaining program
-1. Popover, Select, Combobox, Tooltip, controls families with
-   parity rows.
-2. Planned slices (Q6 example scaffold next? or focus
-   containment — owner ordering: Q6 scaffold + demos was
-   queued before menu-checkbox work; reassess next turn).
-3. README-example accuracy gate (Q15).
-4. Rewrite readiness report WITH full parity, stop for
-   confirmation. Kern untouched.
+1. Demo batches per family → full 111 coverage → wire gate
+   into CI.
+2. Menu checkbox/radio/filter parts (after #37 lands, or
+   stacked if cleaner) + submenu-alias evaluation — NOTE:
+   turned out #37 already contains checkbox/radio (merged
+   scope grew); re-verify against main before planning.
+3. Popover/Select/Tooltip/controls alignment + parity rows;
+   planned slices (focus, nesting, handles, transitions).
+4. Q15 README-example gate. Rewrite readiness report WITH
+   full parity, stop for confirmation. Kern untouched.
 
 ## Standing constraints (unchanged)
 - Release HOLD: no publish/tags/versions. No Kern/token deps.
-  No branches deleted. Merges by merge-commit (no force-push
-  on shared branches; rebase only unpushed tip work... this
-  turn used merge-in flow throughout). Small green PRs merged
-  by agent; large ones reported (#37).
-- Open owner calls: Q6 example app, release timing, PR #37.
+  No branches deleted. Merges by merge-commit, no force-push
+  on shared branches. Small green PRs merged by agent; large
+  ones reported.
+- Open owner calls: PR #37, Q6 demos completion, release
+  timing.
