@@ -985,3 +985,29 @@ Blocking confirm: thin wrapper forcing `dismissable={false}` over
 explicit action traps the user), `accessibilityLabel?`,
 `testID?`, `style?` (surface), `ref` (surface). No `onDismiss`
 (no scrim path exists). All optional except `actions`.
+
+## Text
+
+Source of truth: `TextProps` in `@xoroh/axis`.
+
+Readable text host: caller `children`, `accessibilityLabel?`,
+`accessibilityRole?` (passthrough, e.g. `"header"` — no default
+claim), `numberOfLines?`, `ellipsizeMode?`, `selectable?`,
+`testID?`, `style?`, `ref`. Carries deliberately no typographic
+scale: size, weight, and color are design-system decisions in
+caller `style`. Example: `<Text
+accessibilityLabel="Airplane mode, on">On</Text>`.
+
+## Settings Row
+
+Source of truth: `SettingsRowProps` in `@xoroh/axis`.
+
+Labeled row with a trailing control slot: `title` (required),
+`description?`, `control?` (caller-owned Switch, value, chevron),
+`onPress?` (detail navigation — absence renders a static row whose
+control stays independently operable), `selected?`, `disabled?`,
+`accessibilityLabel?` (defaults to the title when pressable),
+`testID?`, `style?`, `titleStyle?`, `descriptionStyle?`, `ref`.
+Pressable rows carry the button role with selected/disabled
+states. Example: `<SettingsRow title="Wi-Fi"
+description="Home network" onPress={openWifi} />`.

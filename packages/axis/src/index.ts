@@ -106,6 +106,10 @@ export {
   type SelectProps,
 } from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
+export {
+  SettingsRow,
+  type SettingsRowProps,
+} from "./components/SettingsRow";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton";
 export { Slider, type SliderProps } from "./components/Slider";
 export { SplitButton, type SplitButtonProps } from "./components/SplitButton";
@@ -130,6 +134,7 @@ export {
   TabsTrigger,
   type TabsTriggerProps,
 } from "./components/Tabs";
+export { Text, type TextProps } from "./components/Text";
 export { Textarea, type TextareaProps } from "./components/Textarea";
 export { TimePicker, type TimePickerProps } from "./components/TimePicker";
 export { Toast, type ToastProps } from "./components/Toast";

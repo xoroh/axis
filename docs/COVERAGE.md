@@ -75,9 +75,9 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Separator | complete | silent divider, RNTL 2 |
 | Table | complete | header/row/cell parts, RNTL 5 |
 | List Item | complete | pressable/static rows, RNTL 3 |
-| Settings Row | missing | deferred: Kern-shell-shaped; review need |
+| Settings Row | complete | title/description + control slot, static-or-pressable, RNTL 7 |
 | Kbd | complete | key hint, RNTL 1 |
-| Text | missing | deferred: typographic scale is design-system territory; review need |
+| Text | complete | readable host, no type scale (caller style), RNTL 6 |
 
 ## Behavior models (traceability, not components)
 
