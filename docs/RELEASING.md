@@ -1,8 +1,27 @@
 # Manual package releases
 
-Axis packages are **not published by GitHub Actions**. Publishing must remain a deliberate manual step; nothing is published yet (the retired `@xoroh/axis-core` placeholder is gone).
+Axis packages are **not published by GitHub Actions on push**.
+Publishing is owner-authorized only and stays on HOLD until the
+first release is explicitly authorized (the 0.1.0 that ships
+alongside Kern 0.1.0 needs that authorization first — preparing
+the flow below performs no publish, no version bump, and no tag).
 
-Before a package is released:
+Two paths, same gates:
+
+1. **Release workflow** (`.github/workflows/release.yml`,
+   preferred): trigger `Release` manually from the Actions tab.
+   It verifies (install → build → publint/attw) and then stops
+   unless the `RELEASE_CHANGESSETS` repository variable is
+   `'true'` AND the `npm-publish` environment approves (human
+   approver, isolated write token). With all three satisfied it
+   runs `changesets/action` (`version-packages` then `release`),
+   which opens the version PR or publishes with provenance.
+2. **Manual fallback** (from the package directory, after a human
+   approves the release): `bun install --frozen-lockfile`,
+   `bun test`, `npm pack --dry-run` (inspect tarball contents
+   and metadata), then `npm publish --access public`.
+
+Before a package is released (either path):
 
 1. Add its real source, documented entry points, build output, and tests.
 2. Confirm its `package.json` has the correct `@xoroh/*` name, version, `exports`, `files`, repository URL, and MIT license.
