@@ -71,7 +71,9 @@ for (const entry of readdirSync(SRC)) {
   const text = readFileSync(join(SRC, entry), "utf8");
   for (const match of text.matchAll(/from\s*["'](\.[^"']*)["']/g)) {
     if (match[1] !== "./index") {
-      failures.push(`${entry}: native proof must import ./index, not ${match[1]}`);
+      failures.push(
+        `${entry}: native proof must import ./index, not ${match[1]}`,
+      );
     }
   }
   for (const needle of ["@xoroh/kern", "kern-primitives", "document."]) {
