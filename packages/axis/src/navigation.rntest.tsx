@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text as RNText, type View } from "react-native";
 import {
+  Drawer,
   NavigationBar,
   NavigationBarItem,
   NavigationDrawer,
@@ -148,25 +149,21 @@ describe("NavigationRail on React Native", () => {
   });
 });
 
-describe("NavigationDrawer on React Native", () => {
+describe("Drawer on React Native", () => {
   it("renders nothing when closed", async () => {
     await render(
-      <NavigationDrawer testID="drawer" accessibilityLabel="App navigation">
+      <Drawer testID="drawer" accessibilityLabel="App navigation">
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("renders the dialog surface when open", async () => {
     await render(
-      <NavigationDrawer
-        testID="drawer"
-        defaultOpen
-        accessibilityLabel="App navigation"
-      >
+      <Drawer testID="drawer" defaultOpen accessibilityLabel="App navigation">
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByText("Destinations")).toBeTruthy();
@@ -175,14 +172,14 @@ describe("NavigationDrawer on React Native", () => {
   it("dismisses through the scrim with onDismiss before onOpenChange", async () => {
     const order: string[] = [];
     await render(
-      <NavigationDrawer
+      <Drawer
         testID="drawer"
         defaultOpen
         onDismiss={() => order.push("dismiss")}
         onOpenChange={() => order.push("change")}
       >
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     await pressLabel("Dismiss");
@@ -192,9 +189,9 @@ describe("NavigationDrawer on React Native", () => {
 
   it("renders an inert scrim when not dismissable", async () => {
     await render(
-      <NavigationDrawer testID="drawer" defaultOpen dismissable={false}>
+      <Drawer testID="drawer" defaultOpen dismissable={false}>
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -202,9 +199,9 @@ describe("NavigationDrawer on React Native", () => {
 
   it("anchors to the trailing edge on the right side", async () => {
     await render(
-      <NavigationDrawer testID="drawer" defaultOpen side="right">
+      <Drawer testID="drawer" defaultOpen side="right">
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     const flat: Record<string, unknown> = Object.assign(
       {},
@@ -220,11 +217,32 @@ describe("NavigationDrawer on React Native", () => {
   it("forwards a ref to the surface", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <NavigationDrawer defaultOpen ref={ref}>
+      <Drawer defaultOpen ref={ref}>
         <RNText>Destinations</RNText>
-      </NavigationDrawer>,
+      </Drawer>,
     );
     expect(ref.current).toBeTruthy();
+  });
+
+  it("honors the deprecated NavigationDrawer alias (warns once)", async () => {
+    const warnings: unknown[][] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args);
+    };
+    try {
+      await render(
+        <NavigationDrawer testID="drawer" defaultOpen>
+          <RNText>Destinations</RNText>
+        </NavigationDrawer>,
+      );
+      expect(screen.getByRole("dialog")).toBeTruthy();
+      expect(
+        warnings.some((args) => String(args[0]).includes("deprecated")),
+      ).toBe(true);
+    } finally {
+      console.warn = warn;
+    }
   });
 });
 
