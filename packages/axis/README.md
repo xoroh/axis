@@ -1054,3 +1054,33 @@ screen-reader users the same moves. No animation, no back-handler
 beyond the Modal, no focus trap — each deferred with rationale in
 the component header. Example: `<Sheet defaultOpen
 detents={[0.5, 1]} title="Filters" />`.
+
+## Dropdown Menu
+
+Source of truth: `DropdownMenuProps` (+ part props) in `@xoroh/axis`.
+
+Popup menu with submenu cascade: `DropdownMenu` root
+(`open?`/`defaultOpen?`/`onOpenChange?`/`onDismiss?`, `testID?`,
+`style?`, `ref`) owns one dismissal stack —
+`DropdownMenuTrigger`, leaf `DropdownMenuItem` (`value` required,
+`onSelect?`), and `DropdownMenuSub` (`value` required) levels of
+`DropdownMenuSubTrigger` + `DropdownMenuSubContent` (`testID?`,
+`style?` carries fly-out geometry). Opening a submenu replaces the
+path below it (siblings close, ancestors stay); leaf selection and
+scrim press close everything. Sub panels render in flow after
+their trigger. All optional except item/sub `value`. Example:
+`<DropdownMenu><DropdownMenuTrigger … />…</DropdownMenu>`.
+
+## Navigation Menu
+
+Source of truth: `NavigationMenuProps` (+ part props) in `@xoroh/axis`.
+
+Top-level navigation bar with flyout panels: `NavigationMenu`
+root (`openValue?`/`defaultOpenValue?`/`onOpenValueChange?`
+(`null` closed), `onDismiss?`, `testID?`, `style?`, `ref`) with
+`NavigationMenuItem` (`value` required) pairs of
+`NavigationMenuTrigger` (button role, expanded state) and
+`NavigationMenuPanel` (`testID?`, `style?`). Exactly one panel
+open at a time; scrim press dismisses. All optional except item
+`value`. Example: `<NavigationMenu><NavigationMenuItem
+value="products">…</NavigationMenuItem>…</NavigationMenu>`.
