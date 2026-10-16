@@ -73,8 +73,8 @@ FilterProvider filtering).
 | `MenuArrow` | `Menu.Arrow` | caller-positioned marker | Geometry is caller style (no anchor/popup measurement coupling in the part) |
 | `modal={false}` on Root | non-modal menus | in-box portal, no scrim, trigger toggles | Outside-press without a scrim reaches the app (press-capture would hijack touches) |
 | `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
-| Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Pending next slice** (settings menus need controlled-state checkbox/radio APIs of their own) | — |
-| Submenu parts | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger` | **Pending.** `DropdownMenu` already covers cascade behavior (maps to the Submenu pattern promoted to root — thin aliases evaluated in its slice, not assumed here) | — |
+| Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Partially aligned this slice:** `MenuCheckboxItem` (+`Indicator`), `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`) with controlled-state APIs; checkbox items stay open by default (`closeOnClick` default `false`), radio items close | Filter parts (`Input`/`Clear`/`Empty`/`FilterProvider`) deferred: filtering needs item registration (`collection` transfer) + typeahead design — chrome without them |
+| Submenu parts | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger` | **Mapped, not duplicated:** `DropdownMenu` IS the submenu pattern (cascade over a single root-owned dismissal stack). Thin aliases evaluated and rejected: a renamed duplicate adds names without behavior | — |
 
 ### Switch — aligned
 
