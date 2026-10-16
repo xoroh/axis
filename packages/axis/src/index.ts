@@ -26,6 +26,7 @@ export {
   type IdScope,
   resolveDir,
 } from "./a11y";
+export { Switch, type SwitchProps } from "./components/Switch";
 export {
   createDismissPolicy,
   type DismissPolicy,

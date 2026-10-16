@@ -51,7 +51,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --dts-resolve --external react --out-dir dist --clean",
+    "build": "tsup src/index.ts --format esm,cjs --dts --dts-resolve --external react --external react-native --out-dir dist --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:jest": "jest",
@@ -59,7 +59,8 @@
     "check:publish": "publint && attw --pack --ignore-rules=no-resolution"
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "react-native": ">=0.86 <0.89"
   },
   "devDependencies": {
     "@babel/runtime": "^7.28.0",

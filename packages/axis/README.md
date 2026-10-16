@@ -10,9 +10,10 @@ token reads, no styling, and no web-only APIs.
   never depends on Kern, Kern tokens, or any design system, and it is
   usable without Kern.
 - Today Axis provides **behavior foundations** (state models, hooks,
-  registries, math) — not rendered components and not design-system
-  styling. Rendered, accessible components arrive under the component
-  contract as it is reviewed; until then, nothing here renders UI.
+  registries, math) and its first rendered component, `Switch` — not
+  design-system styling. Further rendered, accessible components
+  arrive under the component contract (`docs/COMPONENT_CONTRACT.md`)
+  as it is reviewed.
 - The public entry (`.`) is the whole contract. Deep imports are
   unsupported. Factory internals and web-only behavior stay private
   even where they exist in source for hooks or tests.
@@ -46,3 +47,37 @@ import { useControllableState, normalizeTimeValue } from "@xoroh/axis";
 
 Only the documented public entry (`.`) is supported. Deep imports are
 not part of the contract.
+
+## Switch
+
+Unstyled on/off control. Structure only — a `Pressable` carrying the
+switch role and state, with a track/thumb `View` pair the caller
+styles. No default visuals.
+
+```tsx
+import { useState } from "react";
+import { Switch } from "@xoroh/axis";
+
+function Setting() {
+  const [enabled, setEnabled] = useState(false);
+  return (
+    <Switch
+      value={enabled}
+      onValueChange={setEnabled}
+      accessibilityLabel="Airplane mode"
+      trackStyle={{ backgroundColor: enabled ? "green" : "gray" }}
+    />
+  );
+}
+```
+
+Props: `value` / `defaultValue` (default `false`) / `onValueChange`
+(controlled + uncontrolled, `useControllableState` pattern);
+`disabled` (terminal: no transitions, no callbacks, announced);
+`accessibilityLabel`, `accessibilityLabelledBy`;
+`testID`; `style`, `trackStyle`, `thumbStyle` (all caller-provided,
+all optional); `ref` (forwarded to the root host element).
+
+Accessibility: `accessibilityRole="switch"` with
+`accessibilityState { checked, disabled }`. Name the control with
+`accessibilityLabel` (or `accessibilityLabelledBy` where supported).

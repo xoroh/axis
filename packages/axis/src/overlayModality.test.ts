@@ -4,7 +4,7 @@ import {
   createOverlayModality,
   useOverlayModality,
   useOverlayRegistration,
-} from "./index";
+} from "./overlayModality";
 
 /**
  * Overlay modality — the shared kernel behind "only the topmost overlay is
