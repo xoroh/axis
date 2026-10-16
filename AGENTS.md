@@ -14,6 +14,9 @@ design-system token imports anywhere; React Native host imports are
 allowed only under `packages/axis/src/components/` (rendered components
 per `docs/COMPONENT_CONTRACT.md`) and forbidden in behavior models
 (enforced by `packages/axis/scripts/check-boundary.mjs`).
+Two zones, one package: `src/*.ts` behavior models are universal
+(re-exported alone as `@xoroh/axis/models` for web consumers);
+`src/components/` is native-only, permanently.
 
 ## Direction
 
