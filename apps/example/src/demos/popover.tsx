@@ -59,6 +59,19 @@ export const PopoverDemo: Demo = {
             </PopoverPositioner>
           </PopoverPortal>
         </PopoverRoot>
+        <PopoverRoot modal>
+          <PopoverTrigger accessibilityLabel="Open modal demo popover">
+            <Text>Modal</Text>
+          </PopoverTrigger>
+          <PopoverPortal>
+            <PopoverBackdrop />
+            <PopoverPositioner>
+              <PopoverPopup accessibilityLabel="Modal demo popover">
+                <Text>Modal body</Text>
+              </PopoverPopup>
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
       </View>
     );
   },
