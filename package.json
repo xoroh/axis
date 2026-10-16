@@ -17,7 +17,7 @@
     "lint": "biome check .",
     "typecheck": "bun run --filter @xoroh/axis typecheck",
     "test": "bun test tests/",
-    "test:all": "bun test tests/ && bun run --filter @xoroh/axis test",
+    "test:all": "bun test tests/ && bun run --filter @xoroh/axis test && bun run --filter @xoroh/axis test:jest",
     "build": "bun run --filter @xoroh/axis build"
   },
   "devDependencies": {

@@ -34,6 +34,10 @@ jobs:
         run: bun run --filter @xoroh/axis typecheck
       - name: Test package
         run: bun run --filter @xoroh/axis test
+      - name: Test package on React Native
+        run: bun run --filter @xoroh/axis test:jest
+      - name: Check package boundary
+        run: bun run --filter @xoroh/axis check:boundary
       - name: Build package
         run: bun run --filter @xoroh/axis build
       - name: Check package publishing
