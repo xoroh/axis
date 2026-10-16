@@ -1060,6 +1060,47 @@ behavior, no scroll elevation, no menu handling — shell and
 design-system decisions. Example: `<TopAppBar title="Inbox"
 actions={<SearchButton />} />`.
 
+## Navigation Bar
+
+Source of truth: `NavigationBarProps` (+ item props) in `@xoroh/axis`.
+
+Destination tab bar: `value?`, `defaultValue?` (defaults to the
+first item), `onValueChange?`, `orientation?` (horizontal default),
+`accessibilityLabel?`, `testID?`, `style?`, `ref`, with
+`NavigationBarItem` (`value` + `label` required, `icon?`,
+`disabled?`, `accessibilityLabel?`, `testID?`, `style?`,
+`activeStyle?`, `labelStyle?`). Tablist/tab semantics, exactly one
+destination active, no deselect on re-press. Screens and navigation
+live with the caller. Example: `<NavigationBar><NavigationBarItem
+value="home" label="Home" />…</NavigationBar>`.
+
+## Navigation Rail
+
+Source of truth: `NavigationRailProps` (+ item props) in `@xoroh/axis`.
+
+Vertical destination rail: a rail IS a vertical bar — thin wrapper
+over `NavigationBar` (vertical default, overridable), and
+`NavigationRailItem` is `NavigationBarItem` under its rail name.
+One implementation, one inventory row. Example:
+`<NavigationRail><NavigationRailItem value="home" label="Home"
+/>…</NavigationRail>`.
+
+## Navigation Drawer
+
+Source of truth: `NavigationDrawerProps` in `@xoroh/axis`.
+
+Edge-anchored navigation panel: `open?`, `defaultOpen?`,
+`onOpenChange?`, `onDismiss?`, `dismissable?` (default true —
+scrim press and request-close close; `false` renders an inert
+scrim), `side?` (`"left"` default, `"right"`), `children?`,
+`accessibilityLabel?`, `testID?` (surface; scrim takes
+`<testID>-scrim`), `overlayStyle?`, `surfaceStyle?` (width lives
+here), `ref` (surface). No drag gestures (the `Sheet` pattern
+covers drag), no animation, no back-handler beyond the Modal, no
+focus trap — each deferred with rationale in the component header.
+Example: `<NavigationDrawer defaultOpen
+accessibilityLabel="App navigation" />`.
+
 ## Sheet
 
 Source of truth: `SheetProps` in `@xoroh/axis`.
