@@ -47,6 +47,10 @@ jobs:
         # naming its source of truth (batch-appended docs duplicated
         # fourteen sections before this gate existed).
         run: bun run --filter @xoroh/axis check:readme
+      - name: Check README examples accuracy
+        # Every tsx block parses; @xoroh/axis imports resolve to
+        # the barrel; props set on Axis components exist.
+        run: bun run --filter @xoroh/axis check:readme-examples
       - name: Build package
         run: bun run --filter @xoroh/axis build
       - name: Typecheck example app and check demo coverage
