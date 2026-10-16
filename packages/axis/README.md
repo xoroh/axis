@@ -406,6 +406,35 @@ with rationale in-file.
 `overlayStyle?`, `surfaceStyle?`, `titleStyle?` (all
 caller-provided), `ref` (surface host). All optional.
 
+Compound form (Base UI parity — same names, same state
+semantics): `DialogRoot` (`open?`/`defaultOpen?`/`onOpenChange?`,
+`disablePointerDismissal?`, `modal?`; renders no element) with
+`DialogTrigger` (button role, expanded state), `DialogPortal` (RN
+`Modal` host), `DialogBackdrop` (scrim; inert `View` when pointer
+dismissal is disabled), `DialogPopup` (surface, dialog role),
+`DialogTitle` (`header` role), `DialogDescription`, `DialogClose`.
+Every part takes `render` (element or `(props, state)` function)
+and value-or-function `style`; `data-*` attributes are
+deliberately absent on native (state flows through those
+functions — contract §11). Omitted Base pieces (`Viewport`,
+`initialFocus`/`finalFocus`, nested coordination, `createHandle`,
+`Portal` container/keepMounted) are documented deviations in
+`docs/BASE_UI_PARITY.md`. Example:
+
+```tsx
+<DialogRoot>
+  <DialogTrigger><Text>Open</Text></DialogTrigger>
+  <DialogPortal>
+    <DialogBackdrop />
+    <DialogPopup>
+      <DialogTitle>Example</DialogTitle>
+      <DialogDescription>Details</DialogDescription>
+      <DialogClose><Text>Close</Text></DialogClose>
+    </DialogPopup>
+  </DialogPortal>
+</DialogRoot>
+```
+
 ## Toast
 
 Source of truth: `ToastProps` in `@xoroh/axis`.

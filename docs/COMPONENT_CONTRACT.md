@@ -155,6 +155,48 @@ conditional — a time-picker does not inherit a Switch's contract.
   user-facing change. Nothing here publishes anything; release
   operations stay manual and separately authorized.
 
+## 11. Base UI parity (owner direction 2026-10-16)
+
+Axis is the React Native counterpart of Base UI and mirrors it as
+closely as React Native allows. Concretely, per component family:
+
+- **Compound parts**: `Root` (state owner, renders no element) plus
+  the Base UI part names that have native meaning (`Trigger`,
+  `Portal`, `Backdrop`, `Popup`, `Title`, `Description`, `Close`,
+  `Item`, `Positioner` where measurement applies, …). Single-part
+  APIs stay where they already ship (they are concise, not wrong),
+  and each family documents which Base UI pieces it omits and why.
+- **Props**: Base UI names and semantics (`open`/`defaultOpen`/
+  `onOpenChange`, `value`/`defaultValue`/`onValueChange`,
+  `disabled`, controlled + uncontrolled via
+  `useControllableState`). Axis additions (testIDs, caller styles)
+  are marked as such in the parity record, never silently merged
+  into mirrored semantics.
+- **`render` composition** (Base UI parity for `asChild`-style
+  substitution): every compound part accepts `render` — an element
+  (cloned with part props merged under its own via the `slot`
+  model: part handlers first, consumer style winning) or a function
+  of `(props, state)`. `style` accepts a value or a function of the
+  same state objects Base UI publishes.
+- **`data-*` attributes**: deliberately absent everywhere. React
+  Native hosts reject unknown props, and there is no stylesheet
+  engine to consume attribute selectors. The same state objects
+  Base UI exposes for selectors flow through function
+  `style`/`render` props instead. A `className` passed on a
+  substituted element is overridden to `undefined` (renderers skip
+  it — no host warning fires). This is the one systematic
+  deviation; it is recorded once here rather than per component.
+- **`Portal`**: the native portal host is an RN `Modal`
+  (presents above the app, the equivalent of appending to `body`).
+  `container` has no native meaning and is omitted; `keepMounted`
+  is omitted until a device-verified keep-alive strategy exists
+  (invisible modal subtrees hide from RNTL exactly like the
+  platform hides them — an untestable prop violates §8).
+- Per-component API parity tables with deviations live in
+  `docs/BASE_UI_PARITY.md`, filled family by family. A row becomes
+  `complete` there only with the parts, props, composition, and
+  deviations all recorded.
+
 ## Non-goals of this contract
 
 - No styling system, theme, or token layer. No design-system
