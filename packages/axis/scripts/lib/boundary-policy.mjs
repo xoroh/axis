@@ -18,7 +18,32 @@
 
 import { posix } from "node:path";
 
-export const RN_HOST_BINDINGS = ["Pressable", "StyleProp", "View", "ViewStyle"];
+// Avatar justified 2026-10-16 (image + fallback need the host
+// Image and its source/style types; no other component may add
+// bindings without the same per-PR justification).
+// Modal justified 2026-10-16 (Dialog needs native modal presentation;
+// scrim + onRequestClose dismissal only — no animation API yet).
+// TextInput justified 2026-10-16 (text entry needs the host input;
+// event payloads stay primitive strings, no event-type imports).
+// PanResponder justified 2026-10-16 (Slider drag interaction needs
+// the gesture responder system; no Reanimated/GH dependency added).
+// useWindowDimensions justified 2026-10-16 (positioned overlays need
+// the viewport; hook only, no UI code).
+export const RN_HOST_BINDINGS = [
+  "Image",
+  "ImageSourcePropType",
+  "ImageStyle",
+  "Modal",
+  "PanResponder",
+  "Pressable",
+  "StyleProp",
+  "Text",
+  "TextInput",
+  "TextStyle",
+  "useWindowDimensions",
+  "View",
+  "ViewStyle",
+];
 
 export const ALWAYS_FORBIDDEN_MODULES = [
   "@xoroh/kern",

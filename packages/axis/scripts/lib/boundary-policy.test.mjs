@@ -238,29 +238,27 @@ describe("nested interpolation desynchronization", () => {
   // interpolation at the hidden brace and blanked the load; the recursive
   // scanner keeps it as code. Verified: old finds [], new finds the load.
   test("brace inside a string does not hide a later load in the same interpolation", () => {
-    const src = 'const t = `${cond ? "}" : import("evil")}`;';
+    const src = `const t = \`\${cond ? "}" : import("evil")}\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual(["import"]);
   });
 
   test("brace inside a comment does not hide a later load in the same interpolation", () => {
-    const src = 'const t = `${/* } */ import("evil")}`;';
+    const src = `const t = \`\${/* } */ import("evil")}\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual(["import"]);
   });
 
   test("load in a later interpolation still found (characterization)", () => {
-    const src = 'const t = `${cond ? "}" : x} ${import("evil")}`;';
+    const src = `const t = \`\${cond ? "}" : x} \${import("evil")}\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual(["import"]);
   });
 
   test("nested template expressions still expose loads", () => {
-    const open = "${";
-    const src =
-      "`outer " + open + "`inner " + open + 'import("evil")' + "}`}`;";
+    const src = `\`outer \${\`inner \${import("evil")}\`} end\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual(["import"]);
   });
 
   test("balanced braces without loads stay silent", () => {
-    const src = "const t = `text } more ${x} and {less}`;";
+    const src = `const t = \`text } more \${x} and {less}\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual([]);
   });
 
@@ -270,8 +268,7 @@ describe("nested interpolation desynchronization", () => {
   });
 
   test("gate-level: interpolation-hidden require fails the classifier", () => {
-    const src =
-      'import { View } from "react-native";\nconst t = `${cond ? "}" : require("evil")}`;\n';
+    const src = `import { View } from "react-native";\nconst t = \`\${cond ? "}" : require("evil")}\`;\n`;
     const failures = classifyComponentImports("components/Fancy.tsx", src);
     expect(failures).toEqual(
       expect.arrayContaining([expect.stringContaining("require()")]),
