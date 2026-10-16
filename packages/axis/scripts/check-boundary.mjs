@@ -62,6 +62,27 @@ for (const name of NON_PUBLIC) {
   }
 }
 
+// Native proofs consume the PUBLIC entry only: a deep relative import
+// (`./press`, `../src/x`) would prove a private path, not the contract
+// Kern Native will adopt. Test-library, react, and react-native imports
+// are the proof harness itself and are allowed here (unlike in src/).
+for (const entry of readdirSync(SRC)) {
+  if (!entry.endsWith(".rntest.tsx")) continue;
+  const text = readFileSync(join(SRC, entry), "utf8");
+  for (const match of text.matchAll(/from\s*["'](\.[^"']*)["']/g)) {
+    if (match[1] !== "./index") {
+      failures.push(
+        `${entry}: native proof must import ./index, not ${match[1]}`,
+      );
+    }
+  }
+  for (const needle of ["@xoroh/kern", "kern-primitives", "document."]) {
+    if (text.includes(needle)) {
+      failures.push(`${entry}: forbidden reference ${JSON.stringify(needle)}`);
+    }
+  }
+}
+
 if (failures.length) {
   console.error(`boundary violations (${failures.length}):`);
   for (const f of failures) console.error(`  x ${f}`);

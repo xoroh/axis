@@ -6,8 +6,12 @@ token reads, no styling, and no web-only APIs.
 
 Status: extraction slices 1–2 (`time`, `useControllableState`, selection,
 slot, overlay modality, dismissal, portal registry, focus/presence/press/
-roving models with native bindings per contract, positioning rect math).
-`collection` and `mergeRefs` transfer only through their adoption gates.
+roving models with native bindings per contract, positioning rect math),
+plus native verification (jest + React Native preset: `*.rntest.tsx`
+behavior suites proving the public entry in the RN runtime; the shipped
+artifact additionally bundles under the Expo 57 host — see the Kern
+roadmap for that evidence). `collection` and `mergeRefs` transfer only
+through their adoption gates.
 See the [Axis repository](https://github.com/xoroh/axis) and
 `docs/RELEASING.md` (manual releases only; nothing is published yet).
 

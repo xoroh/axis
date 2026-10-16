@@ -48,6 +48,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --dts-resolve --external react --out-dir dist --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:jest": "jest",
     "check:boundary": "node scripts/check-boundary.mjs",
     "check:publish": "publint && attw --pack --ignore-rules=no-resolution"
   },
@@ -55,12 +56,20 @@
     "react": ">=18"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.28.0",
+    "@react-native/babel-preset": "^0.87.1",
+    "@react-native/jest-preset": "0.87.1",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/react-native": "^14.0.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.6.3",
     "@types/react": "^19.0.0",
+    "jest": "^30.5.2",
     "jsdom": "^28.0.0",
-    "react": "^19.0.0",
+    "react": "^19.3.0",
     "react-dom": "^19.0.0",
+    "react-native": "^0.87.1",
+    "react-test-renderer": "^19.3.0",
     "tsup": "^8.5.1",
     "typescript": "5.9.3",
     "vitest": "^5.0.2"
