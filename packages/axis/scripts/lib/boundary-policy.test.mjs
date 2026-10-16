@@ -2,6 +2,9 @@ import { describe, expect, test } from "bun:test";
 import {
   classifyComponentImports,
   extractImports,
+  findDynamicLoads,
+  resolvesInsideSrc,
+  stripNonCode,
 } from "./boundary-policy.mjs";
 
 /**
@@ -94,5 +97,137 @@ describe("classifyComponentImports", () => {
         `import { useControllableState } from "../useControllableState";\nimport { helper } from "./helper";\n`,
       ),
     ).toEqual([]);
+  });
+
+  test("direct parent traversal outside src fails", () => {
+    const failures = classifyComponentImports(
+      "components/Switch.tsx",
+      `import { x } from "../../outside";\n`,
+    );
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("escapes src");
+  });
+
+  test("traversal beginning with ./../../ fails", () => {
+    const failures = classifyComponentImports(
+      "components/Switch.tsx",
+      `import { x } from "./../../outside";\n`,
+    );
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain("escapes src");
+  });
+
+  test("equivalent normalized traversal paths fail", () => {
+    // Every spelling below climbs above src/components/ (depth 1), so
+    // each normalizes to ../outside regardless of ./, //, or nesting.
+    for (const mod of [".././../outside", "..//../outside"]) {
+      const failures = classifyComponentImports(
+        "components/Switch.tsx",
+        `import { x } from "${mod}";\n`,
+      );
+      expect(failures).toEqual(
+        expect.arrayContaining([expect.stringContaining("escapes src")]),
+      );
+    }
+    // From a nested file the same spellings need one more level.
+    for (const mod of ["../../../outside", "./../../../outside"]) {
+      const failures = classifyComponentImports(
+        "components/nested/Fancy.tsx",
+        `import { x } from "${mod}";\n`,
+      );
+      expect(failures).toEqual(
+        expect.arrayContaining([expect.stringContaining("escapes src")]),
+      );
+    }
+  });
+
+  test("normalized-inside paths with ./ segments pass", () => {
+    expect(
+      classifyComponentImports(
+        "components/nested/Fancy.tsx",
+        `import { x } from "./../helper";\nimport { y } from "../../useControllableState";\n`,
+      ),
+    ).toEqual([]);
+  });
+
+  test("dynamic import() in a component fails", () => {
+    const failures = classifyComponentImports(
+      "components/Fancy.tsx",
+      `const mod = await import("motion-magic");\n`,
+    );
+    expect(failures).toEqual(
+      expect.arrayContaining([expect.stringContaining("dynamic import()")]),
+    );
+  });
+
+  test("require() in a component fails", () => {
+    const failures = classifyComponentImports(
+      "components/Fancy.tsx",
+      `const mod = require("motion-magic");\n`,
+    );
+    expect(failures).toEqual(
+      expect.arrayContaining([expect.stringContaining("require()")]),
+    );
+  });
+});
+
+describe("resolvesInsideSrc", () => {
+  test("extensionless and nested-inside targets stay valid", () => {
+    expect(
+      resolvesInsideSrc("components/Switch.tsx", "../useControllableState"),
+    ).toBe(true);
+    expect(resolvesInsideSrc("components/Switch.tsx", "./helper")).toBe(true);
+    expect(
+      resolvesInsideSrc(
+        "components/nested/F.tsx",
+        "../../useControllableState",
+      ),
+    ).toBe(true);
+  });
+
+  test("escapes fail regardless of spelling", () => {
+    for (const [file, mod] of [
+      ["components/Switch.tsx", "../../outside"],
+      ["components/Switch.tsx", "./../../outside"],
+      ["components/Switch.tsx", "../.."],
+      ["components/nested/F.tsx", "../../../outside"],
+    ]) {
+      expect(resolvesInsideSrc(file, mod)).toBe(false);
+    }
+  });
+});
+
+describe("stripNonCode + findDynamicLoads", () => {
+  test("mentions in comments and strings are not loads", () => {
+    const src = [
+      '// const x = require("nope");',
+      '/* import("nope") */',
+      'const a = "require(\\"nope\\")";',
+      "const b = 'import(\"nope\")';",
+      'const c = `template with require("nope") inside`;',
+    ].join("\n");
+    expect(findDynamicLoads(stripNonCode(src))).toEqual([]);
+  });
+
+  test("real loads are found, including inside template interpolation", () => {
+    // Built without a literal ${…} placeholder so the linter does not
+    // mistake test data for a template mistake; the evaluated string
+    // contains import(`./mod-${name}`).
+    const tmpl = ["`./mod-", "{name}`"].join("$");
+    const src = [
+      `const a = await import(${tmpl});`,
+      'const b = require("real");',
+      'x.require("method-call");',
+    ].join("\n");
+    expect(findDynamicLoads(stripNonCode(src))).toEqual(["import", "require"]);
+  });
+
+  test("stripping preserves code outside literals", () => {
+    // Module specifiers are string literals, so they blank out by
+    // design; structure and comments behave as asserted.
+    const stripped = stripNonCode(`import { x } from "mod"; // trailing`);
+    expect(stripped).toContain("import { x } from");
+    expect(stripped).not.toContain("trailing");
+    expect(stripped).not.toContain("mod");
   });
 });
