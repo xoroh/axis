@@ -64,3 +64,19 @@ needs `collection`, portal positioning, or a second consumer);
 `Form`, virtualized/scroll primitives, gesture/Reanimated work
 (all gated per the scope report). No tokens expended beyond this
 report — work is complete, nothing was cut for length.
+
+## Addendum: merge with main (conflict resolution)
+
+main had moved (#49 reports, #50 AI chat models) so #53 showed
+DIRTY. Merged `origin/main` into the branch (merge commit, no
+rebase): four content conflicts, all keep-both-sides —
+`index.ts`/`models.ts` (my `toastQueue` block beside main's
+`toolCall` + chat-model blocks; models-parity gate holds),
+`docs/COVERAGE.md` (my `toastQueue` model note beside main's chat
+models paragraph), `docs/BASE_UI_PARITY.md` (my Toast/Portal/Input
+sections beside main's AI-chat section). Main added pure models
+only — no rendered parts, so nothing new needed the
+render/function-style pattern. Full suite re-run green (vitest 25
+files/237 tests incl. main's chat suites, jest 403, typecheck,
+lint, boundary, readme, build, publint+attw). No code of this
+branch changed by the merge beyond conflict markers.
