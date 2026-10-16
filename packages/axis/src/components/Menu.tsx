@@ -1233,3 +1233,430 @@ export function MenuArrow({
     </View>
   );
 }
+
+export type MenuCheckboxItemState = {
+  /** Whether the item is currently checked. */
+  checked: boolean;
+  /** Whether the item is currently disabled. */
+  disabled: boolean;
+  /**
+   * Whether the item is pressed. Touch has no hover or keyboard
+   * focus to highlight with — the press is the highlight (same
+   * touch adaptation as `MenuItemState.highlighted`).
+   */
+  highlighted: boolean;
+};
+
+export type MenuCheckboxItemProps = {
+  /** Controlled checked state. Wins over `defaultChecked` when defined. */
+  checked?: boolean;
+  /** Uncontrolled initial checked state. Default `false`. */
+  defaultChecked?: boolean;
+  /** Fires with the next checked state on every committed toggle. */
+  onCheckedChange?: (checked: boolean) => void;
+  /** Terminal: it never toggles and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of item state, caller-provided. */
+  style?: StateStyle<MenuCheckboxItemState, StyleProp<ViewStyle>>;
+  /** Item content (indicator + label composed by the caller). */
+  children?: ReactNode;
+  /**
+   * Whether activation closes the menu. Default `false` (a
+   * settings toggle stays open; pass `true` for one-shot
+   * confirms).
+   */
+  closeOnClick?: boolean;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<MenuCheckboxItemState, SlotProps>;
+};
+
+export type MenuCheckboxItemIndicatorProps = {
+  testID?: string;
+  /** Indicator style, caller-provided. */
+  style?: StyleProp<ViewStyle>;
+  /** Indicator content (check mark). Rendered only while checked. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export type MenuRadioGroupProps = {
+  /** Controlled selected value (`null` nothing selected). Wins over `defaultValue`. */
+  value?: string | null;
+  /** Uncontrolled initial selected value. Default `null`. */
+  defaultValue?: string | null;
+  /** Fires with the next value on every committed selection. */
+  onValueChange?: (value: string) => void;
+  /** Group content (`MenuGroupLabel` + `MenuRadioItem` elements). */
+  children?: ReactNode;
+};
+
+export type MenuRadioItemState = {
+  /** Whether this item is the selected one. */
+  selected: boolean;
+  /** Whether the item is currently disabled. */
+  disabled: boolean;
+  /**
+   * Whether the item is pressed (touch adaptation — see
+   * `MenuCheckboxItemState.highlighted`).
+   */
+  highlighted: boolean;
+};
+
+export type MenuRadioItemProps = {
+  /** Item value identifying this option (required — group identity). */
+  value: string;
+  /** Terminal: it never selects and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of item state, caller-provided. */
+  style?: StateStyle<MenuRadioItemState, StyleProp<ViewStyle>>;
+  /** Item content (indicator + label composed by the caller). */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<MenuRadioItemState, SlotProps>;
+};
+
+export type MenuRadioItemIndicatorProps = {
+  testID?: string;
+  /** Indicator style, caller-provided. */
+  style?: StyleProp<ViewStyle>;
+  /** Indicator content. Rendered only while selected. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+type MenuCheckDisclosure = {
+  /** Currently checked (checkbox item) or selected (radio item). */
+  active: boolean;
+};
+
+/**
+ * Active state for indicator parts. Internal (not exported): an
+ * indicator renders its children only while its item is active,
+ * mirroring Base UI's indicator behavior without a second state
+ * owner.
+ */
+const MenuCheckDisclosureContext = createContext<MenuCheckDisclosure | null>(
+  null,
+);
+
+export function MenuCheckboxItem({
+  checked,
+  defaultChecked = false,
+  onCheckedChange,
+  disabled = false,
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  closeOnClick = false,
+  render,
+}: MenuCheckboxItemProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  const [isChecked, setChecked] = useControllableState<boolean>(
+    checked,
+    defaultChecked,
+    onCheckedChange,
+  );
+  const [highlighted, setHighlighted] = useState(false);
+  const active = isChecked ?? false;
+  const state: MenuCheckboxItemState = {
+    checked: active,
+    disabled,
+    highlighted,
+  };
+
+  const toggleChecked = useCallback(
+    (_event: unknown) => {
+      if (disabled) return;
+      setChecked((previous) => {
+        const next = !(previous ?? false);
+        if (closeOnClick) disclosure?.close();
+        return next;
+      });
+    },
+    [disabled, setChecked, closeOnClick, disclosure],
+  );
+
+  // Outside a Menu there is no disclosure to close: render inert
+  // rather than dropping the node silently (the `MenuItem`
+  // precedent).
+  if (!disclosure) {
+    const substituted = resolveRender(
+      render,
+      {
+        accessibilityRole: "checkbox",
+        accessibilityState: { checked: false, disabled: true },
+        accessibilityLabel,
+        testID,
+        disabled: true,
+        style: resolveStyle(style, {
+          checked: false,
+          disabled: true,
+          highlighted: false,
+        }),
+        children,
+      } satisfies SlotProps,
+      { checked: false, disabled: true, highlighted: false },
+    );
+    if (substituted !== null) return substituted;
+    return (
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: false, disabled: true }}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        disabled
+        style={resolveStyle(style, {
+          checked: false,
+          disabled: true,
+          highlighted: false,
+        })}
+      >
+        {children}
+      </Pressable>
+    );
+  }
+
+  // Presence is mount/unmount: a closed menu shows the trigger only.
+  if (!disclosure.open) return null;
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "checkbox",
+      accessibilityState: { checked: active, disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: toggleChecked,
+      onPressIn: () => setHighlighted(true),
+      onPressOut: () => setHighlighted(false),
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <MenuCheckDisclosureContext.Provider value={{ active }}>
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: active, disabled }}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        disabled={disabled}
+        onPress={toggleChecked}
+        onPressIn={() => setHighlighted(true)}
+        onPressOut={() => setHighlighted(false)}
+        style={resolveStyle(style, state)}
+      >
+        {children}
+      </Pressable>
+    </MenuCheckDisclosureContext.Provider>
+  );
+}
+
+export function MenuCheckboxItemIndicator({
+  testID,
+  style,
+  children,
+  render,
+}: MenuCheckboxItemIndicatorProps): React.ReactNode {
+  const check = useContext(MenuCheckDisclosureContext);
+  // Rendered only while the enclosing item is checked (Base UI
+  // indicator behavior). Outside an item there is no checked state
+  // to read: render nothing rather than a permanently dark or
+  // permanently lit mark.
+  if (!check?.active) return null;
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <View testID={testID} style={style}>
+      {children}
+    </View>
+  );
+}
+
+export function MenuRadioGroup({
+  value,
+  defaultValue = null,
+  onValueChange,
+  children,
+}: MenuRadioGroupProps): React.JSX.Element {
+  const [current, setCurrent] = useControllableState<string | null>(
+    value,
+    defaultValue,
+    (next) => {
+      // Selections are always values; `null` is the empty initial,
+      // never a reported transition (no deselect in single-select).
+      if (next !== null) onValueChange?.(next);
+    },
+  );
+
+  return (
+    <MenuRadioGroupContext.Provider
+      value={{ value: current ?? null, setValue: setCurrent }}
+    >
+      {children}
+    </MenuRadioGroupContext.Provider>
+  );
+}
+
+type MenuRadioGroupDisclosure = {
+  /** Currently selected value (`null` nothing selected). */
+  value: string | null;
+  /** Select `value`. */
+  setValue: (value: string) => void;
+};
+
+/**
+ * Group selection state. Internal (not exported).
+ */
+const MenuRadioGroupContext = createContext<MenuRadioGroupDisclosure | null>(
+  null,
+);
+
+export function MenuRadioItem({
+  value,
+  disabled = false,
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  render,
+}: MenuRadioItemProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  const group = useContext(MenuRadioGroupContext);
+  const [highlighted, setHighlighted] = useState(false);
+  const selected = group !== null && group.value === value;
+  const state: MenuRadioItemState = { selected, disabled, highlighted };
+
+  const selectOption = useCallback(() => {
+    if (disabled) return;
+    group?.setValue(value);
+    disclosure?.close();
+  }, [disabled, group, value, disclosure]);
+
+  // Outside a menu there is no disclosure to close: render inert
+  // rather than dropping the node silently. Outside a group there
+  // is no selection to join: likewise inert.
+  if (!disclosure || !group) {
+    const substituted = resolveRender(
+      render,
+      {
+        accessibilityRole: "radio",
+        accessibilityState: { selected: false, disabled: true },
+        accessibilityLabel,
+        testID,
+        disabled: true,
+        style: resolveStyle(style, {
+          selected: false,
+          disabled: true,
+          highlighted: false,
+        }),
+        children,
+      } satisfies SlotProps,
+      { selected: false, disabled: true, highlighted: false },
+    );
+    if (substituted !== null) return substituted;
+    return (
+      <Pressable
+        accessibilityRole="radio"
+        accessibilityState={{ selected: false, disabled: true }}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        disabled
+        style={resolveStyle(style, {
+          selected: false,
+          disabled: true,
+          highlighted: false,
+        })}
+      >
+        {children}
+      </Pressable>
+    );
+  }
+
+  // Presence is mount/unmount: a closed menu shows the trigger only.
+  if (!disclosure.open) return null;
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "radio",
+      accessibilityState: { selected, disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: selectOption,
+      onPressIn: () => setHighlighted(true),
+      onPressOut: () => setHighlighted(false),
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <MenuCheckDisclosureContext.Provider value={{ active: selected }}>
+      <Pressable
+        accessibilityRole="radio"
+        accessibilityState={{ selected, disabled }}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        disabled={disabled}
+        onPress={selectOption}
+        onPressIn={() => setHighlighted(true)}
+        onPressOut={() => setHighlighted(false)}
+        style={resolveStyle(style, state)}
+      >
+        {children}
+      </Pressable>
+    </MenuCheckDisclosureContext.Provider>
+  );
+}
+
+export function MenuRadioItemIndicator({
+  testID,
+  style,
+  children,
+  render,
+}: MenuRadioItemIndicatorProps): React.ReactNode {
+  const check = useContext(MenuCheckDisclosureContext);
+  // Rendered only while the enclosing item is selected. Outside an
+  // item there is no selection to read: render nothing.
+  if (!check?.active) return null;
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <View testID={testID} style={style}>
+      {children}
+    </View>
+  );
+}
