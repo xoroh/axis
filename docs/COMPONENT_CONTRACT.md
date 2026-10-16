@@ -64,14 +64,25 @@ contract.
   existing models (`dismissPolicy`/`dismissWiring`,
   `overlayModality`, `portal`, `presence`). A component that cannot
   use them documents why in its section.
+- Prerequisite note: the current `check:boundary` ban on
+  `react-native` imports and the AGENTS.md scope text predate
+  rendered components. The first component PR must propose their
+  scoped update (allow RN host imports for component sources, keep
+  the token/Kern/design-system bans absolute). Until then, the
+  rendering clauses above are not yet satisfiable in CI — which is
+  why no component starts before this contract is agreed.
 
 ## 5. Accessibility (required, not later)
 
 - Every interactive component declares its `accessibilityRole`,
   `accessibilityState` (disabled/checked/selected/expanded as
   applicable), and accessible label source (label prop and/or
-  children). Non-interactive containers expose `accessible={false}`
-  passthrough unless their section says otherwise.
+  children). Control relationships are declared where the platform
+  supports them (e.g. labelled-by associations); a component that
+  cannot express its relationship documents the gap instead of
+  silently dropping it. Non-interactive containers expose
+  `accessible={false}` passthrough unless their section says
+  otherwise.
 - Focus: single tab-stop discipline via the `roving` model where a
   group manages focus; modal surfaces contain focus per
   `overlayModality` + `focusTrap` semantics adapted to RN (no DOM
@@ -118,6 +129,9 @@ contract.
   values. Import-success-only tests are rejected in review.
 - A component with dismissal/modality/portal behavior includes the
   stack-order and cleanup tests (the `overlay` suite precedent).
+- Each component slice re-runs package validation (declaration
+  output, `publint`, `attw`): a component that breaks the published
+  surface or its types fails the slice, even with green unit tests.
 - No physical-device run is claimed until it executes (D-DEVICE in
   the Kern roadmap); emulator-independent suites are labeled as such.
 
