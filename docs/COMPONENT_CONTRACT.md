@@ -29,9 +29,13 @@ conditional — a time-picker does not inherit a Switch's contract.
 - Component name: `PascalCase`, matching the RN ecosystem term
   (`Switch`, `Dialog`, `Pressable`-backed `Button` only if the
   contract's Button section exists — do not invent names).
-- Exactly one public entry: the package `.` barrel. Types ship with
-  the component (`ComponentNameProps` exported). Deep imports are not
-  supported and must not be documented.
+- Two public entries, not one package split: the package `.`
+  barrel (everything) and the `./models` subpath (behavior
+  models and hooks only — no `react-native` in its transitive
+  closure, so web consumers never pull the native runtime).
+  Both entries' model lists must match exactly (boundary gate).
+  Types ship with the component (`ComponentNameProps` exported).
+  Deep imports are not supported and must not be documented.
 - Props type name: `<Name>Props`. Event callbacks: `on<EventName>`
   (`onValueChange`, `onOpenChange`). No `render` inversion unless the
   component's section defines it; ref forwarding is required (see §7).
