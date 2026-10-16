@@ -69,6 +69,12 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 `dismissPolicy`, `dismissWiring`, `overlayModality`, `portal`,
 `positioning` (rect math public; clamp/origin internal),
 `presence`, `time`, `slot`, `toastQueue`, `a11y` — all present with unit tests.
+Chat models (ADR 010; contract: `docs/AI_CHAT_MODELS.md`; parity:
+new surface, no Base UI counterpart): `chatStatus` (shared
+generation vocabulary), `stickToBottom`, `chatMessage`, `toolCall`,
+`attachments`, `promptInput`, `chatBranch`, `chatSource`,
+`reasoning` (auto-open helper over the existing `Collapsible` —
+no new primitive) — all present with unit tests.
 `collection`, `mergeRefs` — gated, transfer only with a real consumer.
 
 ## Policy

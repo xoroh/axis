@@ -211,6 +211,24 @@ named reason (not oversight):
 | Calendar / Time Picker / Sheet / Drawer | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred |
 | Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
 
+### AI chat — new surface (no Base UI counterpart)
+
+Base UI ships no chat primitives, so there is nothing to mirror:
+the contract in `docs/AI_CHAT_MODELS.md` IS the cross-platform
+agreement (ADR 010). Kern web mirrors these prop names.
+
+| Axis model | Web: Base UI equiv. | Native: Axis (unstyled behavior) | Deviations |
+|---|---|---|---|
+| `chatStatus` | none — new (`submitted \| streaming \| ready \| error` is the transport's, `idle` is ours) | shared `ChatStatus` + `isChatBusy` / `isChatStreaming` / `isChatError` | — |
+| `stickToBottom` | none — new (scroll container only) | stuck-bit math + hook; no virtualization (caller-measured per contract §4) | — |
+| `chatMessage` | none — new | role vocabulary + speaker/label resolvers; no parts, no markdown | — |
+| `toolCall` | none — new (AI SDK v5 `ToolUIPart` states) | state machine + approve/deny handshake; no registry | — |
+| `attachments` | none — new | list + limits validation; no picking, no upload | — |
+| `promptInput` | none — new | draft + send gate + submit keys + composer height; no field | — |
+| `chatBranch` | none — new | pager index with wrap; no message tree | — |
+| `chatSource` | none — new | `{href, title?}` + hygiene; nothing visual | — |
+| reasoning | `Collapsible` composition | reused as-is + `resolveReasoningOpen` auto-open helper | — |
+
 ## Moved to Kern M3 (scope decision, ADR 006)
 
 Unpublished, so these leave with no aliases and no deprecation
