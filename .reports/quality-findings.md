@@ -24,6 +24,23 @@ priority. Fixed items stay listed with their PR for traceability.
   while 17 changesets pend). A hand list would be a second
   opinion on changesets. *Fix: PR #23* — section now points at
   changesets until the first release. DONE.
+- **Q12 — Switch `value` state props diverged from Base UI.**
+  Critic decision: `checked`/`defaultChecked`/`onCheckedChange`
+  exactly. Old spellings kept as warn-once deprecated aliases
+  (both handlers fire, canonical wins) until removal — Kern's
+  cutover keeps working. *Fix: PR #25.* DONE.
+- **Q13 — 16 components missing ref forwarding** (Avatar, Badge,
+  Card, EmptyState, Fieldset, Field, Kbd, Label, ListItem,
+  Loader, Meter, NavigationRail, Progress, Separator, Skeleton,
+  Toast). *Fix: PR #26* — inline documented composition + one
+  forwarding test each; README prop lists updated. DONE.
+- **Q14 — ARIA state naming audit.** Outcome: consistent. The
+  only mapping is pressed→`selected` (Toggle, ToggleGroup
+  items) — forced, RN has no `pressed` state key (verified
+  against RN 0.87 `ViewAccessibility`), documented in the Toggle
+  parity row. `checked` (Switch/Checkbox/groups), `expanded`
+  (triggers/menus), `busy` (loading), `disabled` everywhere.
+  DONE (verified, no code change needed).
 
 ## Proposed (needs owner call — not started)
 
