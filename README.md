@@ -10,7 +10,9 @@ Axis is an open-source project by [Xoroh](https://github.com/xoroh), set up as a
 - `packages/*` — reusable packages
 
 Each workspace should have its own `package.json` and a unique package name.
-The initial `@xoroh/axis-core` workspace is only a private placeholder; it has no publishable implementation yet.
+`packages/axis` is the `@xoroh/axis` behavior-primitives package (currently
+an initial extraction slice; see its README). The retired
+`@xoroh/axis-core` placeholder no longer exists.
 
 ## Getting started
 
@@ -19,6 +21,10 @@ Requirements: [Bun](https://bun.sh/) 1.3.8 or newer.
 ```sh
 bun install
 bun test
+bun run test:all
+bun run lint
+bun run typecheck
+bun run build
 ```
 
 ## Contributing
