@@ -32,6 +32,10 @@ export {
   type AccordionItemProps,
   type AccordionProps,
 } from "./components/Accordion";
+export {
+  Autocomplete,
+  type AutocompleteProps,
+} from "./components/Autocomplete";
 export { Avatar, type AvatarProps } from "./components/Avatar";
 export { Badge, type BadgeProps } from "./components/Badge";
 export { Button, type ButtonProps } from "./components/Button";
@@ -51,6 +55,8 @@ export {
   CollapsibleTrigger,
   type CollapsibleTriggerProps,
 } from "./components/Collapsible";
+export { Combobox, type ComboboxProps } from "./components/Combobox";
+export { ContextMenu, type ContextMenuProps } from "./components/ContextMenu";
 export { Dialog, type DialogProps } from "./components/Dialog";
 export { Field, type FieldProps } from "./components/Field";
 export { Fieldset, type FieldsetProps } from "./components/Fieldset";

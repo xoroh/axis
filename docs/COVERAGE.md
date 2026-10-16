@@ -36,8 +36,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Number Field | complete | Input+Button composition, RNTL 7 |
 | OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
 | Search | complete | composed entry + clear/submit, RNTL 4 |
-| Autocomplete | missing | adapted: native list overlay |
-| Combobox | missing | adapted: entry + native popup |
+| Autocomplete | complete | filter-as-type + commit, RNTL 8 |
+| Combobox | complete | filterable single-select, RNTL 9 |
 | Select | complete | single-select dropdown, RNTL 8 |
 | Calendar | complete | UTC date grid, RNTL 7 |
 | Time Picker | complete | Input+Button composition, RNTL 6 |
@@ -55,7 +55,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Alert Dialog | missing | blocking confirm + trap |
 | Sheet/Drawer | missing | bottom sheet + detents |
 | Menu | complete | popup menu + items, RNTL 8 |
-| Context Menu | missing | adapted: long-press trigger |
+| Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |
 | Tooltip | complete | long-press + measured placement, RNTL 4 |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |

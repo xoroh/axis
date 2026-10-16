@@ -575,3 +575,41 @@ children in the trigger zone get toggle composed; scrim fills the
 menu container (no Modal/portal host — taps inside never dismiss).
 No submenus, animation, or hover/keyboard nav (each deferred
 with rationale in-file). All props optional except item `value`.
+
+## Combobox
+
+Filterable single-select: `options: ReadonlyArray<{value, label,
+disabled?}>` (required), `value?: string | null`,
+`defaultValue?`, `onValueChange?`, `open?`, `defaultOpen?`,
+`onOpenChange?`, `placeholder?`, `disabled?`,
+`accessibilityLabel?`, `testID?` (entry; toggle is
+`${testID}-toggle`, scrim `${testID}-scrim`, options
+`${testID}-option-{value}`), `style?` (entry), `listStyle?`,
+`inputStyle?`, `ref` (root). Entry is an Axis `Input`; a chevron
+toggle opens the list (the Axis Input exposes no focus API by
+design) and typing filters case-insensitively, auto-opening.
+Option press selects + sets query + closes. Empty filter renders
+an empty listbox, no chrome. All optional except `options`.
+
+## Autocomplete
+
+Filter-as-type where the text IS the value: `options:
+ReadonlyArray<string>` (required), `value?`, `defaultValue?`,
+`onValueChange?` (text), `onCommit?` (option press or submit),
+`open?`, `defaultOpen?`, `onOpenChange?`, `placeholder?`,
+`disabled?`, `accessibilityLabel?`, `testID?`, `style?`,
+`listStyle?`, `inputStyle?`, `ref`. Options are commit actions
+(button role), not a selection set — no selected state is promised.
+Empty query closes the list. All optional except `options`.
+
+## ContextMenu
+
+Long-press popup menu: `children` (anchor, required), `content`
+(menu body, required), `open?`, `defaultOpen?`, `onOpenChange?`,
+`onDismiss?`, `placement?` (default `"bottom"`, clamped),
+`accessibilityLabel?` (menu region), `testID?` (scrim is
+`${testID}-scrim`), `style?` (anchor), `menuStyle?`, `ref`
+(anchor). Long-press toggles; scrim dismisses through `onDismiss` +
+`onOpenChange(false)`. Positions below the anchor — press-point
+positioning deferred, not faked. All optional except
+`children`/`content`.
