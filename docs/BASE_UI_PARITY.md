@@ -102,7 +102,24 @@ Base UI `Toggle`: `pressed`/`defaultPressed`/`onPressedChange`.
 |---|---|---|---|
 | `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`) | `data-pressed`/`data-disabled` → D1 |
 
-### Popover — pending
+### Popover — aligned
+
+Base UI parts: Root, Trigger, Portal, Backdrop, Positioner,
+Popup, Arrow, Title, Description, Close.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `PopoverRoot` | `Popover.Root` | `open`, `defaultOpen`, `onOpenChange`, `onDismiss` identical; renders no element | `modal` **defaults `false`** (popovers are non-modal overlays — inverse of Dialog/Menu); non-modal renders in-box with no scrim, trigger toggles |
+| `PopoverTrigger` | `Popover.Trigger` | tap toggle, button role, `disabled`, `render`, expanded state, anchor registration | No hover (D8); `data-popup-open`/`data-disabled` → D1 |
+| `PopoverPortal` | `Popover.Portal` | RN `Modal` host when modal, in-box otherwise | D2 (no `container`) |
+| `PopoverBackdrop` | `Popover.Backdrop` | scrim dismissal **modal-only** (without a Modal host a full-fill scrim would trap app touches with no dismissal path) | `data-open/closed` → D1; no transition attributes (D9) |
+| `PopoverPositioner` | `Popover.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | No `Arrow` coupling (arrow geometry is caller style) |
+| `PopoverPopup` | `Popover.Popup` | content region, `render`, function styles, `ref` | **No role claim** — RN defines no popover role (verified against RN 0.87 `ViewAccessibility`); labelled region instead (honest silence) |
+| `PopoverTitle` | `Popover.Title` | heading text (`header` role) | — |
+| `PopoverDescription` | `Popover.Description` | descriptive text | — |
+| `PopoverClose` | `Popover.Close` | closes root, `disabled`, `render` | `data-disabled` → D1 |
+| `PopoverArrow` | `Popover.Arrow` | caller-positioned marker | Geometry is caller style |
+| `Popover` (monolith) | — | Concise inline API retained (anchor + in-box scrim + measured box) | Not a Base UI part; always non-modal inline by design |
 
 ### Select — pending
 
