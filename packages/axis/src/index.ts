@@ -1,5 +1,15 @@
 /**
- * `@xoroh/axis` — design-system-neutral, native-first behavior primitives.
+ * `@xoroh/axis` — design-system-neutral, native-first unstyled behavior
+ * models and components (the `.` entry: everything).
+ *
+ * Two zones, one package:
+ *
+ * - Models (`src/*.ts`, re-exported alone as `@xoroh/axis/models`):
+ *   UNIVERSAL behavior — pure TypeScript/React, no `react-native`
+ *   import anywhere in the transitive closure (boundary gate
+ *   enforced). Usable by Kern web and native alike.
+ * - Components (`src/components/`, `.` entry only): NATIVE-ONLY
+ *   rendered controls. No DOM renderer will ever be added.
  *
  * Provenance: slices transfer from `xoroh/kern` (`libs/kern-primitives`)
  * byte-identical; see `axis-contract.md` in Kern for the per-symbol
