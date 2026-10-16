@@ -8,8 +8,9 @@
  *   platform-neutral. No `react-native` here either — a model that needs
  *   the host runtime is a component concern, not a model concern.
  * - Rendered components (`src/components/**`, per the component
- *   contract): may import `react` and `react-native` host primitives
- *   (`View`, `Text`, `Pressable`, types) and nothing else new.
+ *   contract): may import `react`, the approved `react-native` host
+ *   bindings (`boundary-policy.mjs`), and relative paths inside
+ *   `src/` — nothing else.
  *
  * Everywhere forbidden: Kern packages, `react-dom`, `expo`, browser
  * globals, design-token references, and design-system code. The public
@@ -18,33 +19,16 @@
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import {
+  ALWAYS_FORBIDDEN_MODULES,
+  ALWAYS_FORBIDDEN_SOURCE,
+  classifyComponentImports,
+} from "./lib/boundary-policy.mjs";
 
 const SRC = new URL("../src", import.meta.url).pathname;
 const COMPONENTS = join(SRC, "components");
 const failures = [];
 
-const ALWAYS_FORBIDDEN = [
-  "@xoroh/kern",
-  "@xoroh/kern-primitives",
-  "@xoroh/kern-tokens",
-  "@xoroh/kern-native",
-  "@xoroh/kern-material-3",
-  "react-dom",
-  "expo",
-];
-const MODEL_ONLY_FORBIDDEN = ["react-native"];
-const FORBIDDEN_SOURCE_ALWAYS = [
-  ...ALWAYS_FORBIDDEN.flatMap((s) => [`from "${s}"`, `from '${s}'`]),
-  "document.",
-  "window.",
-  "localStorage",
-  "--sys-",
-  "--comp-",
-  "--ref-",
-];
-const FORBIDDEN_SOURCE_MODELS = [
-  ...MODEL_ONLY_FORBIDDEN.flatMap((s) => [`from "${s}"`, `from '${s}'`]),
-];
 // Present in source where hooks/tests need them, but never public API:
 // factory internals plus web-only behavior excluded by the contract.
 const NON_PUBLIC = [
@@ -73,6 +57,12 @@ function sourceFiles(dir, inComponents) {
   return out;
 }
 
+const FORBIDDEN_SOURCE_ALWAYS = [
+  ...ALWAYS_FORBIDDEN_MODULES.flatMap((s) => [`from "${s}"`, `from '${s}'`]),
+  ...ALWAYS_FORBIDDEN_SOURCE,
+];
+const FORBIDDEN_SOURCE_MODELS = [`from "react-native"`, `from 'react-native'`];
+
 for (const { file, inComponents } of sourceFiles(SRC, false)) {
   const rel = file.slice(SRC.length + 1);
   const text = readFileSync(file, "utf8");
@@ -83,6 +73,9 @@ for (const { file, inComponents } of sourceFiles(SRC, false)) {
     if (text.includes(needle)) {
       failures.push(`${rel}: forbidden reference ${JSON.stringify(needle)}`);
     }
+  }
+  if (inComponents) {
+    failures.push(...classifyComponentImports(rel, text));
   }
 }
 

@@ -1,15 +1,14 @@
-# Axis component contract (draft for review)
+# Axis component contract
 
-Status: **proposal** — documentation only. No component is implemented
-under this contract yet. A component lands only after this contract is
-reviewed, and then one component at a time behind the gates below.
+Status: **adopted** — owner-approved substance. (Adopted from the
+archived PR #7 proposal byte-identical; only lifecycle language has
+changed since.) `Switch` is the first component implemented under
+this contract. Each further component lands one at a time behind the
+gates below — no second component until the first passes review.
 
 Scope: the minimum consistent shape of a rendered `@xoroh/axis`
-component. It constrains the first real components (a Switch-class
-control is the expected first vertical slice); it is not a framework
-for every future component. Component-type-specific requirements are
-marked conditional — a time-picker does not inherit a Switch's
-contract.
+component. Component-type-specific requirements are marked
+conditional — a time-picker does not inherit a Switch's contract.
 
 ## 1. What a component is
 
@@ -64,13 +63,12 @@ contract.
   existing models (`dismissPolicy`/`dismissWiring`,
   `overlayModality`, `portal`, `presence`). A component that cannot
   use them documents why in its section.
-- Prerequisite note: the current `check:boundary` ban on
-  `react-native` imports and the AGENTS.md scope text predate
-  rendered components. The first component PR must propose their
-  scoped update (allow RN host imports for component sources, keep
-  the token/Kern/design-system bans absolute). Until then, the
-  rendering clauses above are not yet satisfiable in CI — which is
-  why no component starts before this contract is agreed.
+- Prerequisite (satisfied by the Switch slice): the pre-component
+  `check:boundary` ban on `react-native` imports and the AGENTS.md
+  scope text were updated to the two-zone rule — behavior models stay
+  fully platform-neutral, rendered components under `src/components/`
+  may use RN host primitives only. Future components use that rule as
+  written; no bypass, no per-component exemptions.
 
 ## 5. Accessibility (required, not later)
 

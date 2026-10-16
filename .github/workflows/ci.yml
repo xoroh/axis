@@ -37,7 +37,11 @@ jobs:
       - name: Test package on React Native
         run: bun run --filter @xoroh/axis test:jest
       - name: Check package boundary
-        run: bun run --filter @xoroh/axis check:boundary
+        # The gate and its own mutation suite both run: a boundary whose
+        # tests do not execute is a comment, not a gate.
+        run: |
+          bun run --filter @xoroh/axis check:boundary
+          bun test packages/axis/scripts/lib/boundary-policy.test.mjs
       - name: Build package
         run: bun run --filter @xoroh/axis build
       - name: Check package publishing

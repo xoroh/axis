@@ -48,11 +48,7 @@ describe("Switch on React Native", () => {
   it("starts on with defaultValue and follows the controlled prop", async () => {
     function Host() {
       const [value, setValue] = useState(true);
-      return (
-        <>
-          <Switch testID="sw" value={value} onValueChange={setValue} />
-        </>
-      );
+      return <Switch testID="sw" value={value} onValueChange={setValue} />;
     }
     await render(<Host />);
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
