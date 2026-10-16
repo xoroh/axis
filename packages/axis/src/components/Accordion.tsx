@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -46,6 +49,20 @@ import { useControllableState } from "../useControllableState";
  * (the `Label` precedent). Triggers carry the button role.
  */
 
+export type AccordionState = {
+  /** Currently open item value (`null` for all collapsed). */
+  value: string | null;
+  /** Whether the whole group is disabled. */
+  disabled: boolean;
+};
+
+export type AccordionItemState = {
+  /** Whether this item is currently expanded. */
+  expanded: boolean;
+  /** Whether this item is currently disabled. */
+  disabled: boolean;
+};
+
 export type AccordionProps = {
   /** Controlled open item (an item value, or `null` for all collapsed). Wins over `defaultValue` when defined. */
   value?: string | null;
@@ -58,10 +75,16 @@ export type AccordionProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root group view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root group view style: value or function of group state. */
+  style?: StateStyle<AccordionState, StyleProp<ViewStyle>>;
   /** The group's items (`AccordionItem`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<AccordionState, SlotProps>;
   /** Forwarded to the root group host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -74,14 +97,21 @@ export type AccordionItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item trigger pressable style. */
-  headerStyle?: StyleProp<ViewStyle>;
+  /** Item trigger pressable style: value or function of item state. */
+  headerStyle?: StateStyle<AccordionItemState, StyleProp<ViewStyle>>;
   /** Item panel view style (the panel mounts only while open). */
   panelStyle?: StyleProp<ViewStyle>;
   /** Panel content, rendered inside a `View` only while this item is open. */
   children?: ReactNode;
   /** Trigger content, rendered inside the item's `Pressable`. When absent the trigger still renders, empty but accessible (see header note). */
   header?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole item (trigger and
+   * panel); the panel still mounts only while expanded.
+   */
+  render?: RenderProp<AccordionItemState, SlotProps>;
 };
 
 type AccordionDisclosure = {
@@ -133,8 +163,9 @@ function AccordionRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: AccordionProps): React.JSX.Element {
+}: AccordionProps): React.ReactNode {
   const [openValue, setOpenValue] = useControllableState<string | null>(
     value,
     defaultValue,
@@ -164,12 +195,29 @@ function AccordionRoot({
     [openValue, disabled, toggle],
   );
 
+  const state: AccordionState = {
+    value: openValue ?? null,
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <AccordionDisclosureContext.Provider value={disclosure}>
         {children}
@@ -187,7 +235,8 @@ export function AccordionItem({
   panelStyle,
   children,
   header,
-}: AccordionItemProps): React.JSX.Element {
+  render,
+}: AccordionItemProps): React.ReactNode {
   const group = useContext(AccordionDisclosureContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const expanded = group?.openValue === value;
@@ -196,6 +245,30 @@ export function AccordionItem({
     if (effectiveDisabled) return;
     group?.toggle(value);
   }, [effectiveDisabled, group, value]);
+
+  const state: AccordionItemState = {
+    expanded,
+    disabled: effectiveDisabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: {
+        expanded,
+        disabled: effectiveDisabled,
+      },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: toggleItem,
+      style: resolveStyle(headerStyle, state),
+      header,
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <>
@@ -209,7 +282,7 @@ export function AccordionItem({
         testID={testID}
         disabled={effectiveDisabled}
         onPress={toggleItem}
-        style={headerStyle}
+        style={resolveStyle(headerStyle, state)}
       >
         {header}
       </Pressable>

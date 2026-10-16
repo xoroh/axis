@@ -1,5 +1,8 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -12,6 +15,13 @@ import { useControllableState } from "../useControllableState";
  * pattern: `pressed` (+ `onPressedChange`) for controlled use,
  * `defaultPressed` for uncontrolled.
  */
+
+export type ToggleState = {
+  /** Whether the toggle is currently pressed. */
+  pressed: boolean;
+  /** Whether the toggle is currently disabled. */
+  disabled: boolean;
+};
 
 export type ToggleProps = {
   /** Controlled state. Wins over `defaultPressed` when defined. */
@@ -27,10 +37,16 @@ export type ToggleProps = {
   /** Native labelled-by association where the platform supports it. */
   accessibilityLabelledBy?: string;
   testID?: string;
-  /** Root pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of toggle state, caller-provided. */
+  style?: StateStyle<ToggleState, StyleProp<ViewStyle>>;
   /** Label content rendered inside the pressable. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ToggleState, SlotProps>;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -70,8 +86,9 @@ export function Toggle({
   testID,
   style,
   children,
+  render,
   ref,
-}: ToggleProps): React.JSX.Element {
+}: ToggleProps): React.ReactNode {
   const [isPressed, setPressed] = useControllableState<boolean>(
     pressed,
     defaultPressed,
@@ -93,6 +110,25 @@ export function Toggle({
     [ref],
   );
 
+  const state: ToggleState = { pressed: isPressed ?? false, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { selected: isPressed ?? false, disabled },
+      accessibilityLabel,
+      accessibilityLabelledBy,
+      testID,
+      disabled,
+      onPress: toggle,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       ref={setHostRef}
@@ -103,7 +139,7 @@ export function Toggle({
       testID={testID}
       disabled={disabled}
       onPress={toggle}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

@@ -33,6 +33,30 @@ Status key: `aligned` (parts + props + composition recorded below)
 ship; alignment adds the compound anatomy, never removes the
 concise form pre-1.0.
 
+### Universal composition (this pass)
+
+Every rendered part in `@xoroh/axis` accepts `render` — an element
+(cloned with the part props merged under its own via the `slot`
+model) or a function of `(props, state)` — per contract §11. Parts
+with interaction state take value-or-function `style`
+(`StateStyle<State, …>`) over the same state objects Base UI
+publishes for selectors; stateless parts (`Separator`, `Label`,
+`Text`, `Loader`, `AspectRatio`, `Fieldset`, `Table`/`Header`/`Cell`,
+inner structural styles like `trackStyle`/`dayStyle`) keep a static
+`style` (the `DialogTitle` precedent — a function of empty state
+adds nothing). Each part exports its state type (`ButtonState`,
+`SwitchState`, …) from the public entry. RNTL parity suites
+(`renderparity`, `disclosureparity`) observe substitution + state on
+every family.
+
+### Button — aligned
+
+Base UI `Button`: press primitive with `render` composition.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `Button` | `Button` | `disabled`, `render`, function `style` over `{ disabled, loading }`; ref | `loading`/busy announce is the Axis extension (React Aria `isPending` pattern — Base UI has no loading prop); `data-disabled` → D1. `render` composition covers the icon/loading/link press cases with no separate components |
+
 ### Dialog — aligned
 
 Base UI parts: Root, Trigger, Portal, Backdrop, Viewport,
@@ -83,7 +107,7 @@ Base UI `Switch`: root + thumb parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); `data-checked`/`data-disabled` → D1 |
+| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state; `render` + function `style` over `{ checked, disabled }` | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); `data-checked`/`data-disabled` → D1 |
 
 ### Checkbox — aligned
 
@@ -92,7 +116,7 @@ Base UI `Checkbox`: root + indicator parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Checkbox` | `Checkbox.Root` + `Checkbox.Indicator` | `checked`, `defaultChecked`, `onCheckedChange` identical; `disabled`, `ref`; checkbox role with `checked` state | Single-part API (indicator renders only when checked per caller style, not a separate part); `data-checked`/`data-disabled`/`data-indeterminate` → D1; no `indeterminate` tri-state (unneeded — record if a consumer needs it) |
+| `Checkbox` | `Checkbox.Root` + `Checkbox.Indicator` | `checked`, `defaultChecked`, `onCheckedChange` identical; `disabled`, `ref`; checkbox role with `checked` state; `render` + function `style` over `{ checked, disabled }` | Single-part API (indicator renders only when checked per caller style, not a separate part); `data-checked`/`data-disabled`/`data-indeterminate` → D1; no `indeterminate` tri-state (unneeded — record if a consumer needs it) |
 
 ### Toggle — aligned
 
@@ -100,7 +124,7 @@ Base UI `Toggle`: `pressed`/`defaultPressed`/`onPressedChange`.
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`) | `data-pressed`/`data-disabled` → D1 |
+| `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`); `render` + function `style` over `{ pressed, disabled }` | `data-pressed`/`data-disabled` → D1 |
 
 ### Popover — aligned
 
@@ -129,12 +153,70 @@ Popup, Arrow, Title, Description, Close.
 
 ### All other families — pending
 
+### Toast — aligned (provider + queue)
+
+Base UI parts: Provider, Root, Title, Description, Close, Action,
+Viewport + `toast.add()` object API.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `ToastProvider` | `Toast.Provider` | queue owner, renders no element | Payloads are caller `ToastOptions` (`message`, `actionLabel`, `onAction`, `duration`) held beside the shared `toastQueue` model |
+| `useToast` | `toast.add()` | `add(options): id`, `dismiss(id)`, `clear()`; throws outside the provider instead of dropping toasts | Hook form (no ambient singleton on native) |
+| `ToastViewport` | `Toast.Viewport` | paints one single-shot `Toast` per queued id, oldest-first, optional `limit`; `render` + function `style` over `{ count }` | In-box container (no positioning work — chrome); over-limit toasts stay queued but unpainted |
+| `Toast` (monolith) | `Toast.Root` | `open`/`defaultOpen`/`onOpenChange`/`duration`/`actionLabel`/`onAction`; `render` + function `style` over `{ open }` | No separate `Title`/`Description` parts — the message is caller text in a polite live region; timed auto-dismiss is the `Close`. M3 Snackbar stays separate in Kern |
+
+### Portal — aligned (standalone host)
+
+Base UI `Portal` counterpart; rn-primitives `Portal`/`PortalHost`
+parity (`hostName` naming).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `PortalHost` | `Portal` (host side) | named hosts (`name`), registry-ordered painting, `render` substitution | In-box painting (the `Menu` precedent) — root presentation stays each overlay's own `Modal`; D2 (no `container`), D3 (no `keepMounted`) |
+| `Portal` | `Portal` (content side) | `hostName` matching, nearest-scope nesting, cleanup on unmount | No matching host renders inline (never silently dropped) |
+
+### Input / Textarea — Base UI change-event names
+
+`Input`/`Textarea` used the RN host name `onChangeText`; contract
+§6 reserves `onValueChange` for value controls, and `Search` already
+used it. Hard cut (ADR 011, nothing published): both now take
+`onValueChange`. The host `TextInput` still receives RN
+`onChangeText` — the rename is the public prop only. Internal
+consumers (`Search`, `Combobox`, `OtpField`, `Autocomplete`,
+`TimePicker`, `NumberField`) and suites updated in the same slice.
+
+### Remaining compound-anatomy gaps (composition aligned, anatomy pending)
+
+`render` + function `style` now hold on every part below; what
+remains is Base UI's finer compound anatomy, each deferred for a
+named reason (not oversight):
+
+| Family | Remaining gap | Blocker / disposition |
+|---|---|---|
+| Accordion | no `Header`/`Trigger`/`Panel` split (`header` prop + `children`) | Single-part API retained; split needs no new behavior — record if a consumer needs part-level substitution |
+| AlertDialog | rebuilt on the compound `Dialog` parts this pass (was monolith-only) | — |
+| Autocomplete | no `Input`/`Portal`/`List`/`Row`/`Empty`/`Status` parts | Needs `collection` transfer for row registration; `Empty`/`Status` chrome without it |
+| Checkbox Group / Radio Group / Toggle Group | Root + Item only (no Indicator parts) | Indicator is caller style, not a part (Checkbox precedent) |
+| Collapsible | Root/Trigger/Panel present; composition added this pass | — |
+| Combobox / Select | no `Collection`/filter parts (`Input`/`Clear`/`Empty`/`FilterProvider`) | Needs `collection` transfer + typeahead design |
+| Context Menu | monolith (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
+| Field / Fieldset | no `Control`/`Description`/`Validity`/`Legend` parts | Validity is caller state (`error`); control wiring deferred until a consumer demonstrates the need |
+| Meter / Progress | no `Track`/`Indicator`/`Label`/`Value` parts | Fill is data-driven width under caller style; label/value are caller text |
+| Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
+| OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
+| Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
+| Tabs | no `Indicator` | Indicator geometry is caller style |
+| Tooltip | monolith (no `Provider`/`Trigger`/`Portal`/`Positioner`/`Popup`/`Arrow` split) | Portal-host adoption for the positioning story; long-press toggle is the touch adaptation |
+| Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
+| Calendar / Time Picker / Sheet / Drawer | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred |
+| Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
+
 ## Moved to Kern M3 (scope decision, ADR 006)
 
 Unpublished, so these leave with no aliases and no deprecation
 window (ADR 011). Kern M3 owns the styled receivers; Axis keeps
 the primitives underneath. `Button` (`loading`/busy announce,
-`render` composition is a recorded gap if missing) covers the
+`render` composition) covers the
 icon/loading/link press cases — no separate components.
 
 | Axis export (removed) | Disposition |

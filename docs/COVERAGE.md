@@ -55,7 +55,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
 | Meter | complete | gauge readout, RNTL 2 |
 | Loader/Loading Indicator | complete | busy indicator, RNTL 1 |
-| Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7 |
+| Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7; queued toasts via `ToastProvider` + `useToast` + `ToastViewport` (toast-queue suite) |
+| Portal/Portal host | complete | standalone `PortalHost` + `Portal` over the shared registry, RNTL 7 |
 | Avatar | complete | image + fallback, RNTL 3 (in display suite) |
 | Aspect Ratio | complete | ratio box, RNTL 3 |
 | Separator | complete | silent divider, RNTL 2 |
@@ -67,7 +68,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 `useControllableState`, `selection`, `press`, `roving`, `focusTrap`,
 `dismissPolicy`, `dismissWiring`, `overlayModality`, `portal`,
 `positioning` (rect math public; clamp/origin internal),
-`presence`, `time`, `slot`, `a11y` — all present with unit tests.
+`presence`, `time`, `slot`, `toastQueue`, `a11y` — all present with unit tests.
 `collection`, `mergeRefs` — gated, transfer only with a real consumer.
 
 ## Policy

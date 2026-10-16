@@ -7,6 +7,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
 
@@ -19,6 +22,11 @@ import { Input } from "./Input";
  * (`onSubmitEditing`); result filtering belongs to the caller, never
  * here — this component owns entry, not data.
  */
+
+export type SearchState = {
+  /** Current query. */
+  value: string;
+};
 
 export type SearchProps = {
   /** Controlled query. Wins over `defaultValue` when defined. */
@@ -34,12 +42,19 @@ export type SearchProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of search state. */
+  style?: StateStyle<SearchState, StyleProp<ViewStyle>>;
   /** Input style, caller-provided. */
   inputStyle?: StyleProp<TextStyle>;
   /** Clear-button label for assistive tech. Default `"Clear search"`. */
   clearAccessibilityLabel?: string;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole search container
+   * (entry plus clear affordance).
+   */
+  render?: RenderProp<SearchState, SlotProps>;
   /** Forwarded to the container host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -73,8 +88,9 @@ export function Search({
   style,
   inputStyle,
   clearAccessibilityLabel = "Clear search",
+  render,
   ref,
-}: SearchProps): React.JSX.Element {
+}: SearchProps): React.ReactNode {
   const [query, setQuery] = useControllableState<string>(
     value,
     defaultValue,
@@ -96,11 +112,31 @@ export function Search({
     onSubmit?.(query ?? "");
   }, [onSubmit, query]);
 
+  const state: SearchState = { value: query ?? "" };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      value: query ?? "",
+      placeholder,
+      accessibilityLabel,
+      inputStyle,
+      clearAccessibilityLabel,
+      onValueChange: setQuery,
+      onSubmit: submit,
+      onClear: clear,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setHostRef} testID={testID} style={style}>
+    <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
       <Input
         value={query ?? ""}
-        onChangeText={setQuery}
+        onValueChange={setQuery}
         placeholder={placeholder}
         accessibilityLabel={accessibilityLabel}
         onSubmitEditing={submit}

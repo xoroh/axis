@@ -11,6 +11,9 @@ import {
   useRef,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
@@ -67,6 +70,22 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * precedent).
  */
 
+export type SelectState = {
+  /** Currently selected item value (`null` for none). */
+  value: string | null;
+  /** Whether the list is currently open. */
+  open: boolean;
+  /** Whether the whole select is disabled. */
+  disabled: boolean;
+};
+
+export type SelectItemState = {
+  /** Whether this item is currently selected. */
+  selected: boolean;
+  /** Whether this item is currently disabled. */
+  disabled: boolean;
+};
+
 export type SelectProps = {
   /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. */
   value?: string | null;
@@ -87,12 +106,19 @@ export type SelectProps = {
   /** Accessible name source for the trigger. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Trigger box style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger box style: value or function of select state. */
+  style?: StateStyle<SelectState, StyleProp<ViewStyle>>;
   /** Popup (listbox) box style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
   /** The list's items (`SelectItem`, required). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the anchor container (trigger
+   * plus list); open/close and selection wiring travel in the props.
+   */
+  render?: RenderProp<SelectState, SlotProps>;
   /** Forwarded to the root anchor view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -105,9 +131,15 @@ export type SelectItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Item pressable style: value or function of item state. */
+  style?: StateStyle<SelectItemState, StyleProp<ViewStyle>>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<SelectItemState, SlotProps>;
 };
 
 type SelectSelection = {
@@ -197,8 +229,9 @@ export function Select({
   style,
   listStyle,
   children,
+  render,
   ref,
-}: SelectProps): React.JSX.Element {
+}: SelectProps): React.ReactNode {
   // `onValueChange` takes a plain `string` while the state domain includes
   // `null` (nothing selected), so forward only committed selections —
   // `choose` below never offers `null`, the guard is type-level honesty
@@ -271,6 +304,32 @@ export function Select({
     [selectedValue, disabled, choose],
   );
 
+  const state: SelectState = {
+    value: selectedValue ?? null,
+    open: isOpen ?? false,
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      disabled,
+      onPress: toggle,
+      open: isOpen ?? false,
+      value: selectedValue ?? null,
+      selectedLabel,
+      placeholder,
+      onDismiss: dismiss,
+      listStyle,
+      children,
+      ref: setAnchorRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View ref={setAnchorRef}>
       <Pressable
@@ -280,7 +339,7 @@ export function Select({
         testID={testID}
         disabled={disabled}
         onPress={toggle}
-        style={style}
+        style={resolveStyle(style, state)}
       >
         {selectedLabel ?? placeholder}
       </Pressable>
@@ -318,7 +377,8 @@ export function SelectItem({
   testID,
   style,
   children,
-}: SelectItemProps): React.JSX.Element {
+  render,
+}: SelectItemProps): React.ReactNode {
   const group = useContext(SelectSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const selected = group?.selectedValue === value;
@@ -328,6 +388,23 @@ export function SelectItem({
     group?.choose(value);
   }, [effectiveDisabled, group, value]);
 
+  const state: SelectItemState = { selected, disabled: effectiveDisabled };
+  const substituted = resolveRender(
+    render,
+    {
+      role: "option",
+      accessibilityState: { selected, disabled: effectiveDisabled },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: chooseItem,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       role="option"
@@ -336,7 +413,7 @@ export function SelectItem({
       testID={testID}
       disabled={effectiveDisabled}
       onPress={chooseItem}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

@@ -14,6 +14,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
 import { useFloatingPlacement } from "./useFloatingPlacement";
@@ -96,6 +99,15 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * precedent). All are omitted when `testID` is omitted.
  */
 
+export type ComboboxState = {
+  /** Currently selected option value (`null` for none). */
+  value: string | null;
+  /** Whether the list is currently open. */
+  open: boolean;
+  /** Whether the whole combobox is disabled. */
+  disabled: boolean;
+};
+
 export type ComboboxProps = {
   /** Synchronous option data (required — options are data, not children). */
   options: ReadonlyArray<{ value: string; label: string; disabled?: boolean }>;
@@ -118,12 +130,20 @@ export type ComboboxProps = {
   /** Accessible name source for the entry input. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Entry row (input + toggle) box style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Entry row (input + toggle) box style: value or function of combobox state. */
+  style?: StateStyle<ComboboxState, StyleProp<ViewStyle>>;
   /** Popup (listbox) box style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
   /** Text-entry style, caller-provided. */
   inputStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the anchor container (entry
+   * row plus list); typing, toggle, and choose wiring travel in the
+   * props.
+   */
+  render?: RenderProp<ComboboxState, SlotProps>;
   /** Forwarded to the root anchor view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -190,8 +210,9 @@ export function Combobox({
   style,
   listStyle,
   inputStyle,
+  render,
   ref,
-}: ComboboxProps): React.JSX.Element {
+}: ComboboxProps): React.ReactNode {
   // `onValueChange` takes a plain `string` while the state domain includes
   // `null` (nothing selected), so forward only committed selections —
   // `choose` below never offers `null`, the guard is type-level honesty
@@ -290,12 +311,39 @@ export function Combobox({
 
   const toggleLabel = (isOpen ?? false) ? "Hide options" : "Show options";
 
+  const state: ComboboxState = {
+    value: selectedValue ?? null,
+    open: isOpen ?? false,
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      value: selectedValue ?? null,
+      query,
+      onQueryChange: handleChangeText,
+      onChoose: choose,
+      onToggle: toggle,
+      onDismiss: closeWithoutSelection,
+      placeholder,
+      inputStyle,
+      listStyle,
+      options: filtered,
+      ref: setAnchorRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View ref={setAnchorRef}>
-      <View style={style}>
+      <View style={resolveStyle(style, state)}>
         <Input
           value={query}
-          onChangeText={handleChangeText}
+          onValueChange={handleChangeText}
           placeholder={placeholder}
           editable={!disabled}
           accessibilityLabel={accessibilityLabel}

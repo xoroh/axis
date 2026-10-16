@@ -13,6 +13,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -28,6 +31,13 @@ import { useControllableState } from "../useControllableState";
  * completion (guarded by the last-completed value: a rerender at full
  * length never refires, and only a change away and back resubmits).
  */
+
+export type OtpFieldState = {
+  /** Current code (sliced to `length`). */
+  value: string;
+  /** Whether the field is currently disabled. */
+  disabled: boolean;
+};
 
 export type OtpFieldProps = {
   /** Controlled code. Wins over `defaultValue` when defined. */
@@ -49,12 +59,19 @@ export type OtpFieldProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of field state. */
+  style?: StateStyle<OtpFieldState, StyleProp<ViewStyle>>;
   /** Per-cell container style, caller-provided. */
   cellStyle?: StyleProp<ViewStyle>;
   /** Per-cell text style, caller-provided. */
   textStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole field (cells plus
+   * hidden entry).
+   */
+  render?: RenderProp<OtpFieldState, SlotProps>;
   /** Forwarded to the container view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -98,8 +115,9 @@ export function OtpField({
   style,
   cellStyle,
   textStyle,
+  render,
   ref,
-}: OtpFieldProps): React.JSX.Element {
+}: OtpFieldProps): React.ReactNode {
   const safeLength = Number.isFinite(length)
     ? Math.max(1, Math.floor(length))
     : 6;
@@ -143,12 +161,29 @@ export function OtpField({
     [ref],
   );
 
+  const state: OtpFieldState = { value: current, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      cellStyle,
+      textStyle,
+      value: current,
+      onValueChange: disabled ? undefined : handleChangeText,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {Array.from({ length: safeLength }, (_, index) => {
         // Cells are positional and fixed-length: the index IS the stable

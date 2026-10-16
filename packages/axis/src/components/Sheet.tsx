@@ -16,6 +16,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -77,6 +80,13 @@ import { useControllableState } from "../useControllableState";
  * event — detent math without a measured container is untestable.
  */
 
+export type SheetState = {
+  /** Whether the sheet is currently open. */
+  open: boolean;
+  /** Active detent index. */
+  snapIndex: number;
+};
+
 export type SheetProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
@@ -111,10 +121,17 @@ export type SheetProps = {
   testID?: string;
   /** Scrim layer style, caller-provided. */
   overlayStyle?: StyleProp<ViewStyle>;
-  /** Sheet surface (box) style, caller-provided. */
-  surfaceStyle?: StyleProp<ViewStyle>;
+  /** Sheet surface (box) style: value or function of sheet state. */
+  surfaceStyle?: StateStyle<SheetState, StyleProp<ViewStyle>>;
   /** Title text style, caller-provided. */
   titleStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity) for the sheet
+   * surface: an element is cloned with the surface props merged under
+   * its own; a function receives `(props, state)`. The `Modal` host,
+   * scrim, drag, and snap wiring stay on the part.
+   */
+  render?: RenderProp<SheetState, SlotProps>;
   /** Forwarded to the surface `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -166,8 +183,9 @@ export function Sheet({
   overlayStyle,
   surfaceStyle,
   titleStyle,
+  render,
   ref,
-}: SheetProps): React.JSX.Element | null {
+}: SheetProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -291,6 +309,66 @@ export function Sheet({
 
   const translateY = offsetFor(activeSnap) + dragDy;
   const scrimLabel = dismissable ? "Dismiss" : undefined;
+  const state: SheetState = { open: true, snapIndex: activeSnap };
+
+  const onSurfaceAccessibilityAction = (event: {
+    nativeEvent: { actionName: string };
+  }) => {
+    if (event.nativeEvent.actionName === "expand") expand();
+    else if (event.nativeEvent.actionName === "collapse") collapse();
+  };
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "dialog",
+      accessibilityLabel,
+      accessibilityActions: [
+        { name: "expand", label: "Expand sheet" },
+        { name: "collapse", label: "Collapse sheet" },
+      ],
+      onAccessibilityAction: onSurfaceAccessibilityAction,
+      testID,
+      style: [
+        { transform: [{ translateY }] },
+        resolveStyle(surfaceStyle, state),
+      ],
+      title,
+      titleStyle,
+      children,
+      onDismiss: dismiss,
+      onSnapIndexChange: commitSnap,
+      ref,
+      ...responder.panHandlers,
+    } satisfies SlotProps,
+    state,
+  );
+  const surface =
+    substituted !== null ? (
+      substituted
+    ) : (
+      <View
+        accessible
+        accessibilityRole="dialog"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityActions={[
+          { name: "expand", label: "Expand sheet" },
+          { name: "collapse", label: "Collapse sheet" },
+        ]}
+        onAccessibilityAction={onSurfaceAccessibilityAction}
+        testID={testID}
+        style={[
+          { transform: [{ translateY }] },
+          resolveStyle(surfaceStyle, state),
+        ]}
+        ref={(node) => assignRef(ref, node)}
+        {...responder.panHandlers}
+      >
+        {title === undefined ? null : <Text style={titleStyle}>{title}</Text>}
+        {children}
+      </View>
+    );
 
   return (
     <Modal transparent onRequestClose={dismissable ? dismiss : undefined}>
@@ -312,26 +390,7 @@ export function Sheet({
         ) : (
           <View style={{ flex: 1 }} />
         )}
-        <View
-          accessible
-          accessibilityRole="dialog"
-          accessibilityLabel={accessibilityLabel}
-          accessibilityActions={[
-            { name: "expand", label: "Expand sheet" },
-            { name: "collapse", label: "Collapse sheet" },
-          ]}
-          onAccessibilityAction={(event) => {
-            if (event.nativeEvent.actionName === "expand") expand();
-            else if (event.nativeEvent.actionName === "collapse") collapse();
-          }}
-          testID={testID}
-          style={[{ transform: [{ translateY }] }, surfaceStyle]}
-          ref={(node) => assignRef(ref, node)}
-          {...responder.panHandlers}
-        >
-          {title === undefined ? null : <Text style={titleStyle}>{title}</Text>}
-          {children}
-        </View>
+        {surface}
       </View>
     </Modal>
   );

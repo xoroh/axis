@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -26,6 +29,20 @@ import { useControllableState } from "../useControllableState";
  * of toggle buttons, not a group of checkboxes.
  */
 
+export type ToggleGroupState = {
+  /** Currently pressed item keys. */
+  value: readonly string[];
+  /** Whether the whole group is disabled. */
+  disabled: boolean;
+};
+
+export type ToggleGroupItemState = {
+  /** Whether this item is currently pressed. */
+  pressed: boolean;
+  /** Whether this item is currently disabled. */
+  disabled: boolean;
+};
+
 export type ToggleGroupProps = {
   /** Controlled pressed keys. Wins over `defaultValue` when defined. */
   value?: readonly string[];
@@ -38,10 +55,16 @@ export type ToggleGroupProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root group view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root group view style: value or function of group state. */
+  style?: StateStyle<ToggleGroupState, StyleProp<ViewStyle>>;
   /** The group's items (`ToggleGroupItem`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ToggleGroupState, SlotProps>;
   /** Forwarded to the root group host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -54,9 +77,15 @@ export type ToggleGroupItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Item pressable style: value or function of item state. */
+  style?: StateStyle<ToggleGroupItemState, StyleProp<ViewStyle>>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ToggleGroupItemState, SlotProps>;
 };
 
 type ToggleGroupPressed = {
@@ -108,8 +137,9 @@ function ToggleGroupRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: ToggleGroupProps): React.JSX.Element {
+}: ToggleGroupProps): React.ReactNode {
   const [pressedValues, setPressedValues] = useControllableState<
     readonly string[]
   >(value, defaultValue, onValueChange);
@@ -142,6 +172,25 @@ function ToggleGroupRoot({
     [pressedValues, disabled, toggle],
   );
 
+  const state: ToggleGroupState = {
+    value: pressedValues ?? [],
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "group",
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -152,7 +201,7 @@ function ToggleGroupRoot({
       accessibilityRole="group"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <ToggleGroupPressedContext.Provider value={pressed}>
         {children}
@@ -168,7 +217,8 @@ export function ToggleGroupItem({
   testID,
   style,
   children,
-}: ToggleGroupItemProps): React.JSX.Element {
+  render,
+}: ToggleGroupItemProps): React.ReactNode {
   const group = useContext(ToggleGroupPressedContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const pressed = group?.pressedValues?.includes(value) ?? false;
@@ -178,6 +228,26 @@ export function ToggleGroupItem({
     group?.toggle(value);
   }, [effectiveDisabled, group, value]);
 
+  const state: ToggleGroupItemState = {
+    pressed,
+    disabled: effectiveDisabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { selected: pressed, disabled: effectiveDisabled },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: toggleItem,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -186,7 +256,7 @@ export function ToggleGroupItem({
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleItem}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

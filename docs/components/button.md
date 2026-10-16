@@ -11,8 +11,12 @@ Unstyled pressable action. Caller content, caller visuals.
 announced as busy; caller swaps `children` — nothing renders here),
 `accessibilityLabel?: string`,
 `accessibilityLabelledBy?: string`, `testID?: string`,
-`style?: StyleProp<ViewStyle>`, `children?: ReactNode`, `ref`.
-All optional.
+`style?: StateStyle<ButtonState, StyleProp<ViewStyle>>` (value or
+function of `{ disabled, loading }`), `children?: ReactNode`,
+`render?: RenderProp<ButtonState, SlotProps>` (element or
+`(props, state)` substitution — Base UI `render` parity, covering the
+icon/loading/link press cases with no separate components),
+`ref`. All optional.
 
 ### Example
 
@@ -28,3 +32,12 @@ function Save({ onSave }: { onSave: () => void }) {
   );
 }
 ```
+
+### Composition
+
+Every part takes `render` (element or `(props, state)` function);
+parts with interaction state take value-or-function `style`, while
+stateless parts keep a static `style` (the `DialogTitle` precedent).
+`data-*` attributes are deliberately absent on native — state flows
+through those functions instead (contract §11). See
+`docs/BASE_UI_PARITY.md` for the per-family parity record.

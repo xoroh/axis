@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -22,6 +25,20 @@ import { useControllableState } from "../useControllableState";
  * keeps it (never deselects to `null`), per the selection-model rule.
  */
 
+export type RadioGroupState = {
+  /** Currently selected item value (`null` for none). */
+  value: string | null;
+  /** Whether the whole group is disabled. */
+  disabled: boolean;
+};
+
+export type RadioGroupItemState = {
+  /** Whether this item is currently checked. */
+  checked: boolean;
+  /** Whether this item is currently disabled. */
+  disabled: boolean;
+};
+
 export type RadioGroupProps = {
   /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. */
   value?: string | null;
@@ -34,10 +51,16 @@ export type RadioGroupProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root group view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root group view style: value or function of group state. */
+  style?: StateStyle<RadioGroupState, StyleProp<ViewStyle>>;
   /** The group's items (`RadioGroupItem`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<RadioGroupState, SlotProps>;
   /** Forwarded to the root group host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -50,9 +73,15 @@ export type RadioGroupItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Item pressable style: value or function of item state. */
+  style?: StateStyle<RadioGroupItemState, StyleProp<ViewStyle>>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<RadioGroupItemState, SlotProps>;
 };
 
 type RadioGroupSelection = {
@@ -104,8 +133,9 @@ function RadioGroupRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: RadioGroupProps): React.JSX.Element {
+}: RadioGroupProps): React.ReactNode {
   // `onValueChange` takes a plain `string` while the state domain includes
   // `null` (nothing selected), so forward only committed selections —
   // `select` below never offers `null`, the guard is type-level honesty.
@@ -146,6 +176,25 @@ function RadioGroupRoot({
     [selectedValue, disabled, select],
   );
 
+  const state: RadioGroupState = {
+    value: selectedValue ?? null,
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "radiogroup",
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -156,7 +205,7 @@ function RadioGroupRoot({
       accessibilityRole="radiogroup"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <RadioGroupSelectionContext.Provider value={selection}>
         {children}
@@ -172,7 +221,8 @@ export function RadioGroupItem({
   testID,
   style,
   children,
-}: RadioGroupItemProps): React.JSX.Element {
+  render,
+}: RadioGroupItemProps): React.ReactNode {
   const group = useContext(RadioGroupSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const checked = group?.selectedValue === value;
@@ -182,6 +232,26 @@ export function RadioGroupItem({
     group?.select(value);
   }, [effectiveDisabled, group, value]);
 
+  const state: RadioGroupItemState = {
+    checked,
+    disabled: effectiveDisabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "radio",
+      accessibilityState: { checked, disabled: effectiveDisabled },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: selectItem,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       accessibilityRole="radio"
@@ -190,7 +260,7 @@ export function RadioGroupItem({
       testID={testID}
       disabled={effectiveDisabled}
       onPress={selectItem}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

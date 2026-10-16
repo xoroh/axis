@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Meter — an unstyled gauge readout.
@@ -9,6 +12,11 @@ import { type StyleProp, View, type ViewStyle } from "react-native";
  * fill. No colors, no ticks, no scale chrome — measurement display
  * only.
  */
+
+export type MeterState = {
+  /** Clamped value announced to assistive tech. */
+  value: number;
+};
 
 export type MeterProps = {
   /** Current value. Default `0`. */
@@ -20,10 +28,16 @@ export type MeterProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of meter state, caller-provided. */
+  style?: StateStyle<MeterState, StyleProp<ViewStyle>>;
   /** Fill style, caller-provided (merged under the fill width). */
   fillStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<MeterState, SlotProps>;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -61,8 +75,9 @@ export function Meter({
   testID,
   style,
   fillStyle,
+  render,
   ref,
-}: MeterProps): React.JSX.Element {
+}: MeterProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -76,6 +91,22 @@ export function Meter({
   const range = max - min;
   const clamped = range > 0 ? Math.min(Math.max(value, min), max) : min;
   const percent = range > 0 ? ((clamped - min) / range) * 100 : 0;
+  const state: MeterState = { value: clamped };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "meter",
+      accessibilityValue: { min, max, now: clamped },
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -84,7 +115,7 @@ export function Meter({
       accessibilityValue={{ min, max, now: clamped }}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <View style={[{ width: `${percent}%` }, fillStyle]} />
     </View>
