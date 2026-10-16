@@ -1,0 +1,16 @@
+# Decisions
+
+> Rule: the roadmap is the single source for planned work; VISION is the test every decision is checked against; ideas only move to the roadmap through an ADR.
+
+Status: current. Date: 2026-10-16.
+
+- Vision: [`../VISION.md`](../VISION.md). Component rules: [`../COMPONENT_CONTRACT.md`](../COMPONENT_CONTRACT.md). Parity: [`../BASE_UI_PARITY.md`](../BASE_UI_PARITY.md). Coverage: [`../COVERAGE.md`](../COVERAGE.md). Cross-repo plan: Kern [`kern-axis-migration-and-roadmap.md`](https://github.com/xoroh/kern/blob/main/docs/architecture/kern-axis-migration-and-roadmap.md).
+- Each file has context, decision, rationale, status, date.
+
+| ADR | Decision |
+| --- | --- |
+| [001](001-base-ui-naming-and-parity.md) | Base UI naming and parity |
+| [002](002-drawer-primary-name.md) | Drawer as primary name |
+| [003](003-example-app-not-playground.md) | One runnable example app instead of a playground |
+| [004](004-short-readme-plus-docs.md) | Short README plus docs |
+| [005](005-ship-with-kern-0-1-0.md) | Ships as `@xoroh/axis` alongside Kern 0.1.0 |

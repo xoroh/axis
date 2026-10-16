@@ -15,6 +15,12 @@ allowed only under `packages/axis/src/components/` (rendered components
 per `docs/COMPONENT_CONTRACT.md`) and forbidden in behavior models
 (enforced by `packages/axis/scripts/check-boundary.mjs`).
 
+## Direction
+
+- `docs/VISION.md` is the test every decision is checked against.
+- `docs/decisions/` holds owner ADRs; `docs/IDEAS.md` holds ideas not yet decided (not planned work).
+- The roadmap is the single source for planned work (component contract + parity + coverage in this repo; Kern integration plan in `xoroh/kern`).
+
 ## On-demand Xoroh standards audit
 
 Agents may be asked to audit this repository against Xoroh standards:

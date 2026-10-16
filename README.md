@@ -30,6 +30,9 @@ import { DialogRoot, DialogTrigger, DialogPortal, DialogPopup } from "@xoroh/axi
 
 ## Docs
 
+- [`docs/VISION.md`](docs/VISION.md) — north star, principles, non-goals, quality bar.
+- [`docs/decisions/`](docs/decisions/) — owner decisions (ADR per decision).
+- [`docs/IDEAS.md`](docs/IDEAS.md) — owner ideas not yet decided.
 - [`docs/COMPONENT_CONTRACT.md`](docs/COMPONENT_CONTRACT.md) —
   what a component is, and the rules every slice follows.
 - [`docs/BASE_UI_PARITY.md`](docs/BASE_UI_PARITY.md) — per-component
