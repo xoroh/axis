@@ -246,6 +246,8 @@ export type DialogRootProps = {
   defaultOpen?: boolean;
   /** Fires with the next open state on every committed open or dismissal. */
   onOpenChange?: (open: boolean) => void;
+  /** Fires on backdrop (or request-close) dismissal, before `onOpenChange(false)`. */
+  onDismiss?: () => void;
   /**
    * When `true`, backdrop press does not dismiss (Base UI parity name
    * for the monolith's `dismissable={false}`). Default `false`.
@@ -392,6 +394,7 @@ export function DialogRoot({
   open,
   defaultOpen = false,
   onOpenChange,
+  onDismiss,
   disablePointerDismissal = false,
   modal = true,
   children,
@@ -411,13 +414,15 @@ export function DialogRoot({
     setOpen(false);
   }, [setOpen]);
 
-  // Backdrop/request-close path: guarded on
-  // `disablePointerDismissal` so a non-dismissable dialog (and the
-  // platform back button) cannot close it.
+  // Backdrop/request-close path: `onDismiss` first, then report
+  // `false` — guarded on `disablePointerDismissal` so a
+  // non-dismissable dialog (and the platform back button) cannot
+  // close it.
   const dismiss = useCallback(() => {
     if (disablePointerDismissal) return;
+    onDismiss?.();
     setOpen(false);
-  }, [disablePointerDismissal, setOpen]);
+  }, [disablePointerDismissal, onDismiss, setOpen]);
 
   const disclosure = useMemo<DialogCompoundDisclosure>(
     () => ({
@@ -433,7 +438,7 @@ export function DialogRoot({
   // The root owns state, never layout: no host element (Base UI parity).
   return (
     <DialogCompoundContext.Provider value={disclosure}>
-      <>{children}</>
+      {children}
     </DialogCompoundContext.Provider>
   );
 }

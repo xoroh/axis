@@ -29,17 +29,28 @@ export type Rect = {
 
 export type Placement = "top" | "bottom" | "left" | "right";
 
+/** Cross-axis alignment of the surface against the anchor (Base UI parity). */
+export type Align = "start" | "center" | "end";
+
 export type PositioningOptions = {
   /** Which side of the anchor the surface prefers. Defaults to `"bottom"`. */
   placement?: Placement;
   /** Gap between anchor and surface edges. Defaults to `0`. */
   offset?: number;
+  /**
+   * Cross-axis alignment. Defaults to `"center"` (the historical
+   * behavior — every existing caller centers). `"start"`/`"end"`
+   * pin the surface's leading/trailing edge to the anchor's.
+   */
+  align?: Align;
+  /** Shift along the cross axis after alignment. Defaults to `0`. */
+  alignOffset?: number;
 };
 
 /**
  * The surface origin for `anchor` + `size` at `placement`, before clamping.
- * Centered on the anchor's cross axis: a bottom surface centers horizontally,
- * a right surface centers vertically.
+ * Centered on the anchor's cross axis unless `align` says otherwise:
+ * a bottom surface centers horizontally, a right surface vertically.
  */
 export function resolveFloatingOrigin(
   anchor: Rect,
@@ -48,25 +59,40 @@ export function resolveFloatingOrigin(
 ): { x: number; y: number } {
   const placement = options?.placement ?? "bottom";
   const offset = options?.offset ?? 0;
+  const align = options?.align ?? "center";
+  const alignOffset = options?.alignOffset ?? 0;
+  // Cross-axis origin: center splits the spare space; start pins to
+  // the anchor's leading edge; end pins the surface's trailing edge
+  // to the anchor's. `alignOffset` shifts after alignment.
+  const cross = (
+    anchorStart: number,
+    anchorSpan: number,
+    surfaceSpan: number,
+  ): number => {
+    if (align === "start") return anchorStart + alignOffset;
+    if (align === "end")
+      return anchorStart + anchorSpan - surfaceSpan + alignOffset;
+    return anchorStart + (anchorSpan - surfaceSpan) / 2 + alignOffset;
+  };
   switch (placement) {
     case "top":
       return {
-        x: anchor.x + (anchor.width - size.width) / 2,
+        x: cross(anchor.x, anchor.width, size.width),
         y: anchor.y - size.height - offset,
       };
     case "left":
       return {
         x: anchor.x - size.width - offset,
-        y: anchor.y + (anchor.height - size.height) / 2,
+        y: cross(anchor.y, anchor.height, size.height),
       };
     case "right":
       return {
         x: anchor.x + anchor.width + offset,
-        y: anchor.y + (anchor.height - size.height) / 2,
+        y: cross(anchor.y, anchor.height, size.height),
       };
     case "bottom":
       return {
-        x: anchor.x + (anchor.width - size.width) / 2,
+        x: cross(anchor.x, anchor.width, size.width),
         y: anchor.y + anchor.height + offset,
       };
   }

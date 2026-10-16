@@ -50,7 +50,26 @@ Popup, Title, Description, Close.
 | `DialogClose` | `Dialog.Close` | closes root, `disabled`, `render` with `{disabled}` | `nativeButton` omitted (RN presses are native by construction); `data-disabled` → D1 |
 | `Dialog` (monolith) | — | Concise single-part API retained: `open`/`defaultOpen`/`onOpenChange`/`onDismiss`/`dismissable`/`title`/`actions`/styles | Not a Base UI part; kept for existing consumers, documented alongside the compound form |
 
-### Menu — pending
+### Menu — aligned
+
+Base UI parts: Root, Trigger, Portal, Backdrop, Positioner, Popup,
+Arrow, Item, LinkItem, Separator, SubmenuRoot, SubmenuTrigger,
+Group, GroupLabel, RadioGroup, RadioItem(+Indicator),
+CheckboxItem(+Indicator), List, Viewport (+Input/Clear/Empty/
+FilterProvider filtering).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `MenuRoot` | `Menu.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `onDismiss` (Axis extension, consistent with the monolith); no `modal` — compound menus always present a Backdrop (non-modal variant deferred: outside-press detection without a scrim needs press-capture that would hijack app touches) |
+| `MenuTrigger` | `Menu.Trigger` | button role, `disabled`, `render`, expanded state; registers the positioner anchor | `openOnHover` omitted (D8 — no touch equivalent); `data-popup-open`/`data-disabled` → D1 |
+| `MenuPortal` | `Menu.Portal` | RN `Modal` host (native body-append equivalent) | D2 (no `container`) |
+| `MenuBackdrop` | `Menu.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root; `data-open/closed` → D1; no transition attributes (D9) |
+| `MenuPositioner` | `Menu.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor (model extended with `align` for this) | No `Arrow` coupling (arrow geometry is caller style) |
+| `MenuPopup` | `Menu.Popup` | content box with menu role, `render`, function styles, `ref` | `data-open/closed` → D1; no transition attributes (D9) |
+| `MenuItem` | `Menu.Item` | `disabled`, `onClick`, `closeOnClick` (default `true`), `render`; `highlighted` press state in style fns (touch adaptation of highlight) | `value`/`onSelect` optional Axis extensions (Base items carry no value; cascade identity needs it — `DropdownMenu` depends on it); `data-highlighted`/`data-disabled` → D1 |
+| `MenuSeparator` | `Menu.Separator` | silent divider | — |
+| `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
+| Submenu/Group/Checkbox/Radio/Link/Filter parts | `Menu.SubmenuRoot`, `Menu.Group`, `Menu.CheckboxItem`, … | **Pending next slices.** `DropdownMenu` already covers cascade behavior (maps to the Submenu pattern promoted to root — thin aliases evaluated in its slice, not assumed here) | — |
 
 ### Switch — aligned
 

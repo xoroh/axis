@@ -78,12 +78,26 @@ describe("Dialog compound parts on React Native", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("dismisses through the backdrop", async () => {
+  it("dismisses through the backdrop with onDismiss first", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    const dismissed: boolean[] = [];
+    await render(
+      <DialogRoot
+        onOpenChange={(v) => seen.push(v)}
+        onDismiss={() => dismissed.push(true)}
+      >
+        <DialogTrigger accessibilityLabel="Open dialog">
+          <RNText>Open</RNText>
+        </DialogTrigger>
+        <DialogPortal>
+          <DialogBackdrop testID="dlg-backdrop" />
+          <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+        </DialogPortal>
+      </DialogRoot>,
+    );
     await pressLabel("Open dialog");
-    expect(screen.getByTestId("dlg-backdrop")).toBeTruthy();
     await pressLabel("Dismiss");
+    expect(dismissed).toEqual([true]);
     expect(seen).toEqual([true, false]);
     expect(screen.queryByRole("dialog")).toBeNull();
   });

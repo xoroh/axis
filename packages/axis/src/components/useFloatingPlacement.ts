@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useWindowDimensions, type ViewStyle } from "react-native";
-import { type Placement, type Rect, resolveFloatingRect } from "../positioning";
+import {
+  type Align,
+  type Placement,
+  type Rect,
+  resolveFloatingRect,
+} from "../positioning";
 
 /**
  * Shared measured-placement plumbing for positioned overlays
@@ -42,13 +47,15 @@ export function useFloatingPlacement(options: {
   anchorRef: MeasurableRef;
   placement?: Placement;
   offset?: number;
+  align?: Align;
+  alignOffset?: number;
   active: boolean;
 }): {
   onContentLayout: (event: ContentLayoutEvent) => void;
   style: ViewStyle;
   measured: boolean;
 } {
-  const { anchorRef, placement, offset, active } = options;
+  const { anchorRef, placement, offset, align, alignOffset, active } = options;
   const viewport = useWindowDimensions();
   const [anchor, setAnchor] = useState<MeasuredRect | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
@@ -78,6 +85,8 @@ export function useFloatingPlacement(options: {
   const at = resolveFloatingRect(anchor, size, {
     placement,
     offset,
+    align,
+    alignOffset,
     viewport,
   });
   return {
