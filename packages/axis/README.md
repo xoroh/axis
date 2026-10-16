@@ -512,3 +512,66 @@ Time entry composed from Axis `Input` + `Button`, reusing the
 `onValueChange?`, `step?: number` (minutes, default 1),
 `disabled?`, `accessibilityLabel?`, `testID?`, `style?`, `ref`.
 Steppers walk the step grid and clamp at its ends. All optional.
+
+## Search
+
+Search entry composing Axis `Input` with a clear button (rendered
+only while the query is non-empty): `value?`, `defaultValue?`
+(default `""`), `onValueChange?`, `onSubmit?` (return key),
+`placeholder?`, `accessibilityLabel?`, `testID?`, `style?`
+(container), `inputStyle?`,
+`clearAccessibilityLabel?` (default `"Clear search"`), `ref`
+(container). Filtering belongs to the caller. All optional.
+
+## Pagination
+
+Bounded page navigator: `page?`, `defaultPage?` (default 1),
+`pageCount?` (below 1 collapses to one page),
+`onPageChange?`, `disabled?`, `accessibilityLabel?`, `testID?`,
+`style?`, `children?` (page indicator, e.g. "3 of 12"),
+`previousLabel?`/`nextLabel?` (default "Previous/Next page"),
+`ref` (container). At bounds the corresponding control disables
+itself. Page arithmetic beyond clamp belongs to the caller. All
+optional.
+
+## Select
+
+Single-select dropdown: `value?: string | null`,
+`defaultValue?`, `onValueChange?`, `open?`, `defaultOpen?`,
+`onOpenChange?`, `placeholder?` (ReactNode, shown when empty),
+`disabled?`, `accessibilityLabel?`, `testID?`, `style?` (trigger),
+`listStyle?`, `children` (SelectItems, required), `ref`.
+Trigger shows current label or placeholder with expanded state;
+list positioned with floating placement + scrim dismiss; option
+press selects + closes (re-press keeps, no extra fire). No
+filtering (that's Combobox), no multi. All optional except
+`children`.
+
+`SelectItemProps`: `value: string` (required), `disabled?`,
+`accessibilityLabel?`, `testID?`, `style?`, `children?`; role
+`option` with selected state where supported, else button with
+selected state (verified per platform types, documented in-file).
+
+## Popover
+
+Non-modal anchored overlay: `children` (anchor, required),
+`content` (body, required), `open?`, `defaultOpen?`,
+`onOpenChange?`, `onDismiss?`, `placement?`,
+`accessibilityLabel?` (announced on the region),
+`testID?`, `style?` (anchor), `popoverStyle?`, `ref` (anchor).
+Tap toggles; scrim dismisses (siblings, so box taps never dismiss);
+measured placement, transparent until measured. No role claim —
+React Native defines no popover role. No animation, arrow, hover,
+or focus trap (each deferred with rationale in-file). All optional
+except `children`/`content`.
+
+## Menu
+
+Popup menu: `Menu` (`open?`, `defaultOpen?`, `onOpenChange?`,
+`onDismiss?`, `testID?`, `style?`, `children`, `ref`) +
+`MenuTrigger` (Pressable toggling open) + `MenuItem` (`value`
+required, `disabled?`, `onSelect?` fires then closes). Bare-element
+children in the trigger zone get toggle composed; scrim fills the
+menu container (no Modal/portal host — taps inside never dismiss).
+No submenus, animation, or hover/keyboard nav (each deferred
+with rationale in-file). All props optional except item `value`.

@@ -35,16 +35,16 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Textarea | complete | multiline + auto-grow, RNTL 4 |
 | Number Field | complete | Input+Button composition, RNTL 7 |
 | OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
-| Search | missing | |
+| Search | complete | composed entry + clear/submit, RNTL 4 |
 | Autocomplete | missing | adapted: native list overlay |
 | Combobox | missing | adapted: entry + native popup |
-| Select | missing | adapted: picker/action-sheet pattern |
+| Select | complete | single-select dropdown, RNTL 8 |
 | Calendar | complete | UTC date grid, RNTL 7 |
 | Time Picker | complete | Input+Button composition, RNTL 6 |
 | Accordion | complete | single-expand disclosure, RNTL 7 |
 | Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
-| Pagination | missing | |
+| Pagination | complete | bounded navigation, RNTL 4 |
 | Carousel | missing | swipe/scroll + indicators |
 | Toolbar | missing | |
 | Navigation Bar/Rail/Drawer | missing | destinations + active state |
@@ -54,9 +54,9 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | missing | blocking confirm + trap |
 | Sheet/Drawer | missing | bottom sheet + detents |
-| Menu | missing | popup + dismiss |
+| Menu | complete | popup menu + items, RNTL 8 |
 | Context Menu | missing | adapted: long-press trigger |
-| Popover | missing | adapted: custom positioner |
+| Popover | complete | anchored overlay + scrim, RNTL 7 |
 | Tooltip | complete | long-press + measured placement, RNTL 4 |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |

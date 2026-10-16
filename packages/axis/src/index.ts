@@ -56,8 +56,18 @@ export { Field, type FieldProps } from "./components/Field";
 export { Fieldset, type FieldsetProps } from "./components/Fieldset";
 export { Input, type InputProps } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
+export {
+  Menu,
+  MenuItem,
+  type MenuItemProps,
+  type MenuProps,
+  MenuTrigger,
+  type MenuTriggerProps,
+} from "./components/Menu";
 export { NumberField, type NumberFieldProps } from "./components/NumberField";
 export { OtpField, type OtpFieldProps } from "./components/OtpField";
+export { Pagination, type PaginationProps } from "./components/Pagination";
+export { Popover, type PopoverProps } from "./components/Popover";
 export { Progress, type ProgressProps } from "./components/Progress";
 export {
   RadioGroup,
@@ -65,6 +75,13 @@ export {
   type RadioGroupItemProps,
   type RadioGroupProps,
 } from "./components/RadioGroup";
+export { Search, type SearchProps } from "./components/Search";
+export {
+  Select,
+  SelectItem,
+  type SelectItemProps,
+  type SelectProps,
+} from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
 export { Slider, type SliderProps } from "./components/Slider";
 export { Switch, type SwitchProps } from "./components/Switch";
