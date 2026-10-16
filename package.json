@@ -14,6 +14,7 @@
   "scripts": {
     "changeset": "changeset",
     "version-packages": "changeset version",
+    "release": "changeset publish",
     "lint": "biome check .",
     "typecheck": "bun run --filter @xoroh/axis typecheck",
     "test": "bun test tests/",
