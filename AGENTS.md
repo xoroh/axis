@@ -30,7 +30,7 @@ Agents may be asked to audit this repository against Xoroh standards:
 ## Rules
 
 1. Do not publish, release, tag, deploy, merge, or change remote settings.
-2. Do not push to `development`; do not run destructive Git operations.
+2. Do not push to `main`; do not run destructive Git operations.
 3. Do not interfere with other agents' branches, stashes, or working changes.
 4. No secrets in files, logs, or prompts. Never bypass failing checks.
 5. Human approval is required before any irreversible action.
