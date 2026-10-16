@@ -4,6 +4,8 @@ import { Pressable, Text as RNText, type View } from "react-native";
 import {
   MenuArrow,
   MenuBackdrop,
+  MenuCheckboxItem,
+  MenuCheckboxItemIndicator,
   MenuGroup,
   MenuGroupLabel,
   MenuItem,
@@ -11,6 +13,9 @@ import {
   MenuPopup,
   MenuPortal,
   MenuPositioner,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuRadioItemIndicator,
   MenuRoot,
   MenuSeparator,
   MenuTrigger,
@@ -407,5 +412,205 @@ describe("Menu group, link, arrow, and non-modal parts", () => {
       fireEvent.press(screen.getByText("X"));
     });
     expect(screen.queryByTestId("menu-popup")).toBeNull();
+  });
+});
+
+describe("Menu checkbox and radio items", () => {
+  function SettingsMenu({ onCheck }: { onCheck?: (checked: boolean) => void }) {
+    return (
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuCheckboxItem
+                testID="item-minimap"
+                defaultChecked={false}
+                onCheckedChange={(v) => onCheck?.(v)}
+              >
+                <MenuCheckboxItemIndicator testID="minimap-check">
+                  <RNText>✓</RNText>
+                </MenuCheckboxItemIndicator>
+                <RNText>Minimap</RNText>
+              </MenuCheckboxItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
+    );
+  }
+
+  it("toggles unchecked state, reports, shows the indicator, and stays open", async () => {
+    const seen: boolean[] = [];
+    await render(<SettingsMenu onCheck={(v) => seen.push(v)} />);
+    expect(screen.queryByTestId("minimap-check")).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Minimap"));
+    });
+    expect(seen).toEqual([true]);
+    expect(screen.getByTestId("minimap-check")).toBeTruthy();
+    expect(
+      screen.getByTestId("item-minimap").props.accessibilityState,
+    ).toMatchObject({ checked: true });
+    // closeOnClick defaults to false: settings toggles stay open.
+    expect(screen.getByRole("menu")).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Minimap"));
+    });
+    expect(seen).toEqual([true, false]);
+    expect(screen.queryByTestId("minimap-check")).toBeNull();
+  });
+
+  it("closes when closeOnClick is set", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuCheckboxItem closeOnClick testID="item-once">
+                <RNText>Once</RNText>
+              </MenuCheckboxItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByText("Once"));
+    });
+    expect(screen.queryByTestId("menu-popup")).toBeNull();
+  });
+
+  it("follows controlled checked state", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuCheckboxItem checked testID="item-on">
+                <RNText>On</RNText>
+              </MenuCheckboxItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    expect(
+      screen.getByTestId("item-on").props.accessibilityState,
+    ).toMatchObject({ checked: true });
+  });
+
+  it("keeps disabled checkbox items unchecked and silent", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuCheckboxItem
+                testID="item-off"
+                disabled
+                onCheckedChange={(v) => seen.push(v)}
+              >
+                <RNText>Off</RNText>
+              </MenuCheckboxItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByText("Off"));
+    });
+    expect(seen).toEqual([]);
+    expect(
+      screen.getByTestId("item-off").props.accessibilityState,
+    ).toMatchObject({ checked: false, disabled: true });
+  });
+
+  function SortMenu({ onPick }: { onPick?: (value: string) => void }) {
+    return (
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuRadioGroup onValueChange={onPick}>
+                <MenuRadioItem value="date" testID="item-date">
+                  <MenuRadioItemIndicator testID="date-dot">
+                    <RNText>•</RNText>
+                  </MenuRadioItemIndicator>
+                  <RNText>Date</RNText>
+                </MenuRadioItem>
+                <MenuRadioItem value="name" testID="item-name">
+                  <RNText>Name</RNText>
+                </MenuRadioItem>
+              </MenuRadioGroup>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
+    );
+  }
+
+  it("selects a radio option, reports, and closes", async () => {
+    const seen: string[] = [];
+    await render(<SortMenu onPick={(v) => seen.push(v)} />);
+    await act(async () => {
+      fireEvent.press(screen.getByText("Date"));
+    });
+    expect(seen).toEqual(["date"]);
+    // Selecting closes the menu: the selected state is proven by
+    // the report + dismissal, the indicator itself by the
+    // controlled test below (open menu, preset value).
+    expect(screen.queryByTestId("menu-popup")).toBeNull();
+  });
+
+  it("follows a controlled group value with indicator", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuRadioGroup value="name">
+                <MenuRadioItem value="date" testID="item-date">
+                  <MenuRadioItemIndicator testID="date-dot">
+                    <RNText>•</RNText>
+                  </MenuRadioItemIndicator>
+                  <RNText>Date</RNText>
+                </MenuRadioItem>
+                <MenuRadioItem value="name" testID="item-name">
+                  <MenuRadioItemIndicator testID="name-dot">
+                    <RNText>•</RNText>
+                  </MenuRadioItemIndicator>
+                  <RNText>Name</RNText>
+                </MenuRadioItem>
+              </MenuRadioGroup>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    expect(
+      screen.getByTestId("item-name").props.accessibilityState,
+    ).toMatchObject({ selected: true });
+    expect(screen.getByTestId("name-dot")).toBeTruthy();
+    expect(
+      screen.getByTestId("item-date").props.accessibilityState,
+    ).toMatchObject({ selected: false });
+    expect(screen.queryByTestId("date-dot")).toBeNull();
+  });
+
+  it("renders indicators nothing outside their items", async () => {
+    await render(
+      <>
+        <MenuCheckboxItemIndicator testID="orphan-check">
+          <RNText>✓</RNText>
+        </MenuCheckboxItemIndicator>
+        <MenuRadioItemIndicator testID="orphan-dot">
+          <RNText>•</RNText>
+        </MenuRadioItemIndicator>
+      </>,
+    );
+    expect(screen.queryByTestId("orphan-check")).toBeNull();
+    expect(screen.queryByTestId("orphan-dot")).toBeNull();
   });
 });
