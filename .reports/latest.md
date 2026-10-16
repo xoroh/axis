@@ -33,11 +33,10 @@
 
 ## Remaining program (in order)
 1. Owner merges #54 (Q15 gate), #55 (vendoring).
-2. AI chat models (after scope PR #45 merged — NOTE: verify
-   #45 state; last turn reported it open): useStickToBottom,
-   status vocabulary, Message + a11y, ToolCall, attachments,
-   prompt input, branch, Source — models zone, tests, parity
-   notes. Small PRs, worktrees.
+2. AI chat models: useStickToBottom, status vocabulary,
+   Message + a11y, ToolCall, attachments, prompt input,
+   branch, Source — models zone, tests, parity notes.
+   Small PRs, worktrees.
 3. Popover/Select/Tooltip/controls alignment remainder +
    parity backfill; planned slices (focus, nesting,
    handles, transitions, Q6 demos follow-ups).
