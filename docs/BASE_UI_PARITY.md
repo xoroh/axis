@@ -68,8 +68,13 @@ FilterProvider filtering).
 | `MenuPopup` | `Menu.Popup` | content box with menu role, `render`, function styles, `ref` | `data-open/closed` → D1; no transition attributes (D9) |
 | `MenuItem` | `Menu.Item` | `disabled`, `onClick`, `closeOnClick` (default `true`), `render`; `highlighted` press state in style fns (touch adaptation of highlight) | `value`/`onSelect` optional Axis extensions (Base items carry no value; cascade identity needs it — `DropdownMenu` depends on it); `data-highlighted`/`data-disabled` → D1 |
 | `MenuSeparator` | `Menu.Separator` | silent divider | — |
+| `MenuGroup` + `MenuGroupLabel` | `Menu.Group` + `Menu.GroupLabel` | group container + label text | — |
+| `MenuLinkItem` | `Menu.LinkItem` | link-role item, same select/click/close sequence (shared hook, no duplicated logic) | No `href` (no URL handling on native — navigation is caller behavior) |
+| `MenuArrow` | `Menu.Arrow` | caller-positioned marker | Geometry is caller style (no anchor/popup measurement coupling in the part) |
+| `modal={false}` on Root | non-modal menus | in-box portal, no scrim, trigger toggles | Outside-press without a scrim reaches the app (press-capture would hijack touches) |
 | `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
-| Submenu/Group/Checkbox/Radio/Link/Filter parts | `Menu.SubmenuRoot`, `Menu.Group`, `Menu.CheckboxItem`, … | **Pending next slices.** `DropdownMenu` already covers cascade behavior (maps to the Submenu pattern promoted to root — thin aliases evaluated in its slice, not assumed here) | — |
+| Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Pending next slice** (settings menus need controlled-state checkbox/radio APIs of their own) | — |
+| Submenu parts | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger` | **Pending.** `DropdownMenu` already covers cascade behavior (maps to the Submenu pattern promoted to root — thin aliases evaluated in its slice, not assumed here) | — |
 
 ### Switch — aligned
 

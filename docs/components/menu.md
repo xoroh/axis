@@ -14,13 +14,16 @@ No submenus (see `DropdownMenu`), animation, or hover/keyboard nav
 
 Compound form (Base UI parity — same names, same state
 semantics): `MenuRoot` (`open?`/`defaultOpen?`/`onOpenChange?`/
-`onDismiss?`/`disablePointerDismissal?`; renders no element) with
+`onDismiss?`/`disablePointerDismissal?`/`modal?` (default true;
+`false` renders in-box with no scrim); renders no element) with
 `MenuTrigger` (button role, expanded state, anchor-registering),
 `MenuPortal` (RN `Modal` host — escapes clipped parents, unlike
 the inline monolith), `MenuBackdrop` (scrim), `MenuPositioner`
 (`side?`/`align?`/`sideOffset?`/`alignOffset?`, measured against
 the trigger), `MenuPopup` (content box, menu role), `MenuItem`
-(`highlighted` press state in style fns), `MenuSeparator`.
+(`highlighted` press state in style fns), `MenuSeparator`,
+`MenuGroup`/`MenuGroupLabel`, `MenuLinkItem` (link role, same
+sequence), `MenuArrow` (caller-positioned marker).
 Every part takes `render` (element or `(props, state)` function)
 and value-or-function `style`; `data-*` attributes are
 deliberately absent on native (contract §11). Example:
