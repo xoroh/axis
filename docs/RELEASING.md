@@ -1,6 +1,6 @@
 # Manual package releases
 
-Axis packages are **not published by GitHub Actions**. Publishing must remain a deliberate manual step; do not publish the initial `@xoroh/axis-core` placeholder.
+Axis packages are **not published by GitHub Actions**. Publishing must remain a deliberate manual step; nothing is published yet (the retired `@xoroh/axis-core` placeholder is gone).
 
 Before a package is released:
 

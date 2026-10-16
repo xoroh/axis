@@ -14,9 +14,16 @@
   "scripts": {
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "test": "bun test"
+    "lint": "biome check .",
+    "typecheck": "bun run --filter @xoroh/axis typecheck",
+    "test": "bun test tests/",
+    "test:all": "bun test tests/ && bun run --filter @xoroh/axis test",
+    "build": "bun run --filter @xoroh/axis build"
   },
   "devDependencies": {
-    "@changesets/cli": "^3.0.3"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@biomejs/biome": "^2.5.14",
+    "@changesets/cli": "^3.0.3",
+    "publint": "^0.3.24"
   }
 }
