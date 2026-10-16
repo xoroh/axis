@@ -102,6 +102,12 @@ export {
   MenuTrigger,
   type MenuTriggerProps,
 } from "./components/Menu";
+export {
+  Menubar,
+  MenubarMenu,
+  type MenubarMenuProps,
+  type MenubarProps,
+} from "./components/Menubar";
 export { Meter, type MeterProps } from "./components/Meter";
 export {
   NavigationBar,
