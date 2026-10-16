@@ -25,11 +25,23 @@ describe("normalizeBranchIndex", () => {
 });
 
 describe("nextBranchIndex / previousBranchIndex", () => {
-  it("wraps around both ends", () => {
-    expect(nextBranchIndex(2, 3)).toBe(0);
+  it("steps within the list", () => {
     expect(nextBranchIndex(0, 3)).toBe(1);
-    expect(previousBranchIndex(0, 3)).toBe(2);
+    expect(nextBranchIndex(1, 3)).toBe(2);
+    expect(previousBranchIndex(2, 3)).toBe(1);
     expect(previousBranchIndex(1, 3)).toBe(0);
+  });
+
+  it("stops at the last variant: Next there is a no-op", () => {
+    expect(nextBranchIndex(2, 3)).toBe(2);
+    expect(nextBranchIndex(9, 3)).toBe(2);
+    expect(nextBranchIndex(0, 1)).toBe(0);
+  });
+
+  it("stops at the first variant: Previous there is a no-op", () => {
+    expect(previousBranchIndex(0, 3)).toBe(0);
+    expect(previousBranchIndex(-4, 3)).toBe(0);
+    expect(previousBranchIndex(0, 1)).toBe(0);
   });
 
   it("reads 0 with no branches", () => {
@@ -48,14 +60,20 @@ describe("shouldHideBranchPicker", () => {
 });
 
 describe("useBranch", () => {
-  it("steps with wrap-around", () => {
+  it("steps and stops at both ends", () => {
     const { result } = renderHook(() => useBranch({ count: 3 }));
     expect(result.current.index).toBe(0);
     act(() => result.current.next());
     expect(result.current.index).toBe(1);
     act(() => result.current.previous());
     expect(result.current.index).toBe(0);
+    // Previous on the first variant is a no-op.
     act(() => result.current.previous());
+    expect(result.current.index).toBe(0);
+    // Next on the last variant is a no-op.
+    act(() => result.current.goTo(2));
+    expect(result.current.index).toBe(2);
+    act(() => result.current.next());
     expect(result.current.index).toBe(2);
   });
 

@@ -135,9 +135,12 @@ plain strings each renderer maps its own events onto.
 `resolveComposerHeight` clamps line counts to `minLines..maxLines`
 (default `1..5`) times the caller-measured `lineHeight`. The hook
 owns the draft (controlled or uncontrolled): `submit` reports
-through `onSubmit` only when sendable and never clears — the
-caller clears after handing the draft to its transport, so the
-clear visibly follows the send on every renderer. `handleKey`
+through `onSubmit` only when sendable and never clears — by
+decision the caller clears after handing the draft to its
+transport (`onSubmit={(text) => { send(text); clear(); }}`), so
+the clear visibly follows the send on every renderer and
+controlled drafts behave exactly like uncontrolled ones.
+`handleKey`
 commits or Escape-clears (opt-in `cancelOnEscape`) and reports
 whether it consumed the event.
 
@@ -149,8 +152,8 @@ Source of truth: `normalizeBranchIndex`, `nextBranchIndex`,
 
 The edit-and-retry pager over `count` answer variants (the
 `selection`-model precedent: pure transitions plus a
-controlled/uncontrolled hook). Steps wrap around both ends; `goTo`
-clamps; `count` shrinkage normalises immediately to the last
+controlled/uncontrolled hook). Steps stop at both ends — Next on
+the last and Previous on the first are no-ops; `goTo` clamps; `count` shrinkage normalises immediately to the last
 remaining variant, so the pager never points past its own list.
 The pager hides for single-branch turns by default
 (`hideWhenSingleBranch`). Persisted message trees stay

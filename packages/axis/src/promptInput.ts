@@ -111,9 +111,13 @@ export function resolveComposerHeight(options: {
  * The composer draft, controlled or uncontrolled, gated on the run
  * status. `submit` reports the draft through `onSubmit` when
  * `canSend` holds and is otherwise a terminal no-op (no callbacks
- * from an empty or busy composer). `submit` never clears: the caller
- * clears after handing the draft to its transport, so the clear
- * visibly follows the send on every renderer.
+ * from an empty or busy composer). `submit` never clears, by
+ * decision: the caller clears after handing the draft to its
+ * transport (`onSubmit={(text) => { send(text); clear(); }}`), so
+ * the clear visibly follows the send on every renderer and
+ * controlled drafts behave exactly like uncontrolled ones. A hook
+ * that cleared internally could not clear controlled drafts, and
+ * two behaviors under one name is the bug farm.
  */
 export function usePromptInput(options?: {
   value?: string;

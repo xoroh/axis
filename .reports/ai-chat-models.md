@@ -51,12 +51,14 @@ jest-RN 48 suites / 337 pass · typecheck clean · boundary +
 policy tests (26) clean · check:readme clean · build clean ·
 check:publish clean · lint clean (1 warning pre-existing on main).
 
-## Notes for review
+## Update (Lead review, same turn)
 
-1. Branch pager wraps rather than clamps (toggle-equivalent at
-   count 2, cycling above) — flagged as the one judgment call;
-   easy to flip if Lead prefers clamp.
-2. `usePromptInput.submit` deliberately never clears the draft;
-   docs show the `onSubmit → send → clear` wiring.
+1. Branch pager now stops at the ends (no wraparound): `next` /
+   `previous` clamp, with explicit no-op tests for both ends.
+   Pure transitions, hook test, and `docs/AI_CHAT_MODELS.md`
+   updated to match.
+2. `submit`-never-clears confirmed as the decision; rationale and
+   the `onSubmit → send → clear` wiring now stated in the
+   `usePromptInput` doc block and `docs/AI_CHAT_MODELS.md`.
 3. Token budget: fine — no truncation; everything above is
    implemented, tested, and documented.

@@ -11,7 +11,7 @@
  *
  * ## What is genuinely shared, and what is not
  *
- * The INDEX is shared: normalise, step, wrap, and the
+ * The INDEX is shared: normalise, step, stop-at-the-ends, and the
  * hide-when-single rule, following the `selection`-model precedent
  * (pure transitions plus a controlled/uncontrolled hook). The TREE is
  * not — persisted message trees stay transport-owned; this models the
@@ -29,16 +29,16 @@ export function normalizeBranchIndex(index: number, count: number): number {
   return Math.min(Math.max(Math.floor(index), 0), count - 1);
 }
 
-/** Step forward with wrap-around: the last variant's Next returns to the first. */
+/** Step forward, stopping at the last variant: Next on the last is a no-op. */
 export function nextBranchIndex(index: number, count: number): number {
   if (count <= 0) return 0;
-  return (normalizeBranchIndex(index, count) + 1) % count;
+  return Math.min(normalizeBranchIndex(index, count) + 1, count - 1);
 }
 
-/** Step back with wrap-around: the first variant's Previous jumps to the last. */
+/** Step back, stopping at the first variant: Previous on the first is a no-op. */
 export function previousBranchIndex(index: number, count: number): number {
   if (count <= 0) return 0;
-  return (normalizeBranchIndex(index, count) - 1 + count) % count;
+  return Math.max(normalizeBranchIndex(index, count) - 1, 0);
 }
 
 /**
