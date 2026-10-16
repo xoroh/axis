@@ -9,8 +9,11 @@ accessibility primitives. Bun monorepo. Install: `bun install
 
 Work in this repository only. Kern, Xoroh governance, and other projects
 are separate — never access or modify them. This package must stay
-platform-neutral: no DOM, React Native, Expo, or design-system token
-imports (enforced by `packages/axis/scripts/check-boundary.mjs`).
+platform-neutral, except for rendered components: no DOM, Expo, or
+design-system token imports anywhere; React Native host imports are
+allowed only under `packages/axis/src/components/` (rendered components
+per `docs/COMPONENT_CONTRACT.md`) and forbidden in behavior models
+(enforced by `packages/axis/scripts/check-boundary.mjs`).
 
 ## On-demand Xoroh standards audit
 
