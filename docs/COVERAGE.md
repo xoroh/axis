@@ -21,14 +21,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Toggle Group | complete | pressed-state set, RNTL 5 |
 | Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
-| Icon Button | complete | label-required pressable, RNTL 5 |
-| Link Button | complete | link-role button, RNTL 5 |
-| Loading Button | complete | forced loading, RNTL 5 |
-| Split Button | complete | dual press paths, RNTL 6 |
-| Button Group | complete | layout container, RNTL 5 |
 | Pressable/Trigger primitive | complete | semantics-free press container (caller asserts role); Button/Switch keep their semantics, RNTL 4 |
-| Chip | complete | select/remove, RNTL 7 |
-| FAB family | complete | Fab (icon, label-required, size dp) + ExtendedFab (icon + text), RNTL 9 |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
 | Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
 | Label | complete | nativeID association, RNTL 2 |
@@ -45,16 +38,13 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Accordion | complete | single-expand disclosure, RNTL 7 |
 | Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
-| Pagination | complete | bounded navigation, RNTL 4 |
-| Carousel | complete | paged content, RNTL 6 |
 | Toolbar | complete | oriented group, RNTL 5 |
-| Navigation Bar/Rail/Drawer | complete | tab bar (first-item default, no deselect) + rail wrapper + edge drawer with scrim (`Drawer`; `NavigationDrawer` warn-once alias), RNTL 15 |
+| Drawer | complete | edge-anchored panel with scrim dismissal, RNTL 6 |
 | Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
-| Top App Bar | complete | header role + title/leading/actions slots, RNTL 4 |
 | Menubar | complete | command bar composing DropdownMenu (single-open coordination), RNTL 9 |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
-| Sheet/Drawer | complete | bottom sheet: detents + PanResponder drag + scrim, RNTL 12 |
+| Sheet | complete | bottom sheet: detents + PanResponder drag + scrim, RNTL 12 |
 | Menu | complete | popup menu + items, RNTL 8 |
 | Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |
@@ -64,19 +54,12 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
 | Meter | complete | gauge readout, RNTL 2 |
-| Skeleton | complete | silent placeholder, RNTL 1 |
 | Loader/Loading Indicator | complete | busy indicator, RNTL 1 |
 | Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7 |
-| Badge | complete | adornment, RNTL 1 (in display suite) |
-| Empty State | complete | nothing-here frame, RNTL 2 |
 | Avatar | complete | image + fallback, RNTL 3 (in display suite) |
 | Aspect Ratio | complete | ratio box, RNTL 3 |
-| Card | complete | slot container, RNTL 1 |
 | Separator | complete | silent divider, RNTL 2 |
 | Table | complete | header/row/cell parts, RNTL 5 |
-| List Item | complete | pressable/static rows, RNTL 3 |
-| Settings Row | complete | title/description + control slot, static-or-pressable, RNTL 7 |
-| Kbd | complete | key hint, RNTL 1 |
 | Text | complete | readable host, no type scale (caller style), RNTL 6 |
 
 ## Behavior models (traceability, not components)

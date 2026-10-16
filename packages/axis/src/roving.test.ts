@@ -156,7 +156,7 @@ describe("createRovingModel", () => {
  * the hook: the model holds its index in a closure created per call, so a hook
  * that rebuilds it on every render resets to `defaultActiveIndex` each time. No
  * amount of model testing finds that — the model has no renders. It surfaced
- * when native Carousel, the first real consumer, reported the right index and
+ * when the first real consumer reported the right index and
  * rendered the wrong slide.
  */
 describe("useRovingModel", () => {

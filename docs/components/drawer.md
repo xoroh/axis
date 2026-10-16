@@ -13,6 +13,5 @@ takes `<testID>-scrim`), `overlayStyle?`, `surfaceStyle?`
 genuinely different primitive, not an alias), no animation, no
 back-handler beyond the Modal, no focus trap — each deferred
 with rationale in the component header.
-`NavigationDrawer` remains as a warn-once deprecated alias.
 Example: `<Drawer defaultOpen
 accessibilityLabel="App navigation" />`.
