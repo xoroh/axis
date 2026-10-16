@@ -48,7 +48,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Pagination | complete | bounded navigation, RNTL 4 |
 | Carousel | complete | paged content, RNTL 6 |
 | Toolbar | complete | oriented group, RNTL 5 |
-| Navigation Bar/Rail/Drawer | complete | tab bar (first-item default, no deselect) + rail wrapper + edge drawer with scrim, RNTL 14 |
+| Navigation Bar/Rail/Drawer | complete | tab bar (first-item default, no deselect) + rail wrapper + edge drawer with scrim (`Drawer`; `NavigationDrawer` warn-once alias), RNTL 15 |
 | Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
 | Top App Bar | complete | header role + title/leading/actions slots, RNTL 4 |
 | Menubar | complete | command bar composing DropdownMenu (single-open coordination), RNTL 9 |

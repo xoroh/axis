@@ -11,6 +11,11 @@ import { useControllableState } from "../useControllableState";
 /**
  * NavigationDrawer — an unstyled edge-anchored navigation panel.
  *
+ * Base UI naming (owner direction): the edge-anchored panel is a
+ * `Drawer`. `Sheet` stays a separate primitive — detents, snap
+ * index, and drag-to-snap make it genuinely different, not an
+ * alias (owner Q5 decision).
+ *
  * Structure only: an RN `Modal` (transparent) holding a scrim layer
  * with the drawer surface anchored to the leading (`side="left"`,
  * default) or trailing edge. No default visuals — every visual
@@ -44,7 +49,7 @@ import { useControllableState } from "../useControllableState";
  * precedent).
  */
 
-export type NavigationDrawerProps = {
+export type DrawerProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
@@ -81,7 +86,7 @@ export type NavigationDrawerProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: NavigationDrawerProps["ref"],
+  ref: DrawerProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -98,7 +103,7 @@ function assignRef(
   }
 }
 
-export function NavigationDrawer({
+export function Drawer({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -111,7 +116,7 @@ export function NavigationDrawer({
   overlayStyle,
   surfaceStyle,
   ref,
-}: NavigationDrawerProps): React.JSX.Element | null {
+}: DrawerProps): React.JSX.Element | null {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -156,4 +161,29 @@ export function NavigationDrawer({
       </View>
     </Modal>
   );
+}
+
+/**
+ * Deprecated alias of `Drawer` (Base UI naming). Warns once;
+ * removed after one minor release (contract §10).
+ */
+export type NavigationDrawerProps = DrawerProps;
+
+let warnedNavigationDrawer = false;
+
+/**
+ * Deprecated alias: use `Drawer`. Warns once per session, then
+ * delegates with identical behavior.
+ */
+export function NavigationDrawer(
+  props: NavigationDrawerProps,
+): React.JSX.Element | null {
+  if (!warnedNavigationDrawer) {
+    warnedNavigationDrawer = true;
+    console.warn(
+      "Axis NavigationDrawer is deprecated (Base UI naming): use `Drawer`. " +
+        "It will be removed after one minor release.",
+    );
+  }
+  return <Drawer {...props} />;
 }

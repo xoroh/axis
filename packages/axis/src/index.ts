@@ -157,6 +157,8 @@ export {
   type NavigationBarProps,
 } from "./components/NavigationBar";
 export {
+  Drawer,
+  type DrawerProps,
   NavigationDrawer,
   type NavigationDrawerProps,
 } from "./components/NavigationDrawer";
