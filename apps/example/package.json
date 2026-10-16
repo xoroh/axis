@@ -1,0 +1,23 @@
+{
+  "name": "@xoroh/axis-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Runnable Expo demo app for @xoroh/axis — one unstyled demo per component. Never published.",
+  "main": "index.js",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "check:demos": "node scripts/check-demo-coverage.mjs",
+    "start": "expo start"
+  },
+  "dependencies": {
+    "@xoroh/axis": "workspace:*",
+    "expo": "^57.0.0",
+    "react": "^19.0.0",
+    "react-native": "^0.86.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "babel-preset-expo": "^57.0.0",
+    "typescript": "5.9.3"
+  }
+}
