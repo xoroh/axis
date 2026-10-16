@@ -8,7 +8,7 @@ Owner ideas not yet decided. Status values: `idea` · `researching` · `accepted
 
 | Idea | Status | Notes |
 | --- | --- | --- |
-| AI chat UI primitives and components (placement Axis vs Kern to be decided) | researching | Unstyled chat behavior (thread/composer/message/tool flows) may belong in Axis; styled chat components belong in Kern design systems. Needs survey of assistant-ui/AI Elements/prompt-kit patterns against `docs/COMPONENT_CONTRACT.md` before an ADR. |
-| Component scope review: move design patterns out of Axis | researching | Axis holds only base behavior primitives (Base UI equivalents + standard mobile primitives); design patterns live in Kern design systems. Inventory `docs/COVERAGE.md` rows that are patterns, then ADR. |
+| AI chat UI primitives and components | accepted to roadmap with link | Placed by ADR [010](decisions/010-ai-chat-models.md): unstyled chat behavior models live in Axis; styled chat parts live in Kern design systems. Research note: `.reports/research-ai-chat-ui.md`. |
+| Component scope review: move design patterns out of Axis | accepted to roadmap with link | Decided by ADR [006](decisions/006-scope-primitives-only.md): Axis holds base behavior primitives only; 21 design-pattern components move to Kern design systems (list in `.reports/research-scope-axis-vs-kern.md`). |
 
 Rejected: none recorded.
