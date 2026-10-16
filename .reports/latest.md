@@ -1,61 +1,66 @@
-# Status report — 2026-10-16 (Axis completion program, turn 7)
+# Status report — 2026-10-16 (Axis completion program, turn 8)
 
 ## Done this turn
-- **PR #30 merged** (owner-approved): Menu compound parts.
-- **Q5 closed**: `Drawer` is the edge-anchored panel;
-  `NavigationDrawer` warn-once alias until removal; `Sheet`
-  kept (detents/snap/drag genuinely different — recorded).
-  PR #32 merged green.
-- **PR #33 OPEN (large — for owner review/merge): Menu
-  follow-ups.** Shared item-activation hook (Item/LinkItem
-  differ in role only); `MenuLinkItem`, `MenuGroup`/
-  `MenuGroupLabel`, `MenuArrow` (caller-positioned,
-  documented); non-modal roots (`modal={false}`: in-box
-  portal, no scrim, trigger toggles; outside-press limitation
-  documented). RNTL +5 (full jest 56/408 green locally).
-  Parity rows updated (checkbox/radio/filter/submenu-alias
-  still pending).
-- Positioning model `align`/`alignOffset` shipped inside #30
-  (unit-tested, default center = zero regression).
+- **PR #30 merged** (owner-approved Menu compound parts).
+- **Q5 closed**: `Drawer` canonical, `NavigationDrawer`
+  warn-once alias, `Sheet` kept as genuinely different (PR
+  merged after green CI — small routine).
+- **Q7 closed**: README split merged (PR #35, green).
+  - `packages/axis/README.md` 1169 → short (install, minimal
+    example, 66-row index with absolute URLs, doc links).
+  - 66 per-component notes moved verbatim to
+    `docs/components/*.md` (single `##` each, all with
+    `Source of truth`, titles unique — verified
+    programmatically).
+  - Root `README.md` rewritten (stale scaffolding/release
+    lines gone; HOLD-accurate release line).
+  - Compatibility evidence preserved (not dropped) in new
+    `docs/COMPATIBILITY.md`, linked from both READMEs.
+  - `check-readme` retargeted (per-file source-of-truth,
+    index sync, no stray sections) and green.
+- **PR #33 still open for owner**: Menu follow-ups (large).
+  No action taken on it (no waiting either — independent
+  tracks shipped instead).
 
 ## Decisions with rationale
-1. **Single shared menu context + monolith no-op anchor
-   registrar** (from #30): provably zero monolith behavior
-   change, proven by its untouched green suite.
-2. **Shared `useMenuItemActivation` hook** instead of a
-   duplicated LinkItem body. *Rationale: the select/click/
-   close sequence in two places is the silent-drift shape the
-   slot model exists to prevent.*
-3. **`MenuLinkItem` without `href`.** *Rationale: no URL
-   handling exists on native; navigation is caller behavior —
-   a decorative href prop would be dishonest API.*
-4. **Non-modal = no-Modal in-box portal** (not just no
-   scrim). *Rationale: a Modal still traps touches even
-   without a scrim; true non-modal must paint in-box like the
-   monolith.*
-5. **`MenuGroup` renders all panels when open** (caller error
-   of two panels shows both). *Rationale: visible over
-   silent — dropping would hide caller bugs.*
-6. **Q5 scoping: `Sheet` kept, not aliased.** *Rationale:
-   detents + snap index + drag satisfy the owner's
-   genuinely-different test.*
+1. **Single-source component docs in `docs/components/`;
+   published README keeps index only.** *Rationale: two prose
+   sources drift (the Q1 rot class); absolute URLs keep the
+   npm page functional.*
+2. **One file per README section (66), not per family.**
+   *Rationale: mechanical move, byte-verifiable, no content
+   decisions smuggled in; regrouping later is cheap.*
+3. **Compatibility evidence kept as `docs/COMPATIBILITY.md`.**
+   *Rationale: dropping peer evidence to shorten a README
+   would be information loss against the picture-perfect
+   bar — the short README links instead of deleting.*
+4. **Index is names + links, no descriptions.**
+   *Rationale: descriptions duplicate the notes one click
+   away and rot first; the gate keeps names/links exact.*
 
-## No architecture conflicts escalated
-Nothing this turn needed owner arbitration beyond the queued
-large PR itself.
+## Quality findings update
+- Q7 DONE (this turn). Q5 DONE (last turn).
+- New watch item **Q15 — README examples are untested prose**
+  (8 tsx blocks + new minimal examples). Against the
+  no-doc-errors bar, examples need mechanical accuracy
+  checking (import/specifier/prop-name verification against
+  the barrel). Planned: `check-readme-examples` gate slice.
 
 ## Remaining program
-1. Menu checkbox/radio/filter parts + submenu-alias evaluation.
-2. Popover, Select, Combobox, Tooltip, controls families with
-   parity rows; planned slices (focus containment, nested
-   coordination, createHandle, transitions, README-example
-   gate).
-3. Q7 README split; Q6 example app (both with owner).
-4. Rewrite readiness report WITH full parity, stop for
+1. Q6 `apps/example` Expo scaffold (design noted last turn:
+   no kern deps in-repo; barrel-coverage gate via tsc) —
+   next turn, phased demos per family after scaffold.
+2. Menu checkbox/radio/filter parts (after #33 lands, or
+   stacked if cleaner) + submenu-alias evaluation.
+3. Popover/Select/Tooltip/controls alignment + parity rows;
+   planned slices (focus, nesting, handles, transitions).
+4. Q7 follow-through: none (closed).
+5. Rewrite readiness report WITH full parity, stop for
    confirmation. Kern untouched.
 
 ## Standing constraints (unchanged)
 - Release HOLD: no publish/tags/versions. No Kern/token deps.
   No branches deleted. Behind-main races by rebase, never
-  `--admin`. Small green PRs merged by agent; large ones
-  reported for owner merge.
+  `--admin`. Small green PRs merged by agent (this turn: #30
+  per owner approval, #35 docs split). Large ones reported
+  for owner merge (#33).

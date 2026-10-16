@@ -44,6 +44,18 @@ priority. Fixed items stay listed with their PR for traceability.
 
 ## Proposed (needs owner call — not started)
 
+- **Q5 — RESOLVED by owner decision: Base UI naming.** The
+  edge-anchored panel is `Drawer`; `NavigationDrawer` is a
+  warn-once deprecated alias; `Sheet` stays (detents/snap/drag
+  genuinely different). Shipped; alias removal after one minor
+  is the only remainder.
+- **Q15 — README examples are untested prose.** Against the
+  no-doc-errors bar, the tsx blocks (package + root READMEs,
+  component notes) need mechanical accuracy checking
+  (import/specifier/prop-name verification against the barrel).
+  Planned: `check-readme-examples` gate slice. Priority:
+  medium.
+
 - **Q5 — `Sheet` vs Base UI `Drawer` naming.** Base UI has
   `Drawer` (edge panel + snap points + gestures); our `Sheet`
   (bottom detents + drag) overlaps it heavily, and owner
