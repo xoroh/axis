@@ -68,6 +68,7 @@
     "test:jest": "jest",
     "check:boundary": "node scripts/check-boundary.mjs",
     "check:readme": "node scripts/check-readme.mjs",
+    "check:readme-examples": "node scripts/check-readme-examples.mjs",
     "check:publish": "publint && attw --pack --ignore-rules=no-resolution"
   },
   "peerDependencies": {
