@@ -18,6 +18,12 @@ Two zones, one package: `src/*.ts` behavior models are universal
 (re-exported alone as `@xoroh/axis/models` for web consumers);
 `src/components/` is native-only, permanently.
 
+## Direction
+
+- `docs/VISION.md` is the test every decision is checked against.
+- `docs/decisions/` holds owner ADRs; `docs/IDEAS.md` holds ideas not yet decided (not planned work).
+- The roadmap is the single source for planned work (component contract + parity + coverage in this repo; Kern integration plan in `xoroh/kern`).
+
 ## On-demand Xoroh standards audit
 
 Agents may be asked to audit this repository against Xoroh standards:
