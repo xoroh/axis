@@ -183,3 +183,122 @@ function Consent() {
   );
 }
 ```
+
+## RadioGroup
+
+Unstyled single-selection group. A `View` carrying the radiogroup
+role with `RadioGroupItem` pressables (radio role + checked state).
+Selecting an item replaces the selection; re-activating the selected
+item keeps it (never deselects to null).
+
+### Props
+
+`RadioGroupProps`: `value?: string | null`, `defaultValue?: string
+| null` (default `null`), `onValueChange?: (value: string) => void`,
+`disabled?: boolean` (disables every item), `accessibilityLabel?:
+string`, `testID?: string`, `style?: StyleProp<ViewStyle>`,
+`children: ReactNode` (the items, required), `ref` (group root).
+
+`RadioGroupItemProps`: `value: string` (required),
+`disabled?: boolean`, `accessibilityLabel?: string`,
+`testID?: string`, `style?: StyleProp<ViewStyle>`,
+`children?: ReactNode`. All props optional except `value`.
+
+### Example
+
+```tsx
+import { useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@xoroh/axis";
+
+function SizePicker() {
+  const [size, setSize] = useState<string | null>(null);
+  return (
+    <RadioGroup
+      value={size}
+      onValueChange={setSize}
+      accessibilityLabel="Size"
+    >
+      <RadioGroupItem value="s" accessibilityLabel="Small" />
+      <RadioGroupItem value="m" accessibilityLabel="Medium" />
+    </RadioGroup>
+  );
+}
+```
+
+## Toggle
+
+Unstyled pressed-state button (not a switch): a `Pressable` with the
+button role and selected state, rendering caller label content.
+
+### Props
+
+`pressed?: boolean`, `defaultPressed?: boolean` (default `false`),
+`onPressedChange?: (pressed: boolean) => void`,
+`disabled?: boolean` (terminal), `accessibilityLabel?: string`,
+`accessibilityLabelledBy?: string`, `testID?: string`,
+`style?: StyleProp<ViewStyle>`, `children?: ReactNode`,
+`ref` (root host element). All optional.
+
+### Example
+
+```tsx
+import { useState } from "react";
+import { Text } from "react-native";
+import { Toggle } from "@xoroh/axis";
+
+function Bold() {
+  const [on, setOn] = useState(false);
+  return (
+    <Toggle pressed={on} onPressedChange={setOn} accessibilityLabel="Bold">
+      <Text>B</Text>
+    </Toggle>
+  );
+}
+```
+
+## Button
+
+Unstyled pressable action. Caller content, caller visuals.
+
+### Props
+
+`onPress?: () => void` (suppressed while `disabled` or `loading`),
+`disabled?: boolean`, `loading?: boolean` (suppresses `onPress`,
+announced as busy; caller swaps `children` — nothing renders here),
+`accessibilityLabel?: string`,
+`accessibilityLabelledBy?: string`, `testID?: string`,
+`style?: StyleProp<ViewStyle>`, `children?: ReactNode`, `ref`.
+All optional.
+
+### Example
+
+```tsx
+import { Text } from "react-native";
+import { Button } from "@xoroh/axis";
+
+function Save({ onSave }: { onSave: () => void }) {
+  return (
+    <Button onPress={onSave} accessibilityLabel="Save">
+      <Text>Save</Text>
+    </Button>
+  );
+}
+```
+
+## Label
+
+Unstyled text label. Associates with a control via `nativeID`
+(mirrored on the control's `accessibilityLabelledBy`); focus behavior
+belongs to the control. No invented role — read as text.
+
+Props: `children?: ReactNode`, `nativeID?: string`,
+`testID?: string`, `style?: StyleProp<TextStyle>`. All optional.
+
+## Separator
+
+Unstyled divider. A silent `View` (`accessible={false}` — React
+Native defines no separator role, and an unbacked claim is worse than
+silence). Direction is a styling decision in `style`; no orientation
+prop it cannot honor.
+
+Props: `testID?: string`, `style?: StyleProp<ViewStyle>`. All optional.

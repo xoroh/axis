@@ -18,7 +18,14 @@
 
 import { posix } from "node:path";
 
-export const RN_HOST_BINDINGS = ["Pressable", "StyleProp", "View", "ViewStyle"];
+export const RN_HOST_BINDINGS = [
+  "Pressable",
+  "StyleProp",
+  "Text",
+  "TextStyle",
+  "View",
+  "ViewStyle",
+];
 
 export const ALWAYS_FORBIDDEN_MODULES = [
   "@xoroh/kern",

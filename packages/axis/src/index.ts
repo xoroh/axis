@@ -26,8 +26,18 @@ export {
   type IdScope,
   resolveDir,
 } from "./a11y";
+export { Button, type ButtonProps } from "./components/Button";
 export { Checkbox, type CheckboxProps } from "./components/Checkbox";
+export { Label, type LabelProps } from "./components/Label";
+export {
+  RadioGroup,
+  RadioGroupItem,
+  type RadioGroupItemProps,
+  type RadioGroupProps,
+} from "./components/RadioGroup";
+export { Separator, type SeparatorProps } from "./components/Separator";
 export { Switch, type SwitchProps } from "./components/Switch";
+export { Toggle, type ToggleProps } from "./components/Toggle";
 export {
   createDismissPolicy,
   type DismissPolicy,

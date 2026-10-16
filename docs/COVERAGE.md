@@ -16,11 +16,11 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Switch | complete | First slice; Pressable + role/state, controlled/uncontrolled, RNTL 7 |
 | Checkbox | complete | Pressable + box/check views, controlled/uncontrolled, RNTL 7 | |
 | Checkbox Group | missing | |
-| Radio Group | missing | single-select + roving |
-| Toggle | missing | |
+| Radio Group | complete | single-select group + items, RNTL 8 |
+| Toggle | complete | pressed-state button, RNTL 7 |
 | Toggle Group | missing | |
 | Slider | missing | drag value; native gesture work |
-| Button | missing | RNP gap; priority unstyled pressable wrapper |
+| Button | complete | press/disabled/loading + busy, RNTL 7 |
 | Icon Button | missing | |
 | Link Button | missing | |
 | Loading Button | missing | |
@@ -30,7 +30,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | FAB family | missing | deferred: design-system-shaped; needs contract review |
 | Field | missing | label/control wiring |
 | Fieldset | missing | |
-| Label | missing | |
+| Label | complete | nativeID association, RNTL 2 |
 | Input | missing | |
 | Textarea | missing | |
 | Number Field | missing | |
@@ -69,7 +69,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Avatar | missing | |
 | Aspect Ratio | missing | |
 | Card | missing | |
-| Separator | missing | |
+| Separator | complete | silent divider, RNTL 2 |
 | Table | missing | |
 | List Item | missing | |
 | Settings Row | missing | deferred: Kern-shell-shaped; review need |
