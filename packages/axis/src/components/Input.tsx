@@ -25,6 +25,8 @@ export type InputProps = {
   secureTextEntry?: boolean;
   /** Editable flag. `false` renders read-only. Default `true`. */
   editable?: boolean;
+  /** Fires on the return key. */
+  onSubmitEditing?: () => void;
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
@@ -56,6 +58,7 @@ export function Input({
   value,
   defaultValue = "",
   onChangeText,
+  onSubmitEditing,
   placeholder,
   secureTextEntry = false,
   editable = true,
@@ -82,6 +85,7 @@ export function Input({
       ref={setHostRef}
       value={text ?? ""}
       onChangeText={editable ? setText : undefined}
+      onSubmitEditing={editable ? onSubmitEditing : undefined}
       placeholder={placeholder}
       secureTextEntry={secureTextEntry}
       editable={editable}
