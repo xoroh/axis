@@ -67,12 +67,12 @@ priority. Fixed items stay listed with their PR for traceability.
   (cheap pre-1.0, expensive after). **RESOLVED (owner call this
   turn): option (b) with `Drawer` canonical — shipped; alias
   removal pending.**
-- **Q6 — No interactive demo surface.** Docs are prose +
-  untested snippets; Base UI/shadcn pattern is live examples and
-  a playground. Owner decision: no playground in the axis repo;
-  keep ONE runnable Expo example app (`apps/example`) covering
-  every component; interactive docs/playground belongs to
-  Kern's site. Scaffold next. Priority: medium.
+- **Q6 — No interactive demo surface.** Owner decision: no
+  playground in the axis repo; keep ONE runnable Expo example
+  app (`apps/example`) covering every component.
+  Status: scaffold shipped (shell + registry + coverage gate +
+  Switch/Button/Dialog demos, 8/111); per-family demo batches
+  to follow; gate joins CI with the final batch.
 - **Q7 — README single-file scale.** RESOLVED this turn: split
   shipped (66 notes in `docs/components/`, short READMEs,
   retargeted gate).
