@@ -26,6 +26,7 @@ export {
   type IdScope,
   resolveDir,
 } from "./a11y";
+export { Checkbox, type CheckboxProps } from "./components/Checkbox";
 export { Switch, type SwitchProps } from "./components/Switch";
 export {
   createDismissPolicy,
