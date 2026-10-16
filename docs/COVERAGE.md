@@ -26,7 +26,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Loading Button | complete | forced loading, RNTL 5 |
 | Split Button | complete | dual press paths, RNTL 6 |
 | Button Group | complete | layout container, RNTL 5 |
-| Pressable/Trigger primitive | deferred | evaluate raw-Pressable need vs Button/Switch coverage |
+| Pressable/Trigger primitive | complete | semantics-free press container (caller asserts role); Button/Switch keep their semantics, RNTL 4 |
 | Chip | complete | select/remove, RNTL 7 |
 | FAB family | complete | Fab (icon, label-required, size dp) + ExtendedFab (icon + text), RNTL 9 |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
@@ -50,7 +50,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Toolbar | complete | oriented group, RNTL 5 |
 | Navigation Bar/Rail/Drawer | deferred | app-shell navigation patterns; dedicated design slice |
 | Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
-| Top App Bar | deferred | app chrome; dedicated design slice |
+| Top App Bar | complete | header role + title/leading/actions slots, RNTL 4 |
 | Menubar | deferred | desktop bar pattern; dedicated design slice |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
