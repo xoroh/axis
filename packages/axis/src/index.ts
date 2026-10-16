@@ -174,6 +174,8 @@ export {
 } from "./components/ToggleGroup";
 export { Toolbar, type ToolbarProps } from "./components/Toolbar";
 export { Tooltip, type TooltipProps } from "./components/Tooltip";
+export { TopAppBar, type TopAppBarProps } from "./components/TopAppBar";
+export { Trigger, type TriggerProps } from "./components/Trigger";
 export {
   createDismissPolicy,
   type DismissPolicy,
