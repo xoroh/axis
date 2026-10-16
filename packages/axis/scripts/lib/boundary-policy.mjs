@@ -89,77 +89,94 @@ export function resolvesInsideSrc(relPath, module) {
 
 /**
  * Replace comments and string literals with blanks so dependency-loading
- * detection sees code, not prose. Handles `//`, `/* … *\/`, single- and
- * double-quoted strings (with escapes), and template literals including
- * nested `${ … }` interpolation (recursed as code). Deliberately small:
- * `src/` has no exotic syntax beyond this.
+ * detection sees code, not prose. Recursive descent over real nesting:
+ * block/line comments, single- and double-quoted strings (with escapes),
+ * template literals, and `${ … }` interpolation (recursed as code, so
+ * braces inside nested strings or comments there cannot desynchronize
+ * the scan and hide a later `import()` or `require()`). Deliberately
+ * dependency-free: `src/` has no exotic syntax beyond this.
  */
 export function stripNonCode(source) {
-  let out = "";
-  let i = 0;
   const n = source.length;
-  function blanks(s) {
-    return s.replace(/[^\n]/g, " ");
+  const blanks = (s) => s.replace(/[^\n]/g, " ");
+
+  function takeQuoted(i, quote) {
+    let j = i + 1;
+    while (j < n && source[j] !== quote) j = source[j] === "\\" ? j + 2 : j + 1;
+    return Math.min(j + 1, n);
   }
-  while (i < n) {
-    const c = source[i];
-    const next = source[i + 1] ?? "";
-    if (c === "/" && next === "/") {
-      const end = source.indexOf("\n", i);
-      const stop = end === -1 ? n : end;
-      out += blanks(source.slice(i, stop));
-      i = stop;
-      continue;
-    }
-    if (c === "/" && next === "*") {
-      const end = source.indexOf("*/", i + 2);
-      const stop = end === -1 ? n : end + 2;
-      out += blanks(source.slice(i, stop));
-      i = stop;
-      continue;
-    }
-    if (c === '"' || c === "'") {
-      let j = i + 1;
-      while (j < n && source[j] !== c) j = source[j] === "\\" ? j + 2 : j + 1;
-      out += blanks(source.slice(i, Math.min(j + 1, n)));
-      i = Math.min(j + 1, n);
-      continue;
-    }
-    if (c === "`") {
-      let j = i + 1;
-      let chunkStart = i;
-      while (j < n) {
-        if (source[j] === "\\") {
-          j += 2;
-          continue;
-        }
-        if (source[j] === "`") break;
-        if (source[j] === "$" && source[j + 1] === "{") {
-          out += blanks(source.slice(chunkStart, j));
-          let k = j + 2;
-          let braces = 1;
-          while (k < n && braces > 0) {
-            if (source[k] === "{") braces += 1;
-            else if (source[k] === "}") braces -= 1;
-            k += 1;
-          }
-          // Interpolation is code: keep it so dynamic loads inside
-          // `${ … }` are still detected.
-          out += source.slice(j, k);
-          chunkStart = k;
-          j = k;
-          continue;
-        }
-        j += 1;
+
+  // Parse an expression starting at i; stops before the matching `}`
+  // at this level (or EOF). Returns the code-with-literals-blanked.
+  function parseExpr(i, topLevel) {
+    let text = "";
+    while (i < n) {
+      const c = source[i];
+      const next = source[i + 1] ?? "";
+      if (c === "}" && !topLevel) return { text, end: i };
+      if (c === "{") {
+        const inner = parseExpr(i + 1, false);
+        text += `{${inner.text}}`;
+        i = inner.end + 1;
+        continue;
       }
-      out += blanks(source.slice(chunkStart, Math.min(j + 1, n)));
-      i = Math.min(j + 1, n);
-      continue;
+      if (c === "/" && next === "/") {
+        const nl = source.indexOf("\n", i);
+        const stop = nl === -1 ? n : nl;
+        text += blanks(source.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (c === "/" && next === "*") {
+        const end = source.indexOf("*/", i + 2);
+        const stop = end === -1 ? n : end + 2;
+        text += blanks(source.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        const stop = takeQuoted(i, c);
+        text += blanks(source.slice(i, stop));
+        i = stop;
+        continue;
+      }
+      if (c === "`") {
+        const t = parseTemplate(i + 1);
+        text += `\`${t.text}\``;
+        i = t.end + 1;
+        continue;
+      }
+      text += c;
+      i += 1;
     }
-    out += c;
-    i += 1;
+    return { text, end: i };
   }
-  return out;
+
+  // Parse inside a template literal starting after the opening
+  // backtick; literal text blanks out, `${ … }` recurses as code.
+  function parseTemplate(i) {
+    let text = "";
+    while (i < n) {
+      const c = source[i];
+      if (c === "\\") {
+        text += "  ";
+        i += 2;
+        continue;
+      }
+      if (c === "`") return { text, end: i };
+      if (c === "$" && source[i + 1] === "{") {
+        const inner = parseExpr(i + 2, false);
+        text += `\${${inner.text}}`;
+        i = inner.end + 1;
+        continue;
+      }
+      text += c === "\n" ? "\n" : " ";
+      i += 1;
+    }
+    return { text, end: i };
+  }
+
+  return parseExpr(0, true).text;
 }
 
 /**
