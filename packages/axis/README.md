@@ -58,54 +58,35 @@ Per-component notes (props, examples, accessibility) live in
 | [Aspect Ratio](https://github.com/xoroh/axis/blob/main/docs/components/aspect-ratio.md) |
 | [Autocomplete](https://github.com/xoroh/axis/blob/main/docs/components/autocomplete.md) |
 | [Avatar](https://github.com/xoroh/axis/blob/main/docs/components/avatar.md) |
-| [Badge](https://github.com/xoroh/axis/blob/main/docs/components/badge.md) |
 | [Button](https://github.com/xoroh/axis/blob/main/docs/components/button.md) |
-| [Button Group](https://github.com/xoroh/axis/blob/main/docs/components/button-group.md) |
 | [Calendar](https://github.com/xoroh/axis/blob/main/docs/components/calendar.md) |
-| [Card](https://github.com/xoroh/axis/blob/main/docs/components/card.md) |
-| [Carousel](https://github.com/xoroh/axis/blob/main/docs/components/carousel.md) |
 | [Checkbox](https://github.com/xoroh/axis/blob/main/docs/components/checkbox.md) |
 | [Checkbox Group](https://github.com/xoroh/axis/blob/main/docs/components/checkbox-group.md) |
-| [Chip](https://github.com/xoroh/axis/blob/main/docs/components/chip.md) |
 | [Collapsible](https://github.com/xoroh/axis/blob/main/docs/components/collapsible.md) |
 | [Combobox](https://github.com/xoroh/axis/blob/main/docs/components/combobox.md) |
 | [ContextMenu](https://github.com/xoroh/axis/blob/main/docs/components/context-menu.md) |
 | [Dialog](https://github.com/xoroh/axis/blob/main/docs/components/dialog.md) |
 | [Drawer](https://github.com/xoroh/axis/blob/main/docs/components/drawer.md) |
 | [Dropdown Menu](https://github.com/xoroh/axis/blob/main/docs/components/dropdown-menu.md) |
-| [EmptyState](https://github.com/xoroh/axis/blob/main/docs/components/empty-state.md) |
-| [Extended Fab](https://github.com/xoroh/axis/blob/main/docs/components/extended-fab.md) |
-| [Fab](https://github.com/xoroh/axis/blob/main/docs/components/fab.md) |
 | [Field](https://github.com/xoroh/axis/blob/main/docs/components/field.md) |
 | [Fieldset](https://github.com/xoroh/axis/blob/main/docs/components/fieldset.md) |
-| [Icon Button](https://github.com/xoroh/axis/blob/main/docs/components/icon-button.md) |
 | [Input](https://github.com/xoroh/axis/blob/main/docs/components/input.md) |
-| [Kbd](https://github.com/xoroh/axis/blob/main/docs/components/kbd.md) |
 | [Label](https://github.com/xoroh/axis/blob/main/docs/components/label.md) |
-| [Link Button](https://github.com/xoroh/axis/blob/main/docs/components/link-button.md) |
-| [List Item](https://github.com/xoroh/axis/blob/main/docs/components/list-item.md) |
 | [Loader](https://github.com/xoroh/axis/blob/main/docs/components/loader.md) |
-| [Loading Button](https://github.com/xoroh/axis/blob/main/docs/components/loading-button.md) |
 | [Menu](https://github.com/xoroh/axis/blob/main/docs/components/menu.md) |
 | [Menubar](https://github.com/xoroh/axis/blob/main/docs/components/menubar.md) |
 | [Meter](https://github.com/xoroh/axis/blob/main/docs/components/meter.md) |
-| [Navigation Bar](https://github.com/xoroh/axis/blob/main/docs/components/navigation-bar.md) |
 | [Navigation Menu](https://github.com/xoroh/axis/blob/main/docs/components/navigation-menu.md) |
-| [Navigation Rail](https://github.com/xoroh/axis/blob/main/docs/components/navigation-rail.md) |
 | [Number Field](https://github.com/xoroh/axis/blob/main/docs/components/number-field.md) |
 | [OTP Field](https://github.com/xoroh/axis/blob/main/docs/components/otp-field.md) |
-| [Pagination](https://github.com/xoroh/axis/blob/main/docs/components/pagination.md) |
 | [Popover](https://github.com/xoroh/axis/blob/main/docs/components/popover.md) |
 | [Progress](https://github.com/xoroh/axis/blob/main/docs/components/progress.md) |
 | [Radio Group](https://github.com/xoroh/axis/blob/main/docs/components/radio-group.md) |
 | [Search](https://github.com/xoroh/axis/blob/main/docs/components/search.md) |
 | [Select](https://github.com/xoroh/axis/blob/main/docs/components/select.md) |
 | [Separator](https://github.com/xoroh/axis/blob/main/docs/components/separator.md) |
-| [Settings Row](https://github.com/xoroh/axis/blob/main/docs/components/settings-row.md) |
 | [Sheet](https://github.com/xoroh/axis/blob/main/docs/components/sheet.md) |
-| [Skeleton](https://github.com/xoroh/axis/blob/main/docs/components/skeleton.md) |
 | [Slider](https://github.com/xoroh/axis/blob/main/docs/components/slider.md) |
-| [Split Button](https://github.com/xoroh/axis/blob/main/docs/components/split-button.md) |
 | [Switch](https://github.com/xoroh/axis/blob/main/docs/components/switch.md) |
 | [Table](https://github.com/xoroh/axis/blob/main/docs/components/table.md) |
 | [Tabs](https://github.com/xoroh/axis/blob/main/docs/components/tabs.md) |
@@ -117,7 +98,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Toggle Group](https://github.com/xoroh/axis/blob/main/docs/components/toggle-group.md) |
 | [Toolbar](https://github.com/xoroh/axis/blob/main/docs/components/toolbar.md) |
 | [Tooltip](https://github.com/xoroh/axis/blob/main/docs/components/tooltip.md) |
-| [Top App Bar](https://github.com/xoroh/axis/blob/main/docs/components/top-app-bar.md) |
 | [Trigger](https://github.com/xoroh/axis/blob/main/docs/components/trigger.md) |
 <!-- index:end -->
 

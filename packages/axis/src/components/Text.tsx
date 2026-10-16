@@ -8,7 +8,9 @@ import { Text as HostText, type StyleProp, type TextStyle } from "react-native";
  * (label source, role passthrough) and truncation passthrough. It
  * carries deliberately NO typographic scale: size, weight, and color
  * are design-system decisions expressed through caller `style`.
- * A component that needs key-hint semantics uses `Kbd`, not this.
+ * A component that needs key-hint semantics owns it (Axis
+ * carries no key-hint primitive — key hints are display
+ * typography, not behavior).
  */
 
 export type TextProps = {

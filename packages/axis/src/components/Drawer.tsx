@@ -9,7 +9,7 @@ import {
 import { useControllableState } from "../useControllableState";
 
 /**
- * NavigationDrawer — an unstyled edge-anchored navigation panel.
+ * Drawer — an unstyled edge-anchored panel.
  *
  * Base UI naming (owner direction): the edge-anchored panel is a
  * `Drawer`. `Sheet` stays a separate primitive — detents, snap
@@ -161,29 +161,4 @@ export function Drawer({
       </View>
     </Modal>
   );
-}
-
-/**
- * Deprecated alias of `Drawer` (Base UI naming). Warns once;
- * removed after one minor release (contract §10).
- */
-export type NavigationDrawerProps = DrawerProps;
-
-let warnedNavigationDrawer = false;
-
-/**
- * Deprecated alias: use `Drawer`. Warns once per session, then
- * delegates with identical behavior.
- */
-export function NavigationDrawer(
-  props: NavigationDrawerProps,
-): React.JSX.Element | null {
-  if (!warnedNavigationDrawer) {
-    warnedNavigationDrawer = true;
-    console.warn(
-      "Axis NavigationDrawer is deprecated (Base UI naming): use `Drawer`. " +
-        "It will be removed after one minor release.",
-    );
-  }
-  return <Drawer {...props} />;
 }

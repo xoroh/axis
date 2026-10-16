@@ -127,8 +127,20 @@ Popup, Arrow, Title, Description, Close.
 
 ### Tooltip — pending
 
-### Switch — pending
-
-### Checkbox — pending
-
 ### All other families — pending
+
+## Moved to Kern M3 (scope decision, ADR 006)
+
+Unpublished, so these leave with no aliases and no deprecation
+window (ADR 011). Kern M3 owns the styled receivers; Axis keeps
+the primitives underneath. `Button` (`loading`/busy announce,
+`render` composition is a recorded gap if missing) covers the
+icon/loading/link press cases — no separate components.
+
+| Axis export (removed) | Disposition |
+|---|---|
+| `Badge`, `Card`, `Carousel`, `Chip`, `EmptyState`, `Fab`, `ExtendedFab`, `Kbd`, `NavigationBar`, `NavigationRail`, `SettingsRow`, `Skeleton`, `SplitButton`, `TopAppBar`, `ButtonGroup`, `ListItem`, `Pagination` | Moved: Kern M3 owns the pattern; behavior donors port into M3 receivers consuming retained Axis primitives/hooks |
+| `IconButton` | Removed: `Button` + required `accessibilityLabel` covers it |
+| `LinkButton` | Removed: link-look is caller styling (Base UI forbids button-as-link); `Button`'s `render` composition covers element substitution where it exists (gap noted if absent) |
+| `LoadingButton` | Removed: `Button`'s `loading` (busy announce, React Aria `isPending` pattern) covers it — Base UI has no loading prop |
+| `NavigationDrawer` | Removed: `Drawer` is the name (no alias, nothing published) |

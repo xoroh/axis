@@ -14,14 +14,12 @@ import { Pressable, type StyleProp, type ViewStyle } from "react-native";
  * own, and using raw RN `Pressable` would drop the terminal-disabled
  * guard and the ref/testID conventions every Axis host carries.
  *
- * The deferred-row evaluation (`Pressable/Trigger` vs
- * Button/Switch coverage) resolves here: `Button` (labelled action
- * with busy state), `IconButton` (label-required icon action), and
- * `Switch` (binary state with checked announcements) each assert
- * semantics this component must not repeat. Reach for those when the
- * control IS a button, an icon action, or a toggle; reach for
- * `Trigger` when the control owns its own semantics and needs only
- * a press container. A `Trigger` with a `button` role and a label is
+ * Reach for `Button` when the control IS a labelled action (with
+ * busy state) or `Switch` when it IS binary state with checked
+ * announcements — each asserts semantics this component must not
+ * repeat. Reach for `Trigger` when the control owns its own
+ * semantics and needs only a press container. A `Trigger` with a
+ * `button` role and a label is
  * a `Button` written the long way — review rejects it.
  */
 
