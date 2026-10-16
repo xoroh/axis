@@ -201,7 +201,36 @@ export {
 export { NumberField, type NumberFieldProps } from "./components/NumberField";
 export { OtpField, type OtpFieldProps } from "./components/OtpField";
 export { Pagination, type PaginationProps } from "./components/Pagination";
-export { Popover, type PopoverProps } from "./components/Popover";
+export {
+  Popover,
+  PopoverArrow,
+  type PopoverArrowProps,
+  PopoverBackdrop,
+  type PopoverBackdropProps,
+  type PopoverBackdropState,
+  PopoverClose,
+  type PopoverCloseProps,
+  type PopoverCloseState,
+  PopoverDescription,
+  type PopoverDescriptionProps,
+  PopoverPopup,
+  type PopoverPopupProps,
+  type PopoverPopupState,
+  PopoverPortal,
+  type PopoverPortalProps,
+  PopoverPositioner,
+  type PopoverPositionerProps,
+  type PopoverPositionerState,
+  type PopoverProps,
+  PopoverRoot,
+  type PopoverRootProps,
+  type PopoverRootState,
+  PopoverTitle,
+  type PopoverTitleProps,
+  PopoverTrigger,
+  type PopoverTriggerProps,
+  type PopoverTriggerState,
+} from "./components/Popover";
 export { Progress, type ProgressProps } from "./components/Progress";
 export {
   RadioGroup,
