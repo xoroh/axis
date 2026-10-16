@@ -21,13 +21,19 @@ import { posix } from "node:path";
 // Avatar justified 2026-10-16 (image + fallback need the host
 // Image and its source/style types; no other component may add
 // bindings without the same per-PR justification).
+// Modal justified 2026-10-16 (Dialog needs native modal presentation;
+// scrim + onRequestClose dismissal only — no animation API yet).
+// TextInput justified 2026-10-16 (text entry needs the host input;
+// event payloads stay primitive strings, no event-type imports).
 export const RN_HOST_BINDINGS = [
   "Image",
   "ImageSourcePropType",
   "ImageStyle",
+  "Modal",
   "Pressable",
   "StyleProp",
   "Text",
+  "TextInput",
   "TextStyle",
   "View",
   "ViewStyle",

@@ -42,6 +42,9 @@ export {
   type CheckboxGroupItemProps,
   type CheckboxGroupProps,
 } from "./components/CheckboxGroup";
+export { Dialog, type DialogProps } from "./components/Dialog";
+export { Field, type FieldProps } from "./components/Field";
+export { Input, type InputProps } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
 export { Progress, type ProgressProps } from "./components/Progress";
 export {
@@ -62,6 +65,7 @@ export {
   TabsTrigger,
   type TabsTriggerProps,
 } from "./components/Tabs";
+export { Toast, type ToastProps } from "./components/Toast";
 export { Toggle, type ToggleProps } from "./components/Toggle";
 export {
   createDismissPolicy,

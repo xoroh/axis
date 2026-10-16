@@ -28,10 +28,10 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Pressable/Trigger primitive | missing | shared press host |
 | Chip | missing | |
 | FAB family | missing | deferred: design-system-shaped; needs contract review |
-| Field | missing | label/control wiring |
+| Field | complete | label/control/error row, RNTL 2 (in input suite) |
 | Fieldset | missing | |
 | Label | complete | nativeID association, RNTL 2 |
-| Input | missing | |
+| Input | complete | controlled/uncontrolled entry, RNTL 5 |
 | Textarea | missing | |
 | Number Field | missing | |
 | OTP Field | missing | segmented entry |
@@ -51,7 +51,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Navigation Menu | missing | adapted: stacked nav, not flyout |
 | Top App Bar | missing | |
 | Menubar | missing | adapted: simplify desktop bar |
-| Dialog | missing | adapted: modal sheet pattern |
+| Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | missing | blocking confirm + trap |
 | Sheet/Drawer | missing | bottom sheet + detents |
 | Menu | missing | popup + dismiss |
@@ -63,7 +63,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Meter | missing | |
 | Skeleton | missing | |
 | Loader/Loading Indicator | missing | |
-| Snackbar/Toast | missing | adapted: native timing |
+| Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7 |
 | Badge | complete | adornment, RNTL 1 (in display suite) |
 | Empty State | missing | |
 | Avatar | complete | image + fallback, RNTL 3 (in display suite) |

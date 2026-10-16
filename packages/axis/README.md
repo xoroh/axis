@@ -362,3 +362,49 @@ image role and label; absence or load error renders caller
 `children` in a fallback `View`. Props: `source?:
 ImageSourcePropType`, `children?`, `accessibilityLabel?`,
 `testID?`, `style?` (image), `fallbackStyle?`.
+
+## Dialog
+
+Unstyled modal dialog. Renders `null` when closed; when open, a
+transparent RN `Modal` with a scrim `Pressable` and a surface `View`
+carrying the dialog role. Scrim press and `onRequestClose` dismiss
+(iff `dismissable`, default `true` — set `false` for the AlertDialog
+pattern with explicit actions). Hardware-back beyond
+`onRequestClose`, animations, and focus trap are explicitly deferred
+with rationale in-file.
+
+`DialogProps`: `open?: boolean`, `defaultOpen?: boolean`,
+`onOpenChange?: (open: boolean) => void`,
+`onDismiss?: () => void`, `dismissable?: boolean` (default `true`),
+`title?: ReactNode`, `children?: ReactNode` (content),
+`actions?: ReactNode`, `accessibilityLabel?: string`,
+`testID?: string` (scrim is `${testID}-scrim`),
+`overlayStyle?`, `surfaceStyle?`, `titleStyle?` (all
+caller-provided), `ref` (surface host). All optional.
+
+## Toast
+
+Transient notification with timed auto-dismiss. Renders `null` when
+closed; open content announces via a polite live region.
+`ToastProps`: `open?`, `defaultOpen?`,
+`onOpenChange?`, `duration?: number` (ms, default 4000; `<= 0`
+disables the timer), `children?` (message),
+`actionLabel?: string` + `onAction?: () => void` (button rendered
+only with a label; fires then dismisses), `accessibilityLabel?`,
+`testID?`, `style?`. No ref, no animation. All optional.
+
+## Input
+
+Single-line text entry: `value?`, `defaultValue?` (default `""`),
+`onChangeText?: (text: string) => void`, `placeholder?`,
+`secureTextEntry?` (default `false`), `editable?` (default `true`,
+`false` is read-only), `accessibilityLabel?`, `testID?`,
+`style?: StyleProp<TextStyle>`, `ref` (host input). Payloads stay
+primitive strings. All optional.
+
+## Field
+
+Label/control/error row: `label?`, `children?` (control),
+`error?` (rendered only when provided, announced politely),
+`testID?`, `style?`, `labelStyle?`, `errorStyle?`. No validation
+logic — validity is caller state expressed by passing `error`.
