@@ -2,6 +2,12 @@
   "name": "@xoroh/axis",
   "version": "0.0.0",
   "description": "Design-system-neutral, native-first behavior and interaction primitives for React Native.",
+  "keywords": [
+    "react-native",
+    "primitives",
+    "accessibility",
+    "unstyled"
+  ],
   "license": "MIT",
   "author": "Xoroh",
   "repository": {
