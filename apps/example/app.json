@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Axis Example",
+    "slug": "axis-example",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "org.xoroh.axis.example"
+    },
+    "android": {
+      "package": "org.xoroh.axis.example"
+    }
+  }
+}
