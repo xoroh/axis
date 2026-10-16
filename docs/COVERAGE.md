@@ -15,7 +15,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 |---|---|---|
 | Switch | complete | First slice; Pressable + role/state, controlled/uncontrolled, RNTL 7 |
 | Checkbox | complete | Pressable + box/check views, controlled/uncontrolled, RNTL 7 | |
-| Checkbox Group | missing | |
+| Checkbox Group | complete | multi-select group, RNTL 7 |
 | Radio Group | complete | single-select group + items, RNTL 8 |
 | Toggle | complete | pressed-state button, RNTL 7 |
 | Toggle Group | missing | |
@@ -41,9 +41,9 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Select | missing | adapted: picker/action-sheet pattern |
 | Calendar | missing | date grid |
 | Time Picker | missing | entry/pick + validation |
-| Accordion | missing | |
+| Accordion | complete | single-expand disclosure, RNTL 7 |
 | Collapsible | missing | |
-| Tabs | missing | |
+| Tabs | complete | tablist/triggers/panels, RNTL 7 |
 | Pagination | missing | |
 | Carousel | missing | swipe/scroll + indicators |
 | Toolbar | missing | |
@@ -59,14 +59,14 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Popover | missing | adapted: custom positioner |
 | Tooltip | missing | adapted: long-press replaces hover |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
-| Progress (linear/circular) | missing | |
+| Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
 | Meter | missing | |
 | Skeleton | missing | |
 | Loader/Loading Indicator | missing | |
 | Snackbar/Toast | missing | adapted: native timing |
-| Badge | missing | |
+| Badge | complete | adornment, RNTL 1 (in display suite) |
 | Empty State | missing | |
-| Avatar | missing | |
+| Avatar | complete | image + fallback, RNTL 3 (in display suite) |
 | Aspect Ratio | missing | |
 | Card | missing | |
 | Separator | complete | silent divider, RNTL 2 |

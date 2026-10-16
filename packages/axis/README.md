@@ -302,3 +302,63 @@ silence). Direction is a styling decision in `style`; no orientation
 prop it cannot honor.
 
 Props: `testID?: string`, `style?: StyleProp<ViewStyle>`. All optional.
+
+## CheckboxGroup
+
+Unstyled multi-selection group. Items toggle membership in a shared
+value array; re-activating a selected item removes it.
+
+`CheckboxGroupProps`: `value?: readonly string[]`,
+`defaultValue?: readonly string[]`,
+`onValueChange?: (value: readonly string[]) => void`,
+`disabled?: boolean` (disables every item), `accessibilityLabel?:
+string`, `testID?: string`, `style?: StyleProp<ViewStyle>`,
+`children: ReactNode` (required), `ref` (group root).
+
+`CheckboxGroupItemProps`: `value: string` (required),
+`disabled?: boolean`, `accessibilityLabel?: string`,
+`testID?: string`, `style?: StyleProp<ViewStyle>`,
+`children?: ReactNode`. Items render role `checkbox` with checked
+state. All props optional except item `value`.
+
+## Tabs
+
+Unstyled tabbed interface: `Tabs` (value/defaultValue/onValueChange,
+`children` required, ref to root), `TabsList` (role `tablist`),
+`TabsTrigger` (`value` required; role `tab` with selected state; no
+deselect), `TabsPanel` (`value` required; rendered only when
+selected). Orientation and keyboard roving are explicitly deferred —
+native press selection suffices for v1.
+
+## Accordion
+
+Unstyled single-expand disclosure (multi-mode deferred):
+`Accordion` (`value`/`defaultValue`/`onValueChange` over `string |
+null`, re-activating the open item collapses to `null`,
+`disabled` blocks all) + `AccordionItem` (`value` required;
+trigger `Pressable` with expanded state; panel mounted only when
+open; `header` content with an empty-accessible-trigger fallback).
+No animation — presence wiring deferred with rationale in-file.
+
+## Progress
+
+Determinate/indeterminate indicator: `value` (default 0), `min`
+(default 0), `max` (default 100), `indeterminate` (announces busy,
+no value), role `progressbar` with `{min, max, now}` value,
+`accessibilityLabel`. Values clamp; fill width is data-driven under
+caller `barStyle`. Example: `<Progress value={42}
+accessibilityLabel="Loading" />`.
+
+## Badge
+
+Count/dot adornment: caller `children` in a container `View` with
+`accessibilityLabel` (e.g. "3 unread"), `style`, `textStyle`. Read
+as plain content; no invented role.
+
+## Avatar
+
+Identity image with fallback: `source` renders an `Image` with the
+image role and label; absence or load error renders caller
+`children` in a fallback `View`. Props: `source?:
+ImageSourcePropType`, `children?`, `accessibilityLabel?`,
+`testID?`, `style?` (image), `fallbackStyle?`.

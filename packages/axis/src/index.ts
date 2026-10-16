@@ -26,9 +26,24 @@ export {
   type IdScope,
   resolveDir,
 } from "./a11y";
+export {
+  Accordion,
+  AccordionItem,
+  type AccordionItemProps,
+  type AccordionProps,
+} from "./components/Accordion";
+export { Avatar, type AvatarProps } from "./components/Avatar";
+export { Badge, type BadgeProps } from "./components/Badge";
 export { Button, type ButtonProps } from "./components/Button";
 export { Checkbox, type CheckboxProps } from "./components/Checkbox";
+export {
+  CheckboxGroup,
+  CheckboxGroupItem,
+  type CheckboxGroupItemProps,
+  type CheckboxGroupProps,
+} from "./components/CheckboxGroup";
 export { Label, type LabelProps } from "./components/Label";
+export { Progress, type ProgressProps } from "./components/Progress";
 export {
   RadioGroup,
   RadioGroupItem,
@@ -37,6 +52,16 @@ export {
 } from "./components/RadioGroup";
 export { Separator, type SeparatorProps } from "./components/Separator";
 export { Switch, type SwitchProps } from "./components/Switch";
+export {
+  Tabs,
+  TabsList,
+  type TabsListProps,
+  TabsPanel,
+  type TabsPanelProps,
+  type TabsProps,
+  TabsTrigger,
+  type TabsTriggerProps,
+} from "./components/Tabs";
 export { Toggle, type ToggleProps } from "./components/Toggle";
 export {
   createDismissPolicy,
