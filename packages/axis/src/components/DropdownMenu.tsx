@@ -156,8 +156,9 @@ type DropdownDisclosure = {
  * collapsed and inert and items render inert, like `MenuItem` outside
  * `Menu`.
  */
-const DropdownDisclosureContext =
-  createContext<DropdownDisclosure | null>(null);
+const DropdownDisclosureContext = createContext<DropdownDisclosure | null>(
+  null,
+);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -290,9 +291,8 @@ export function DropdownMenuSubTrigger({
   const disclosure = useContext(DropdownDisclosureContext);
   const identity = disclosure?.sub ?? null;
   const expanded =
-    identity === null
-      ? false
-      : (disclosure?.openPath[identity.depth] === identity.value) ?? false;
+    identity !== null &&
+    disclosure?.openPath[identity.depth] === identity.value;
 
   const openTrigger = useCallback(() => {
     if (disabled) return;

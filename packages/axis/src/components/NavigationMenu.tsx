@@ -114,8 +114,9 @@ type NavigationDisclosure = {
  * render collapsed and inert and panels render nothing, like
  * `MenuItem` outside `Menu`.
  */
-const NavigationDisclosureContext =
-  createContext<NavigationDisclosure | null>(null);
+const NavigationDisclosureContext = createContext<NavigationDisclosure | null>(
+  null,
+);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -216,13 +217,13 @@ export function NavigationMenuItem({
   // nothing rather than a panel that can never open or close.
   if (!disclosure) return null;
 
-  let trigger: ReactNode = null;
-  let panel: ReactNode = null;
+  const triggerNodes: ReactNode[] = [];
+  const panelNodes: ReactNode[] = [];
   Children.forEach(children, (child) => {
     if (isValidElement(child) && child.type === NavigationMenuPanel) {
-      panel = child;
+      panelNodes.push(child);
     } else {
-      trigger = child;
+      triggerNodes.push(child);
     }
   });
 
@@ -230,37 +231,39 @@ export function NavigationMenuItem({
   // `NavigationMenuTrigger` (the `Menu` precedent): internal open
   // first, then the caller's handler; `disabled` on the child is
   // terminal — neither fires.
-  let boundTrigger = trigger;
-  if (isValidElement(trigger) && trigger.type !== NavigationMenuTrigger) {
-    const childProps = trigger.props as {
-      disabled?: unknown;
-      onPress?: unknown;
-    };
-    const childDisabled = childProps.disabled === true;
-    const childOnPress =
-      typeof childProps.onPress === "function"
-        ? (childProps.onPress as (event: unknown) => void)
-        : undefined;
-    boundTrigger = cloneElement(
-      trigger as ReactElement<{ onPress?: (event: unknown) => void }>,
-      {
-        key: trigger.key ?? `navigation-trigger-${value}`,
-        onPress: (event: unknown) => {
-          if (childDisabled) return;
-          disclosure.openItem(value);
-          childOnPress?.(event);
+  const boundTriggers = triggerNodes.map((node, index) => {
+    if (isValidElement(node) && node.type !== NavigationMenuTrigger) {
+      const childProps = node.props as {
+        disabled?: unknown;
+        onPress?: unknown;
+      };
+      const childDisabled = childProps.disabled === true;
+      const childOnPress =
+        typeof childProps.onPress === "function"
+          ? (childProps.onPress as (event: unknown) => void)
+          : undefined;
+      return cloneElement(
+        node as ReactElement<{ onPress?: (event: unknown) => void }>,
+        {
+          key: node.key ?? `navigation-trigger-${value}-${index}`,
+          onPress: (event: unknown) => {
+            if (childDisabled) return;
+            disclosure.openItem(value);
+            childOnPress?.(event);
+          },
         },
-      },
-    );
-  }
+      );
+    }
+    return node;
+  });
 
   return (
     <NavigationDisclosureContext.Provider
       value={{ ...disclosure, item: value }}
     >
       <View>
-        {boundTrigger}
-        {disclosure.openValue === value ? panel : null}
+        {boundTriggers}
+        {disclosure.openValue === value ? panelNodes : null}
       </View>
     </NavigationDisclosureContext.Provider>
   );

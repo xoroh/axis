@@ -159,9 +159,9 @@ describe("DropdownMenu on React Native", () => {
         <RNText>Orphan</RNText>
       </DropdownMenuItem>,
     );
-    expect(
-      screen.getByTestId("orphan").props.accessibilityState,
-    ).toMatchObject({ disabled: true });
+    expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject(
+      { disabled: true },
+    );
   });
 
   it("follows controlled open state", async () => {
