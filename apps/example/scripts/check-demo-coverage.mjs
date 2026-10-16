@@ -65,8 +65,8 @@ for (const name of [...claimed].sort()) {
 
 const missing = [...components].sort().filter((c) => !claimed.has(c));
 if (missing.length > 0) {
-  console.log(
-    `demo coverage: ${components.size - missing.length}/${components.size} components demoed; missing: ${missing.join(", ")}`,
+  failures.push(
+    `missing demos for ${missing.length} component(s): ${missing.join(", ")}`,
   );
 } else {
   console.log(`demo coverage holds: all ${components.size} components demoed.`);

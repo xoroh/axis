@@ -49,5 +49,11 @@ jobs:
         run: bun run --filter @xoroh/axis check:readme
       - name: Build package
         run: bun run --filter @xoroh/axis build
+      - name: Typecheck example app and check demo coverage
+        # After the build: demos typecheck against the built barrel,
+        # and every barrel component export must have a demo.
+        run: |
+          bun run --filter @xoroh/axis-example typecheck
+          bun run --filter @xoroh/axis-example check:demos
       - name: Check package publishing
         run: bun run --filter @xoroh/axis check:publish

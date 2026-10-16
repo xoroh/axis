@@ -1,6 +1,17 @@
 import type { ReactNode } from "react";
+import { BarsDemo } from "./bars";
 import { ButtonDemo } from "./button";
 import { DialogDemo } from "./dialog";
+import { DisclosureDemo } from "./disclosure";
+import { DisplayDemo } from "./display";
+import { DropdownDemo } from "./dropdown";
+import { EntryDemo } from "./entry";
+import { ListSelectDemo } from "./list-select";
+import { MenuDemo } from "./menu";
+import { OverlaysDemo } from "./overlays";
+import { PopoverDemo } from "./popover";
+import { RangesDemo } from "./ranges";
+import { SelectionDemo } from "./selection";
 import { SwitchDemo } from "./switch";
 
 /**
@@ -24,4 +35,19 @@ export type Demo = {
   render: () => ReactNode;
 };
 
-export const DEMOS: Demo[] = [SwitchDemo, ButtonDemo, DialogDemo];
+export const DEMOS: Demo[] = [
+  SwitchDemo,
+  ButtonDemo,
+  DialogDemo,
+  SelectionDemo,
+  EntryDemo,
+  ListSelectDemo,
+  RangesDemo,
+  DisplayDemo,
+  DisclosureDemo,
+  OverlaysDemo,
+  MenuDemo,
+  DropdownDemo,
+  BarsDemo,
+  PopoverDemo,
+];
