@@ -104,6 +104,16 @@ export {
 } from "./components/Menu";
 export { Meter, type MeterProps } from "./components/Meter";
 export {
+  NavigationBar,
+  NavigationBarItem,
+  type NavigationBarItemProps,
+  type NavigationBarProps,
+} from "./components/NavigationBar";
+export {
+  NavigationDrawer,
+  type NavigationDrawerProps,
+} from "./components/NavigationDrawer";
+export {
   NavigationMenu,
   NavigationMenuItem,
   type NavigationMenuItemProps,
@@ -113,6 +123,12 @@ export {
   NavigationMenuTrigger,
   type NavigationMenuTriggerProps,
 } from "./components/NavigationMenu";
+export {
+  NavigationRail,
+  NavigationRailItem,
+  type NavigationRailItemProps,
+  type NavigationRailProps,
+} from "./components/NavigationRail";
 export { NumberField, type NumberFieldProps } from "./components/NumberField";
 export { OtpField, type OtpFieldProps } from "./components/OtpField";
 export { Pagination, type PaginationProps } from "./components/Pagination";
