@@ -17,8 +17,11 @@ export function useControllableState<T>(
 
   useEffect(() => {
     if (wasControlled.current !== controlled) {
+      // Misuse detector (React issues the same warning): flipping
+      // controlled↔uncontrolled mid-lifetime is always a bug. Kept
+      // because it catches real defects, not for compatibility.
       console.warn(
-        "Kern: a component changed from controlled to uncontrolled (or vice versa). Keep the value prop defined for its lifetime.",
+        "Axis: a component changed from controlled to uncontrolled (or vice versa). Keep the value prop defined for its lifetime.",
       );
       wasControlled.current = controlled;
     }

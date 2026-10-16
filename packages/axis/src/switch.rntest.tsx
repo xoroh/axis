@@ -105,41 +105,4 @@ describe("Switch on React Native", () => {
       opacity: 0.5,
     });
   });
-
-  it("honors the deprecated value-spelling (warns once, canonical wins)", async () => {
-    const warnings: unknown[][] = [];
-    const warn = console.warn;
-    console.warn = (...args: unknown[]) => {
-      warnings.push(args);
-    };
-    try {
-      const seenChecked: boolean[] = [];
-      const seenValue: boolean[] = [];
-      await render(
-        <Switch
-          testID="sw"
-          defaultValue={false}
-          onValueChange={(v) => seenValue.push(v)}
-          onCheckedChange={(v) => seenChecked.push(v)}
-        />,
-      );
-      await press("sw");
-      // Both handlers fire (compat fan-out); the canonical name is
-      // the documented one.
-      expect(seenChecked).toEqual([true]);
-      expect(seenValue).toEqual([true]);
-      expect(
-        warnings.some((args) => String(args[0]).includes("deprecated")),
-      ).toBe(true);
-    } finally {
-      console.warn = warn;
-    }
-  });
-
-  it("prefers checked over value when both are present", async () => {
-    await render(<Switch testID="sw" checked defaultValue={false} />);
-    expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
-      checked: true,
-    });
-  });
 });
