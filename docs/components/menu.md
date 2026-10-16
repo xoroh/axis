@@ -23,7 +23,12 @@ the inline monolith), `MenuBackdrop` (scrim), `MenuPositioner`
 the trigger), `MenuPopup` (content box, menu role), `MenuItem`
 (`highlighted` press state in style fns), `MenuSeparator`,
 `MenuGroup`/`MenuGroupLabel`, `MenuLinkItem` (link role, same
-sequence), `MenuArrow` (caller-positioned marker).
+sequence), `MenuArrow` (caller-positioned marker),
+`MenuCheckboxItem` (+`Indicator`; stays open by default),
+`MenuRadioGroup`/`MenuRadioItem` (+`Indicator`; closes on
+select). Submenu cascade lives in `DropdownMenu` (same
+dismissal-stack pattern at root level); menu filtering
+(`Input`/`Clear`/`Empty`) waits on the `collection` transfer.
 Every part takes `render` (element or `(props, state)` function)
 and value-or-function `style`; `data-*` attributes are
 deliberately absent on native (contract §11). Example:
