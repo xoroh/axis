@@ -39,8 +39,8 @@ describe("SettingsRow on React Native", () => {
         control={
           <Switch
             accessibilityLabel="Airplane mode switch"
-            defaultValue={false}
-            onValueChange={(v) => seen.push(v)}
+            defaultChecked={false}
+            onCheckedChange={(v) => seen.push(v)}
           />
         }
       />,

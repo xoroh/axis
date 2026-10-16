@@ -52,6 +52,32 @@ Popup, Title, Description, Close.
 
 ### Menu — pending
 
+### Switch — aligned
+
+Base UI `Switch`: root + thumb parts with
+`checked`/`defaultChecked`/`onCheckedChange`.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); deprecated `value`/`defaultValue`/`onValueChange` aliases warn once until removal (contract §10); `data-checked`/`data-disabled` → D1 |
+
+### Checkbox — aligned
+
+Base UI `Checkbox`: root + indicator parts with
+`checked`/`defaultChecked`/`onCheckedChange`.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `Checkbox` | `Checkbox.Root` + `Checkbox.Indicator` | `checked`, `defaultChecked`, `onCheckedChange` identical; `disabled`, `ref`; checkbox role with `checked` state | Single-part API (indicator renders only when checked per caller style, not a separate part); `data-checked`/`data-disabled`/`data-indeterminate` → D1; no `indeterminate` tri-state (unneeded — record if a consumer needs it) |
+
+### Toggle — aligned
+
+Base UI `Toggle`: `pressed`/`defaultPressed`/`onPressedChange`.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`) | `data-pressed`/`data-disabled` → D1 |
+
 ### Popover — pending
 
 ### Select — pending

@@ -27,13 +27,13 @@ describe("Switch on React Native", () => {
     expect(screen.getByLabelText("Airplane mode")).toBeTruthy();
   });
 
-  it("toggles uncontrolled state and reports through onValueChange", async () => {
+  it("toggles uncontrolled state and reports through onCheckedChange", async () => {
     const seen: boolean[] = [];
     await render(
       <Switch
         testID="sw"
-        defaultValue={false}
-        onValueChange={(v) => seen.push(v)}
+        defaultChecked={false}
+        onCheckedChange={(v) => seen.push(v)}
       />,
     );
     await press("sw");
@@ -45,10 +45,12 @@ describe("Switch on React Native", () => {
     expect(seen).toEqual([true, false]);
   });
 
-  it("starts on with defaultValue and follows the controlled prop", async () => {
+  it("starts on with defaultChecked and follows the controlled prop", async () => {
     function Host() {
-      const [value, setValue] = useState(true);
-      return <Switch testID="sw" value={value} onValueChange={setValue} />;
+      const [checked, setChecked] = useState(true);
+      return (
+        <Switch testID="sw" checked={checked} onCheckedChange={setChecked} />
+      );
     }
     await render(<Host />);
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
@@ -60,8 +62,8 @@ describe("Switch on React Native", () => {
     });
   });
 
-  it("controlled value without an updating parent holds its state", async () => {
-    await render(<Switch testID="sw" value={false} />);
+  it("controlled checked without an updating parent holds its state", async () => {
+    await render(<Switch testID="sw" checked={false} />);
     await press("sw");
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -71,7 +73,7 @@ describe("Switch on React Native", () => {
   it("disabled is terminal: no transition, no callback, announced disabled", async () => {
     let calls = 0;
     await render(
-      <Switch testID="sw" disabled onValueChange={() => (calls += 1)} />,
+      <Switch testID="sw" disabled onCheckedChange={() => (calls += 1)} />,
     );
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -101,6 +103,43 @@ describe("Switch on React Native", () => {
     );
     expect(screen.getByTestId("sw").props.style).toMatchObject({
       opacity: 0.5,
+    });
+  });
+
+  it("honors the deprecated value-spelling (warns once, canonical wins)", async () => {
+    const warnings: unknown[][] = [];
+    const warn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args);
+    };
+    try {
+      const seenChecked: boolean[] = [];
+      const seenValue: boolean[] = [];
+      await render(
+        <Switch
+          testID="sw"
+          defaultValue={false}
+          onValueChange={(v) => seenValue.push(v)}
+          onCheckedChange={(v) => seenChecked.push(v)}
+        />,
+      );
+      await press("sw");
+      // Both handlers fire (compat fan-out); the canonical name is
+      // the documented one.
+      expect(seenChecked).toEqual([true]);
+      expect(seenValue).toEqual([true]);
+      expect(
+        warnings.some((args) => String(args[0]).includes("deprecated")),
+      ).toBe(true);
+    } finally {
+      console.warn = warn;
+    }
+  });
+
+  it("prefers checked over value when both are present", async () => {
+    await render(<Switch testID="sw" checked defaultValue={false} />);
+    expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
+      checked: true,
     });
   });
 });

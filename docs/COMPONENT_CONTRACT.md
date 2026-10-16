@@ -96,9 +96,15 @@ conditional — a time-picker does not inherit a Switch's contract.
 
 ## 6. Controlled / uncontrolled state
 
-- Where both modes exist: `value` + `defaultValue` + `onValueChange`
-  naming, built on `useControllableState`; uncontrolled state never
-  resets on re-render; controlled mode never writes internal state.
+- Where both modes exist, state props follow Base UI exactly
+  (critic decision 2026-10-16): binary controls use
+  `checked`/`defaultChecked`/`onCheckedChange` (`Switch`,
+  `Checkbox`); press-state controls use
+  `pressed`/`defaultPressed`/`onPressedChange` (`Toggle`);
+  value controls (groups, fields, sliders, selects) use
+  `value`/`defaultValue`/`onValueChange`. All built on
+  `useControllableState`; uncontrolled state never resets on
+  re-render; controlled mode never writes internal state.
 - Single-selection controls do not deselect on re-activation unless
   their section specifies toggle semantics (the `selection` model
   rule).
