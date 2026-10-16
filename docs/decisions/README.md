@@ -14,8 +14,3 @@ Status: current. Date: 2026-10-16.
 | [003](003-example-app-not-playground.md) | One runnable example app instead of a playground |
 | [004](004-short-readme-plus-docs.md) | Short README plus docs |
 | [005](005-ship-with-kern-0-1-0.md) | Ships as `@xoroh/axis` alongside Kern 0.1.0 |
-| [006](006-scope-primitives-only.md) | Scope is primitives only; 21 design-pattern components leave Axis |
-| [007](007-one-package-two-zones.md) | One package: universal models zone (+ `./models`) and native-only components zone |
-| [008](008-no-web-components.md) | No web components (Base UI is the web layer) |
-| [009](009-no-core-wrappers.md) | Axis does not wrap sufficient RN core components |
-| [010](010-ai-chat-models.md) | AI chat behavior models live in Axis |
