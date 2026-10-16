@@ -12,10 +12,9 @@ import { useControllableState } from "../useControllableState";
  * with Base UI names: `checked` (+ `onCheckedChange`) for controlled
  * use, `defaultChecked` for uncontrolled.
  *
- * Pre-cutover aliases (`value`, `defaultValue`, `onValueChange`) still
- * work and fan out to the canonical handlers, but warn once: they are
- * deprecated and will be removed after one minor release (contract
- * §10). When both spellings are present the canonical one wins.
+ * One clean current API (owner no-compat rule): no aliases, no
+ * warn-once shims. Nothing was published, so there is nobody to
+ * migrate.
  */
 
 export type SwitchProps = {
@@ -25,21 +24,6 @@ export type SwitchProps = {
   defaultChecked?: boolean;
   /** Fires with the next state on every committed toggle. */
   onCheckedChange?: (checked: boolean) => void;
-  /**
-   * Deprecated alias of `checked` (pre-cutover spelling). Warns once;
-   * canonical wins when both are present. Removed after one minor.
-   */
-  value?: boolean;
-  /**
-   * Deprecated alias of `defaultChecked`. Warns once. Removed after
-   * one minor.
-   */
-  defaultValue?: boolean;
-  /**
-   * Deprecated alias of `onCheckedChange`. Warns once; still fires
-   * (both handlers run) until removal. Removed after one minor.
-   */
-  onValueChange?: (value: boolean) => void;
   /** Terminal: no transitions, no callbacks, announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
@@ -56,12 +40,6 @@ export type SwitchProps = {
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
-
-/**
- * Deprecation notice flag (module state, warn once per session, not
- * per render — a render-path warning would spam every toggle).
- */
-let warnedDeprecatedAlias = false;
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -92,9 +70,6 @@ export function Switch({
   checked,
   defaultChecked = false,
   onCheckedChange,
-  value,
-  defaultValue,
-  onValueChange,
   disabled = false,
   accessibilityLabel,
   accessibilityLabelledBy,
@@ -104,28 +79,10 @@ export function Switch({
   thumbStyle,
   ref,
 }: SwitchProps): React.JSX.Element {
-  if (
-    !warnedDeprecatedAlias &&
-    (value !== undefined ||
-      defaultValue !== undefined ||
-      onValueChange !== undefined)
-  ) {
-    warnedDeprecatedAlias = true;
-    console.warn(
-      "Axis Switch: `value`/`defaultValue`/`onValueChange` are deprecated " +
-        "aliases of `checked`/`defaultChecked`/`onCheckedChange` (Base UI " +
-        "parity) and will be removed after one minor release. " +
-        "When both spellings are present the canonical one wins.",
-    );
-  }
-
   const [on, setOn] = useControllableState<boolean>(
-    checked ?? value,
-    defaultChecked ?? defaultValue ?? false,
-    (next) => {
-      onCheckedChange?.(next);
-      onValueChange?.(next);
-    },
+    checked,
+    defaultChecked,
+    onCheckedChange,
   );
 
   const toggle = useCallback(() => {

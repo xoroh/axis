@@ -83,7 +83,7 @@ Base UI `Switch`: root + thumb parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); deprecated `value`/`defaultValue`/`onValueChange` aliases warn once until removal (contract §10); `data-checked`/`data-disabled` → D1 |
+| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); `data-checked`/`data-disabled` → D1 |
 
 ### Checkbox — aligned
 
