@@ -18,15 +18,16 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Checkbox Group | complete | multi-select group, RNTL 7 |
 | Radio Group | complete | single-select group + items, RNTL 8 |
 | Toggle | complete | pressed-state button, RNTL 7 |
-| Toggle Group | missing | |
+| Toggle Group | complete | pressed-state set, RNTL 5 |
 | Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
-| Icon Button | missing | |
-| Link Button | missing | |
-| Loading Button | missing | |
-| Split Button | missing | |
-| Pressable/Trigger primitive | missing | shared press host |
-| Chip | missing | |
+| Icon Button | complete | label-required pressable, RNTL 5 |
+| Link Button | complete | link-role button, RNTL 5 |
+| Loading Button | complete | forced loading, RNTL 5 |
+| Split Button | complete | dual press paths, RNTL 6 |
+| Button Group | complete | layout container, RNTL 5 |
+| Pressable/Trigger primitive | deferred | evaluate raw-Pressable need vs Button/Switch coverage |
+| Chip | complete | select/remove, RNTL 7 |
 | FAB family | missing | deferred: design-system-shaped; needs contract review |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
 | Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
@@ -45,35 +46,37 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
 | Pagination | complete | bounded navigation, RNTL 4 |
-| Carousel | missing | swipe/scroll + indicators |
-| Toolbar | missing | |
-| Navigation Bar/Rail/Drawer | missing | destinations + active state |
-| Navigation Menu | missing | adapted: stacked nav, not flyout |
-| Top App Bar | missing | |
-| Menubar | missing | adapted: simplify desktop bar |
+| Carousel | complete | paged content, RNTL 6 |
+| Toolbar | complete | oriented group, RNTL 5 |
+| Navigation Bar/Rail/Drawer | deferred | app-shell navigation patterns; dedicated design slice |
+| Navigation Menu | deferred | flyout adaptation needs navigation design; after Menu proves out |
+| Top App Bar | deferred | app chrome; dedicated design slice |
+| Menubar | deferred | desktop bar pattern; dedicated design slice |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
-| Alert Dialog | missing | blocking confirm + trap |
-| Sheet/Drawer | missing | bottom sheet + detents |
+| Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
+| Sheet/Drawer | deferred | bottom-sheet detents + gestures are a dedicated slice (PanResponder sheet pattern) |
 | Menu | complete | popup menu + items, RNTL 8 |
 | Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |
+| Dropdown Menu | deferred | submenu cascade needs positioning design; after Menu proves out |
 | Tooltip | complete | long-press + measured placement, RNTL 4 |
+| Scroll Area | na-native | native ScrollView covers it; no wrapper adds value |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
-| Meter | missing | |
-| Skeleton | missing | |
-| Loader/Loading Indicator | missing | |
+| Meter | complete | gauge readout, RNTL 2 |
+| Skeleton | complete | silent placeholder, RNTL 1 |
+| Loader/Loading Indicator | complete | busy indicator, RNTL 1 |
 | Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7 |
 | Badge | complete | adornment, RNTL 1 (in display suite) |
-| Empty State | missing | |
+| Empty State | complete | nothing-here frame, RNTL 2 |
 | Avatar | complete | image + fallback, RNTL 3 (in display suite) |
-| Aspect Ratio | missing | |
-| Card | missing | |
+| Aspect Ratio | complete | ratio box, RNTL 3 |
+| Card | complete | slot container, RNTL 1 |
 | Separator | complete | silent divider, RNTL 2 |
-| Table | missing | |
-| List Item | missing | |
+| Table | complete | header/row/cell parts, RNTL 5 |
+| List Item | complete | pressable/static rows, RNTL 3 |
 | Settings Row | missing | deferred: Kern-shell-shaped; review need |
-| Kbd | missing | display only |
+| Kbd | complete | key hint, RNTL 1 |
 | Text | missing | deferred: typographic scale is design-system territory; review need |
 
 ## Behavior models (traceability, not components)

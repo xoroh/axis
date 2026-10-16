@@ -29,7 +29,10 @@ import { posix } from "node:path";
 // the gesture responder system; no Reanimated/GH dependency added).
 // useWindowDimensions justified 2026-10-16 (positioned overlays need
 // the viewport; hook only, no UI code).
+// ActivityIndicator justified 2026-10-16 (Loader busy indicator;
+// host primitive, no animation policy).
 export const RN_HOST_BINDINGS = [
+  "ActivityIndicator",
   "Image",
   "ImageSourcePropType",
   "ImageStyle",

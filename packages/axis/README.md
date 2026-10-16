@@ -613,3 +613,265 @@ Long-press popup menu: `children` (anchor, required), `content`
 `onOpenChange(false)`. Positions below the anchor — press-point
 positioning deferred, not faked. All optional except
 `children`/`content`.
+
+## Meter
+
+Gauge readout (task progress lives in `Progress`): `value?`
+(default 0), `min?` (default 0), `max?` (default 100),
+`accessibilityLabel?`, `testID?`, `style?`, `fillStyle?`
+(data-driven width merged underneath). Meter role with
+`{min, max, now}` value. All optional.
+
+## Loader
+
+Busy indicator: host `ActivityIndicator` with announced busy
+state. `size?: number | "small" | "large"`, `color?: string`,
+`accessibilityLabel?`, `testID?`, `style?`. All optional.
+
+## Skeleton
+
+Loading placeholder: silent (`accessible={false}`), no motion.
+`testID?`, `style?` (dimensions live here). All optional.
+
+## EmptyState
+
+Nothing-here frame: `title?`, `description?`, `action?` (caller
+slot), `accessibilityLabel?`, `testID?`, `style?`,
+`titleStyle?`, `descriptionStyle?`. No iconography, no copy. All
+optional.
+
+## Card
+
+Content container with `header?`, `media?`, `children?`,
+`actions?` slots (each rendered only when provided),
+`accessibilityLabel?`, `testID?`, `style?`, `headerStyle?`,
+`mediaStyle?`, `actionsStyle?`. No elevation, shape, or padding.
+All optional.
+
+## ListItem
+
+Row with `leading?`/`children`/`trailing?` slots. With `onPress`
+it is a pressable row (button role, selected/disabled state);
+without, a static `View` (no fake affordance).
+`onPress?`, `selected?` (default `false`), `disabled?` (default
+`false`), `accessibilityLabel?`, `testID?`, `style?`,
+`contentStyle?` (string-children text). All optional.
+
+## Kbd
+
+Key-hint display: `children?`, `testID?`, `style?`. Inline
+semantics only — no keyboard handling. All optional.
+
+## Table
+
+Tabular structure: `Table` (container + `ref`) with `TableHeader`,
+`TableRow` (`header?` maps to the header role), and `TableCell`
+parts. Plain `View`s — no table/row/cell roles exist in the native
+role set, so none are claimed. No sorting, pagination, or selection.
+`testID?`/`style?` throughout. All optional.
+
+## Carousel
+
+Paged content: `index?`, `defaultIndex?` (default 0),
+`onIndexChange?`, `loop?` (default `false`, wraps at ends),
+`testID?`, `style?`, `children` (pages, required), `ref`. Only the
+active page mounts; Previous/Next controls clamp (or loop) at
+bounds. No swipe — gesture paging deferred. All optional except
+`children`.
+
+## Toolbar
+
+Control group container: `orientation?: "horizontal" | "vertical"`
+(default `"horizontal"`, applied as structural flex direction),
+`disabled?`, `accessibilityLabel?` (toolbar role asserted via
+props — containers are not accessibility elements, so role queries
+do not match; documented), `testID?`, `style?`, `children`
+(required), `ref`. No roving keyboard (transfer-gated model).
+All optional except `children`.
+
+## Chip
+
+Compact select/remove control: outer `View` with sibling main and
+remove `Pressable`s. `selected?`, `defaultSelected?`,
+`onSelectedChange?`, `onPress?` (tap action, fires after the
+internal toggle), `onRemove?` (remove path only, never toggles),
+`disabled?` (blocks all three), `accessibilityLabel?`, `testID?`,
+`style?`, `removeStyle?`, `children?`, `ref`. Main carries button
+role + selected state. All optional.
+
+## LinkButton
+
+`Button` with the link role. Same props as `Button`
+(`onPress?`, `disabled?`, `accessibilityLabel?`,
+`accessibilityLabelledBy?`, `testID?`, `style?`,
+`children?`, `ref`). All optional.
+
+## LoadingButton
+
+`Button` forced into loading: `loading?: boolean` (default
+`true`) announces busy and suppresses press; all other `Button`
+props pass through. Content swap is the caller's. All optional.
+
+## SplitButton
+
+Primary action + secondary trigger side by side: `onPress?`,
+`onSecondaryPress?`, `disabled?` (shared),
+`secondaryLabel?` (default `"More actions"`),
+`accessibilityLabel?`, `testID?`, `style?`, `secondaryStyle?`,
+`children?` (primary label), `ref`. Two independent press paths.
+All optional.
+
+## ButtonGroup
+
+Honest layout container for buttons: `testID?`, `style?`,
+`children?` (required), `ref`. Role `group`. No behavior theft —
+member buttons keep their own props. All optional except
+`children`.
+
+## Table
+
+Tabular structure: `Table` (container + `ref`), `TableHeader`,
+`TableRow` (`header?` maps to the header role), `TableCell`. Plain
+`View`s — the native role set has no table/row/cell values, so none
+are claimed. No sorting, pagination, or selection. `testID?`/`style?`
+throughout. All optional.
+
+## Carousel
+
+Paged content: `index?`, `defaultIndex?` (default 0),
+`onIndexChange?`, `loop?` (default `false`, wraps at ends),
+`testID?`, `style?`, `children` (pages, required), `ref`. Only the
+active page mounts; Previous/Next controls clamp (or loop) at
+bounds. No swipe — gesture paging deferred. All optional except
+`children`.
+
+## Toolbar
+
+Control group container: `orientation?: "horizontal" | "vertical"`
+(default `"horizontal"`, applied as structural flex direction),
+`disabled?`, `accessibilityLabel?` (toolbar role asserted via
+props — containers are not accessibility elements, so role queries
+do not match; documented), `testID?`, `style?`, `children`
+(required), `ref`. No roving keyboard (transfer-gated model).
+All optional except `children`.
+
+## Chip
+
+Compact select/remove control: outer `View` with sibling main and
+remove `Pressable`s. `selected?`, `defaultSelected?`,
+`onSelectedChange?`, `onPress?` (tap action, fires after the
+internal toggle), `onRemove?` (remove path only, never toggles),
+`disabled?` (blocks all three), `accessibilityLabel?`, `testID?`,
+`style?`, `removeStyle?`, `children?`, `ref`. Main carries button
+role + selected state. All optional.
+
+## LinkButton
+
+`Button` with the link role. Same props as `Button`
+(`onPress?`, `disabled?`, `accessibilityLabel?`,
+`accessibilityLabelledBy?`, `testID?`, `style?`,
+`children?`, `ref`). All optional.
+
+## LoadingButton
+
+`Button` forced into loading: `loading?: boolean` (default
+`true`) announces busy and suppresses press; all other `Button`
+props pass through. Content swap is the caller's. All optional.
+
+## SplitButton
+
+Primary action + secondary trigger side by side: `onPress?`,
+`onSecondaryPress?`, `disabled?` (shared),
+`secondaryLabel?` (default `"More actions"`),
+`accessibilityLabel?`, `testID?` (secondary is
+`${testID}-secondary`), `style?` (primary), `secondaryStyle?`,
+`children?` (primary label), `ref` (container). Two independent
+press paths. All optional.
+
+## ButtonGroup
+
+Honest layout container for buttons: `testID?`, `style?`,
+`children?` (required), `ref`. Role `group`. No behavior theft —
+member buttons keep their own props. All optional except
+`children`.
+
+## Meter
+
+Gauge readout (task progress lives in `Progress`): `value?`
+(default 0), `min?` (default 0), `max?` (default 100),
+`accessibilityLabel?`, `testID?`, `style?`, `fillStyle?`
+(data-driven width merged underneath). Meter role with
+`{min, max, now}` value. All optional.
+
+## Loader
+
+Busy indicator: host `ActivityIndicator` with announced busy
+state. `size?: number | "small" | "large"`, `color?: string`,
+`accessibilityLabel?`, `testID?`, `style?`. All optional.
+
+## Skeleton
+
+Loading placeholder: silent (`accessible={false}`), no motion.
+`testID?`, `style?` (dimensions live here). All optional.
+
+## EmptyState
+
+Nothing-here frame: `title?`, `description?`, `action?` (caller
+slot), `accessibilityLabel?`, `testID?`, `style?`,
+`titleStyle?`, `descriptionStyle?`. No iconography, no copy. All
+optional.
+
+## Card
+
+Content container with `header?`, `media?`, `children?`,
+`actions?` slots (each rendered only when provided),
+`accessibilityLabel?`, `testID?`, `style?`, `headerStyle?`,
+`mediaStyle?`, `actionsStyle?`. No elevation, shape, or padding.
+All optional.
+
+## ListItem
+
+Row with `leading?`/`children`/`trailing?` slots. With `onPress`
+it is a pressable row (button role, selected/disabled state);
+without, a static `View` (no fake affordance).
+`onPress?`, `selected?` (default `false`), `disabled?` (default
+`false`), `accessibilityLabel?`, `testID?`, `style?`,
+`contentStyle?` (string-children text). All optional.
+
+## Kbd
+
+Key-hint display: `children?`, `testID?`, `style?`. Inline
+semantics only — no keyboard handling. All optional.
+
+## Toggle Group
+
+Pressed-state set (CheckboxGroup with pressed semantics):
+`ToggleGroup` (`value?: readonly string[]`, `defaultValue?`,
+`onValueChange?`, `disabled?`, `accessibilityLabel?`, `testID?`,
+`style?`, `children` required, `ref`) + `ToggleGroupItem`
+(`value` required, `disabled?`, `accessibilityLabel?`, `testID?`,
+`style?`, `children?`; button role + selected state). Toggle adds,
+re-press removes. All optional except listed required.
+
+## Icon Button
+
+Icon-only pressable: like `Button` but **an `accessibilityLabel`
+is required in practice** — without one the control is nameless.
+`onPress?`, `disabled?`, `loading?`, `accessibilityLabel?`,
+`accessibilityLabelledBy?`, `testID?`, `style?`, `children?`,
+`ref`. All optional.
+
+## Aspect Ratio
+
+Ratio box: `ratio?: number` (default 1; non-finite and non-positive
+clamp to 1, never throw), `testID?`, `style?`, `children?`,
+`ref`. Merges `{aspectRatio}` under caller style. All optional.
+
+## AlertDialog
+
+Blocking confirm: thin wrapper forcing `dismissable={false}` over
+`Dialog`. `open?`, `defaultOpen?`, `onOpenChange?`, `title?`,
+`children?`, `actions` (required — a blocking dialog without an
+explicit action traps the user), `accessibilityLabel?`,
+`testID?`, `style?` (surface), `ref` (surface). No `onDismiss`
+(no scrim path exists). All optional except `actions`.
