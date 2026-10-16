@@ -71,6 +71,14 @@ export {
   isChatStreaming,
 } from "./chatStatus";
 export {
+  type CollectionItem,
+  type CollectionMatch,
+  defaultCollectionMatch,
+  filterCollectionKeys,
+  findCollectionText,
+  useCollectionRegistry,
+} from "./collection";
+export {
   Accordion,
   AccordionItem,
   type AccordionItemProps,
@@ -158,6 +166,11 @@ export {
   type MenuCheckboxItemIndicatorProps,
   type MenuCheckboxItemProps,
   type MenuCheckboxItemState,
+  MenuClear,
+  type MenuClearProps,
+  type MenuClearState,
+  MenuEmpty,
+  type MenuEmptyProps,
   MenuGroup,
   MenuGroupLabel,
   type MenuGroupLabelProps,
@@ -165,6 +178,8 @@ export {
   MenuItem,
   type MenuItemProps,
   type MenuItemState,
+  MenuInput,
+  type MenuInputProps,
   MenuLinkItem,
   type MenuLinkItemProps,
   MenuPopup,
@@ -251,9 +266,42 @@ export {
 export { Search, type SearchProps } from "./components/Search";
 export {
   Select,
+  SelectArrow,
+  type SelectArrowProps,
+  SelectBackdrop,
+  type SelectBackdropProps,
+  type SelectBackdropState,
+  SelectGroup,
+  SelectGroupLabel,
+  type SelectGroupLabelProps,
+  type SelectGroupProps,
   SelectItem,
+  SelectItemIndicator,
+  type SelectItemIndicatorProps,
   type SelectItemProps,
+  type SelectItemState,
+  SelectItemText,
+  type SelectItemTextProps,
+  SelectPopup,
+  type SelectPopupProps,
+  type SelectPopupState,
+  SelectPortal,
+  type SelectPortalProps,
+  SelectPositioner,
+  type SelectPositionerProps,
+  type SelectPositionerState,
   type SelectProps,
+  SelectRoot,
+  type SelectRootProps,
+  type SelectRootState,
+  SelectSeparator,
+  type SelectSeparatorProps,
+  SelectTrigger,
+  type SelectTriggerProps,
+  type SelectTriggerState,
+  SelectValue,
+  type SelectValueProps,
+  type SelectValueState,
 } from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
 export { Sheet, type SheetProps } from "./components/Sheet";
@@ -291,7 +339,25 @@ export {
   type ToggleGroupProps,
 } from "./components/ToggleGroup";
 export { Toolbar, type ToolbarProps } from "./components/Toolbar";
-export { Tooltip, type TooltipProps } from "./components/Tooltip";
+export {
+  Tooltip,
+  TooltipArrow,
+  type TooltipArrowProps,
+  TooltipPopup,
+  type TooltipPopupProps,
+  type TooltipPopupState,
+  TooltipPortal,
+  type TooltipPortalProps,
+  TooltipPositioner,
+  type TooltipPositionerProps,
+  type TooltipPositionerState,
+  type TooltipProps,
+  TooltipRoot,
+  type TooltipRootProps,
+  TooltipTrigger,
+  type TooltipTriggerProps,
+  type TooltipTriggerState,
+} from "./components/Tooltip";
 export { Trigger, type TriggerProps } from "./components/Trigger";
 export {
   createDismissPolicy,

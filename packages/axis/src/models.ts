@@ -52,6 +52,14 @@ export {
   isChatStreaming,
 } from "./chatStatus";
 export {
+  type CollectionItem,
+  type CollectionMatch,
+  defaultCollectionMatch,
+  filterCollectionKeys,
+  findCollectionText,
+  useCollectionRegistry,
+} from "./collection";
+export {
   createDismissPolicy,
   type DismissPolicy,
   type DismissPolicyOptions,
