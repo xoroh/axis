@@ -51,7 +51,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Navigation Bar/Rail/Drawer | complete | tab bar (first-item default, no deselect) + rail wrapper + edge drawer with scrim, RNTL 14 |
 | Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
 | Top App Bar | complete | header role + title/leading/actions slots, RNTL 4 |
-| Menubar | deferred | desktop bar pattern; dedicated design slice |
+| Menubar | complete | command bar composing DropdownMenu (single-open coordination), RNTL 9 |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
 | Sheet/Drawer | complete | bottom sheet: detents + PanResponder drag + scrim, RNTL 12 |
