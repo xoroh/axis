@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { act, useState } from "react";
+import { act, createRef, type ElementRef, useState } from "react";
+import type { View } from "react-native";
 import { Field, Input } from "./index";
 
 /**
@@ -94,5 +95,13 @@ describe("Field on React Native", () => {
     );
     expect(screen.getByTestId("f")).toBeTruthy();
     expect(screen.getByTestId("in")).toBeTruthy();
+  });
+});
+
+describe("Field ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Field ref={ref} testID="f" label="Name" />);
+    expect(ref.current).toBeTruthy();
   });
 });

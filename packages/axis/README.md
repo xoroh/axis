@@ -372,7 +372,7 @@ Unstyled text label. Associates with a control via `nativeID`
 belongs to the control. No invented role — read as text.
 
 Props: `children?: ReactNode`, `nativeID?: string`,
-`testID?: string`, `style?: StyleProp<TextStyle>`. All optional.
+`testID?: string`, `style?: StyleProp<TextStyle>`, `ref?`. All optional.
 
 ## Separator
 
@@ -383,7 +383,7 @@ Native defines no separator role, and an unbacked claim is worse than
 silence). Direction is a styling decision in `style`; no orientation
 prop it cannot honor.
 
-Props: `testID?: string`, `style?: StyleProp<ViewStyle>`. All optional.
+Props: `testID?: string`, `style?: StyleProp<ViewStyle>`, `ref?`. All optional.
 
 ## Checkbox Group
 
@@ -435,7 +435,7 @@ Source of truth: `ProgressProps` in `@xoroh/axis`.
 Determinate/indeterminate indicator: `value` (default 0), `min`
 (default 0), `max` (default 100), `indeterminate` (announces busy,
 no value), role `progressbar` with `{min, max, now}` value,
-`accessibilityLabel`. Values clamp; fill width is data-driven under
+`accessibilityLabel`, `ref?` (container). Values clamp; fill width is data-driven under
 caller `barStyle`. Example: `<Progress value={42}
 accessibilityLabel="Loading" />`.
 
@@ -444,7 +444,7 @@ accessibilityLabel="Loading" />`.
 Source of truth: `BadgeProps` in `@xoroh/axis`.
 
 Count/dot adornment: caller `children` in a container `View` with
-`accessibilityLabel` (e.g. "3 unread"), `style`, `textStyle`. Read
+`accessibilityLabel` (e.g. "3 unread"), `style`, `textStyle`, `ref?` (container). Read
 as plain content; no invented role.
 
 ## Avatar
@@ -455,7 +455,7 @@ Identity image with fallback: `source` renders an `Image` with the
 image role and label; absence or load error renders caller
 `children` in a fallback `View`. Props: `source?:
 ImageSourcePropType`, `children?`, `accessibilityLabel?`,
-`testID?`, `style?` (image), `fallbackStyle?`.
+`testID?`, `style?` (image), `fallbackStyle?`, `ref?` (rendered host).
 
 ## Dialog
 
@@ -518,7 +518,7 @@ closed; open content announces via a polite live region.
 disables the timer), `children?` (message),
 `actionLabel?: string` + `onAction?: () => void` (button rendered
 only with a label; fires then dismisses), `accessibilityLabel?`,
-`testID?`, `style?`. No ref, no animation. All optional.
+`testID?`, `style?`, `ref?` (surface). No animation. All optional.
 
 ## Input
 
@@ -537,7 +537,7 @@ Source of truth: `FieldProps` in `@xoroh/axis`.
 
 Label/control/error row: `label?`, `children?` (control),
 `error?` (rendered only when provided, announced politely),
-`testID?`, `style?`, `labelStyle?`, `errorStyle?`. No validation
+`testID?`, `style?`, `labelStyle?`, `errorStyle?`, `ref?` (container). No validation
 logic — validity is caller state expressed by passing `error`.
 
 ## Collapsible
@@ -592,7 +592,7 @@ under caller style, no animation), `accessibilityLabel?`,
 Source of truth: `FieldsetProps` in `@xoroh/axis`.
 
 Group of related fields with a legend: `legend?`, `children?`,
-`testID?`, `style?`, `legendStyle?`. No invented group role; legend
+`testID?`, `style?`, `legendStyle?`, `ref?` (container). No invented group role; legend
 read as text. No validation logic — validity is caller state.
 
 ## Tooltip
@@ -774,7 +774,7 @@ Gauge readout (task progress lives in `Progress`): `value?`
 (default 0), `min?` (default 0), `max?` (default 100),
 `accessibilityLabel?`, `testID?`, `style?`, `fillStyle?`
 (data-driven width merged underneath). Meter role with
-`{min, max, now}` value. All optional.
+`{min, max, now}` value, `ref?` (container). All optional.
 
 ## Loader
 
@@ -782,14 +782,14 @@ Source of truth: `LoaderProps` in `@xoroh/axis`.
 
 Busy indicator: host `ActivityIndicator` with announced busy
 state. `size?: number | "small" | "large"`, `color?: string`,
-`accessibilityLabel?`, `testID?`, `style?`. All optional.
+`accessibilityLabel?`, `testID?`, `style?`, `ref?` (container). All optional.
 
 ## Skeleton
 
 Source of truth: `SkeletonProps` in `@xoroh/axis`.
 
 Loading placeholder: silent (`accessible={false}`), no motion.
-`testID?`, `style?` (dimensions live here). All optional.
+`testID?`, `style?` (dimensions live here), `ref?`. All optional.
 
 ## EmptyState
 
@@ -797,7 +797,7 @@ Source of truth: `EmptyStateProps` in `@xoroh/axis`.
 
 Nothing-here frame: `title?`, `description?`, `action?` (caller
 slot), `accessibilityLabel?`, `testID?`, `style?`,
-`titleStyle?`, `descriptionStyle?`. No iconography, no copy. All
+`titleStyle?`, `descriptionStyle?`, `ref?` (container). No iconography, no copy. All
 optional.
 
 ## Card
@@ -807,7 +807,7 @@ Source of truth: `CardProps` in `@xoroh/axis`.
 Content container with `header?`, `media?`, `children?`,
 `actions?` slots (each rendered only when provided),
 `accessibilityLabel?`, `testID?`, `style?`, `headerStyle?`,
-`mediaStyle?`, `actionsStyle?`. No elevation, shape, or padding.
+`mediaStyle?`, `actionsStyle?`, `ref?` (container). No elevation, shape, or padding.
 All optional.
 
 ## List Item
@@ -819,13 +819,13 @@ it is a pressable row (button role, selected/disabled state);
 without, a static `View` (no fake affordance).
 `onPress?`, `selected?` (default `false`), `disabled?` (default
 `false`), `accessibilityLabel?`, `testID?`, `style?`,
-`contentStyle?` (string-children text). All optional.
+`contentStyle?` (string-children text), `ref?` (rendered host). All optional.
 
 ## Kbd
 
 Source of truth: `KbdProps` in `@xoroh/axis`.
 
-Key-hint display: `children?`, `testID?`, `style?`. Inline
+Key-hint display: `children?`, `testID?`, `style?`, `ref?`. Inline
 semantics only — no keyboard handling. All optional.
 
 ## Table
@@ -1045,7 +1045,8 @@ value="home" label="Home" />…</NavigationBar>`.
 Source of truth: `NavigationRailProps` (+ item props) in `@xoroh/axis`.
 
 Vertical destination rail: a rail IS a vertical bar — thin wrapper
-over `NavigationBar` (vertical default, overridable), and
+over `NavigationBar` (vertical default, overridable, `ref?`
+forwarded), and
 `NavigationRailItem` is `NavigationBarItem` under its rail name.
 One implementation, one inventory row. Example:
 `<NavigationRail><NavigationRailItem value="home" label="Home"

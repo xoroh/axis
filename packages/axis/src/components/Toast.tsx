@@ -1,4 +1,10 @@
-import { type ReactNode, useCallback, useEffect } from "react";
+import {
+  type ElementRef,
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useEffect,
+} from "react";
 import {
   Pressable,
   type StyleProp,
@@ -62,7 +68,34 @@ export type ToastProps = {
   testID?: string;
   /** Root view style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /** Forwarded to the toast surface `View`. */
+  ref?: Ref<ElementRef<typeof View>>;
 };
+
+/**
+ * Assign one value to every ref in the list. Inline here (not imported)
+ * deliberately: the shared `mergeRefs` composition has no approved
+ * consumer yet, and the contract requires an inline, documented,
+ * tested composition until its transfer gate passes. When it does,
+ * this body is its first consumer.
+ */
+function assignRef(
+  ref: ToastProps["ref"],
+  value: ElementRef<typeof View> | null,
+): void {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref && typeof ref === "object" && "current" in ref) {
+    try {
+      (ref as { current: unknown }).current = value;
+    } catch {
+      // A frozen ref object cannot take the write — leave it alone
+      // rather than failing the render over it.
+    }
+  }
+}
 
 export function Toast({
   open,
@@ -75,6 +108,7 @@ export function Toast({
   accessibilityLabel,
   testID,
   style,
+  ref,
 }: ToastProps): React.JSX.Element | null {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
@@ -104,10 +138,21 @@ export function Toast({
     setOpen(false);
   }, [onAction, setOpen]);
 
+  // Stable identity so the host element is not detached and re-attached
+  // on every render — the ref callback reads through `ref`, never
+  // closing over render-scoped values besides it.
+  const setHostRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      assignRef(ref, node);
+    },
+    [ref],
+  );
+
   if (!isOpen) return null;
 
   return (
     <View
+      ref={setHostRef}
       accessibilityLiveRegion="polite"
       accessibilityLabel={accessibilityLabel}
       testID={testID}

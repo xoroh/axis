@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { act } from "react";
-import { Text } from "react-native";
+import { act, createRef, type ElementRef } from "react";
+import { type Image, Text, type View } from "react-native";
 import { Avatar, Badge, Progress } from "./index";
 
 /**
@@ -82,5 +82,35 @@ describe("Avatar on React Native", () => {
     });
     expect(screen.queryByRole("image")).toBeNull();
     expect(screen.getByTestId("av")).toBeTruthy();
+  });
+});
+
+describe("Avatar ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof Image>>();
+    await render(
+      <Avatar
+        ref={ref}
+        source={{ uri: "https://example.com/a.png" }}
+        testID="a"
+      />,
+    );
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Badge ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Badge ref={ref} testID="b" accessibilityLabel="3 unread" />);
+    expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Progress ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Progress ref={ref} testID="p" value={42} />);
+    expect(ref.current).toBeTruthy();
   });
 });

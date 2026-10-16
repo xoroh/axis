@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { act } from "react";
+import { act, createRef, type ElementRef } from "react";
+import type { View } from "react-native";
 import { Fieldset, Textarea } from "./index";
 
 /**
@@ -76,5 +77,13 @@ describe("Fieldset on React Native", () => {
     );
     expect(screen.getByTestId("fs")).toBeTruthy();
     expect(screen.getByTestId("ta")).toBeTruthy();
+  });
+});
+
+describe("Fieldset ref forwarding", () => {
+  it("forwards a ref to the host element", async () => {
+    const ref = createRef<ElementRef<typeof View>>();
+    await render(<Fieldset ref={ref} testID="f" legend="Group" />);
+    expect(ref.current).toBeTruthy();
   });
 });
