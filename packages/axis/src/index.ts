@@ -64,6 +64,20 @@ export {
 export { Combobox, type ComboboxProps } from "./components/Combobox";
 export { ContextMenu, type ContextMenuProps } from "./components/ContextMenu";
 export { Dialog, type DialogProps } from "./components/Dialog";
+export {
+  DropdownMenu,
+  DropdownMenuItem,
+  type DropdownMenuItemProps,
+  type DropdownMenuProps,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  type DropdownMenuSubContentProps,
+  type DropdownMenuSubProps,
+  DropdownMenuSubTrigger,
+  type DropdownMenuSubTriggerProps,
+  DropdownMenuTrigger,
+  type DropdownMenuTriggerProps,
+} from "./components/DropdownMenu";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState";
 export { ExtendedFab, type ExtendedFabProps } from "./components/ExtendedFab";
 export { Fab, type FabProps } from "./components/Fab";
@@ -89,6 +103,16 @@ export {
   type MenuTriggerProps,
 } from "./components/Menu";
 export { Meter, type MeterProps } from "./components/Meter";
+export {
+  NavigationMenu,
+  NavigationMenuItem,
+  type NavigationMenuItemProps,
+  NavigationMenuPanel,
+  type NavigationMenuPanelProps,
+  type NavigationMenuProps,
+  NavigationMenuTrigger,
+  type NavigationMenuTriggerProps,
+} from "./components/NavigationMenu";
 export { NumberField, type NumberFieldProps } from "./components/NumberField";
 export { OtpField, type OtpFieldProps } from "./components/OtpField";
 export { Pagination, type PaginationProps } from "./components/Pagination";

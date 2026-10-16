@@ -49,7 +49,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Carousel | complete | paged content, RNTL 6 |
 | Toolbar | complete | oriented group, RNTL 5 |
 | Navigation Bar/Rail/Drawer | deferred | app-shell navigation patterns; dedicated design slice |
-| Navigation Menu | deferred | flyout adaptation needs navigation design; after Menu proves out |
+| Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
 | Top App Bar | deferred | app chrome; dedicated design slice |
 | Menubar | deferred | desktop bar pattern; dedicated design slice |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
@@ -58,7 +58,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Menu | complete | popup menu + items, RNTL 8 |
 | Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |
-| Dropdown Menu | deferred | submenu cascade needs positioning design; after Menu proves out |
+| Dropdown Menu | complete | submenu cascade (single dismissal stack), RNTL 10 |
 | Tooltip | complete | long-press + measured placement, RNTL 4 |
 | Scroll Area | na-native | native ScrollView covers it; no wrapper adds value |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
