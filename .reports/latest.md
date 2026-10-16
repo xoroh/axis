@@ -1,41 +1,49 @@
-# Status report — 2026-10-16 (Axis completion program, turn 1)
+# Status report — 2026-10-16 (Axis completion program, turn 3)
 
-## Done (all on `xoroh/axis`, main @ `a2ebea5` after merges)
-- Batch J — `Text` (readable host, no type scale) + `SettingsRow`
-  (title/description + control slot, static-or-pressable). RNTL 13.
-  PR #12 merged (CI green).
-- Batch K — `Fab` (label-required icon, dp box) + `ExtendedFab`
-  (icon + text). Shape/size-system stay caller-side: resolves the
-  design-system-shaped deferral. RNTL 9. PR #13 merged (CI green).
-- Batch L — `Sheet` (bottom sheet: detent snaps, PanResponder
-  drag-to-dismiss/settle, scrim, expand/collapse actions; no
-  animation/back-handler/focus-trap, each deferred with rationale).
-  RNTL 12. PR #14 merged (CI green).
-- Batch M — `DropdownMenu` (submenu cascade, single root-owned
-  dismissal stack, cascade path internal) + `NavigationMenu` (top
-  bar, single-open flyout panels, controlled open value). RNTL 19.
-  PR #15 OPEN, CI pending (run 38920186678).
-- Each batch: RNTL suite + README section + COVERAGE.md row +
-  changeset (minor, unpublished) + typecheck/lint/boundary green
-  locally; full validate (47+ suites) in CI.
+## Owner direction applied (supersedes the readiness verdict)
+- Axis mirrors Base UI as closely as RN allows (names, compound
+  parts, props, controlled patterns, render composition,
+  data-state where meaningful; every deviation documented).
+- `rn-primitives` (MIT) + mature RN libraries: implementation
+  references only — no dependency, no wholesale copying.
+- No MCP server or CLI for Axis: nothing to drop (the contract
+  already excludes both; verified by grep — single exclusion line).
+- PR #20 (readiness report) closed as superseded: its verdict
+  predates the alignment program. The parity check will land in a
+  rewritten readiness report at the end, not now.
 
-## Inventory remaining (Batch N, not started)
-- `Pressable/Trigger primitive` — needs the evaluate-vs-Button/Switch
-  decision recorded, then the minimal host.
-- `Navigation Bar/Rail/Drawer` — app-shell patterns as generic
-  selectable-row/drawer-panel components.
-- `Top App Bar` — leading/title/actions header container.
-- `Menubar` — desktop-bar pattern adapted to native (menu-command
-  bar, distinct from NavigationMenu's link panels).
-- `na-native` rows (Scroll Area, Preview Card) stand as ruled.
-- `collection`/`mergeRefs` stay gated (no consumer yet).
+## Done this turn
+- Alignment slice 1 (PR #21 OPEN, CI running): shared
+  `render`-prop composition (`resolveRender`/`resolveStyle` over
+  the `slot` merge; className→undefined; function styles carry
+  part state) with vitest suite (7 tests), Dialog compound parts
+  (Root/Trigger/Portal/Backdrop/Popup/Title/Description/Close —
+  RNTL 11, monolith suite still green), contract §11 (parity
+  rules), `docs/BASE_UI_PARITY.md` (Dialog aligned, systematic
+  deviations D1–D10), README anatomy, changeset. Monolith
+  `Dialog` unchanged. Local: typecheck/lint/boundary/vitest/jest
+  green.
+- Key design rulings (all documented in-file): `keepMounted`
+  dropped (untestable — invisible modal subtrees hide from RNTL
+  like the platform hides them); `data-*` systematically absent
+  (D1); same-index settle reports nothing (shared hook
+  `Object.is` semantic); cascade paths stay internal
+  (from Batch M, unchanged).
 
-## Blockers / decisions for owner
-- Release HOLD intact: no publish, tags, or version bumps (all
-  manifests `0.0.0`, changesets accumulate unpublished).
-- Routine merges (#12, #13, #14) done on green CI per mission
-  authorization (repo AGENTS.md default is no-merge; mission
-  direction supersedes for routine green PRs).
-- No branches deleted; feature branches retained post-merge.
-- Next: Batch N, then `.reports/axis-release-ready.md`, then stop
-  for owner confirmation before any kern work.
+## Remaining program (Base UI alignment, family by family)
+1. Menu family (Menu/DropdownMenu/NavigationMenu/Menubar):
+   Root/Trigger/Portal/Backdrop/Positioner/Popup/Item/Submenu/
+   Group parts + render composition on existing parts.
+2. Popover, Select, Combobox, Tooltip, Dialog-adjacent overlays
+   (AlertDialog, Sheet as Drawer-like? — Base has Drawer with
+   snap points: map our Sheet).
+3. Controls (Switch, Checkbox, Radio, Slider, Tabs, etc.):
+   parts + render + state objects where Base defines them.
+4. Then: rewrite `.reports/axis-release-ready.md` WITH the
+   per-component Base UI parity check, and stop for owner
+   confirmation. Kern untouched until then.
+
+## Standing constraints (unchanged)
+- Small PRs, merge routine ones on green CI; trees clean/pushed;
+  no branches deleted. No Kern/token deps. Release HOLD: no
+  publish, tags, or version bumps.
