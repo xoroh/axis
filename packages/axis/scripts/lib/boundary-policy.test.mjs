@@ -238,7 +238,7 @@ describe("nested interpolation desynchronization", () => {
   // interpolation at the hidden brace and blanked the load; the recursive
   // scanner keeps it as code. Verified: old finds [], new finds the load.
   test("brace inside a string does not hide a later load in the same interpolation", () => {
-    const src = `const t = \`${cond ? "}" : import("evil")}\`;`;
+    const src = `const t = \`\${cond ? "}" : import("evil")}\`;`;
     expect(findDynamicLoads(stripNonCode(src))).toEqual(["import"]);
   });
 
