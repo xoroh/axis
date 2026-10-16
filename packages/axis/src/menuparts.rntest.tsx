@@ -2,8 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Pressable, Text as RNText, type View } from "react-native";
 import {
+  MenuArrow,
   MenuBackdrop,
+  MenuGroup,
+  MenuGroupLabel,
   MenuItem,
+  MenuLinkItem,
   MenuPopup,
   MenuPortal,
   MenuPositioner,
@@ -286,5 +290,122 @@ describe("Menu compound parts on React Native", () => {
       </MenuRoot>,
     );
     expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("Menu group, link, arrow, and non-modal parts", () => {
+  it("renders group label with items", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuGroup testID="group">
+                <MenuGroupLabel testID="group-label">Sort</MenuGroupLabel>
+                <MenuItem value="date">
+                  <RNText>Date</RNText>
+                </MenuItem>
+              </MenuGroup>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    expect(screen.getByTestId("group")).toBeTruthy();
+    expect(screen.getByText("Sort")).toBeTruthy();
+    expect(screen.getByText("Date")).toBeTruthy();
+  });
+
+  it("activates link items with the link role and closes", async () => {
+    const order: string[] = [];
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuLinkItem
+                value="docs"
+                testID="link-docs"
+                onSelect={(v) => order.push(`select:${v}`)}
+                onClick={() => order.push("click")}
+              >
+                <RNText>Docs</RNText>
+              </MenuLinkItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    expect(screen.getByRole("link", { name: "Docs" })).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByText("Docs"));
+    });
+    expect(order).toEqual(["select:docs", "click"]);
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("renders the arrow marker where the caller puts it", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuArrow testID="menu-arrow" />
+              <MenuItem value="x">
+                <RNText>X</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    expect(screen.getByTestId("menu-arrow")).toBeTruthy();
+  });
+
+  it("non-modal menus render in-box with no scrim and toggle closed", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <MenuRoot modal={false} onOpenChange={(v) => seen.push(v)}>
+        <MenuTrigger accessibilityLabel="Open menu">
+          <RNText>Open</RNText>
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuItem value="x">
+                <RNText>X</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    await pressLabel("Open menu");
+    expect(seen).toEqual([true]);
+    expect(screen.queryByLabelText("Dismiss menu")).toBeNull();
+    expect(screen.getByTestId("menu-popup")).toBeTruthy();
+    await pressLabel("Open menu");
+    expect(seen).toEqual([true, false]);
+    expect(screen.queryByTestId("menu-popup")).toBeNull();
+  });
+
+  it("non-modal menus still close on item select", async () => {
+    await render(
+      <MenuRoot modal={false} defaultOpen>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="menu-popup">
+              <MenuItem value="x">
+                <RNText>X</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByText("X"));
+    });
+    expect(screen.queryByTestId("menu-popup")).toBeNull();
   });
 });
