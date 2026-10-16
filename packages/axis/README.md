@@ -453,3 +453,62 @@ under caller style, no animation), `accessibilityLabel?`,
 Group of related fields with a legend: `legend?`, `children?`,
 `testID?`, `style?`, `legendStyle?`. No invented group role; legend
 read as text. No validation logic — validity is caller state.
+
+## Tooltip
+
+Anchored hint on long-press: `content` (required), `children`
+(anchor, required), `open?`, `defaultOpen?` (default `false`),
+`onOpenChange?`, `placement?` (default `"top"`, clamped into the
+viewport), `accessibilityLabel?`, `testID?`, `style?` (anchor),
+`tipStyle?`, `ref` (anchor wrapper). The tip carries the tooltip
+role; it is measured and placed with the shared floating-placement
+plumbing (anchor `measure()` + viewport + rect math) and stays
+transparent until measured. Pixel placement needs the native
+runtime — covered by placement-math unit tests, not asserted in
+jsdom-free RNTL. No hover model, no scrim. All props optional
+except `content`/`children`.
+
+## Tooltip
+
+Anchored hint on long-press: `content` + `children` (anchor, both
+required), `open?`, `defaultOpen?` (default `false`),
+`onOpenChange?`, `placement?` (default `"top"`, clamped into the
+viewport), `accessibilityLabel?`, `testID?`, `style?` (anchor),
+`tipStyle?`, `ref` (anchor wrapper). The tip carries the tooltip
+role and is measured/placed with shared floating-placement
+plumbing; it stays transparent until measured. Pixel placement
+needs the native runtime (math unit-tested, not asserted in RNTL).
+No hover model, no scrim. All props optional except
+`content`/`children`.
+
+## Slider
+
+Drag value control (PanResponder, no Reanimated/Gesture Handler):
+`value?`, `defaultValue?` (default `min`), `onValueChange?`,
+`min?` (default 0), `max?` (default 100), `step?: number`
+(default 0 = continuous, >0 snaps), `disabled?`,
+`accessibilityLabel?`, `testID?`, `style?`, `trackStyle?`,
+`fillStyle?`, `thumbStyle?`, `ref` (track). Role `slider` with
+`{min, max, now}` value plus `increment`/`decrement` actions.
+Degenerate `min > max` collapses safely. All optional.
+
+## Calendar
+
+Date grid (plain UTC `Date` math, no date library; Sunday-start
+weeks): `value?: string | null` (ISO `yyyy-mm-dd`),
+`defaultValue?`, `onValueChange?`, `month?: string` (`yyyy-mm`,
+controlled visible month), `onMonthChange?`, `minDate?`,
+`maxDate?` (out-of-range days disabled), `disabled?`,
+`accessibilityLabel?`, `testID?`, `style?`, `dayStyle?`, `ref`.
+Day cells carry button role + selected/disabled state; header has
+previous/next-month actions. Invalid strings never throw. All
+optional.
+
+## TimePicker
+
+Time entry composed from Axis `Input` + `Button`, reusing the
+`time` math (`normalizeTimeValue`, step grid, formatting):
+`value?: {hours, minutes} | null`, `defaultValue?`,
+`onValueChange?`, `step?: number` (minutes, default 1),
+`disabled?`, `accessibilityLabel?`, `testID?`, `style?`, `ref`.
+Steppers walk the step grid and clamp at its ends. All optional.

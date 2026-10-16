@@ -19,7 +19,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Radio Group | complete | single-select group + items, RNTL 8 |
 | Toggle | complete | pressed-state button, RNTL 7 |
 | Toggle Group | missing | |
-| Slider | missing | drag value; native gesture work |
+| Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
 | Icon Button | missing | |
 | Link Button | missing | |
@@ -39,8 +39,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Autocomplete | missing | adapted: native list overlay |
 | Combobox | missing | adapted: entry + native popup |
 | Select | missing | adapted: picker/action-sheet pattern |
-| Calendar | missing | date grid |
-| Time Picker | missing | entry/pick + validation |
+| Calendar | complete | UTC date grid, RNTL 7 |
+| Time Picker | complete | Input+Button composition, RNTL 6 |
 | Accordion | complete | single-expand disclosure, RNTL 7 |
 | Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
@@ -57,7 +57,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Menu | missing | popup + dismiss |
 | Context Menu | missing | adapted: long-press trigger |
 | Popover | missing | adapted: custom positioner |
-| Tooltip | missing | adapted: long-press replaces hover |
+| Tooltip | complete | long-press + measured placement, RNTL 4 |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
 | Meter | missing | |
