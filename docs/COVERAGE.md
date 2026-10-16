@@ -28,7 +28,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Button Group | complete | layout container, RNTL 5 |
 | Pressable/Trigger primitive | deferred | evaluate raw-Pressable need vs Button/Switch coverage |
 | Chip | complete | select/remove, RNTL 7 |
-| FAB family | missing | deferred: design-system-shaped; needs contract review |
+| FAB family | complete | Fab (icon, label-required, size dp) + ExtendedFab (icon + text), RNTL 9 |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
 | Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
 | Label | complete | nativeID association, RNTL 2 |

@@ -65,6 +65,8 @@ export { Combobox, type ComboboxProps } from "./components/Combobox";
 export { ContextMenu, type ContextMenuProps } from "./components/ContextMenu";
 export { Dialog, type DialogProps } from "./components/Dialog";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState";
+export { ExtendedFab, type ExtendedFabProps } from "./components/ExtendedFab";
+export { Fab, type FabProps } from "./components/Fab";
 export { Field, type FieldProps } from "./components/Field";
 export { Fieldset, type FieldsetProps } from "./components/Fieldset";
 export { IconButton, type IconButtonProps } from "./components/IconButton";
