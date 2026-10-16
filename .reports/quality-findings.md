@@ -64,17 +64,18 @@ priority. Fixed items stay listed with their PR for traceability.
   breaks the 1-week-old `Sheet` API pre-1.0); (b) keep both
   (`Sheet` bottom-only, `Drawer` edge-anchored — but then our
   `NavigationDrawer` triple-collides by name). Priority: medium
-  (cheap pre-1.0, expensive after). **Decision required.**
+  (cheap pre-1.0, expensive after). **RESOLVED (owner call this
+  turn): option (b) with `Drawer` canonical — shipped; alias
+  removal pending.**
 - **Q6 — No interactive demo surface.** Docs are prose +
   untested snippets; Base UI/shadcn pattern is live examples and
-  a playground. Proposal: `apps/playground` (Expo) for
-  component demos. A new app is product/architecture scope.
-  Priority: medium. **Decision required.**
-- **Q7 — README single-file scale.** 69 sections and growing
-  ~30 per batch family. Proposal: split to
-  `docs/components/*.md` with README as index at ~1500 lines or
-  when a docs app exists (pairs with Q6). Priority: low.
-  **Decision required.**
+  a playground. Owner decision: no playground in the axis repo;
+  keep ONE runnable Expo example app (`apps/example`) covering
+  every component; interactive docs/playground belongs to
+  Kern's site. Scaffold next. Priority: medium.
+- **Q7 — README single-file scale.** RESOLVED this turn: split
+  shipped (66 notes in `docs/components/`, short READMEs,
+  retargeted gate).
 
 ## Verified OK (no action)
 
