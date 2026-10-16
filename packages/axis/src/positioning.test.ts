@@ -44,6 +44,41 @@ describe("resolveFloatingOrigin", () => {
       y: 148,
     });
   });
+
+  it("pins start/end alignment to the anchor edges (center stays default)", () => {
+    // ANCHOR x=100 w=80; SIZE w=120.
+    expect(
+      resolveFloatingOrigin(ANCHOR, SIZE, { align: "start" }),
+    ).toMatchObject({ x: 100 });
+    expect(resolveFloatingOrigin(ANCHOR, SIZE, { align: "end" })).toMatchObject(
+      { x: 100 + 80 - 120 },
+    );
+    // Vertical placement aligns on y instead.
+    expect(
+      resolveFloatingOrigin(ANCHOR, SIZE, {
+        placement: "right",
+        align: "start",
+      }),
+    ).toMatchObject({ y: 100 });
+    expect(
+      resolveFloatingOrigin(ANCHOR, SIZE, {
+        placement: "right",
+        align: "end",
+      }),
+    ).toMatchObject({ y: 100 + 40 - 60 });
+  });
+
+  it("shifts the aligned origin by alignOffset", () => {
+    expect(
+      resolveFloatingOrigin(ANCHOR, SIZE, {
+        align: "start",
+        alignOffset: 8,
+      }),
+    ).toMatchObject({ x: 108 });
+    expect(
+      resolveFloatingOrigin(ANCHOR, SIZE, { alignOffset: 8 }),
+    ).toMatchObject({ x: 88 });
+  });
 });
 
 describe("clampRectToViewport", () => {

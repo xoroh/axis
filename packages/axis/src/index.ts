@@ -119,11 +119,29 @@ export {
 } from "./components/LoadingButton";
 export {
   Menu,
+  MenuBackdrop,
+  type MenuBackdropProps,
+  type MenuBackdropState,
   MenuItem,
   type MenuItemProps,
+  type MenuItemState,
+  MenuPopup,
+  type MenuPopupProps,
+  type MenuPopupState,
+  MenuPortal,
+  type MenuPortalProps,
+  MenuPositioner,
+  type MenuPositionerProps,
+  type MenuPositionerState,
   type MenuProps,
+  MenuRoot,
+  type MenuRootProps,
+  type MenuRootState,
+  MenuSeparator,
+  type MenuSeparatorProps,
   MenuTrigger,
   type MenuTriggerProps,
+  type MenuTriggerState,
 } from "./components/Menu";
 export {
   Menubar,
@@ -256,6 +274,7 @@ export {
   resolvePortalTarget,
 } from "./portal";
 export {
+  type Align,
   type Placement,
   type PositioningOptions,
   type Rect,

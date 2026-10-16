@@ -11,9 +11,23 @@ import {
   useContext,
   useMemo,
   useRef,
+  useState,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
-import type { Placement } from "../positioning";
+import {
+  Modal,
+  Pressable,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from "react-native";
+import type { Align, Placement } from "../positioning";
+import {
+  type RenderProp,
+  resolveRender,
+  resolveStyle,
+  type StateStyle,
+} from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
@@ -96,38 +110,91 @@ export type MenuProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
+export type MenuTriggerState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
 export type MenuTriggerProps = {
   testID?: string;
-  /** Trigger pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
-  /** Trigger content, rendered inside the `Pressable` (required — an empty trigger is a bug). */
-  children: ReactNode;
+  /** Value or function of trigger state, caller-provided. */
+  style?: StateStyle<MenuTriggerState, StyleProp<ViewStyle>>;
+  /** Trigger content, rendered inside the `Pressable`. Optional when `render` supplies it (an empty trigger with neither is a bug). */
+  children?: ReactNode;
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<MenuTriggerState, SlotProps>;
+};
+
+export type MenuItemState = {
+  /** Whether the item is currently disabled. */
+  disabled: boolean;
+  /**
+   * Whether the item is pressed. Touch has no hover or keyboard
+   * focus to highlight with — the press is the highlight (native
+   * adaptation, documented in the parity record).
+   */
+  highlighted: boolean;
 };
 
 export type MenuItemProps = {
-  /** Item value passed to `onSelect` when this item is activated (required). */
-  value: string;
+  /**
+   * Item value. Optional (Base UI parity — Base items carry no
+   * value): required only for `onSelect`, and for cascade identity
+   * in `DropdownMenu`.
+   */
+  value?: string;
   /** Terminal: it never selects and is announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of item state, caller-provided. */
+  style?: StateStyle<MenuItemState, StyleProp<ViewStyle>>;
   /** Item content, rendered inside the `Pressable`. */
   children?: ReactNode;
-  /** Fires with `value` on activation, before the menu closes. */
+  /**
+   * Fires with `value` on activation, before `onClick` and close.
+   * Requires `value` — without one there is nothing to report.
+   */
   onSelect?: (value: string) => void;
+  /**
+   * Fires on activation (Base UI parity), after `onSelect`. Always
+   * fires, with or without `value`.
+   */
+  onClick?: (event: unknown) => void;
+  /**
+   * Whether activation closes the menu. Default `true` (set
+   * `false` for checkbox-style items that stay open).
+   */
+  closeOnClick?: boolean;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<MenuItemState, SlotProps>;
 };
 
 type MenuDisclosure = {
   open: boolean;
   toggle: () => void;
   close: () => void;
+  /** Scrim/outside dismissal (monolith: same as close; compound: `onDismiss` first). */
+  dismiss: () => void;
+  /** Backdrop press dismisses (compound Root prop; monolith always dismisses). */
+  disablePointerDismissal: boolean;
+  /** Anchor host for `MenuPositioner` measurement (compound only). */
+  anchorHostRef: { current: ElementRef<typeof View> | null };
+  /** Register the trigger host for positioner measurement. */
+  setAnchorRef: (node: ElementRef<typeof View> | null) => void;
 };
 
 /**
@@ -182,24 +249,59 @@ export function MenuTrigger({
   children,
   disabled = false,
   accessibilityLabel,
-}: MenuTriggerProps): React.JSX.Element {
+  render,
+}: MenuTriggerProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
-  const expanded = disclosure?.open ?? false;
+  const open = disclosure?.open ?? false;
+  const state: MenuTriggerState = { open, disabled };
 
   const toggleTrigger = useCallback(() => {
     if (disabled) return;
     disclosure?.toggle();
   }, [disabled, disclosure]);
 
+  // Register the host for `MenuPositioner` measurement when inside
+  // any menu root (monolith or compound); outside a root there is
+  // nothing to anchor to and registration is a no-op write.
+  const setTriggerRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      // A trigger renders a Pressable whose ref resolves to its host
+      // view; the positioner only needs the measurable node.
+      disclosure?.setAnchorRef(node);
+    },
+    [disclosure],
+  );
+
+  // Outside a Menu there is no disclosure to toggle: render inert
+  // (announced disabled, press is a no-op) rather than dropping the
+  // node silently.
+  const inert = disclosure === null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded: open, disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: toggleTrigger,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
+      ref={setTriggerRef}
       accessibilityRole="button"
-      accessibilityState={{ expanded, disabled }}
+      accessibilityState={{ expanded: open, disabled: disabled || inert }}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      disabled={disabled}
+      disabled={disabled || inert}
       onPress={toggleTrigger}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -214,19 +316,42 @@ export function MenuItem({
   style,
   children,
   onSelect,
-}: MenuItemProps): React.JSX.Element | null {
+  onClick,
+  closeOnClick = true,
+  render,
+}: MenuItemProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
+  const [highlighted, setHighlighted] = useState(false);
+  const state: MenuItemState = { disabled, highlighted };
 
-  const selectItem = useCallback(() => {
-    if (disabled) return;
-    onSelect?.(value);
-    disclosure?.close();
-  }, [disabled, onSelect, value, disclosure]);
+  const selectItem = useCallback(
+    (event: unknown) => {
+      if (disabled) return;
+      if (value !== undefined) onSelect?.(value);
+      onClick?.(event);
+      if (closeOnClick) disclosure?.close();
+    },
+    [disabled, onSelect, onClick, value, closeOnClick, disclosure],
+  );
 
   // Outside a Menu there is no disclosure to close: render inert
   // (announced disabled, press is a no-op) rather than dropping the
   // node silently.
   if (!disclosure) {
+    const substituted = resolveRender(
+      render,
+      {
+        role: "menuitem",
+        accessibilityState: { disabled: true },
+        accessibilityLabel,
+        testID,
+        disabled: true,
+        style: resolveStyle(style, { disabled: true, highlighted: false }),
+        children,
+      } satisfies SlotProps,
+      { disabled: true, highlighted: false },
+    );
+    if (substituted !== null) return substituted;
     return (
       <Pressable
         role="menuitem"
@@ -234,7 +359,7 @@ export function MenuItem({
         accessibilityLabel={accessibilityLabel}
         testID={testID}
         disabled
-        style={style}
+        style={resolveStyle(style, { disabled: true, highlighted: false })}
       >
         {children}
       </Pressable>
@@ -244,6 +369,24 @@ export function MenuItem({
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;
 
+  const substituted = resolveRender(
+    render,
+    {
+      role: "menuitem",
+      accessibilityState: { disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: selectItem,
+      onPressIn: () => setHighlighted(true),
+      onPressOut: () => setHighlighted(false),
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       role="menuitem"
@@ -252,14 +395,16 @@ export function MenuItem({
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
-      style={style}
+      onPressIn={() => setHighlighted(true)}
+      onPressOut={() => setHighlighted(false)}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
   );
 }
 
-function MenuRoot({
+function MenuInlineRoot({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -309,6 +454,12 @@ function MenuRoot({
     anchorHostRef.current = node;
   }, []);
 
+  // The monolith measures its trigger WRAPPER (above), not the
+  // trigger part: trigger registration is ignored here so the
+  // compound `MenuTrigger`'s anchor write cannot move the monolith's
+  // measured anchor. Zero behavior change by construction.
+  const ignoreAnchorRef = useCallback(() => {}, []);
+
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
     placement,
@@ -316,8 +467,16 @@ function MenuRoot({
   });
 
   const disclosure = useMemo<MenuDisclosure>(
-    () => ({ open: isOpen ?? false, toggle, close }),
-    [isOpen, toggle, close],
+    () => ({
+      open: isOpen ?? false,
+      toggle,
+      close,
+      dismiss,
+      disablePointerDismissal: false,
+      anchorHostRef,
+      setAnchorRef: ignoreAnchorRef,
+    }),
+    [isOpen, toggle, close, dismiss, ignoreAnchorRef],
   );
 
   // Partition direct children by element type: `MenuItem` elements
@@ -392,4 +551,402 @@ function MenuRoot({
   );
 }
 
-export { MenuRoot as Menu };
+export { MenuInlineRoot as Menu };
+
+/* ------------------------------------------------------------------ */
+/* Compound parts (Base UI parity)                                      */
+/*                                                                      */
+/* `<Menu>` above is the concise inline API (trigger zone + in-box     */
+/* scrim + content, children partitioned by type). The parts below     */
+/* mirror Base UI's Menu anatomy — Root (state owner, renders no       */
+/* element), Trigger (shared with the monolith, extended with          */
+/* `render` and anchor registration), Portal (an RN `Modal`: the       */
+/* native portal host), Backdrop (the scrim), Positioner (measured     */
+/* placement against the trigger anchor), Popup (the content box),      */
+/* Item (shared, extended with `onClick`/`closeOnClick` and            */
+/* `highlighted` press state), Separator — with `render`               */
+/* element/function composition and value-or-function `style` on       */
+/* every part. Omitted Base UI pieces are documented deviations, not   */
+/* oversights: no `Arrow` (positioning-marker geometry is caller       */
+/* style; a marker with no measurement coupling is chrome), no        */
+/* checkbox/radio/group items yet (their own slice — settings menus   */
+/* need them, and they deserve controlled-state APIs of their own),    */
+/* no `LinkItem` (a menu item rendering a link is caller content in   */
+/* an `Item`), no `Input`/`Clear`/`Empty`/`FilterProvider` filtering   */
+/* (needs the `collection` transfer + typeahead design), no hover or   */
+/* keyboard traversal (D8), no animation states (D9), and no `data-*`  */
+/* attributes (D1 — state flows through function `style`/`render`      */
+/* props instead). Non-modal menus (no Backdrop) defer with reason:    */
+/* outside-press detection without a scrim needs press-capture on     */
+/* the root view, which would hijack touches meant for the app.        */
+/* ------------------------------------------------------------------ */
+
+export type MenuRootState = {
+  open: boolean;
+};
+
+export type MenuRootProps = {
+  /** Controlled open state. Wins over `defaultOpen` when defined. */
+  open?: boolean;
+  /** Uncontrolled initial open state. Default `false`. */
+  defaultOpen?: boolean;
+  /** Fires with the next open state on every committed toggle or dismissal. */
+  onOpenChange?: (open: boolean) => void;
+  /** Fires on scrim dismissal, before `onOpenChange(false)`. */
+  onDismiss?: () => void;
+  /**
+   * When `true`, backdrop press does not dismiss (Base UI parity
+   * name for staying open). Default `false`.
+   */
+  disablePointerDismissal?: boolean;
+  /** Trigger, Portal, and shared content. Renders no element itself. */
+  children?: ReactNode;
+  /** Forwarded nowhere (the root renders no element); accepted so ref-spreading callers typecheck. */
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type MenuBackdropState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+};
+
+export type MenuBackdropProps = {
+  testID?: string;
+  /** Value or function of backdrop state, caller-provided. */
+  style?: StateStyle<MenuBackdropState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * scrim host; dismissal wiring stays on the part.
+   */
+  render?: RenderProp<MenuBackdropState, SlotProps>;
+};
+
+export type MenuPositionerState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+};
+
+export type MenuPositionerProps = {
+  /** Preferred side for the content box. Default `"bottom"`. */
+  side?: Placement;
+  /** Cross-axis alignment. Default `"center"`. */
+  align?: Align;
+  /** Gap between anchor and content edges. Default `0`. */
+  sideOffset?: number;
+  /** Shift along the cross axis after alignment. Default `0`. */
+  alignOffset?: number;
+  testID?: string;
+  /** Value or function of positioner state, caller-provided. */
+  style?: StateStyle<MenuPositionerState, StyleProp<ViewStyle>>;
+  /** Popup (and optional Arrow content) composed by the caller. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * positioned wrapper; measurement stays on the part.
+   */
+  render?: RenderProp<MenuPositionerState, SlotProps>;
+};
+
+export type MenuPopupState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+};
+
+export type MenuPopupProps = {
+  testID?: string;
+  /** Value or function of popup state, caller-provided. */
+  style?: StateStyle<MenuPopupState, StyleProp<ViewStyle>>;
+  /** Item content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * content host; role stays on the part.
+   */
+  render?: RenderProp<MenuPopupState, SlotProps>;
+  /** Forwarded to the content `View`. */
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type MenuSeparatorProps = {
+  testID?: string;
+  /** Separator style, caller-provided. */
+  style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export type MenuPortalProps = {
+  /** Portal content (Backdrop + Positioner composed by the caller). */
+  children?: ReactNode;
+  testID?: string;
+};
+
+/**
+ * Assign one value to every ref in the list, for the popup host.
+ * Inline here (not imported) deliberately — the contract rule, see
+ * every other part in this package.
+ */
+function assignPopupRef(
+  ref: MenuPopupProps["ref"],
+  value: ElementRef<typeof View> | null,
+): void {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref && typeof ref === "object" && "current" in ref) {
+    try {
+      (ref as { current: unknown }).current = value;
+    } catch {
+      // A frozen ref object cannot take the write — leave it alone
+      // rather than failing the render over it.
+    }
+  }
+}
+
+export function MenuRoot({
+  open,
+  defaultOpen = false,
+  onOpenChange,
+  onDismiss,
+  disablePointerDismissal = false,
+  children,
+  ref,
+}: MenuRootProps): React.JSX.Element {
+  // Accepted for ref-spreading callers; the root renders no element
+  // to attach it to (Base UI parity — documented, not dropped
+  // silently: an unused ref would be the silent version of this).
+  void ref;
+  const [isOpen, setOpen] = useControllableState<boolean>(
+    open,
+    defaultOpen,
+    onOpenChange,
+  );
+
+  const toggle = useCallback(() => {
+    setOpen((previous) => !(previous ?? false));
+  }, [setOpen]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  // Backdrop path: `onDismiss` first, then report `false` (the
+  // `Dialog` dismissal precedent). Guarded on
+  // `disablePointerDismissal` so a non-dismissable menu cannot
+  // close through the scrim.
+  const dismiss = useCallback(() => {
+    if (disablePointerDismissal) return;
+    onDismiss?.();
+    setOpen(false);
+  }, [disablePointerDismissal, onDismiss, setOpen]);
+
+  const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
+  const setAnchorRef = useCallback((node: ElementRef<typeof View> | null) => {
+    anchorHostRef.current = node;
+  }, []);
+
+  const disclosure = useMemo<MenuDisclosure>(
+    () => ({
+      open: isOpen ?? false,
+      toggle,
+      close,
+      dismiss,
+      disablePointerDismissal,
+      anchorHostRef,
+      setAnchorRef,
+    }),
+    [isOpen, toggle, close, dismiss, disablePointerDismissal, setAnchorRef],
+  );
+
+  // The root owns state, never layout: no host element (Base UI parity).
+  return (
+    <MenuDisclosureContext.Provider value={disclosure}>
+      {children}
+    </MenuDisclosureContext.Provider>
+  );
+}
+
+export function MenuPortal({
+  children,
+  testID,
+}: MenuPortalProps): React.JSX.Element | null {
+  const disclosure = useContext(MenuDisclosureContext);
+  // Outside a root there is no open state to present: render nothing.
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+
+  // The RN portal host: a transparent `Modal` presents above the app
+  // (the native equivalent of appending to `body`). `container` has
+  // no native meaning and is omitted by design. Unlike the monolith
+  // (in-box scrim), the compound menu escapes clipped parents —
+  // that is the point of the part.
+  return (
+    <Modal
+      transparent
+      visible={disclosure.open}
+      onRequestClose={disclosure.dismiss}
+      testID={testID}
+    >
+      {children}
+    </Modal>
+  );
+}
+
+export function MenuBackdrop({
+  testID,
+  style,
+  render,
+}: MenuBackdropProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+  const state: MenuBackdropState = { open: disclosure.open };
+
+  if (!disclosure.disablePointerDismissal) {
+    const substituted = resolveRender(
+      render,
+      {
+        accessibilityLabel: "Dismiss menu",
+        testID,
+        onPress: disclosure.dismiss,
+        style: resolveStyle(style, state),
+      } satisfies SlotProps,
+      state,
+    );
+    if (substituted !== null) return substituted;
+    return (
+      <Pressable
+        accessibilityLabel="Dismiss menu"
+        testID={testID}
+        onPress={disclosure.dismiss}
+        style={[SCRIM_FILL, resolveStyle(style, state)]}
+      />
+    );
+  }
+
+  // Non-dismissable: a plain host with no label and no handler — no
+  // fake affordance (the monolith's non-dismissable precedent has no
+  // scrim at all; the compound keeps the layer for layout parity
+  // with the dismissable shape).
+  const substituted = resolveRender(
+    render,
+    { testID, style: resolveStyle(style, state) } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <View testID={testID} style={[SCRIM_FILL, resolveStyle(style, state)]} />
+  );
+}
+
+export function MenuPositioner({
+  side,
+  align,
+  sideOffset,
+  alignOffset,
+  testID,
+  style,
+  children,
+  render,
+}: MenuPositionerProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  // Hooks before guards: measurement runs (harmlessly) even while
+  // closed so activation never reorders hook calls.
+  const floating = useFloatingPlacement({
+    anchorRef: disclosure?.anchorHostRef ?? { current: null },
+    placement: side,
+    offset: sideOffset,
+    align,
+    alignOffset,
+    active: disclosure?.open ?? false,
+  });
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+  const state: MenuPositionerState = { open: disclosure.open };
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      onLayout: floating.onContentLayout,
+      style: [floating.style, resolveStyle(style, state)],
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <View
+      testID={testID}
+      onLayout={floating.onContentLayout}
+      style={[floating.style, resolveStyle(style, state)]}
+    >
+      {children}
+    </View>
+  );
+}
+
+export function MenuPopup({
+  testID,
+  style,
+  children,
+  render,
+  ref,
+}: MenuPopupProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+
+  const setPopupRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      assignPopupRef(ref, node);
+    },
+    [ref],
+  );
+
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+  const state: MenuPopupState = { open: disclosure.open };
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "menu",
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setPopupRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <View
+      ref={setPopupRef}
+      accessible
+      role="menu"
+      testID={testID}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </View>
+  );
+}
+
+export function MenuSeparator({
+  testID,
+  style,
+  render,
+}: MenuSeparatorProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return <View accessible={false} testID={testID} style={style} />;
+}
