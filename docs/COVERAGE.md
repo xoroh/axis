@@ -29,12 +29,12 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Chip | missing | |
 | FAB family | missing | deferred: design-system-shaped; needs contract review |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
-| Fieldset | missing | |
+| Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
 | Label | complete | nativeID association, RNTL 2 |
 | Input | complete | controlled/uncontrolled entry, RNTL 5 |
-| Textarea | missing | |
-| Number Field | missing | |
-| OTP Field | missing | segmented entry |
+| Textarea | complete | multiline + auto-grow, RNTL 4 |
+| Number Field | complete | Input+Button composition, RNTL 7 |
+| OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
 | Search | missing | |
 | Autocomplete | missing | adapted: native list overlay |
 | Combobox | missing | adapted: entry + native popup |
@@ -42,7 +42,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Calendar | missing | date grid |
 | Time Picker | missing | entry/pick + validation |
 | Accordion | complete | single-expand disclosure, RNTL 7 |
-| Collapsible | missing | |
+| Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
 | Pagination | missing | |
 | Carousel | missing | swipe/scroll + indicators |

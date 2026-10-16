@@ -408,3 +408,48 @@ Label/control/error row: `label?`, `children?` (control),
 `error?` (rendered only when provided, announced politely),
 `testID?`, `style?`, `labelStyle?`, `errorStyle?`. No validation
 logic — validity is caller state expressed by passing `error`.
+
+## Collapsible
+
+Single disclosure unit: `Collapsible` (`open`/`defaultOpen`/
+`onOpenChange`, `disabled`, `testID?`, `style?`, `children`,
+`ref` to root) + `CollapsibleTrigger` (Pressable with expanded
+state) + `CollapsiblePanel` (mounted only when open). No animation
+(deferred with rationale in-file). All props optional except
+`children` where noted.
+
+## OtpField
+
+Segmented code entry with auto-advance: one hidden host `TextInput`
+(`keyboardType` number-pad) plus digit cells. `value?`,
+`defaultValue?`, `onValueChange?`, `length?: number` (default 6,
+clamped to ≥1), `disabled?` (read-only), `secureTextEntry?`,
+`autoSubmit?` (default `false`; with `onComplete?` fires exactly once
+per completion, re-arming after the value drops below full length),
+`accessibilityLabel?`, `testID?` (cells are `${testID}-cell-{i}`),
+`style?`, `cellStyle?`, `textStyle?`, `ref` (container). All optional.
+
+## NumberField
+
+Numeric entry with steppers, composed from Axis `Input` + `Button`
+(no reimplemented text entry or press handling): `value?: number |
+null` (`null` = empty), `defaultValue?`, `onValueChange?`,
+`min?`, `max?`, `step?: number` (default 1, clamped to >0),
+`disabled?` (disables input + steppers),
+`accessibilityLabel?`, `testID?`, `style?`, `inputStyle?`,
+`buttonStyle?` (both steppers), `ref` (container). Invalid text
+parses to `null`; stepping clamps into `[min, max]`. All optional.
+
+## Textarea
+
+Multiline entry: `value?`, `defaultValue?` (default `""`),
+`onChangeText?`, `placeholder?`, `editable?` (default `true`),
+`numberOfLines?` (default 3), `autoGrow?` (measured height merged
+under caller style, no animation), `accessibilityLabel?`,
+`testID?`, `style?`, `ref`. All optional.
+
+## Fieldset
+
+Group of related fields with a legend: `legend?`, `children?`,
+`testID?`, `style?`, `legendStyle?`. No invented group role; legend
+read as text. No validation logic — validity is caller state.

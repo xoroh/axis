@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act } from "react";
+import { Text } from "react-native";
 import { Avatar, Badge, Progress } from "./index";
 
 /**
@@ -53,7 +54,7 @@ describe("Avatar on React Native", () => {
   it("shows fallback content without a source", async () => {
     await render(
       <Avatar testID="av" accessibilityLabel="Ada">
-        <></>
+        <Text>AD</Text>
       </Avatar>,
     );
     expect(screen.getByTestId("av")).toBeTruthy();

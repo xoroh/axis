@@ -42,10 +42,21 @@ export {
   type CheckboxGroupItemProps,
   type CheckboxGroupProps,
 } from "./components/CheckboxGroup";
+export {
+  Collapsible,
+  CollapsiblePanel,
+  type CollapsiblePanelProps,
+  type CollapsibleProps,
+  CollapsibleTrigger,
+  type CollapsibleTriggerProps,
+} from "./components/Collapsible";
 export { Dialog, type DialogProps } from "./components/Dialog";
 export { Field, type FieldProps } from "./components/Field";
+export { Fieldset, type FieldsetProps } from "./components/Fieldset";
 export { Input, type InputProps } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
+export { NumberField, type NumberFieldProps } from "./components/NumberField";
+export { OtpField, type OtpFieldProps } from "./components/OtpField";
 export { Progress, type ProgressProps } from "./components/Progress";
 export {
   RadioGroup,
@@ -65,6 +76,7 @@ export {
   TabsTrigger,
   type TabsTriggerProps,
 } from "./components/Tabs";
+export { Textarea, type TextareaProps } from "./components/Textarea";
 export { Toast, type ToastProps } from "./components/Toast";
 export { Toggle, type ToggleProps } from "./components/Toggle";
 export {
