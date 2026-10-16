@@ -22,7 +22,7 @@ Add new applications under `apps/` and reusable workspaces under `packages/`. Ea
 
 ## Pull requests
 
-- Branch from `development` and target pull requests at `development`.
+- Branch from `main` and target pull requests at `main`.
 - Keep each change focused and explain the problem it solves.
 - Add or update tests and documentation when behavior changes.
 - Do not include secrets, credentials, or private user data.
