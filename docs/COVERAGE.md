@@ -54,7 +54,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Menubar | deferred | desktop bar pattern; dedicated design slice |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
-| Sheet/Drawer | deferred | bottom-sheet detents + gestures are a dedicated slice (PanResponder sheet pattern) |
+| Sheet/Drawer | complete | bottom sheet: detents + PanResponder drag + scrim, RNTL 12 |
 | Menu | complete | popup menu + items, RNTL 8 |
 | Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |

@@ -112,6 +112,7 @@ export {
   SettingsRow,
   type SettingsRowProps,
 } from "./components/SettingsRow";
+export { Sheet, type SheetProps } from "./components/Sheet";
 export { Skeleton, type SkeletonProps } from "./components/Skeleton";
 export { Slider, type SliderProps } from "./components/Slider";
 export { SplitButton, type SplitButtonProps } from "./components/SplitButton";

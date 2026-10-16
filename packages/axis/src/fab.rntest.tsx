@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
-import type { Pressable } from "react-native";
+import { type Pressable, View } from "react-native";
 import { ExtendedFab, Fab } from "./index";
 
 /**
@@ -85,11 +85,12 @@ describe("ExtendedFab on React Native", () => {
 
   it("renders the leading icon beside the text", async () => {
     await render(
-      <ExtendedFab testID="xfab" icon={<></>}>
+      <ExtendedFab testID="xfab" icon={<View testID="xfab-icon" />}>
         Create note
       </ExtendedFab>,
     );
     expect(screen.getByTestId("xfab")).toBeTruthy();
+    expect(screen.getByTestId("xfab-icon")).toBeTruthy();
     expect(screen.getByText("Create note")).toBeTruthy();
   });
 
