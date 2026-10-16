@@ -63,7 +63,30 @@ export {
 } from "./components/Collapsible";
 export { Combobox, type ComboboxProps } from "./components/Combobox";
 export { ContextMenu, type ContextMenuProps } from "./components/ContextMenu";
-export { Dialog, type DialogProps } from "./components/Dialog";
+export {
+  Dialog,
+  DialogBackdrop,
+  type DialogBackdropProps,
+  type DialogBackdropState,
+  DialogClose,
+  type DialogCloseProps,
+  type DialogCloseState,
+  DialogDescription,
+  type DialogDescriptionProps,
+  DialogPopup,
+  type DialogPopupProps,
+  type DialogPopupState,
+  DialogPortal,
+  type DialogPortalProps,
+  DialogRoot,
+  type DialogRootProps,
+  type DialogRootState,
+  DialogTitle,
+  type DialogTitleProps,
+  DialogTrigger,
+  type DialogTriggerProps,
+  type DialogTriggerState,
+} from "./components/Dialog";
 export {
   DropdownMenu,
   DropdownMenuItem,
@@ -250,6 +273,12 @@ export {
   type PressPhase,
   usePress,
 } from "./press";
+export {
+  type RenderProp,
+  resolveRender,
+  resolveStyle,
+  type StateStyle,
+} from "./render";
 export {
   type RovingItem,
   type RovingModel,
