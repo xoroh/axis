@@ -48,6 +48,7 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --dts-resolve --external react --out-dir dist --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:boundary": "node scripts/check-boundary.mjs",
     "check:publish": "publint && attw --pack --ignore-rules=no-resolution"
   },
   "peerDependencies": {
