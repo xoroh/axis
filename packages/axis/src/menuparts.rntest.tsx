@@ -77,8 +77,12 @@ describe("Menu compound parts on React Native", () => {
     expect(screen.getByRole("menu")).toBeTruthy();
     expect(screen.getByText("New")).toBeTruthy();
     expect(screen.getByTestId("menu-sep")).toBeTruthy();
+    // The trigger sits behind the open modal overlay layer, so it is
+    // hidden from assistive tech while the menu is up; its state is
+    // still readable with the hidden-element opt-in.
     expect(
-      screen.getByLabelText("Open menu").props.accessibilityState,
+      screen.getByLabelText("Open menu", { includeHiddenElements: true }).props
+        .accessibilityState,
     ).toMatchObject({ expanded: true });
   });
 

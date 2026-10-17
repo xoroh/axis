@@ -14,7 +14,6 @@ import {
   useState,
 } from "react";
 import {
-  Modal,
   Pressable,
   type StyleProp,
   Text,
@@ -31,6 +30,7 @@ import {
 } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -63,7 +63,7 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * is a sibling rendered before the content (so the content paints
  * above it): scrim press dismisses through `onDismiss` +
  * `onOpenChange(false)` (the `Dialog` scrim precedent, minus the
- * `Modal` — this menu paints inside its parent's box). While open the
+ * overlay host — this menu paints inside its parent's box). While open the
  * scrim covers the trigger zone, so pressing the trigger dismisses
  * through the scrim path rather than toggling.
  *
@@ -596,7 +596,7 @@ export { MenuInlineRoot as Menu };
 /* scrim + content, children partitioned by type). The parts below     */
 /* mirror Base UI's Menu anatomy — Root (state owner, renders no       */
 /* element), Trigger (shared with the monolith, extended with          */
-/* `render` and anchor registration), Portal (an RN `Modal`: the       */
+/* `render` and anchor registration), Portal (the overlay host: the    */
 /* native portal host), Backdrop (the scrim), Positioner (measured     */
 /* placement against the trigger anchor), Popup (the content box),      */
 /* Item (shared, extended with `onClick`/`closeOnClick` and            */
@@ -637,7 +637,7 @@ export type MenuRootProps = {
    */
   disablePointerDismissal?: boolean;
   /**
-   * Whether the open menu presents modally (a `Modal` host with a
+   * Whether the open menu presents modally (an overlay host with a
    * scrim). Default `true`. When `false` the portal renders
    * in-box like the monolith: no scrim, and the trigger stays
    * pressable so it toggles closed — but presses outside the menu
@@ -818,11 +818,26 @@ export function MenuRoot({
     ],
   );
 
-  // The root owns state, never layout: no host element (Base UI parity).
+  // The root owns state, never layout: no host element (Base UI
+  // parity). The overlay root wraps it so stacking, dismissal and
+  // focus belong to one owner (the `DialogRoot` precedent).
   return (
-    <MenuDisclosureContext.Provider value={disclosure}>
-      {children}
-    </MenuDisclosureContext.Provider>
+    <OverlayRoot
+      open={isOpen}
+      onOpenChange={setOpen}
+      onDismiss={onDismiss}
+      modal={modal}
+      dismissable={!disablePointerDismissal}
+      dismiss={{
+        outsidePointer: !disablePointerDismissal,
+        systemBack: !disablePointerDismissal,
+        escape: !disablePointerDismissal,
+      }}
+    >
+      <MenuDisclosureContext.Provider value={disclosure}>
+        {children}
+      </MenuDisclosureContext.Provider>
+    </OverlayRoot>
   );
 }
 
@@ -835,26 +850,18 @@ export function MenuPortal({
   if (!disclosure) return null;
   if (!disclosure.open) return null;
 
-  // The RN portal host: a transparent `Modal` presents above the app
-  // (the native equivalent of appending to `body`). `container` has
-  // no native meaning and is omitted by design. Unlike the monolith
-  // (in-box scrim), the compound menu escapes clipped parents —
-  // that is the point of the part. Non-modal roots render in-box
-  // with no scrim instead (the monolith shape): presses outside
-  // reach the app rather than dismissing (documented on `modal`).
+  // The portal host: `OverlayPortal` paints at the app's
+  // `PortalHost`, so the compound menu escapes clipped parents —
+  // that is the point of the part — without an RN `Modal` of its own
+  // (one root presents every layer; see the `Overlay` module note).
+  // `container` has no native meaning and is omitted by design.
+  // Non-modal roots render in-box with no scrim instead (the monolith
+  // shape): presses outside reach the app rather than dismissing
+  // (documented on `modal`).
   if (!disclosure.modal) {
     return <View testID={testID}>{children}</View>;
   }
-  return (
-    <Modal
-      transparent
-      visible={disclosure.open}
-      onRequestClose={disclosure.dismiss}
-      testID={testID}
-    >
-      {children}
-    </Modal>
-  );
+  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
 }
 
 export function MenuBackdrop({

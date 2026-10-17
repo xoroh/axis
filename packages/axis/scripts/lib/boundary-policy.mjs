@@ -31,7 +31,12 @@ import { posix } from "node:path";
 // the viewport; hook only, no UI code).
 // ActivityIndicator justified 2026-10-16 (Loader busy indicator;
 // host primitive, no animation policy).
+// AccessibilityInfo, BackHandler, findNodeHandle justified 2026-10-17
+// (Overlay root needs native back dismissal via BackHandler,
+// accessibility focus/motion via AccessibilityInfo and findNodeHandle).
 export const RN_HOST_BINDINGS = [
+  "AccessibilityInfo",
+  "BackHandler",
   "ActivityIndicator",
   "Image",
   "ImageSourcePropType",
@@ -46,6 +51,7 @@ export const RN_HOST_BINDINGS = [
   "useWindowDimensions",
   "View",
   "ViewStyle",
+  "findNodeHandle",
 ];
 
 export const ALWAYS_FORBIDDEN_MODULES = [
