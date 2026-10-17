@@ -19,7 +19,7 @@ import type { Demo } from "./registry";
  */
 export const PopoverDemo: Demo = {
   slug: "popover",
-  title: "Popover",
+  title: "Popovers",
   components: [
     "Popover",
     "PopoverArrow",

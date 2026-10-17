@@ -10,10 +10,11 @@ import { DEMOS } from "./demos/registry";
 export function App(): React.JSX.Element {
   const [active, setActive] = useState<string | null>(null);
   const demo = DEMOS.find((d) => d.slug === active);
+  const DemoScreen = demo?.render;
 
   return (
     <View style={{ flex: 1, paddingTop: 64 }}>
-      {demo === undefined ? (
+      {demo === undefined || DemoScreen === undefined ? (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 4 }}>
           <Text style={{ fontSize: 22, marginBottom: 12 }}>
             Axis examples ({DEMOS.length})
@@ -41,10 +42,7 @@ export function App(): React.JSX.Element {
             <Text>← {demo.title}</Text>
           </Pressable>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {(() => {
-              const DemoScreen = demo.render;
-              return <DemoScreen />;
-            })()}
+            <DemoScreen key={demo.slug} />
           </ScrollView>
         </View>
       )}
