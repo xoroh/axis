@@ -16,7 +16,7 @@ jsdom-free RNTL. No hover model, no scrim. All props optional
 except `content`/`children`.
 
 Compound form (Base UI parity — same names, same state
-semantics): `TooltipProvider` (`showDelay?`/`hideDelay?` in ms,
+semantics): `TooltipProvider` (`delay?`/`closeDelay?` in ms,
 default `0` — one timing for a group of tips; delays run from
 the long-press commit since hover has no touch equivalent;
 renders no element) with `TooltipRoot` (`open?`/`defaultOpen?`/
@@ -36,7 +36,7 @@ or `(props, state)` function) and value-or-function `style`;
 second long-press — there is no scrim). Example:
 
 ```tsx
-<TooltipProvider showDelay={100}>
+<TooltipProvider delay={100}>
   <TooltipRoot>
     <TooltipTrigger accessibilityLabel="More info">
       <Text>Info</Text>

@@ -190,7 +190,7 @@ Popup, Arrow.
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `TooltipProvider` | `Tooltip.Provider` | `showDelay`/`hideDelay` group timing; renders no element | delays run from the long-press commit (hover has no touch equivalent — D8); a pending show cancels on dismiss (no ghost tips) |
+| `TooltipProvider` | `Tooltip.Provider` | `delay`/`closeDelay` group timing; renders no element | delays run from the long-press commit (hover has no touch equivalent — D8); a pending show cancels on dismiss (no ghost tips) |
 | `TooltipRoot` | `Tooltip.Root` | `open`, `defaultOpen`, `onOpenChange`, `disabled` (terminal — forces hidden); renders no element | — |
 | `TooltipTrigger` | `Tooltip.Trigger` | long-press toggle, `disabled`, `render`, anchor registration; `delayLongPress` forwarded to the host | no hover (D8); timing itself needs a finger (device gap, recorded — RNTL dispatches `longPress` directly) |
 | `TooltipPortal` | `Tooltip.Portal` | in-box host (renders nothing while hidden or outside a root) | no `Modal` host — a non-modal hint must never trap touches (overlay-root adoption seam noted in-file; positioning stays separable) |
@@ -198,6 +198,18 @@ Popup, Arrow.
 | `TooltipPopup` | `Tooltip.Popup` | tip with tooltip role, `render`, function styles, `ref` | `data-*` → D1; no transition attributes (D9) |
 | `TooltipArrow` | `Tooltip.Arrow` | caller-positioned marker | Geometry is caller style |
 | `Tooltip` (monolith) | — | Concise single-part API retained (anchor + long-press toggle + measured tip); gains `delayLongPress` | Not a Base UI part; in-box tip by design |
+
+### P1 gaps from `.reports/kern-needs-from-axis.md` — open board items
+
+Four Kern P1 asks touch these families. What is shipped, and what
+is deliberately left open (no fabricated proof, no silent drop):
+
+| Ask | State | Why it is not "done" here |
+|---|---|---|
+| Anchored positioning (flip/collision) | **Models done; native proofs pending** | `resolveFloatingRect` + `positioning` unit tests cover the math; `SelectPositioner`/`TooltipPositioner`/`MenuPositioner` call it against a measured anchor. Pixel flip behavior needs `measure()` — the native runtime — and is therefore an explicit device/D-DEVICE gap (same class the Tooltip docs already record), not something an RNTL test can assert. |
+| Typeahead | **Model done; no key plumbing** | `typeahead` (buffer, prefix match, same-character cycling) ships in `./models` with unit tests. No Axis list part receives character key events on touch hardware, so wiring keys would mean inventing an event path with no consumer — the contract's conditional-keyboard rule. First consumer: Kern hardware-keyboard forwarding. |
+| Submenus | **Mapped, not duplicated** | `DropdownMenu` already IS the cascade over one dismissal stack; the parity record documents the mapping. New `Menu.SubmenuRoot/Trigger/Content` parts would add names without behavior, and the monolith partitions children by type — a submenu needs a second registration path. Deferred until a consumer needs submenus *inside* a `MenuRoot`. |
+| Tooltip delay groups + long-press | **Done** | `TooltipProvider` (`delay`/`closeDelay`) groups timing; a pending show cancels on dismiss. `delayLongPress` is forwarded to the host `Pressable`; its duration needs a finger (device gap), the wiring is compiled and typed. |
 
 ### All other families — pending
 

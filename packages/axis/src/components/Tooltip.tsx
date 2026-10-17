@@ -225,12 +225,12 @@ export type TooltipProviderProps = {
    * delay, adapted: hover has no touch equivalent, so the delay
    * runs from the long-press commit, not from hover).
    */
-  showDelay?: number;
+  delay?: number;
   /**
    * Delay in milliseconds before a tip hides after its dismiss
    * fires. Default `0` (instant).
    */
-  hideDelay?: number;
+  closeDelay?: number;
   /** Tooltip roots sharing this timing. */
   children?: ReactNode;
 };
@@ -339,8 +339,8 @@ type TooltipRootDisclosure = {
 };
 
 type TooltipDelay = {
-  showDelay: number;
-  hideDelay: number;
+  delay: number;
+  closeDelay: number;
 };
 
 /**
@@ -358,18 +358,18 @@ const TooltipDelayContext = createContext<TooltipDelay | null>(null);
 const TooltipRootContext = createContext<TooltipRootDisclosure | null>(null);
 
 export function TooltipProvider({
-  showDelay = 0,
-  hideDelay = 0,
+  delay = 0,
+  closeDelay = 0,
   children,
 }: TooltipProviderProps): React.JSX.Element {
   // Clamped at zero: a negative delay would fire immediately with a
   // confusing value in the tree — instant is the honest floor.
   const timing = useMemo<TooltipDelay>(
     () => ({
-      showDelay: Math.max(0, showDelay),
-      hideDelay: Math.max(0, hideDelay),
+      delay: Math.max(0, delay),
+      closeDelay: Math.max(0, closeDelay),
     }),
-    [showDelay, hideDelay],
+    [delay, closeDelay],
   );
   // The provider owns timing, never layout: no host element.
   return (
@@ -422,7 +422,7 @@ export function TooltipRoot({
         clearTimeout(timers.current.hide);
         timers.current.hide = undefined;
       }
-      const wait = next ? (delay?.showDelay ?? 0) : (delay?.hideDelay ?? 0);
+      const wait = next ? (delay?.delay ?? 0) : (delay?.closeDelay ?? 0);
       if (wait <= 0) {
         setVisible(next);
         return;

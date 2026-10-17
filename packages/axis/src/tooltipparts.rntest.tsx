@@ -162,7 +162,7 @@ describe("Tooltip compound parts on React Native", () => {
   it("groups tips under one provider timing", async () => {
     const seen: boolean[] = [];
     await render(
-      <TooltipProvider showDelay={20} hideDelay={20}>
+      <TooltipProvider delay={20} closeDelay={20}>
         <TooltipRoot onOpenChange={(v) => seen.push(v)}>
           <TooltipTrigger testID="g-trigger">
             <Text>Info</Text>
@@ -190,7 +190,7 @@ describe("Tooltip compound parts on React Native", () => {
   it("never shows a tip dismissed mid-delay", async () => {
     const seen: boolean[] = [];
     await render(
-      <TooltipProvider showDelay={5000}>
+      <TooltipProvider delay={5000}>
         <TooltipRoot onOpenChange={(v) => seen.push(v)}>
           <TooltipTrigger testID="c-trigger">
             <Text>Info</Text>

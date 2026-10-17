@@ -61,7 +61,7 @@ export const OverlaysDemo: Demo = {
         <Tooltip content={<Text>Hint text</Text>}>
           <Text>Long-press me</Text>
         </Tooltip>
-        <TooltipProvider showDelay={100}>
+        <TooltipProvider delay={100}>
           <TooltipRoot>
             <TooltipTrigger accessibilityLabel="Demo compound tip anchor">
               <Text>Long-press me (compound)</Text>
