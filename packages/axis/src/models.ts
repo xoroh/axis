@@ -52,6 +52,14 @@ export {
   isChatStreaming,
 } from "./chatStatus";
 export {
+  type CollectionItem,
+  type CollectionMatch,
+  defaultCollectionMatch,
+  filterCollectionKeys,
+  findCollectionText,
+  useCollectionRegistry,
+} from "./collection";
+export {
   createDismissPolicy,
   type DismissPolicy,
   type DismissPolicyOptions,
@@ -167,4 +175,10 @@ export {
   type ToolCallState,
   useToolCall,
 } from "./toolCall";
+export {
+  appendTypeaheadQuery,
+  isTypeaheadExpired,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "./typeahead";
 export { type StateAction, useControllableState } from "./useControllableState";

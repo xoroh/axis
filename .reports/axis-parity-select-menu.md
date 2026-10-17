@@ -1,0 +1,132 @@
+# Report — Base UI parity for Select, Combobox, Tooltip, Menu filter
+
+Date: 2026-10-17. Branch: `feat/axis-parity-select-menu`, worktree
+`/tmp/opencode/axis-parity-select`. PR: https://github.com/xoroh/axis/pull/57
+(open only — never self-merged; Axis Lead merges).
+
+## Outcome
+
+Base UI parity landed for the four families the Lead scoped, with
+the parity record now `aligned` for Select and Tooltip and
+`partial` (with reasons) for Combobox:
+
+- **New universal models** (`./models`, zero `react-native`, both
+  barrels, unit-tested):
+  - `collection` — item registry (`useCollectionRegistry`),
+    `defaultCollectionMatch`, `filterCollectionKeys`,
+    `findCollectionText`. Transferred with real consumers:
+    Combobox filtering, Menu filter parts, Select label lookup.
+  - `typeahead` — `appendTypeaheadQuery`, `isTypeaheadExpired`,
+    `matchTypeaheadKey` (prefix match + same-character cycling).
+- **Select compound**: `SelectRoot` (`items` label table, value +
+  open state, `modal`, `disablePointerDismissal`, terminal
+  `disabled`), `SelectTrigger`, `SelectValue` (placeholder +
+  function children), `SelectPortal` (RN `Modal`, in-box when
+  non-modal), `SelectBackdrop`, `SelectPositioner`, `SelectPopup`
+  (listbox role), `SelectArrow`, `SelectItem` (shared; adds
+  `label`, `render`, `highlighted`, registry publication),
+  `SelectItemText`, `SelectItemIndicator`, `SelectGroup`,
+  `SelectGroupLabel`, `SelectSeparator`.
+- **Tooltip compound**: `TooltipProvider` (`delay`/`closeDelay`
+  group timing; pending show cancels on dismiss), `TooltipRoot`,
+  `TooltipTrigger` (`delayLongPress` forwarded to the host),
+  `TooltipPortal` (in-box), `TooltipPositioner`, `TooltipPopup`,
+  `TooltipArrow`.
+- **Menu filter parts**: `MenuRoot` owns the query
+  (`filterValue`/`defaultFilterValue`/`onFilterChange`) with
+  `MenuInput`, `MenuClear` (disabled when empty), `MenuEmpty`
+  (counts the same visibility rule items hide by); `filterText`
+  on `MenuItem`/`MenuLinkItem`/`MenuCheckboxItem`/`MenuRadioItem`.
+  Compound roots only — the monolith has no filter composition
+  point and says so.
+- **Combobox**: adopts `defaultCollectionMatch` (one filter rule
+  across the package); compound row parts still deferred with the
+  data-driven reason recorded.
+- Demos cover all 130 components (gate green), docs updated
+  (4 component notes + parity + coverage), changeset (minor).
+- Merge commit `b237173` picked up #53's render composition, toast
+  queue, and Portal host; no overlap resolved by hand.
+
+## P1 asks from `.reports/kern-needs-from-axis.md`
+
+| Ask | State |
+|---|---|
+| Anchored positioning (flip/collision) | **Models shipped; native proof is a device gap.** `positioning`/`resolveFloatingRect` unit tests cover the math and every positioner calls it; pixel flip needs `measure()` (native runtime), so it is recorded as D-DEVICE, not asserted. Overlay-root seam documented in `SelectPortal`/`MenuPortal`/`TooltipPortal` — positioning stays separable from the host. |
+| Typeahead | **Model shipped, no key plumbing.** No Axis list part receives character key events on touch; wiring them would be an invented path with no consumer (contract's conditional-keyboard rule). First consumer: Kern hardware-keyboard forwarding. |
+| Submenus | **Mapped, not duplicated.** `DropdownMenu` is the cascade today; new `Menu.SubmenuRoot/Trigger/Content` would add names without behavior. Recorded with the condition that would reopen it (submenus inside a `MenuRoot`). |
+| Tooltip delay groups + long-press | **Done**, including the Base UI prop names (`delay`/`closeDelay`). |
+
+## Commands run + real output
+
+```
+bun install --frozen-lockfile                 875 packages installed
+bun run test                                  2 pass / 0 fail
+bun run lint                                  Checked 197 files, 1 warning (pre-existing, apps/example/src/demos/switch.tsx, clean at HEAD)
+bun run --filter @xoroh/axis typecheck        exit 0
+bun run --filter @xoroh/axis-example typecheck exit 0   (after a real install; see lessons)
+bun run --filter @xoroh/axis test             27 files / 250 tests passed
+bun run --filter @xoroh/axis test:jest        55 suites / 439 tests passed
+bun run --filter @xoroh/axis check:boundary   exit 0
+bun test packages/axis/scripts/lib/boundary-policy.test.mjs   26 pass / 0 fail
+bun run --filter @xoroh/axis check:readme     exit 0
+bun run --filter @xoroh/axis-example check:demos  "demo coverage holds: all 130 components demoed."
+bun run --filter @xoroh/axis build            exit 0
+bun run --filter @xoroh/axis check:publish    exit 0 (publint + attw)
+```
+
+## Screenshots
+
+None: this slice is behavior/API parity with no visual change
+(unstyled primitives, caller-provided values). Pixel placement
+stays unasserted until a device run.
+
+## Acceptance
+
+1. Select/Tooltip aligned, Combobox partial-with-reasons, Menu
+   filter parts shipped: **PASS** (parity record + docs + demos).
+2. No consumer regressions: **PASS** (439 jest + 250 vitest green,
+   demo gate and example typecheck green).
+3. Tests fail before / pass after: **PASS** for what ships —
+   `collection.test.ts`, `typeahead.test.ts`,
+   `selectparts.rntest.tsx` (16), `menufilter.rntest.tsx` (10),
+   `tooltipparts.rntest.tsx` (9). Three fabricated proofs were
+   **removed rather than kept green** (see below).
+4. Worktree + branch + open PR, no self-merge: **PASS** (#57).
+
+## What's still weak (honest)
+
+- Three tests written by an earlier run asserted behavior nothing
+  implements (key-event typeahead, `MenuSubmenu*`, viewport flip).
+  They passed some conditions for the wrong reason; they are now
+  deleted and the gaps recorded as open items instead. This is the
+  one defect class I would flag for the Lead.
+- Combobox compound anatomy is still missing (deliberate, data-
+  driven design; needs a consumer asking for composed rows).
+- `delayLongPress`/`delay` durations need a finger to verify.
+- Device verification (`D-DEVICE`) has never been executed for
+  placement.
+
+## Gaps for other leads
+
+- Kern Lead: consume `collection`/`typeahead` from
+  `@xoroh/axis/models` for hardware-keyboard forwarding; the
+  overlay-root seam is marked in-file for when that root lands.
+- Axis Lead: board items needed for (a) key-event plumbing, (b)
+  submenus inside `MenuRoot`, (c) the device placement spike.
+
+## Lessons (for `.team/lessons.md`)
+
+1. A test that only asserts a node exists (`toBeTruthy()` on a
+   positioner) is worse than no test: it passes while proving
+   nothing. Device-dependent behavior gets a documented gap, not a
+   green line.
+2. Symlinking a sibling checkout's `node_modules` into a worktree
+   makes `@xoroh/axis` resolve to the **other** checkout's build —
+   stale-dist type errors that look like missing exports. Run a
+   real `bun install` per worktree.
+
+## Suggested next item
+
+Axis Lead reviews #57; next roadmap item is the board gaps above
+(key-event plumbing + the device placement spike), or the
+remaining parity families.

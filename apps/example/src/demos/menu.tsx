@@ -4,8 +4,11 @@ import {
   MenuBackdrop,
   MenuCheckboxItem,
   MenuCheckboxItemIndicator,
+  MenuClear,
+  MenuEmpty,
   MenuGroup,
   MenuGroupLabel,
+  MenuInput,
   MenuItem,
   MenuLinkItem,
   MenuPopup,
@@ -34,8 +37,11 @@ export const MenuDemo: Demo = {
     "MenuBackdrop",
     "MenuCheckboxItem",
     "MenuCheckboxItemIndicator",
+    "MenuClear",
+    "MenuEmpty",
     "MenuGroup",
     "MenuGroupLabel",
+    "MenuInput",
     "MenuItem",
     "MenuLinkItem",
     "MenuPopup",
@@ -98,6 +104,34 @@ export const MenuDemo: Demo = {
             <Text>A</Text>
           </MenuItem>
         </Menu>
+        <MenuRoot>
+          <MenuTrigger accessibilityLabel="Open filterable menu">
+            <Text>Filterable</Text>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuBackdrop />
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuInput
+                  accessibilityLabel="Filter demo menu"
+                  placeholder="Filter"
+                />
+                <MenuItem value="new" filterText="New">
+                  <Text>New</Text>
+                </MenuItem>
+                <MenuItem value="open" filterText="Open">
+                  <Text>Open</Text>
+                </MenuItem>
+                <MenuEmpty>
+                  <Text>No matches</Text>
+                </MenuEmpty>
+                <MenuClear accessibilityLabel="Clear demo filter">
+                  <Text>Clear</Text>
+                </MenuClear>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
       </View>
     );
   },

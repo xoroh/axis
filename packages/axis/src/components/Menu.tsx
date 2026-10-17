@@ -9,6 +9,8 @@ import {
   type Ref,
   useCallback,
   useContext,
+  useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -18,10 +20,16 @@ import {
   Pressable,
   type StyleProp,
   Text,
+  TextInput,
   type TextStyle,
   View,
   type ViewStyle,
 } from "react-native";
+import {
+  type CollectionItem,
+  defaultCollectionMatch,
+  useCollectionRegistry,
+} from "../collection";
 import type { Align, Placement } from "../positioning";
 import {
   type RenderProp,
@@ -175,6 +183,12 @@ export type MenuItemProps = {
    */
   onClick?: (event: unknown) => void;
   /**
+   * Matchable text for menu filtering (`MenuInput`): the item hides
+   * while a non-empty query matches nothing in this text. Defaults
+   * to bare string children; items without text always show.
+   */
+  filterText?: string;
+  /**
    * Whether activation closes the menu. Default `true` (set
    * `false` for checkbox-style items that stay open).
    */
@@ -199,7 +213,76 @@ type MenuDisclosure = {
   anchorHostRef: { current: ElementRef<typeof View> | null };
   /** Register the trigger host for positioner measurement. */
   setAnchorRef: (node: ElementRef<typeof View> | null) => void;
+  /**
+   * Filter state for `MenuInput`/`MenuClear`/`MenuEmpty` plus item
+   * registration (compound `MenuRoot` only; the monolith carries
+   * `null` — filter parts render nothing there, documented on
+   * `MenuRoot`).
+   */
+  filter: MenuFilter | null;
 };
+
+/**
+ * The menu filter: the query text plus the item registry items
+ * publish their matchable text to. Internal shape (not exported as
+ * a type — `MenuInput`/`MenuClear`/`MenuEmpty` are the API).
+ */
+type MenuFilter = {
+  query: string;
+  setQuery: (query: string) => void;
+  items: readonly CollectionItem[];
+  register: (item: CollectionItem) => void;
+  unregister: (key: string) => void;
+};
+
+/**
+ * Whether an item with `text` shows under `query`: items with no
+ * matchable text always show (nothing to judge them by — hiding
+ * them would delete structure like dividers on any keystroke).
+ */
+function isFilterVisible(query: string, text: string): boolean {
+  return text === "" || defaultCollectionMatch(query, text);
+}
+
+/**
+ * Shared item filtering: register `text` (empty when the item
+ * carries none) and report visibility under the current query.
+ * Internal — `MenuItem`, `MenuLinkItem`, `MenuCheckboxItem`, and
+ * `MenuRadioItem` differ only in role, never in filtering.
+ */
+function useMenuFilterItem(
+  filter: MenuFilter | null,
+  text: string | undefined,
+): boolean {
+  const key = useId();
+  const resolved = text ?? "";
+  // Deps are the stable registry callbacks — never the `filter`
+  // object, whose identity changes on every keystroke and would
+  // re-run every registration effect (unregister + re-register
+  // allocate) per keystroke, looping through passive effects.
+  const register = filter?.register;
+  const unregister = filter?.unregister;
+  useEffect(() => {
+    if (!register || !unregister) return;
+    register({ key, text: resolved });
+    return () => unregister(key);
+  }, [register, unregister, key, resolved]);
+  if (!filter) return true;
+  return isFilterVisible(filter.query, resolved);
+}
+
+/**
+ * Resolve an item's matchable text: the explicit `filterText`
+ * first, then bare string children, else none (always visible).
+ */
+function menuItemFilterText(
+  filterText: string | undefined,
+  children: ReactNode,
+): string | undefined {
+  if (filterText !== undefined) return filterText;
+  if (typeof children === "string") return children;
+  return undefined;
+}
 
 /**
  * Shared open state for the menu's parts. Internal to this module
@@ -360,6 +443,7 @@ export function MenuItem({
   testID,
   style,
   children,
+  filterText,
   onSelect,
   onClick,
   closeOnClick = true,
@@ -367,6 +451,10 @@ export function MenuItem({
 }: MenuItemProps): React.ReactNode {
   const { disclosure, highlighted, setHighlighted, selectItem } =
     useMenuItemActivation({ disabled, value, onSelect, onClick, closeOnClick });
+  const filterVisible = useMenuFilterItem(
+    disclosure?.filter ?? null,
+    menuItemFilterText(filterText, children),
+  );
   const state: MenuItemState = { disabled, highlighted };
 
   // Outside a Menu there is no disclosure to close: render inert
@@ -403,6 +491,11 @@ export function MenuItem({
 
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;
+
+  // Filtered out: hidden while the query matches nothing in this
+  // item's text (stays mounted, so registration persists and the
+  // item returns when the query clears).
+  if (!filterVisible) return null;
 
   const substituted = resolveRender(
     render,
@@ -511,6 +604,10 @@ function MenuInlineRoot({
       modal: true,
       anchorHostRef,
       setAnchorRef: ignoreAnchorRef,
+      // The monolith partitions children by type with no filter
+      // composition point: filter parts render nothing here
+      // (compound `MenuRoot` owns filtering).
+      filter: null,
     }),
     [isOpen, toggle, close, dismiss, ignoreAnchorRef],
   );
@@ -599,20 +696,21 @@ export { MenuInlineRoot as Menu };
 /* `render` and anchor registration), Portal (an RN `Modal`: the       */
 /* native portal host), Backdrop (the scrim), Positioner (measured     */
 /* placement against the trigger anchor), Popup (the content box),      */
-/* Item (shared, extended with `onClick`/`closeOnClick` and            */
-/* `highlighted` press state), Separator — with `render`               */
-/* element/function composition and value-or-function `style` on       */
-/* every part. Omitted Base UI pieces are documented deviations, not   */
-/* oversights: no `Arrow` (positioning-marker geometry is caller       */
-/* style; a marker with no measurement coupling is chrome), no        */
-/* checkbox/radio/group items yet (their own slice — settings menus   */
-/* need them, and they deserve controlled-state APIs of their own),    */
-/* no `LinkItem` (a menu item rendering a link is caller content in   */
-/* an `Item`), no `Input`/`Clear`/`Empty`/`FilterProvider` filtering   */
-/* (needs the `collection` transfer + typeahead design), no hover or   */
-/* keyboard traversal (D8), no animation states (D9), and no `data-*`  */
-/* attributes (D1 — state flows through function `style`/`render`      */
-/* props instead). Non-modal menus (`modal={false}` on the Root)   */
+/* Item (shared, extended with `onClick`/`closeOnClick`,               */
+/* `highlighted` press state, and `filterText`), LinkItem, Separator,  */
+/* Group/GroupLabel, Arrow (caller-positioned marker),                 */
+/* CheckboxItem (+Indicator), RadioGroup/RadioItem (+Indicator), and   */
+/* the filter parts Input/Clear/Empty over the `collection` registry   */
+/* (items publish `filterText`; empty matches show `Empty`) — with     */
+/* `render` element/function composition and value-or-function         */
+/* `style` on every part. Omitted Base UI pieces are documented        */
+/* deviations, not oversights: no `FilterProvider` (the Root owns the  */
+/* query directly — a provider with no other state is chrome), no      */
+/* hover or keyboard traversal (D8), no animation states (D9), and     */
+/* no `data-*` attributes (D1 — state flows through function          */
+/* `style`/`render` props instead). Filter parts work in the compound  */
+/* form only (the monolith partitions children by type with no filter  */
+/* composition point). Non-modal menus (`modal={false}` on the Root)   */
 /* render the portal in-box with no Backdrop; outside-press without  */
 /* a scrim is a documented limitation (press-capture would hijack    */
 /* app touches).                                                     */
@@ -646,6 +744,15 @@ export type MenuRootProps = {
    * press-capture that would hijack app touches).
    */
   modal?: boolean;
+  /**
+   * Controlled filter query for `MenuInput`/`MenuClear`/`MenuEmpty`.
+   * Wins over `defaultFilterValue` when defined.
+   */
+  filterValue?: string;
+  /** Uncontrolled initial filter query. Default `""` (unfiltered). */
+  defaultFilterValue?: string;
+  /** Fires with the next query on every committed filter change. */
+  onFilterChange?: (query: string) => void;
   /** Trigger, Portal, and shared content. Renders no element itself. */
   children?: ReactNode;
   /** Forwarded nowhere (the root renders no element); accepted so ref-spreading callers typecheck. */
@@ -760,6 +867,9 @@ export function MenuRoot({
   onDismiss,
   disablePointerDismissal = false,
   modal = true,
+  filterValue,
+  defaultFilterValue = "",
+  onFilterChange,
   children,
   ref,
 }: MenuRootProps): React.JSX.Element {
@@ -796,6 +906,37 @@ export function MenuRoot({
     anchorHostRef.current = node;
   }, []);
 
+  const [filterQuery, setFilterQuery] = useControllableState<string>(
+    filterValue,
+    defaultFilterValue,
+    onFilterChange,
+  );
+  const collection = useCollectionRegistry();
+  const {
+    items: filterItems,
+    register: registerFilterItem,
+    unregister: unregisterFilterItem,
+  } = collection;
+  // Separate memo: the query changes on every keystroke while the
+  // disclosure below must stay stable for everything else, so items
+  // re-render on filter changes without rebuilding toggle/close.
+  const filter = useMemo<MenuFilter>(
+    () => ({
+      query: filterQuery ?? "",
+      setQuery: setFilterQuery,
+      items: filterItems,
+      register: registerFilterItem,
+      unregister: unregisterFilterItem,
+    }),
+    [
+      filterQuery,
+      setFilterQuery,
+      filterItems,
+      registerFilterItem,
+      unregisterFilterItem,
+    ],
+  );
+
   const disclosure = useMemo<MenuDisclosure>(
     () => ({
       open: isOpen ?? false,
@@ -806,6 +947,7 @@ export function MenuRoot({
       modal,
       anchorHostRef,
       setAnchorRef,
+      filter,
     }),
     [
       isOpen,
@@ -815,6 +957,7 @@ export function MenuRoot({
       disablePointerDismissal,
       modal,
       setAnchorRef,
+      filter,
     ],
   );
 
@@ -837,11 +980,15 @@ export function MenuPortal({
 
   // The RN portal host: a transparent `Modal` presents above the app
   // (the native equivalent of appending to `body`). `container` has
-  // no native meaning and is omitted by design. Unlike the monolith
-  // (in-box scrim), the compound menu escapes clipped parents —
-  // that is the point of the part. Non-modal roots render in-box
-  // with no scrim instead (the monolith shape): presses outside
-  // reach the app rather than dismissing (documented on `modal`).
+  // no native meaning and is omitted by design. When the shared
+  // overlay root lands, this host can move onto it; positioning
+  // (`MenuPositioner` + the `positioning` model) stays separable
+  // from the host either way, so the move touches only this part.
+  // Unlike the monolith (in-box scrim), the compound menu escapes
+  // clipped parents — that is the point of the part. Non-modal
+  // roots render in-box with no scrim instead (the monolith shape):
+  // presses outside reach the app rather than dismissing
+  // (documented on `modal`).
   if (!disclosure.modal) {
     return <View testID={testID}>{children}</View>;
   }
@@ -1053,6 +1200,12 @@ export type MenuLinkItemProps = {
   /** Item content, rendered inside the `Pressable`. */
   children?: ReactNode;
   /**
+   * Matchable text for menu filtering (`MenuInput`): the item hides
+   * while a non-empty query matches nothing in this text. Defaults
+   * to bare string children; items without text always show.
+   */
+  filterText?: string;
+  /**
    * Fires with `value` on activation, before `onClick` and close.
    * Requires `value` — without one there is nothing to report.
    */
@@ -1135,6 +1288,7 @@ export function MenuLinkItem({
   testID,
   style,
   children,
+  filterText,
   onSelect,
   onClick,
   closeOnClick = true,
@@ -1142,6 +1296,10 @@ export function MenuLinkItem({
 }: MenuLinkItemProps): React.ReactNode {
   const { disclosure, highlighted, setHighlighted, selectItem } =
     useMenuItemActivation({ disabled, value, onSelect, onClick, closeOnClick });
+  const filterVisible = useMenuFilterItem(
+    disclosure?.filter ?? null,
+    menuItemFilterText(filterText, children),
+  );
   const state: MenuItemState = { disabled, highlighted };
 
   // Outside a Menu there is no disclosure to close: render inert
@@ -1179,6 +1337,10 @@ export function MenuLinkItem({
 
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;
+
+  // Filtered out: hidden while the query matches nothing in this
+  // item's text (stays mounted, so registration persists).
+  if (!filterVisible) return null;
 
   const substituted = resolveRender(
     render,
@@ -1264,6 +1426,12 @@ export type MenuCheckboxItemProps = {
   /** Item content (indicator + label composed by the caller). */
   children?: ReactNode;
   /**
+   * Matchable text for menu filtering (`MenuInput`): the item hides
+   * while a non-empty query matches nothing in this text. Defaults
+   * to bare string children; items without text always show.
+   */
+  filterText?: string;
+  /**
    * Whether activation closes the menu. Default `false` (a
    * settings toggle stays open; pass `true` for one-shot
    * confirms).
@@ -1323,6 +1491,12 @@ export type MenuRadioItemProps = {
   /** Item content (indicator + label composed by the caller). */
   children?: ReactNode;
   /**
+   * Matchable text for menu filtering (`MenuInput`): the item hides
+   * while a non-empty query matches nothing in this text. Defaults
+   * to bare string children; items without text always show.
+   */
+  filterText?: string;
+  /**
    * Element or function substitution (Base UI parity).
    */
   render?: RenderProp<MenuRadioItemState, SlotProps>;
@@ -1364,10 +1538,15 @@ export function MenuCheckboxItem({
   testID,
   style,
   children,
+  filterText,
   closeOnClick = false,
   render,
 }: MenuCheckboxItemProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
+  const filterVisible = useMenuFilterItem(
+    disclosure?.filter ?? null,
+    menuItemFilterText(filterText, children),
+  );
   const [isChecked, setChecked] = useControllableState<boolean>(
     checked,
     defaultChecked,
@@ -1435,6 +1614,10 @@ export function MenuCheckboxItem({
 
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;
+
+  // Filtered out: hidden while the query matches nothing in this
+  // item's text (stays mounted, so registration persists).
+  if (!filterVisible) return null;
 
   const substituted = resolveRender(
     render,
@@ -1544,10 +1727,15 @@ export function MenuRadioItem({
   testID,
   style,
   children,
+  filterText,
   render,
 }: MenuRadioItemProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
   const group = useContext(MenuRadioGroupContext);
+  const filterVisible = useMenuFilterItem(
+    disclosure?.filter ?? null,
+    menuItemFilterText(filterText, children),
+  );
   const [highlighted, setHighlighted] = useState(false);
   const selected = group !== null && group.value === value;
   const state: MenuRadioItemState = { selected, disabled, highlighted };
@@ -1601,6 +1789,10 @@ export function MenuRadioItem({
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;
 
+  // Filtered out: hidden while the query matches nothing in this
+  // item's text (stays mounted, so registration persists).
+  if (!filterVisible) return null;
+
   const substituted = resolveRender(
     render,
     {
@@ -1648,6 +1840,212 @@ export function MenuRadioItemIndicator({
   // Rendered only while the enclosing item is selected. Outside an
   // item there is no selection to read: render nothing.
   if (!check?.active) return null;
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <View testID={testID} style={style}>
+      {children}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Filter parts (compound `MenuRoot` only)                              */
+/*                                                                      */
+/* `MenuInput` binds a text entry to the root's filter query, items     */
+/* hide while the query matches nothing in their `filterText`,         */
+/* `MenuClear` resets the query, and `MenuEmpty` renders when the      */
+/* query matches nothing at all. Items publish through the             */
+/* `collection` registry; `MenuEmpty` counts the same                  */
+/* visibility rule items hide by, so the two can never disagree.       */
+/* Axis additions (Base UI's Menu has no filter parts): the names      */
+/* follow the documented `Input`/`Clear`/`Empty` plan.                 */
+/* ------------------------------------------------------------------ */
+
+export type MenuInputProps = {
+  /** Placeholder text for the filter entry. */
+  placeholder?: string;
+  /** Accessible name source for the filter entry. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Filter entry style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Terminal: the query never changes. Default `false`. */
+  disabled?: boolean;
+  /** Forwarded to the entry `TextInput`. */
+  ref?: Ref<ElementRef<typeof TextInput>>;
+};
+
+export type MenuClearState = {
+  /** The current filter query. */
+  query: string;
+  /** Whether clearing is currently disabled (no query, or terminal). */
+  disabled: boolean;
+};
+
+export type MenuClearProps = {
+  testID?: string;
+  /** Value or function of clear state, caller-provided. */
+  style?: StateStyle<MenuClearState, StyleProp<ViewStyle>>;
+  /** Clear content (label composed by the caller). */
+  children?: ReactNode;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  /** Terminal: the query never clears. Default `false`. */
+  disabled?: boolean;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<MenuClearState, SlotProps>;
+};
+
+export type MenuEmptyProps = {
+  testID?: string;
+  /** Empty-state style, caller-provided. */
+  style?: StyleProp<ViewStyle>;
+  /** Empty-state content ("No matches" composed by the caller). */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+/**
+ * Assign one value to every ref in the list, for the entry host.
+ * Inline here (not imported) deliberately — the contract rule, see
+ * every other part in this package.
+ */
+function assignFilterInputRef(
+  ref: MenuInputProps["ref"],
+  value: ElementRef<typeof TextInput> | null,
+): void {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref && typeof ref === "object" && "current" in ref) {
+    try {
+      (ref as { current: unknown }).current = value;
+    } catch {
+      // A frozen ref object cannot take the write — leave it alone
+      // rather than failing the render over it.
+    }
+  }
+}
+
+export function MenuInput({
+  placeholder,
+  accessibilityLabel,
+  testID,
+  style,
+  disabled = false,
+  ref,
+}: MenuInputProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  const filter = disclosure?.filter ?? null;
+
+  const setEntryRef = useCallback(
+    (node: ElementRef<typeof TextInput> | null) => {
+      assignFilterInputRef(ref, node);
+    },
+    [ref],
+  );
+
+  // Compound roots only: the monolith has no filter composition
+  // point, and an entry bound to nothing would lie about filtering.
+  if (!disclosure || !filter) return null;
+  // Presence is mount/unmount: a closed menu shows the trigger only.
+  if (!disclosure.open) return null;
+
+  return (
+    <TextInput
+      ref={setEntryRef}
+      value={filter.query}
+      onChangeText={filter.setQuery}
+      placeholder={placeholder}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      editable={!disabled}
+      style={style}
+    />
+  );
+}
+
+export function MenuClear({
+  testID,
+  style,
+  children,
+  accessibilityLabel,
+  disabled = false,
+  render,
+}: MenuClearProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  const filter = disclosure?.filter ?? null;
+  const query = filter?.query ?? "";
+  // Nothing to clear is the disabled state: an enabled Clear with
+  // an empty query would promise an action it cannot take.
+  const effectiveDisabled = disabled || query === "";
+  const state: MenuClearState = { query, disabled: effectiveDisabled };
+
+  const clearQuery = useCallback(() => {
+    if (effectiveDisabled) return;
+    filter?.setQuery("");
+  }, [effectiveDisabled, filter]);
+
+  if (!disclosure || !filter) return null;
+  if (!disclosure.open) return null;
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: clearQuery,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      disabled={effectiveDisabled}
+      onPress={clearQuery}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+export function MenuEmpty({
+  testID,
+  style,
+  children,
+  render,
+}: MenuEmptyProps): React.ReactNode {
+  const disclosure = useContext(MenuDisclosureContext);
+  const filter = disclosure?.filter ?? null;
+  if (!disclosure || !filter) return null;
+  if (!disclosure.open) return null;
+  // Shows only under a real query with zero visible items, counted
+  // by the same rule items hide by (`isFilterVisible`) — the two
+  // can never disagree about what "no matches" means.
+  if (filter.query.trim() === "") return null;
+  const visible = filter.items.filter((item) =>
+    isFilterVisible(filter.query, item.text),
+  );
+  if (visible.length > 0) return null;
+
   const substituted = resolveRender(
     render,
     { testID, style, children } satisfies SlotProps,
