@@ -57,7 +57,9 @@ export function filterCollectionKeys(
   query: string,
   match: CollectionMatch = defaultCollectionMatch,
 ): string[] {
-  return items.filter((item) => match(query, item.text)).map((item) => item.key);
+  return items
+    .filter((item) => match(query, item.text))
+    .map((item) => item.key);
 }
 
 /** The registered text for `key`, or `undefined` when unregistered. */

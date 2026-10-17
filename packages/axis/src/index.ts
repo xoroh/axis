@@ -175,11 +175,11 @@ export {
   MenuGroupLabel,
   type MenuGroupLabelProps,
   type MenuGroupProps,
+  MenuInput,
+  type MenuInputProps,
   MenuItem,
   type MenuItemProps,
   type MenuItemState,
-  MenuInput,
-  type MenuInputProps,
   MenuLinkItem,
   type MenuLinkItemProps,
   MenuPopup,
@@ -352,6 +352,8 @@ export {
   type TooltipPositionerProps,
   type TooltipPositionerState,
   type TooltipProps,
+  TooltipProvider,
+  type TooltipProviderProps,
   TooltipRoot,
   type TooltipRootProps,
   TooltipTrigger,
@@ -471,4 +473,10 @@ export {
   type ToolCallState,
   useToolCall,
 } from "./toolCall";
+export {
+  appendTypeaheadQuery,
+  isTypeaheadExpired,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "./typeahead";
 export { type StateAction, useControllableState } from "./useControllableState";

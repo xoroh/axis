@@ -14,8 +14,8 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
-import { useControllableState } from "../useControllableState";
 import { defaultCollectionMatch } from "../collection";
+import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 

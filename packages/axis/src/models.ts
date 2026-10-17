@@ -171,4 +171,10 @@ export {
   type ToolCallState,
   useToolCall,
 } from "./toolCall";
+export {
+  appendTypeaheadQuery,
+  isTypeaheadExpired,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "./typeahead";
 export { type StateAction, useControllableState } from "./useControllableState";

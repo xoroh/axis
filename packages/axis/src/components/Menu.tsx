@@ -928,7 +928,13 @@ export function MenuRoot({
       register: registerFilterItem,
       unregister: unregisterFilterItem,
     }),
-    [filterQuery, setFilterQuery, filterItems, registerFilterItem, unregisterFilterItem],
+    [
+      filterQuery,
+      setFilterQuery,
+      filterItems,
+      registerFilterItem,
+      unregisterFilterItem,
+    ],
   );
 
   const disclosure = useMemo<MenuDisclosure>(
@@ -974,11 +980,15 @@ export function MenuPortal({
 
   // The RN portal host: a transparent `Modal` presents above the app
   // (the native equivalent of appending to `body`). `container` has
-  // no native meaning and is omitted by design. Unlike the monolith
-  // (in-box scrim), the compound menu escapes clipped parents —
-  // that is the point of the part. Non-modal roots render in-box
-  // with no scrim instead (the monolith shape): presses outside
-  // reach the app rather than dismissing (documented on `modal`).
+  // no native meaning and is omitted by design. When the shared
+  // overlay root lands, this host can move onto it; positioning
+  // (`MenuPositioner` + the `positioning` model) stays separable
+  // from the host either way, so the move touches only this part.
+  // Unlike the monolith (in-box scrim), the compound menu escapes
+  // clipped parents — that is the point of the part. Non-modal
+  // roots render in-box with no scrim instead (the monolith shape):
+  // presses outside reach the app rather than dismissing
+  // (documented on `modal`).
   if (!disclosure.modal) {
     return <View testID={testID}>{children}</View>;
   }

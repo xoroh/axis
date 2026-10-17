@@ -5,6 +5,7 @@ import {
   type Ref,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
 } from "react";
@@ -54,6 +55,12 @@ export type TooltipProps = {
   placement?: Placement;
   /** Accessible name source for the tip. */
   accessibilityLabel?: string;
+  /**
+   * Long-press duration in milliseconds before the toggle fires,
+   * forwarded to the anchor `Pressable` (`delayLongPress`). Absent
+   * means the platform default — Axis never invents timing.
+   */
+  delayLongPress?: number;
   testID?: string;
   /** Anchor wrapper style, caller-provided. */
   style?: StyleProp<ViewStyle>;
@@ -89,6 +96,7 @@ export function Tooltip({
   onOpenChange,
   placement,
   accessibilityLabel,
+  delayLongPress,
   testID,
   style,
   tipStyle,
@@ -121,7 +129,9 @@ export function Tooltip({
 
   return (
     <View ref={setAnchorRef} style={style} testID={testID}>
-      <Pressable onLongPress={toggle}>{children}</Pressable>
+      <Pressable onLongPress={toggle} delayLongPress={delayLongPress}>
+        {children}
+      </Pressable>
       {visible ? (
         <View
           // Explicit like the anchor rule for progressbar/image: a tip
@@ -149,13 +159,15 @@ export function Tooltip({
 /* Positioner (measured placement against the trigger anchor), Popup    */
 /* (the tip), Arrow (caller-positioned marker) — with `render`          */
 /* element/function composition and value-or-function `style` on       */
-/* every part. Omitted Base UI pieces are documented deviations, not   */
-/* oversights: no `Provider` (show/hide delays coordinate hover,       */
-/* which has no touch equivalent — D8), no `Modal` portal host (a       */
-/* non-modal hint must never trap touches; the tip paints in-box       */
-/* like the monolith), no hover or keyboard traversal (D8), no          */
-/* animation states (D9), and no `data-*` attributes (D1). Dismissal    */
-/* is a second long-press or the controlled prop — there is no scrim,   */
+/* every part. `TooltipProvider` groups tips under one show/hide     */
+/* timing (delays run from the long-press commit — hover has no touch  */
+/* equivalent). Omitted Base UI pieces are documented deviations, not  */
+/* oversights: no `Modal` portal host (a non-modal hint must never     */
+/* trap touches; the tip paints in-box like the monolith — when the    */
+/* overlay root lands, tips can host there instead; positioning stays  */
+/* separable from the host either way), no hover or keyboard           */
+/* traversal (D8), no animation states (D9), and no `data-*`           */
+/* attributes (D1). Dismissal is a second long-press or the            */
 /* so there is no Backdrop part.                                        */
 /* ------------------------------------------------------------------ */
 
@@ -172,6 +184,24 @@ export type TooltipRootProps = {
   children?: ReactNode;
   /** Forwarded nowhere (the root renders no element); accepted so ref-spreading callers typecheck. */
   ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type TooltipProviderProps = {
+  /**
+   * Delay in milliseconds before a tip shows after its trigger
+   * fires. Default `0` (instant). Groups tips under one timing so
+   * a screen of hints behaves as one (the Base UI `Provider`
+   * delay, adapted: hover has no touch equivalent, so the delay
+   * runs from the long-press commit, not from hover).
+   */
+  showDelay?: number;
+  /**
+   * Delay in milliseconds before a tip hides after its dismiss
+   * fires. Default `0` (instant).
+   */
+  hideDelay?: number;
+  /** Tooltip roots sharing this timing. */
+  children?: ReactNode;
 };
 
 export type TooltipTriggerState = {
@@ -191,6 +221,12 @@ export type TooltipTriggerProps = {
   disabled?: boolean;
   /** Accessible name source for the anchor. */
   accessibilityLabel?: string;
+  /**
+   * Long-press duration in milliseconds before the toggle fires,
+   * forwarded to the host `Pressable` (`delayLongPress`). Absent
+   * means the platform default — Axis never invents timing.
+   */
+  delayLongPress?: number;
   /**
    * Element or function substitution (Base UI parity).
    */
@@ -271,6 +307,17 @@ type TooltipRootDisclosure = {
   setAnchorRef: (node: ElementRef<typeof View> | null) => void;
 };
 
+type TooltipDelay = {
+  showDelay: number;
+  hideDelay: number;
+};
+
+/**
+ * Group timing for tips. Internal default (not exported): roots
+ * outside a provider show and hide instantly.
+ */
+const TooltipDelayContext = createContext<TooltipDelay | null>(null);
+
 /**
  * Shared visibility state for the tip's parts. Internal to this
  * module (not exported): parts must render inside a `TooltipRoot`
@@ -278,6 +325,28 @@ type TooltipRootDisclosure = {
  * portal never mounts.
  */
 const TooltipRootContext = createContext<TooltipRootDisclosure | null>(null);
+
+export function TooltipProvider({
+  showDelay = 0,
+  hideDelay = 0,
+  children,
+}: TooltipProviderProps): React.JSX.Element {
+  // Clamped at zero: a negative delay would fire immediately with a
+  // confusing value in the tree — instant is the honest floor.
+  const timing = useMemo<TooltipDelay>(
+    () => ({
+      showDelay: Math.max(0, showDelay),
+      hideDelay: Math.max(0, hideDelay),
+    }),
+    [showDelay, hideDelay],
+  );
+  // The provider owns timing, never layout: no host element.
+  return (
+    <TooltipDelayContext.Provider value={timing}>
+      {children}
+    </TooltipDelayContext.Provider>
+  );
+}
 
 export function TooltipRoot({
   open,
@@ -295,11 +364,51 @@ export function TooltipRoot({
     defaultOpen,
     onOpenChange,
   );
+  const delay = useContext(TooltipDelayContext);
 
+  // Pending show/hide timers: a toggle in the other direction
+  // cancels the pending one (a tip dismissed mid-delay never
+  // appears), and unmount clears both (no set-state after unmount).
+  const timers = useRef<{
+    show?: ReturnType<typeof setTimeout>;
+    hide?: ReturnType<typeof setTimeout>;
+  }>({});
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      if (pending.show !== undefined) clearTimeout(pending.show);
+      if (pending.hide !== undefined) clearTimeout(pending.hide);
+    };
+  }, []);
+
+  const commit = useCallback(
+    (next: boolean) => {
+      if (timers.current.show !== undefined) {
+        clearTimeout(timers.current.show);
+        timers.current.show = undefined;
+      }
+      if (timers.current.hide !== undefined) {
+        clearTimeout(timers.current.hide);
+        timers.current.hide = undefined;
+      }
+      const wait = next ? (delay?.showDelay ?? 0) : (delay?.hideDelay ?? 0);
+      if (wait <= 0) {
+        setVisible(next);
+        return;
+      }
+      timers.current[next ? "show" : "hide"] = setTimeout(
+        () => setVisible(next),
+        wait,
+      );
+    },
+    [delay, setVisible],
+  );
+
+  const shown = visible ?? false;
   const toggle = useCallback(() => {
     if (disabled) return;
-    setVisible((previous) => !(previous ?? false));
-  }, [disabled, setVisible]);
+    commit(!shown);
+  }, [disabled, shown, commit]);
 
   const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
   const setAnchorRef = useCallback((node: ElementRef<typeof View> | null) => {
@@ -334,6 +443,7 @@ export function TooltipTrigger({
   children,
   disabled = false,
   accessibilityLabel,
+  delayLongPress,
   render,
 }: TooltipTriggerProps): React.ReactNode {
   const root = useContext(TooltipRootContext);
@@ -364,6 +474,7 @@ export function TooltipTrigger({
       accessibilityLabel,
       testID,
       disabled: effectiveDisabled || inert,
+      delayLongPress,
       onLongPress: toggleTip,
       style: resolveStyle(style, state),
       children,
@@ -378,6 +489,7 @@ export function TooltipTrigger({
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       disabled={effectiveDisabled || inert}
+      delayLongPress={delayLongPress}
       onLongPress={toggleTip}
       style={resolveStyle(style, state)}
     >

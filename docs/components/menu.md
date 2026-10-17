@@ -1,6 +1,6 @@
 ## Menu
 
-Source of truth: `MenuProps`, `MenuItemProps`, `MenuTriggerProps` in `@xoroh/axis`.
+Source of truth: `MenuProps`, `MenuItemProps`, `MenuTriggerProps`, `MenuRootProps`, `MenuInputProps`, `MenuClearProps`, `MenuEmptyProps` in `@xoroh/axis`.
 
 Popup menu: `Menu` (`open?`, `defaultOpen?`, `onOpenChange?`,
 `onDismiss?`, `testID?`, `style?`, `children`, `ref`) +
@@ -27,8 +27,16 @@ sequence), `MenuArrow` (caller-positioned marker),
 `MenuCheckboxItem` (+`Indicator`; stays open by default),
 `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`; closes on
 select). Submenu cascade lives in `DropdownMenu` (same
-dismissal-stack pattern at root level); menu filtering
-(`Input`/`Clear`/`Empty`) waits on the `collection` transfer.
+dismissal-stack pattern at root level — submenus compose there,
+not as `Menu` parts). Filtering (compound roots only — the
+monolith partitions children by type with no filter composition
+point): `MenuRoot` owns the query (`filterValue?`/
+`defaultFilterValue?`/`onFilterChange?`) with `MenuInput` (text
+entry bound to the query), `MenuClear` (resets; disabled with an
+empty query), `MenuEmpty` (renders when the query matches
+nothing); items publish `filterText?` (defaults to bare string
+children; textless items always show) through the `collection`
+registry, and `MenuEmpty` counts the same rule items hide by.
 Every part takes `render` (element or `(props, state)` function)
 and value-or-function `style`; `data-*` attributes are
 deliberately absent on native (contract §11). Example:

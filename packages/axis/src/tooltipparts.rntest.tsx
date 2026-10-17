@@ -1,10 +1,17 @@
-import { render, screen, userEvent } from "@testing-library/react-native";
+import {
+  render,
+  screen,
+  userEvent,
+  waitForElementToBeRemoved,
+} from "@testing-library/react-native";
+import { act } from "react";
 import { Text } from "react-native";
 import {
   TooltipArrow,
   TooltipPopup,
   TooltipPortal,
   TooltipPositioner,
+  TooltipProvider,
   TooltipRoot,
   TooltipTrigger,
 } from "./index";
@@ -74,7 +81,9 @@ describe("Tooltip compound parts on React Native", () => {
   it("follows controlled visibility", async () => {
     const view = await render(<TipCompound open={false} />);
     expect(screen.queryByRole("tooltip")).toBeNull();
-    view.rerender(<TipCompound open />);
+    await act(async () => {
+      view.rerender(<TipCompound open />);
+    });
     expect(screen.getByRole("tooltip")).toBeTruthy();
   });
 
@@ -143,8 +152,64 @@ describe("Tooltip compound parts on React Native", () => {
         <Text>Info</Text>
       </TooltipTrigger>,
     );
-    expect(screen.getByTestId("o-trigger").props.disabled).toBe(true);
+    expect(
+      screen.getByTestId("o-trigger").props.accessibilityState.disabled,
+    ).toBe(true);
     await longPressTrigger("o-trigger");
     expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  it("groups tips under one provider timing", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <TooltipProvider showDelay={20} hideDelay={20}>
+        <TooltipRoot onOpenChange={(v) => seen.push(v)}>
+          <TooltipTrigger testID="g-trigger">
+            <Text>Info</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner>
+              <TooltipPopup>
+                <Text>Details here</Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
+      </TooltipProvider>,
+    );
+    await userEvent.longPress(screen.getByTestId("g-trigger"));
+    // Poll, never sleep-assert: the delay fires during the press on
+    // any scheduler.
+    expect(await screen.findByRole("tooltip")).toBeTruthy();
+    expect(seen).toEqual([true]);
+    await userEvent.longPress(screen.getByTestId("g-trigger"));
+    await waitForElementToBeRemoved(() => screen.queryByRole("tooltip"));
+    expect(seen).toEqual([true, false]);
+  });
+
+  it("never shows a tip dismissed mid-delay", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <TooltipProvider showDelay={5000}>
+        <TooltipRoot onOpenChange={(v) => seen.push(v)}>
+          <TooltipTrigger testID="c-trigger">
+            <Text>Info</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner>
+              <TooltipPopup>
+                <Text>Details here</Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
+      </TooltipProvider>,
+    );
+    await userEvent.longPress(screen.getByTestId("c-trigger"));
+    // The five-second show timer is still pending: no tip, no
+    // callback yet — a delayed tip never appears early, and the
+    // pending timer clears if a dismiss or unmount lands first.
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(seen).toEqual([]);
   });
 });

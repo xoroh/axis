@@ -416,11 +416,14 @@ export function SelectItem({
   const group = useContext(SelectSelectionContext);
   const root = useContext(SelectRootContext);
   const selection = group ?? root;
-  const effectiveDisabled =
-    disabled || (selection?.groupDisabled ?? false);
+  const effectiveDisabled = disabled || (selection?.groupDisabled ?? false);
   const selected = selection?.selectedValue === value;
   const [highlighted, setHighlighted] = useState(false);
-  const state: SelectItemState = { selected, disabled: effectiveDisabled, highlighted };
+  const state: SelectItemState = {
+    selected,
+    disabled: effectiveDisabled,
+    highlighted,
+  };
 
   // Publish the label to the compound root's registry so
   // `SelectValue` resolves labels without reading children itself.
@@ -467,7 +470,11 @@ export function SelectItem({
     };
     const substituted = resolveRender(
       render,
-      { ...pressableProps, disabled: true, accessibilityState: { selected: false, disabled: true } },
+      {
+        ...pressableProps,
+        disabled: true,
+        accessibilityState: { selected: false, disabled: true },
+      },
       inertState,
     );
     if (substituted !== null) return substituted;
@@ -559,6 +566,14 @@ export type SelectRootProps = {
   defaultValue?: string | null;
   /** Fires with the chosen item value on every committed selection. */
   onValueChange?: (value: string) => void;
+  /**
+   * Value-label lookup table (Base UI `items` parity): the trigger
+   * value display reads the selected item's registered label while
+   * the list is open, but items unmount with a closed list — pass
+   * `items` so the label (not the raw value) shows while closed.
+   * Live registrations win over this table while mounted.
+   */
+  items?: ReadonlyArray<{ value: string; label: string }>;
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
@@ -786,6 +801,8 @@ type SelectRootDisclosure = SelectSelection & {
   items: readonly CollectionItem[];
   register: (item: CollectionItem) => void;
   unregister: (key: string) => void;
+  /** Static value-label table for closed-list display (Base `items`). */
+  labelItems: ReadonlyArray<{ value: string; label: string }>;
 };
 
 type SelectIndicatorDisclosure = {
@@ -799,13 +816,15 @@ type SelectIndicatorDisclosure = {
  * mirroring Base UI's indicator behavior without a second state
  * owner (the `Menu` indicator precedent).
  */
-const SelectIndicatorContext =
-  createContext<SelectIndicatorDisclosure | null>(null);
+const SelectIndicatorContext = createContext<SelectIndicatorDisclosure | null>(
+  null,
+);
 
 export function SelectRoot({
   value,
   defaultValue = null,
   onValueChange,
+  items,
   open,
   defaultOpen = false,
   onOpenChange,
@@ -897,6 +916,7 @@ export function SelectRoot({
       items: registryItems,
       register,
       unregister,
+      labelItems: items ?? [],
     }),
     [
       selectedValue,
@@ -912,6 +932,7 @@ export function SelectRoot({
       registryItems,
       register,
       unregister,
+      items,
     ],
   );
 
@@ -957,7 +978,10 @@ export function SelectTrigger({
     render,
     {
       accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: effectiveDisabled || inert },
+      accessibilityState: {
+        expanded: open,
+        disabled: effectiveDisabled || inert,
+      },
       accessibilityLabel,
       testID,
       disabled: effectiveDisabled || inert,
@@ -973,7 +997,10 @@ export function SelectTrigger({
     <Pressable
       ref={setTriggerRef}
       accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: effectiveDisabled || inert }}
+      accessibilityState={{
+        expanded: open,
+        disabled: effectiveDisabled || inert,
+      }}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       disabled={effectiveDisabled || inert}
@@ -994,13 +1021,20 @@ export function SelectValue({
 }: SelectValueProps): React.ReactNode {
   const root = useContext(SelectRootContext);
   const value = root?.selectedValue ?? null;
-  // The registered label first (items publish on mount), then the
-  // raw value (an item that never registered — conditional content
-  // — still shows something honest), then the placeholder.
-  const label =
+  // The registered label first (items publish on mount while the
+  // list is open), then the root `items` table (closed-list display
+  // — registrations unmount with the list), then the raw value (an
+  // item that never registered still shows something honest), then
+  // the placeholder.
+  const registered =
     value === null || value === undefined
       ? undefined
-      : (findCollectionText(root?.items ?? [], value) ?? value);
+      : findCollectionText(root?.items ?? [], value);
+  const tabled =
+    value === null || value === undefined
+      ? undefined
+      : root?.labelItems.find((entry) => entry.value === value)?.label;
+  const label = registered ?? tabled ?? value ?? undefined;
   const showingPlaceholder = label === undefined;
   const state: SelectValueState = { value, placeholder: showingPlaceholder };
   const content =
@@ -1010,7 +1044,11 @@ export function SelectValue({
 
   const substituted = resolveRender(
     render,
-    { testID, style: resolveStyle(style, state), children: content } satisfies SlotProps,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      children: content,
+    } satisfies SlotProps,
     state,
   );
   if (substituted !== null) return substituted;
@@ -1032,9 +1070,12 @@ export function SelectPortal({
   if (!root.open) return null;
 
   // The RN portal host: a transparent `Modal` presents above the app
-  // (the native equivalent of appending to `body`). Non-modal roots
-  // render in-box with no scrim instead (the `Menu` compound
-  // precedent).
+  // (the native equivalent of appending to `body`). When the shared
+  // overlay root lands, this host can move onto it; positioning
+  // (`SelectPositioner` + the `positioning` model) stays separable
+  // from the host either way, so the move touches only this part.
+  // Non-modal roots render in-box with no scrim instead (the `Menu`
+  // compound precedent).
   if (!root.modal) {
     return <View testID={testID}>{children}</View>;
   }
@@ -1091,7 +1132,10 @@ export function SelectBackdrop({
   );
   if (substituted !== null) return substituted;
   return (
-    <View testID={testID} style={[scrimFillStyle, resolveStyle(style, state)]} />
+    <View
+      testID={testID}
+      style={[scrimFillStyle, resolveStyle(style, state)]}
+    />
   );
 }
 
