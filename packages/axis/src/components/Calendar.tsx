@@ -6,6 +6,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -30,6 +33,15 @@ import { useControllableState } from "../useControllableState";
  * `null`) — the component never throws on bad input.
  */
 
+export type CalendarState = {
+  /** Currently selected date (ISO `yyyy-mm-dd`, `null` for none). */
+  value: string | null;
+  /** Visible month key (ISO `yyyy-mm`). */
+  month: string;
+  /** Whether the whole calendar is disabled. */
+  disabled: boolean;
+};
+
 export type CalendarProps = {
   /** Controlled selected date (ISO `yyyy-mm-dd`). Wins over `defaultValue` when defined. */
   value?: string | null;
@@ -50,10 +62,17 @@ export type CalendarProps = {
   /** Accessible name source for the calendar container. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of calendar state. */
+  style?: StateStyle<CalendarState, StyleProp<ViewStyle>>;
   /** Day-cell style (every day pressable), caller-provided. */
   dayStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole grid; selection
+   * and navigation wiring travel in the props.
+   */
+  render?: RenderProp<CalendarState, SlotProps>;
   /** Forwarded to the root view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -169,8 +188,9 @@ export function Calendar({
   testID,
   style,
   dayStyle,
+  render,
   ref,
-}: CalendarProps): React.JSX.Element {
+}: CalendarProps): React.ReactNode {
   const [selected, setSelected] = useControllableState<string | null>(
     value,
     defaultValue,
@@ -262,12 +282,42 @@ export function Calendar({
     cells.push(toISODate(visibleParts.year, visibleParts.monthIndex, day));
   }
 
+  const state: CalendarState = {
+    value: selectedISO ?? null,
+    month: visibleKey,
+    disabled,
+  };
+  // Substitution entry point: `disabled` stays terminal (contract
+  // §7); range clamping is the default grid's concern — a substituted
+  // grid owns its own day enablement.
+  const selectSubstitutedDay = (iso: string) => {
+    selectDay(iso, false);
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      value: selectedISO ?? null,
+      month: visibleKey,
+      onValueChange: selectSubstitutedDay,
+      onMonthChange: setVisibleMonth,
+      onPreviousMonth: goPrevious,
+      onNextMonth: goNext,
+      dayStyle,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <View>
         <Pressable

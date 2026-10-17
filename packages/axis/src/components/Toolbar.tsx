@@ -1,5 +1,8 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Toolbar — an unstyled container grouping a set of controls.
@@ -21,6 +24,11 @@ import { type StyleProp, View, type ViewStyle } from "react-native";
  * press handling, so there is nothing for it to block.
  */
 
+export type ToolbarState = {
+  /** Observational disabled flag announced on the container. */
+  disabled: boolean;
+};
+
 export type ToolbarProps = {
   /**
    * Reading order of the grouped controls. Default `"horizontal"`.
@@ -38,10 +46,16 @@ export type ToolbarProps = {
   /** Accessible name source for the group. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root view style. Merges over the orientation base direction. */
-  style?: StyleProp<ViewStyle>;
+  /** Root view style: value or function of toolbar state. Merges over the orientation base direction. */
+  style?: StateStyle<ToolbarState, StyleProp<ViewStyle>>;
   /** Grouped controls rendered inside the container. Required. */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ToolbarState, SlotProps>;
   /** Forwarded to the root view host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -78,8 +92,9 @@ export function Toolbar({
   testID,
   style,
   children,
+  render,
   ref,
-}: ToolbarProps): React.JSX.Element {
+}: ToolbarProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -90,6 +105,25 @@ export function Toolbar({
     [ref],
   );
 
+  const state: ToolbarState = { disabled };
+  const baseDirection = {
+    flexDirection: orientation === "vertical" ? "column" : "row",
+  } as const;
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "toolbar",
+      accessibilityState: { disabled },
+      accessibilityLabel,
+      testID,
+      style: [baseDirection, resolveStyle(style, state)],
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -97,10 +131,7 @@ export function Toolbar({
       accessibilityState={{ disabled }}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={[
-        { flexDirection: orientation === "vertical" ? "column" : "row" },
-        style,
-      ]}
+      style={[baseDirection, resolveStyle(style, state)]}
     >
       {children}
     </View>

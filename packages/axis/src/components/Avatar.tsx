@@ -7,6 +7,8 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Avatar — an unstyled identity image with fallback.
@@ -17,6 +19,11 @@ import {
  * carries the image role and label, the fallback is plain content.
  * Sizing, shape, and placeholder art are the caller's.
  */
+
+export type AvatarState = {
+  /** Whether the fallback is showing (no source, or the image failed). */
+  showingFallback: boolean;
+};
 
 export type AvatarProps = {
   /** Image source. Absence (or load failure) shows the fallback. */
@@ -30,6 +37,13 @@ export type AvatarProps = {
   style?: StyleProp<ImageStyle>;
   /** Fallback container style, caller-provided. */
   fallbackStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the whole avatar (image or
+   * fallback branch); branch styles stay static values.
+   */
+  render?: RenderProp<AvatarState, SlotProps>;
   /**
    * Forwarded to whichever host renders (the `Image`, or the
    * fallback `View`). Both branches resolve it.
@@ -69,8 +83,9 @@ export function Avatar({
   testID,
   style,
   fallbackStyle,
+  render,
   ref,
-}: AvatarProps): React.JSX.Element {
+}: AvatarProps): React.ReactNode {
   const [failed, setFailed] = useState(false);
   // Stable identity so the host element is not detached and re-attached
   // on every render.
@@ -80,6 +95,23 @@ export function Avatar({
     },
     [ref],
   );
+
+  const showingFallback = !source || failed;
+  const state: AvatarState = { showingFallback };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "image",
+      accessibilityLabel,
+      testID,
+      style: showingFallback ? fallbackStyle : style,
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   if (source && !failed) {
     return (

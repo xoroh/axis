@@ -28,4 +28,20 @@ Add new applications under `apps/` and reusable workspaces under `packages/`. Ea
 - Do not include secrets, credentials, or private user data.
 - Use a clear, conventional commit message (for example, `feat: add ...` or `fix: ...`).
 
+## Re-vendoring for Kern consumers
+
+Kern consumes Axis pre-publish through a committed vendored
+tarball (`vendor/axis/axis-<sha>.tgz`, `file:` spec with lockfile
+pin). To reproduce that tarball from any clean checkout:
+
+```sh
+node scripts/pack-vendor.mjs --out <dir>  # prints <dir>/axis-<sha>.tgz + sha512
+```
+
+The script builds fresh, packs with `npm pack` (release-equivalent),
+and refuses dirty trees unless `--allow-dirty` is passed for
+scratch builds. It performs no version bump and no publish.
+Copy the printed tarball into Kern's `vendor/axis/` and
+re-install there to re-pin.
+
 By submitting a contribution, you agree that it may be distributed under the repository's MIT License. Please preserve existing copyright and license notices.

@@ -8,6 +8,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -23,6 +26,20 @@ import { useControllableState } from "../useControllableState";
  * (unlike `RadioGroup`, which never deselects on re-activation).
  */
 
+export type CheckboxGroupState = {
+  /** Currently selected item values. */
+  value: readonly string[];
+  /** Whether the whole group is disabled. */
+  disabled: boolean;
+};
+
+export type CheckboxGroupItemState = {
+  /** Whether this item is currently checked. */
+  checked: boolean;
+  /** Whether this item is currently disabled. */
+  disabled: boolean;
+};
+
 export type CheckboxGroupProps = {
   /** Controlled selection (item values). Wins over `defaultValue` when defined. */
   value?: readonly string[];
@@ -35,10 +52,16 @@ export type CheckboxGroupProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Root group view style. */
-  style?: StyleProp<ViewStyle>;
+  /** Root group view style: value or function of group state. */
+  style?: StateStyle<CheckboxGroupState, StyleProp<ViewStyle>>;
   /** The group's items (`CheckboxGroupItem`). */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<CheckboxGroupState, SlotProps>;
   /** Forwarded to the root group host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -51,9 +74,15 @@ export type CheckboxGroupItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Item pressable style: value or function of item state. */
+  style?: StateStyle<CheckboxGroupItemState, StyleProp<ViewStyle>>;
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<CheckboxGroupItemState, SlotProps>;
 };
 
 type CheckboxGroupSelection = {
@@ -104,8 +133,9 @@ function CheckboxGroupRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: CheckboxGroupProps): React.JSX.Element {
+}: CheckboxGroupProps): React.ReactNode {
   const [selectedValues, setSelectedValues] = useControllableState<
     readonly string[]
   >(value, defaultValue, onValueChange);
@@ -138,6 +168,25 @@ function CheckboxGroupRoot({
     [selectedValues, disabled, toggle],
   );
 
+  const state: CheckboxGroupState = {
+    value: selectedValues ?? [],
+    disabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "group",
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -148,7 +197,7 @@ function CheckboxGroupRoot({
       accessibilityRole="group"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <CheckboxGroupSelectionContext.Provider value={selection}>
         {children}
@@ -164,7 +213,8 @@ export function CheckboxGroupItem({
   testID,
   style,
   children,
-}: CheckboxGroupItemProps): React.JSX.Element {
+  render,
+}: CheckboxGroupItemProps): React.ReactNode {
   const group = useContext(CheckboxGroupSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const checked = group?.selectedValues?.includes(value) ?? false;
@@ -174,6 +224,26 @@ export function CheckboxGroupItem({
     group?.toggle(value);
   }, [effectiveDisabled, group, value]);
 
+  const state: CheckboxGroupItemState = {
+    checked,
+    disabled: effectiveDisabled,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "checkbox",
+      accessibilityState: { checked, disabled: effectiveDisabled },
+      accessibilityLabel,
+      testID,
+      disabled: effectiveDisabled,
+      onPress: toggleItem,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       accessibilityRole="checkbox"
@@ -182,7 +252,7 @@ export function CheckboxGroupItem({
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleItem}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>

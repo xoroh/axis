@@ -12,6 +12,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -28,6 +31,13 @@ import { useControllableState } from "../useControllableState";
  * screen-reader control is exposed through the `increment` /
  * `decrement` accessibility actions.
  */
+
+export type SliderState = {
+  /** Current (clamped) value. */
+  value: number;
+  /** Whether the slider is currently disabled. */
+  disabled: boolean;
+};
 
 export type SliderProps = {
   /** Controlled value. Wins over `defaultValue` when defined. */
@@ -47,14 +57,21 @@ export type SliderProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Track container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Track container style: value or function of slider state. */
+  style?: StateStyle<SliderState, StyleProp<ViewStyle>>;
   /** Track container style, caller-provided (merged over `style`). */
   trackStyle?: StyleProp<ViewStyle>;
   /** Fill bar style, caller-provided (merged over the data-driven width). */
   fillStyle?: StyleProp<ViewStyle>;
   /** Thumb indicator style, caller-provided. */
   thumbStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Gesture, layout, and accessibility
+   * wiring stay on the part — substitution replaces the host only.
+   */
+  render?: RenderProp<SliderState, SlotProps>;
   /** Forwarded to the track container host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -98,8 +115,9 @@ export function Slider({
   trackStyle,
   fillStyle,
   thumbStyle,
+  render,
   ref,
-}: SliderProps): React.JSX.Element {
+}: SliderProps): React.ReactNode {
   // A degenerate `min > max` range collapses to the single point `min`
   // — announced and rendered as such, never thrown over.
   const lo = min;
@@ -203,6 +221,27 @@ export function Slider({
     [ref],
   );
 
+  const state: SliderState = { value: clamped, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "slider",
+      accessibilityState: { disabled },
+      accessibilityValue: { min: lo, max: hi, now: clamped },
+      accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
+      onAccessibilityAction,
+      accessibilityLabel,
+      testID,
+      onLayout,
+      style: [resolveStyle(style, state), trackStyle],
+      ref: setHostRef,
+      ...pan.panHandlers,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View
       ref={setHostRef}
@@ -218,7 +257,7 @@ export function Slider({
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       onLayout={onLayout}
-      style={[style, trackStyle]}
+      style={[resolveStyle(style, state), trackStyle]}
       {...pan.panHandlers}
     >
       <View style={[{ width: `${percent}%` }, fillStyle]} />

@@ -12,6 +12,9 @@ import {
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -52,6 +55,18 @@ import { useControllableState } from "../useControllableState";
  * "Dismiss menu".
  */
 
+export type NavigationMenuState = {
+  /** Currently open item value (`null` closed). */
+  openValue: string | null;
+};
+
+export type NavigationMenuTriggerState = {
+  /** Whether this trigger's panel is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
 export type NavigationMenuProps = {
   /** Controlled open item value (`null` closed). Wins over `defaultOpenValue`. */
   openValue?: string | null;
@@ -62,10 +77,16 @@ export type NavigationMenuProps = {
   /** Fires on scrim dismissal, before `onOpenValueChange(null)`. */
   onDismiss?: () => void;
   testID?: string;
-  /** Bar container style, caller-provided (row layout is default). */
-  style?: StyleProp<ViewStyle>;
+  /** Bar container style: value or function of menu state (row layout is default). */
+  style?: StateStyle<NavigationMenuState, StyleProp<ViewStyle>>;
   /** `NavigationMenuItem` elements. */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the bar container.
+   */
+  render?: RenderProp<NavigationMenuState, SlotProps>;
   /** Forwarded to the bar container `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -79,14 +100,20 @@ export type NavigationMenuItemProps = {
 
 export type NavigationMenuTriggerProps = {
   testID?: string;
-  /** Trigger pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger pressable style: value or function of trigger state. */
+  style?: StateStyle<NavigationMenuTriggerState, StyleProp<ViewStyle>>;
   /** Trigger content (required — an empty trigger is a bug). */
   children: ReactNode;
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<NavigationMenuTriggerState, SlotProps>;
 };
 
 export type NavigationMenuPanelProps = {
@@ -95,6 +122,11 @@ export type NavigationMenuPanelProps = {
   style?: StyleProp<ViewStyle>;
   /** Panel content. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). The panel
+   * still mounts only inside its item.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
 };
 
 type NavigationDisclosure = {
@@ -162,7 +194,8 @@ export function NavigationMenuTrigger({
   children,
   disabled = false,
   accessibilityLabel,
-}: NavigationMenuTriggerProps): React.JSX.Element {
+  render,
+}: NavigationMenuTriggerProps): React.ReactNode {
   const disclosure = useContext(NavigationDisclosureContext);
   const value = disclosure?.item ?? null;
   const expanded = value !== null && disclosure?.openValue === value;
@@ -177,6 +210,26 @@ export function NavigationMenuTrigger({
   // (announced disabled, press is a no-op) rather than dropping the
   // node silently.
   const inert = value === null;
+  const state: NavigationMenuTriggerState = {
+    open: expanded,
+    disabled: disabled || inert,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded, disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: openTrigger,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -185,7 +238,7 @@ export function NavigationMenuTrigger({
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -196,11 +249,25 @@ export function NavigationMenuPanel({
   testID,
   style,
   children,
-}: NavigationMenuPanelProps): React.JSX.Element | null {
+  render,
+}: NavigationMenuPanelProps): React.ReactNode {
   const disclosure = useContext(NavigationDisclosureContext);
   // Panel chrome without an item is meaningless: a bare panel
   // outside a `NavigationMenuItem` renders nothing.
   if (!disclosure || disclosure.item === null) return null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "menu",
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View accessible role="menu" testID={testID} style={style}>
       {children}
@@ -277,8 +344,9 @@ function NavigationMenuRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: NavigationMenuProps): React.JSX.Element {
+}: NavigationMenuProps): React.ReactNode {
   const [current, setCurrent] = useControllableState<string | null>(
     openValue,
     defaultOpenValue,
@@ -313,10 +381,32 @@ function NavigationMenuRoot({
     [ref],
   );
 
+  const barState: NavigationMenuState = {
+    openValue: current ?? null,
+  };
+  const barSubstituted = resolveRender(
+    render,
+    {
+      testID,
+      style: [{ flexDirection: "row" }, resolveStyle(style, barState)],
+      children,
+      ref: setBarRef,
+    } satisfies SlotProps,
+    barState,
+  );
+  const bar =
+    barSubstituted !== null ? (
+      barSubstituted
+    ) : (
+      <View style={[{ flexDirection: "row" }, resolveStyle(style, barState)]}>
+        {children}
+      </View>
+    );
+
   return (
     <View ref={setBarRef}>
       <NavigationDisclosureContext.Provider value={disclosure}>
-        <View style={[{ flexDirection: "row" }, style]}>{children}</View>
+        {bar}
         {current !== null && current !== undefined ? (
           <Pressable
             accessibilityLabel="Dismiss menu"

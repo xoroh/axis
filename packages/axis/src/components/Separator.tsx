@@ -1,5 +1,7 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Separator — an unstyled divider between content.
@@ -16,6 +18,13 @@ export type SeparatorProps = {
   testID?: string;
   /** Divider style, caller-provided. */
   style?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The separator carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -48,8 +57,9 @@ function assignRef(
 export function Separator({
   testID,
   style,
+  render,
   ref,
-}: SeparatorProps): React.JSX.Element {
+}: SeparatorProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -59,6 +69,18 @@ export function Separator({
     },
     [ref],
   );
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: false,
+      testID,
+      style,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <View ref={setHostRef} accessible={false} testID={testID} style={style} />

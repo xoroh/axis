@@ -6,6 +6,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -49,6 +52,13 @@ import { useControllableState } from "../useControllableState";
  * precedent).
  */
 
+export type DrawerState = {
+  /** Whether the drawer is currently open. */
+  open: boolean;
+  /** Anchored edge. */
+  side: "left" | "right";
+};
+
 export type DrawerProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
@@ -72,8 +82,15 @@ export type DrawerProps = {
   testID?: string;
   /** Scrim layer style, caller-provided. */
   overlayStyle?: StyleProp<ViewStyle>;
-  /** Drawer surface (box) style, caller-provided (width lives here). */
-  surfaceStyle?: StyleProp<ViewStyle>;
+  /** Drawer surface (box) style: value or function of drawer state (width lives here). */
+  surfaceStyle?: StateStyle<DrawerState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity) for the drawer
+   * surface: an element is cloned with the surface props merged under
+   * its own; a function receives `(props, state)`. The `Modal` host
+   * and scrim stay on the part.
+   */
+  render?: RenderProp<DrawerState, SlotProps>;
   /** Forwarded to the surface `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -115,8 +132,9 @@ export function Drawer({
   testID,
   overlayStyle,
   surfaceStyle,
+  render,
   ref,
-}: DrawerProps): React.JSX.Element | null {
+}: DrawerProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -131,6 +149,42 @@ export function Drawer({
   if (!isOpen) return null;
 
   const anchor = side === "left" ? { left: 0 } : { right: 0 };
+  const state: DrawerState = { open: true, side };
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      accessibilityRole: "dialog",
+      accessibilityLabel,
+      testID,
+      style: [
+        { position: "absolute", top: 0, bottom: 0, ...anchor },
+        resolveStyle(surfaceStyle, state),
+      ],
+      children,
+      ref,
+    } satisfies SlotProps,
+    state,
+  );
+  const surface =
+    substituted !== null ? (
+      substituted
+    ) : (
+      <View
+        accessible
+        accessibilityRole="dialog"
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        style={[
+          { position: "absolute", top: 0, bottom: 0, ...anchor },
+          resolveStyle(surfaceStyle, state),
+        ]}
+        ref={(node) => assignRef(ref, node)}
+      >
+        {children}
+      </View>
+    );
 
   return (
     <Modal transparent onRequestClose={dismissable ? dismiss : undefined}>
@@ -145,19 +199,7 @@ export function Drawer({
         ) : (
           <View style={{ flex: 1 }} />
         )}
-        <View
-          accessible
-          accessibilityRole="dialog"
-          accessibilityLabel={accessibilityLabel}
-          testID={testID}
-          style={[
-            { position: "absolute", top: 0, bottom: 0, ...anchor },
-            surfaceStyle,
-          ]}
-          ref={(node) => assignRef(ref, node)}
-        >
-          {children}
-        </View>
+        {surface}
       </View>
     </Modal>
   );

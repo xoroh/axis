@@ -7,6 +7,9 @@ import {
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { Placement } from "../positioning";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
@@ -21,6 +24,11 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * positions below the anchor — press-point positioning is deferred,
  * documented, and not faked. No submenus, no animation.
  */
+
+export type ContextMenuState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+};
 
 export type ContextMenuProps = {
   /** Anchor content. Long-press opens the menu. */
@@ -40,10 +48,17 @@ export type ContextMenuProps = {
   /** Accessible name source for the menu region. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Anchor wrapper style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Anchor wrapper style: value or function of menu state. */
+  style?: StateStyle<ContextMenuState, StyleProp<ViewStyle>>;
   /** Menu box style, caller-provided. */
   menuStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the anchor wrapper (anchor
+   * plus menu); long-press and dismissal wiring travel in the props.
+   */
+  render?: RenderProp<ContextMenuState, SlotProps>;
   /** Forwarded to the anchor wrapper host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -78,8 +93,9 @@ export function ContextMenu({
   testID,
   style,
   menuStyle,
+  render,
   ref,
-}: ContextMenuProps): React.JSX.Element {
+}: ContextMenuProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -110,8 +126,27 @@ export function ContextMenu({
     setOpen((previous) => !(previous ?? false));
   }, [setOpen]);
 
+  const state: ContextMenuState = { open: isOpen ?? false };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      onLongPress: toggle,
+      onDismiss: dismiss,
+      open: isOpen ?? false,
+      content,
+      menuStyle,
+      accessibilityLabel,
+      children,
+      ref: setAnchorRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setAnchorRef} style={style} testID={testID}>
+    <View ref={setAnchorRef} style={resolveStyle(style, state)} testID={testID}>
       <Pressable onLongPress={toggle}>{children}</Pressable>
       {isOpen ? (
         <>

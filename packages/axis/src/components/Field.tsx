@@ -6,6 +6,9 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Field — an unstyled label/control/error row.
@@ -18,6 +21,11 @@ import {
  * demonstrates the need.
  */
 
+export type FieldState = {
+  /** Whether an error is currently shown. */
+  invalid: boolean;
+};
+
 export type FieldProps = {
   /** Label content rendered above the control. */
   label?: ReactNode;
@@ -26,12 +34,18 @@ export type FieldProps = {
   /** Error content; rendered only when provided. */
   error?: ReactNode;
   testID?: string;
-  /** Container style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Container style: value or function of field state. */
+  style?: StateStyle<FieldState, StyleProp<ViewStyle>>;
   /** Label text style, caller-provided. */
   labelStyle?: StyleProp<TextStyle>;
   /** Error text style, caller-provided. */
   errorStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<FieldState, SlotProps>;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -69,8 +83,9 @@ export function Field({
   style,
   labelStyle,
   errorStyle,
+  render,
   ref,
-}: FieldProps): React.JSX.Element {
+}: FieldProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -81,8 +96,25 @@ export function Field({
     [ref],
   );
 
+  const state: FieldState = { invalid: error !== undefined };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      label,
+      labelStyle,
+      error,
+      errorStyle,
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
-    <View ref={setHostRef} testID={testID} style={style}>
+    <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
       {label !== undefined ? <Text style={labelStyle}>{label}</Text> : null}
       {children}
       {error !== undefined ? (

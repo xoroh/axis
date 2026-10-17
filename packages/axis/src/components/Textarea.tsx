@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback, useState } from "react";
 import { type StyleProp, TextInput, type TextStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -12,13 +15,20 @@ import { useControllableState } from "../useControllableState";
  * strings, as in `Input`.
  */
 
+export type TextareaState = {
+  /** Current text. */
+  value: string;
+  /** Whether the input is currently editable. */
+  editable: boolean;
+};
+
 export type TextareaProps = {
   /** Controlled text. Wins over `defaultValue` when defined. */
   value?: string;
   /** Uncontrolled initial text. Default `""`. */
   defaultValue?: string;
-  /** Fires with the next text on every change. */
-  onChangeText?: (text: string) => void;
+  /** Fires with the next text on every change (Base UI name). */
+  onValueChange?: (text: string) => void;
   /** Placeholder text. Visual only, caller-provided. */
   placeholder?: string;
   /** Editable flag. `false` renders read-only. Default `true`. */
@@ -33,8 +43,14 @@ export type TextareaProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Input style, caller-provided. */
-  style?: StyleProp<TextStyle>;
+  /** Input style: value or function of textarea state, caller-provided. */
+  style?: StateStyle<TextareaState, StyleProp<TextStyle>>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<TextareaState, SlotProps>;
   /** Forwarded to the host text input. */
   ref?: Ref<ElementRef<typeof TextInput>>;
 };
@@ -60,7 +76,7 @@ function assignRef(
 export function Textarea({
   value,
   defaultValue = "",
-  onChangeText,
+  onValueChange,
   placeholder,
   editable = true,
   numberOfLines = 3,
@@ -68,12 +84,13 @@ export function Textarea({
   accessibilityLabel,
   testID,
   style,
+  render,
   ref,
-}: TextareaProps): React.JSX.Element {
+}: TextareaProps): React.ReactNode {
   const [text, setText] = useControllableState<string>(
     value,
     defaultValue,
-    onChangeText,
+    onValueChange,
   );
   const [measuredHeight, setMeasuredHeight] = useState<number | undefined>(
     undefined,
@@ -85,6 +102,25 @@ export function Textarea({
     },
     [ref],
   );
+
+  const state: TextareaState = { value: text ?? "", editable };
+  const substituted = resolveRender(
+    render,
+    {
+      value: text ?? "",
+      onChangeText: editable ? setText : undefined,
+      placeholder,
+      editable,
+      multiline: true,
+      numberOfLines,
+      accessibilityLabel,
+      testID,
+      style: resolveStyle(style, state),
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <TextInput
@@ -103,7 +139,7 @@ export function Textarea({
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       style={[
-        style,
+        resolveStyle(style, state),
         measuredHeight !== undefined ? { height: measuredHeight } : null,
       ]}
     />

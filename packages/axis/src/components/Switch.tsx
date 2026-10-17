@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -17,6 +20,13 @@ import { useControllableState } from "../useControllableState";
  * migrate.
  */
 
+export type SwitchState = {
+  /** Whether the switch is currently on. */
+  checked: boolean;
+  /** Whether the switch is currently disabled. */
+  disabled: boolean;
+};
+
 export type SwitchProps = {
   /** Controlled state. Wins over `defaultChecked` when defined. */
   checked?: boolean;
@@ -31,12 +41,18 @@ export type SwitchProps = {
   /** Native labelled-by association where the platform supports it. */
   accessibilityLabelledBy?: string;
   testID?: string;
-  /** Root pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of switch state, caller-provided. */
+  style?: StateStyle<SwitchState, StyleProp<ViewStyle>>;
   /** Track container style. */
   trackStyle?: StyleProp<ViewStyle>;
   /** Thumb indicator style. */
   thumbStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<SwitchState, SlotProps>;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -77,8 +93,9 @@ export function Switch({
   style,
   trackStyle,
   thumbStyle,
+  render,
   ref,
-}: SwitchProps): React.JSX.Element {
+}: SwitchProps): React.ReactNode {
   const [on, setOn] = useControllableState<boolean>(
     checked,
     defaultChecked,
@@ -100,6 +117,24 @@ export function Switch({
     [ref],
   );
 
+  const state: SwitchState = { checked: on ?? false, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "switch",
+      accessibilityState: { checked: on ?? false, disabled },
+      accessibilityLabel,
+      accessibilityLabelledBy,
+      testID,
+      disabled,
+      onPress: toggle,
+      style: resolveStyle(style, state),
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       ref={setHostRef}
@@ -110,7 +145,7 @@ export function Switch({
       testID={testID}
       disabled={disabled}
       onPress={toggle}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <View style={trackStyle}>
         <View style={thumbStyle} />

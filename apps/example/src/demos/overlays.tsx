@@ -1,9 +1,14 @@
 import {
   AlertDialog,
+  Button,
   ContextMenu,
   Drawer,
+  Portal,
+  PortalHost,
   Sheet,
   Toast,
+  ToastProvider,
+  ToastViewport,
   Tooltip,
   TooltipArrow,
   TooltipPopup,
@@ -13,15 +18,16 @@ import {
   TooltipRoot,
   TooltipTrigger,
   Trigger,
+  useToast,
 } from "@xoroh/axis";
 import { Text, View } from "react-native";
 import type { Demo } from "./registry";
 
 /**
- * Overlays demo: blocking dialog, sheet, drawer, toast, tooltip,
- * long-press menu, and a semantics-free trigger — all with plain
- * caller styles. The tooltip section shows both the concise
- * monolith and the compound anatomy under one provider timing.
+ * Overlays demo: blocking dialog, sheet, drawer, toast (single-shot
+ * and queued), tooltip (monolith and compound), long-press menu,
+ * standalone portal host, and a semantics-free trigger — all with
+ * plain caller styles.
  */
 export const OverlaysDemo: Demo = {
   slug: "overlays",
@@ -31,6 +37,10 @@ export const OverlaysDemo: Demo = {
     "Sheet",
     "Drawer",
     "Toast",
+    "ToastProvider",
+    "ToastViewport",
+    "Portal",
+    "PortalHost",
     "Tooltip",
     "TooltipArrow",
     "TooltipPopup",
@@ -75,6 +85,16 @@ export const OverlaysDemo: Demo = {
         <Toast accessibilityLabel="Demo toast" defaultOpen={false}>
           <Text>Saved</Text>
         </Toast>
+        <ToastProvider>
+          <QueueDemoButton />
+          <ToastViewport />
+        </ToastProvider>
+        <PortalHost>
+          <Text>Host anchor</Text>
+          <Portal>
+            <Text>Portaled content</Text>
+          </Portal>
+        </PortalHost>
         <Sheet defaultOpen={false} title="Filters" />
         <Drawer defaultOpen={false} accessibilityLabel="Demo drawer">
           <Text>Destinations</Text>
@@ -90,3 +110,17 @@ export const OverlaysDemo: Demo = {
     );
   },
 };
+
+function QueueDemoButton() {
+  const toast = useToast();
+  return (
+    <Button
+      accessibilityLabel="Queue a toast"
+      onPress={() => {
+        toast.add({ message: "Queued hello" });
+      }}
+    >
+      <Text>Queue a toast</Text>
+    </Button>
+  );
+}

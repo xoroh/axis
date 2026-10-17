@@ -41,7 +41,7 @@ export const EntryDemo: Demo = {
           <Input
             accessibilityLabel="Name input"
             value={name}
-            onChangeText={setName}
+            onValueChange={setName}
             placeholder="Ada"
           />
         </Field>
@@ -49,7 +49,7 @@ export const EntryDemo: Demo = {
           <Textarea
             accessibilityLabel="Notes input"
             value={notes}
-            onChangeText={setNotes}
+            onValueChange={setNotes}
             placeholder="Details"
           />
         </Field>

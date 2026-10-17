@@ -13,6 +13,9 @@ import {
   useState,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -56,6 +59,23 @@ import { useControllableState } from "../useControllableState";
  * "Dismiss menu".
  */
 
+export type DropdownMenuState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+};
+
+export type DropdownMenuTriggerState = {
+  /** Whether the menu is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
+export type DropdownMenuItemState = {
+  /** Whether the item is currently disabled. */
+  disabled: boolean;
+};
+
 export type DropdownMenuProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
@@ -66,24 +86,37 @@ export type DropdownMenuProps = {
   /** Fires on scrim dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   testID?: string;
-  /** Menu content box style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Menu content box style: value or function of menu state. */
+  style?: StateStyle<DropdownMenuState, StyleProp<ViewStyle>>;
   /** Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements. */
   children: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. Replaces the content box (not the
+   * trigger zone or scrim).
+   */
+  render?: RenderProp<DropdownMenuState, SlotProps>;
   /** Forwarded to the menu container `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
 
 export type DropdownMenuTriggerProps = {
   testID?: string;
-  /** Trigger pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger pressable style: value or function of trigger state. */
+  style?: StateStyle<DropdownMenuTriggerState, StyleProp<ViewStyle>>;
   /** Trigger content (required — an empty trigger is a bug). */
   children: ReactNode;
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<DropdownMenuTriggerState, SlotProps>;
 };
 
 export type DropdownMenuItemProps = {
@@ -94,12 +127,18 @@ export type DropdownMenuItemProps = {
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Item pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Item pressable style: value or function of item state. */
+  style?: StateStyle<DropdownMenuItemState, StyleProp<ViewStyle>>;
   /** Item content, rendered inside the `Pressable`. */
   children?: ReactNode;
   /** Fires with `value` on activation, before the menu closes. */
   onSelect?: (value: string) => void;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<DropdownMenuItemState, SlotProps>;
 };
 
 export type DropdownMenuSubProps = {
@@ -111,14 +150,20 @@ export type DropdownMenuSubProps = {
 
 export type DropdownMenuSubTriggerProps = {
   testID?: string;
-  /** Trigger pressable style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
+  /** Trigger pressable style: value or function of trigger state. */
+  style?: StateStyle<DropdownMenuTriggerState, StyleProp<ViewStyle>>;
   /** Trigger content (required). */
   children: ReactNode;
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<DropdownMenuTriggerState, SlotProps>;
 };
 
 export type DropdownMenuSubContentProps = {
@@ -127,6 +172,11 @@ export type DropdownMenuSubContentProps = {
   style?: StyleProp<ViewStyle>;
   /** `DropdownMenuItem`/`DropdownMenuSub` elements. */
   children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). The panel
+   * still mounts only while its submenu is open.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
 };
 
 type SubIdentity = {
@@ -205,7 +255,8 @@ export function DropdownMenuTrigger({
   children,
   disabled = false,
   accessibilityLabel,
-}: DropdownMenuTriggerProps): React.JSX.Element {
+  render,
+}: DropdownMenuTriggerProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
   const expanded = disclosure?.open ?? false;
 
@@ -213,6 +264,23 @@ export function DropdownMenuTrigger({
     if (disabled) return;
     disclosure?.toggleRoot();
   }, [disabled, disclosure]);
+
+  const state: DropdownMenuTriggerState = { open: expanded, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded, disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: toggleTrigger,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <Pressable
@@ -222,7 +290,7 @@ export function DropdownMenuTrigger({
       testID={testID}
       disabled={disabled}
       onPress={toggleTrigger}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -237,7 +305,8 @@ export function DropdownMenuItem({
   style,
   children,
   onSelect,
-}: DropdownMenuItemProps): React.JSX.Element | null {
+  render,
+}: DropdownMenuItemProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
 
   const selectItem = useCallback(() => {
@@ -249,6 +318,21 @@ export function DropdownMenuItem({
   // Outside a menu there is no disclosure to close: render inert
   // rather than dropping the node silently (the `MenuItem` precedent).
   if (!disclosure) {
+    const inertState: DropdownMenuItemState = { disabled: true };
+    const inertSubstituted = resolveRender(
+      render,
+      {
+        role: "menuitem",
+        accessibilityState: { disabled: true },
+        accessibilityLabel,
+        testID,
+        disabled: true,
+        style: resolveStyle(style, inertState),
+        children,
+      } satisfies SlotProps,
+      inertState,
+    );
+    if (inertSubstituted !== null) return inertSubstituted;
     return (
       <Pressable
         role="menuitem"
@@ -256,7 +340,7 @@ export function DropdownMenuItem({
         accessibilityLabel={accessibilityLabel}
         testID={testID}
         disabled
-        style={style}
+        style={resolveStyle(style, inertState)}
       >
         {children}
       </Pressable>
@@ -266,6 +350,23 @@ export function DropdownMenuItem({
   // Presence is mount/unmount: a closed root shows the trigger only.
   if (!disclosure.open) return null;
 
+  const state: DropdownMenuItemState = { disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      role: "menuitem",
+      accessibilityState: { disabled },
+      accessibilityLabel,
+      testID,
+      disabled,
+      onPress: selectItem,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       role="menuitem"
@@ -274,7 +375,7 @@ export function DropdownMenuItem({
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -287,7 +388,8 @@ export function DropdownMenuSubTrigger({
   children,
   disabled = false,
   accessibilityLabel,
-}: DropdownMenuSubTriggerProps): React.JSX.Element {
+  render,
+}: DropdownMenuSubTriggerProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
   const identity = disclosure?.sub ?? null;
   const expanded =
@@ -304,6 +406,26 @@ export function DropdownMenuSubTrigger({
   // (announced disabled, press is a no-op) rather than dropping the
   // node silently.
   const inert = identity === null;
+  const state: DropdownMenuTriggerState = {
+    open: expanded,
+    disabled: disabled || inert,
+  };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded, disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: openTrigger,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -312,7 +434,7 @@ export function DropdownMenuSubTrigger({
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       {children}
     </Pressable>
@@ -323,7 +445,8 @@ export function DropdownMenuSubContent({
   testID,
   style,
   children,
-}: DropdownMenuSubContentProps): React.JSX.Element | null {
+  render,
+}: DropdownMenuSubContentProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
   const identity = disclosure?.sub ?? null;
   // Panel chrome without a submenu is meaningless: render nothing
@@ -331,6 +454,19 @@ export function DropdownMenuSubContent({
   if (!disclosure || identity === null) return null;
   if (!disclosure.open) return null;
   if (disclosure.openPath[identity.depth] !== identity.value) return null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "menu",
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <View accessible role="menu" testID={testID} style={style}>
       {children}
@@ -368,8 +504,9 @@ function DropdownMenuRoot({
   testID,
   style,
   children,
+  render,
   ref,
-}: DropdownMenuProps): React.JSX.Element {
+}: DropdownMenuProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -466,6 +603,32 @@ function DropdownMenuRoot({
     return node;
   });
 
+  const boxState: DropdownMenuState = { open: isOpen ?? false };
+  const boxSubstituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "menu",
+      testID,
+      style: resolveStyle(style, boxState),
+      children: panelNodes,
+    } satisfies SlotProps,
+    boxState,
+  );
+  const contentBox =
+    boxSubstituted !== null ? (
+      boxSubstituted
+    ) : (
+      <View
+        accessible
+        role="menu"
+        testID={testID}
+        style={resolveStyle(style, boxState)}
+      >
+        {panelNodes}
+      </View>
+    );
+
   return (
     <View ref={setContainerRef}>
       <DropdownDisclosureContext.Provider value={disclosure}>
@@ -478,9 +641,7 @@ function DropdownMenuRoot({
               onPress={dismiss}
               style={SCRIM_FILL}
             />
-            <View accessible role="menu" testID={testID} style={style}>
-              {panelNodes}
-            </View>
+            {contentBox}
           </>
         ) : null}
       </DropdownDisclosureContext.Provider>

@@ -1,24 +1,40 @@
 import type { ElementRef, ReactNode, Ref } from "react";
-import type { StyleProp, View, ViewStyle } from "react-native";
-import { Dialog } from "./Dialog";
+import { type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
+import { useControllableState } from "../useControllableState";
+import {
+  DialogBackdrop,
+  DialogPopup,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from "./Dialog";
 
 /**
  * AlertDialog — a blocking dialog that only closes through its actions.
  *
- * A thin wrapper around `Dialog` (in-`src` composition): every prop
- * maps straight through, except dismissal is removed. `dismissable`
- * is forced to `false` always — the prop is not accepted at all (it
- * is omitted from this type), so no caller can accidentally make a
- * blocking dialog dismissable. The scrim renders with no dismiss
- * label and no handler; closing happens only through the caller's
- * own action buttons calling back (typically `onOpenChange(false)`).
+ * A thin specialization of the compound `Dialog` parts (in-`src`
+ * composition): `DialogRoot` (forced non-dismissable), `DialogPortal`,
+ * `DialogBackdrop` (inert — no dismiss label, no handler), and
+ * `DialogPopup` carrying the title, content, and REQUIRED action row.
+ * `dismissable` is not accepted at all (omitted from this type), so no
+ * caller can accidentally make a blocking dialog dismissable. Closing
+ * happens only through the caller's own action buttons calling back
+ * (typically `onOpenChange(false)`).
  *
  * `actions` is REQUIRED: a blocking dialog without an explicit action
  * traps the user on the surface with no way out. State follows the
- * `useControllableState` pattern via the inner `Dialog`: `open` (+
- * `onOpenChange`) for controlled use, `defaultOpen` for uncontrolled
- * (default `false`). Presence is mount/unmount: closed renders `null`.
+ * `useControllableState` pattern: `open` (+ `onOpenChange`) for
+ * controlled use, `defaultOpen` for uncontrolled (default `false`).
+ * Presence is mount/unmount: closed renders `null` (via `DialogPortal`).
  */
+
+export type AlertDialogState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
 
 export type AlertDialogProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
@@ -27,7 +43,7 @@ export type AlertDialogProps = {
   defaultOpen?: boolean;
   /** Fires with the next open state; actions report `false` through here. */
   onOpenChange?: (open: boolean) => void;
-  /** Dialog title, rendered in a `Text` when provided. */
+  /** Dialog title, rendered in a `DialogTitle` when provided. */
   title?: ReactNode;
   /** Dialog content. */
   children?: ReactNode;
@@ -39,9 +55,16 @@ export type AlertDialogProps = {
   /** Accessible name source for the dialog surface. */
   accessibilityLabel?: string;
   testID?: string;
-  /** Dialog surface (box) style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
-  /** Forwarded to the dialog surface `View` (via `Dialog`). */
+  /** Dialog surface (box) style: value or function of dialog state. */
+  style?: StateStyle<AlertDialogState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity) for the dialog
+   * surface: an element is cloned with the popup props merged under
+   * its own; a function receives `(props, state)`. Blocking
+   * (non-dismissable) semantics stay on the part.
+   */
+  render?: RenderProp<AlertDialogState, SlotProps>;
+  /** Forwarded to the dialog surface `View` (via `DialogPopup`). */
   ref?: Ref<ElementRef<typeof View>>;
 };
 
@@ -55,24 +78,41 @@ export function AlertDialog({
   accessibilityLabel,
   testID,
   style,
+  render,
   ref,
-}: AlertDialogProps): React.JSX.Element | null {
+}: AlertDialogProps): React.ReactNode {
+  // Single state owner: `DialogRoot` below runs controlled off this
+  // value, so open state has one source and the function-form `style`
+  // reads the same value the portal presents.
+  const [isOpen, setOpen] = useControllableState<boolean>(
+    open,
+    defaultOpen,
+    onOpenChange,
+  );
+  const state: AlertDialogState = { open: isOpen ?? false };
+
   return (
-    <Dialog
-      open={open}
-      defaultOpen={defaultOpen}
-      onOpenChange={onOpenChange}
+    <DialogRoot
+      open={isOpen}
+      onOpenChange={setOpen}
       // Forced, never caller-provided: a blocking dialog must not
       // dismiss from the scrim (or the request-close path).
-      dismissable={false}
-      title={title}
-      actions={actions}
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      surfaceStyle={style}
-      ref={ref}
+      disablePointerDismissal
     >
-      {children}
-    </Dialog>
+      <DialogPortal>
+        <DialogBackdrop testID={testID ? `${testID}-scrim` : undefined} />
+        <DialogPopup
+          accessibilityLabel={accessibilityLabel}
+          testID={testID}
+          style={resolveStyle(style, state)}
+          render={render}
+          ref={ref}
+        >
+          {title != null ? <DialogTitle>{title}</DialogTitle> : null}
+          {children}
+          <View>{actions}</View>
+        </DialogPopup>
+      </DialogPortal>
+    </DialogRoot>
   );
 }

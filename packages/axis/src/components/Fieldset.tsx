@@ -6,6 +6,8 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { type RenderProp, resolveRender } from "../render";
+import type { SlotProps } from "../slot";
 
 /**
  * Fieldset — an unstyled group of related fields with a legend.
@@ -26,6 +28,13 @@ export type FieldsetProps = {
   style?: StyleProp<ViewStyle>;
   /** Legend text style, caller-provided. */
   legendStyle?: StyleProp<TextStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`. The group carries no state, so the
+   * function form receives an empty state object.
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -61,8 +70,9 @@ export function Fieldset({
   testID,
   style,
   legendStyle,
+  render,
   ref,
-}: FieldsetProps): React.JSX.Element {
+}: FieldsetProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -72,6 +82,20 @@ export function Fieldset({
     },
     [ref],
   );
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style,
+      legend,
+      legendStyle,
+      children,
+      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
 
   return (
     <View ref={setHostRef} testID={testID} style={style}>

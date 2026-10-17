@@ -1,5 +1,8 @@
 import { type ElementRef, type Ref, useCallback } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import type { StateStyle } from "../render";
+import { type RenderProp, resolveRender, resolveStyle } from "../render";
+import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
@@ -12,6 +15,13 @@ import { useControllableState } from "../useControllableState";
  * `useControllableState` pattern: `checked` (+ `onCheckedChange`) for
  * controlled use, `defaultChecked` for uncontrolled.
  */
+
+export type CheckboxState = {
+  /** Whether the checkbox is currently checked. */
+  checked: boolean;
+  /** Whether the checkbox is currently disabled. */
+  disabled: boolean;
+};
 
 export type CheckboxProps = {
   /** Controlled state. Wins over `defaultChecked` when defined. */
@@ -27,12 +37,18 @@ export type CheckboxProps = {
   /** Native labelled-by association where the platform supports it. */
   accessibilityLabelledBy?: string;
   testID?: string;
-  /** Root pressable style. */
-  style?: StyleProp<ViewStyle>;
+  /** Value or function of checkbox state, caller-provided. */
+  style?: StateStyle<CheckboxState, StyleProp<ViewStyle>>;
   /** Box container style. */
   boxStyle?: StyleProp<ViewStyle>;
   /** Check indicator style (rendered only when checked). */
   checkmarkStyle?: StyleProp<ViewStyle>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<CheckboxState, SlotProps>;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -66,8 +82,9 @@ export function Checkbox({
   style,
   boxStyle,
   checkmarkStyle,
+  render,
   ref,
-}: CheckboxProps): React.JSX.Element {
+}: CheckboxProps): React.ReactNode {
   const [isChecked, setChecked] = useControllableState<boolean>(
     checked,
     defaultChecked,
@@ -89,6 +106,24 @@ export function Checkbox({
     [ref],
   );
 
+  const state: CheckboxState = { checked: isChecked ?? false, disabled };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "checkbox",
+      accessibilityState: { checked: isChecked ?? false, disabled },
+      accessibilityLabel,
+      accessibilityLabelledBy,
+      testID,
+      disabled,
+      onPress: toggle,
+      style: resolveStyle(style, state),
+      ref: setHostRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
   return (
     <Pressable
       ref={setHostRef}
@@ -99,7 +134,7 @@ export function Checkbox({
       testID={testID}
       disabled={disabled}
       onPress={toggle}
-      style={style}
+      style={resolveStyle(style, state)}
     >
       <View style={boxStyle}>
         {isChecked ? (
