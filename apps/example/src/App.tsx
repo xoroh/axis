@@ -41,7 +41,10 @@ export function App(): React.JSX.Element {
             <Text>← {demo.title}</Text>
           </Pressable>
           <ScrollView contentContainerStyle={{ padding: 16 }}>
-            {demo.render()}
+            {(() => {
+              const DemoScreen = demo.render;
+              return <DemoScreen />;
+            })()}
           </ScrollView>
         </View>
       )}

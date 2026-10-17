@@ -6,8 +6,9 @@
   "main": "index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "check:demos": "node scripts/check-demo-coverage.mjs",
-    "start": "expo start"
+    "check:demos": "node scripts/check-demo-coverage.mjs && node scripts/check-web-bundle.mjs",
+    "start": "expo start",
+    "check:web": "node scripts/check-web-bundle.mjs"
   },
   "dependencies": {
     "@xoroh/axis": "workspace:*",
