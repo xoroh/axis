@@ -1,15 +1,10 @@
 import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
-import {
-  Modal,
-  Pressable,
-  type StyleProp,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 
 /**
  * Drawer — an unstyled edge-anchored panel.
@@ -19,26 +14,26 @@ import { useControllableState } from "../useControllableState";
  * index, and drag-to-snap make it genuinely different, not an
  * alias (owner Q5 decision).
  *
- * Structure only: an RN `Modal` (transparent) holding a scrim layer
- * with the drawer surface anchored to the leading (`side="left"`,
- * default) or trailing edge. No default visuals — every visual
- * value (`overlayStyle`, `surfaceStyle`) is caller-provided; width
- * especially is caller geometry. State follows the
- * `useControllableState` pattern (`open`/`defaultOpen`/
- * `onOpenChange`); presence is mount/unmount. When `dismissable`
- * (default `true`) the scrim is a `Pressable` labelled "Dismiss"
- * and scrim press closes via `onDismiss` + `onOpenChange(false)`
- * (the `Dialog` scrim precedent); when `false` the scrim is a plain
- * `View` with no label and no handler. `Modal.onRequestClose` is
- * always wired to the same dismiss path and no-ops when not
- * `dismissable`.
+ * Structure only: the `Overlay` root painting at the app's
+ * `PortalHost`, holding a scrim layer with the drawer surface
+ * anchored to the leading (`side="left"`, default) or trailing
+ * edge. No default visuals — every visual value (`overlayStyle`,
+ * `surfaceStyle`) is caller-provided; width especially is caller
+ * geometry. State follows the `useControllableState` pattern
+ * (`open`/`defaultOpen`/`onOpenChange`); presence is mount/unmount.
+ * When `dismissable` (default `true`) the scrim is a `Pressable`
+ * labelled "Dismiss" and scrim press closes via `onDismiss` +
+ * `onOpenChange(false)` (the `Dialog` scrim precedent); when `false`
+ * the scrim is a plain `View` with no label and no handler. Android
+ * system back is wired to the same dismiss path and no-ops when not
+ * `dismissable` (the `Overlay` root owns it).
  *
  * Deferred, each for a named reason (not oversight): no drag
  * gestures (the `Sheet` PanResponder pattern covers drag; a drawer
  * that needs edge-swipe says so in its section and composes it),
- * no animation (the `Dialog` precedent), no `BackHandler` beyond
- * `Modal.onRequestClose` (the `Dialog` precedent), no focus trap
- * (the `Dialog` precedent).
+ * no animation (the `Dialog` precedent), no focus trap beyond the
+ * overlay root's modal announcement and focus move/restore (the
+ * `focusTrap` RN adaptation, parity D5).
  *
  * Accessibility notes: the surface is an accessibility element
  * (`accessible`) so the `dialog` role reaches assistive tech. The
@@ -87,7 +82,7 @@ export type DrawerProps = {
   /**
    * Element or function substitution (Base UI parity) for the drawer
    * surface: an element is cloned with the surface props merged under
-   * its own; a function receives `(props, state)`. The `Modal` host
+   * its own; a function receives `(props, state)`. The overlay host
    * and scrim stay on the part.
    */
   render?: RenderProp<DrawerState, SlotProps>;
@@ -187,20 +182,35 @@ export function Drawer({
     );
 
   return (
-    <Modal transparent onRequestClose={dismissable ? dismiss : undefined}>
-      <View style={[{ flex: 1 }, overlayStyle]}>
-        {dismissable ? (
-          <Pressable
-            accessibilityLabel="Dismiss"
-            testID={testID === undefined ? undefined : `${testID}-scrim`}
-            onPress={dismiss}
-            style={{ flex: 1 }}
-          />
-        ) : (
-          <View style={{ flex: 1 }} />
-        )}
-        {surface}
-      </View>
-    </Modal>
+    <OverlayRoot
+      open={isOpen}
+      onOpenChange={setOpen}
+      onDismiss={dismiss}
+      modal
+      dismissable={dismissable}
+      dismiss={{
+        outsidePointer: dismissable,
+        systemBack: dismissable,
+        escape: dismissable,
+      }}
+    >
+      <OverlayPortal
+        testID={testID === undefined ? undefined : `${testID}-portal`}
+      >
+        <View style={[{ flex: 1 }, overlayStyle]}>
+          {dismissable ? (
+            <Pressable
+              accessibilityLabel="Dismiss"
+              testID={testID === undefined ? undefined : `${testID}-scrim`}
+              onPress={dismiss}
+              style={{ flex: 1 }}
+            />
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+          {surface}
+        </View>
+      </OverlayPortal>
+    </OverlayRoot>
   );
 }

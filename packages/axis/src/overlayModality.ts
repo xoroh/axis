@@ -138,3 +138,18 @@ export function useOverlayModality(
 
   return state;
 }
+
+export type OverlayModalityRegistry = ReturnType<typeof createOverlayModality>;
+
+let sharedOverlayModality: OverlayModalityRegistry | null = null;
+
+/**
+ * Shared overlay modality registry for global stacking, top-detection,
+ * and dismissal order across the application.
+ */
+export function getSharedOverlayModality(): OverlayModalityRegistry {
+  if (!sharedOverlayModality) {
+    sharedOverlayModality = createOverlayModality();
+  }
+  return sharedOverlayModality;
+}
