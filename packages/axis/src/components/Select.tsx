@@ -36,9 +36,6 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { useFloatingPlacement } from "./useFloatingPlacement";
-import type { SlotProps } from "../slot";
-import { useControllableState } from "../useControllableState";
-import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
  * Select — an unstyled single-select dropdown.

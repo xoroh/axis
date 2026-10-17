@@ -159,7 +159,7 @@ export function Tooltip({
   if (substituted !== null) return substituted;
 
   return (
-<View ref={setAnchorRef} style={resolveStyle(style, state)} testID={testID}>
+    <View ref={setAnchorRef} style={resolveStyle(style, state)} testID={testID}>
       <Pressable onLongPress={toggle} delayLongPress={delayLongPress}>
         {children}
       </Pressable>
