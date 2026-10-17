@@ -14,6 +14,7 @@ Delivered Base UI parity for Select, Combobox, Tooltip, and Menu filtering:
   - `Tooltip`: `TooltipProvider` (shared delay group), `TooltipRoot`, `TooltipTrigger` (`delayLongPress`), `TooltipPortal` (in-box host), `TooltipPositioner`, `TooltipPopup`, `TooltipArrow`.
   - `Menu`: filter parts `MenuInput`, `MenuClear`, `MenuEmpty` with `filterText` matching on menu items.
   - `Combobox`: updated to adopt shared `defaultCollectionMatch` from `collection`.
+- Fixed Select text node warning: raw strings and numbers in trigger placeholders and item children are now safely wrapped in `<Text>` so React Native / React Native Web never logs "Unexpected text node" warnings.
 - Merged cleanly with latest `origin/main` (incorporating `feat/axis-baseui-alignment` #53 with `render` prop composition, `ToastQueue`, and `PortalHost`).
 - Example app updated to cover all new parts; demo coverage gate held (130 components).
 - Changeset written (`.changeset/axis-parity-select-menu.md`).

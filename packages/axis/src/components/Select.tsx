@@ -265,6 +265,17 @@ function assignRef(
  * anything else (fragments, arrays, custom wrappers) is skipped, and
  * an unmatched value yields `undefined` (the placeholder shows).
  */
+/**
+ * Wrap raw strings or numbers in `<Text>` so React Native / React Native Web
+ * never emit an "Unexpected text node" warning when rendering into a `Pressable` host.
+ */
+function wrapText(node: ReactNode): ReactNode {
+  if (typeof node === "string" || typeof node === "number") {
+    return <Text>{node}</Text>;
+  }
+  return node;
+}
+
 function findItemLabel(
   children: ReactNode,
   value: string | null | undefined,
@@ -278,7 +289,7 @@ function findItemLabel(
       child.type === SelectItem &&
       child.props.value === value
     ) {
-      label = child.props.children;
+      label = child.props.label ?? child.props.children;
     }
   });
   return label;
@@ -419,7 +430,7 @@ export function Select({
         onPress={toggle}
         style={resolveStyle(style, state)}
       >
-        {selectedLabel ?? placeholder}
+        {wrapText(selectedLabel ?? placeholder)}
       </Pressable>
       {isOpen ? (
         <Pressable
@@ -532,7 +543,7 @@ export function SelectItem({
         disabled
         style={resolveStyle(style, inertState)}
       >
-        {children}
+        {wrapText(children)}
       </Pressable>
     );
   }
@@ -550,7 +561,7 @@ export function SelectItem({
       onPressOut={() => setHighlighted(false)}
       style={resolveStyle(style, state)}
     >
-      {children}
+      {wrapText(children)}
     </Pressable>
   );
 
@@ -1052,7 +1063,7 @@ export function SelectTrigger({
       onPress={toggleTrigger}
       style={resolveStyle(style, state)}
     >
-      {children}
+      {wrapText(children)}
     </Pressable>
   );
 }
