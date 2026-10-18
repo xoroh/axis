@@ -123,15 +123,62 @@ export function clampRectToViewport(
  * defaults to unbounded when the renderer has not measured one yet — the
  * preferred origin stands rather than clamping against a zero rect.
  */
-export function resolveFloatingRect(
+/**
+ * Determine the effective placement side for `anchor` and `size`,
+ * flipping to the opposite side if the preferred placement overflows
+ * `viewport` and the opposite side fits.
+ */
+export function resolveFloatingSide(
   anchor: Rect,
   size: { width: number; height: number },
   options?: PositioningOptions & {
     viewport?: { width: number; height: number };
     viewportPadding?: number;
   },
+): Placement {
+  const placement = options?.placement ?? "bottom";
+  if (!options?.viewport) return placement;
+  const pad = options.viewportPadding ?? 0;
+  const offset = options.offset ?? 0;
+  const viewport = options.viewport;
+
+  if (placement === "bottom") {
+    const bottomOverflow =
+      anchor.y + anchor.height + offset + size.height - (viewport.height - pad);
+    const topFits = anchor.y - offset - size.height >= pad;
+    if (bottomOverflow > 0 && topFits) return "top";
+  } else if (placement === "top") {
+    const topOverflow = pad - (anchor.y - offset - size.height);
+    const bottomFits =
+      anchor.y + anchor.height + offset + size.height <= viewport.height - pad;
+    if (topOverflow > 0 && bottomFits) return "bottom";
+  } else if (placement === "right") {
+    const rightOverflow =
+      anchor.x + anchor.width + offset + size.width - (viewport.width - pad);
+    const leftFits = anchor.x - offset - size.width >= pad;
+    if (rightOverflow > 0 && leftFits) return "left";
+  } else if (placement === "left") {
+    const leftOverflow = pad - (anchor.x - offset - size.width);
+    const rightFits =
+      anchor.x + anchor.width + offset + size.width <= viewport.width - pad;
+    if (leftOverflow > 0 && rightFits) return "right";
+  }
+  return placement;
+}
+
+export function resolveFloatingRect(
+  anchor: Rect,
+  size: { width: number; height: number },
+  options?: PositioningOptions & {
+    viewport?: { width: number; height: number };
+    viewportPadding?: number;
+    flip?: boolean;
+  },
 ): { x: number; y: number } {
-  const origin = resolveFloatingOrigin(anchor, size, options);
+  const placement = options?.flip
+    ? resolveFloatingSide(anchor, size, options)
+    : options?.placement;
+  const origin = resolveFloatingOrigin(anchor, size, { ...options, placement });
   if (!options?.viewport) return origin;
   return clampRectToViewport(
     origin,

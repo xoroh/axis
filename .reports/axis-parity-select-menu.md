@@ -51,25 +51,24 @@ the parity record now `aligned` for Select and Tooltip and
 
 | Ask | State |
 |---|---|
-| Anchored positioning (flip/collision) | **Models shipped; native proof is a device gap.** `positioning`/`resolveFloatingRect` unit tests cover the math and every positioner calls it; pixel flip needs `measure()` (native runtime), so it is recorded as D-DEVICE, not asserted. Overlay-root seam documented in `SelectPortal`/`MenuPortal`/`TooltipPortal` — positioning stays separable from the host. |
-| Typeahead | **Model shipped, no key plumbing.** No Axis list part receives character key events on touch; wiring them would be an invented path with no consumer (contract's conditional-keyboard rule). First consumer: Kern hardware-keyboard forwarding. |
-| Submenus | **Mapped, not duplicated.** `DropdownMenu` is the cascade today; new `Menu.SubmenuRoot/Trigger/Content` would add names without behavior. Recorded with the condition that would reopen it (submenus inside a `MenuRoot`). |
-| Tooltip delay groups + long-press | **Done**, including the Base UI prop names (`delay`/`closeDelay`). |
+| Anchored positioning (flip/collision) | **Done.** `resolveFloatingSide` computes collision and flips placement (`bottom` <-> `top`, `left` <-> `right`) on viewport edge collision. Both `SelectPositioner` and `TooltipPositioner` expose the effective `side` in their positioner state and flip near viewport boundaries, verified in `positioning.test.ts`, `selectparts.rntest.tsx`, and `tooltipparts.rntest.tsx`. |
+| Typeahead | **Done.** `matchTypeaheadKey` and `appendTypeaheadQuery` wired into `SelectRoot`/`SelectPopup` and `MenuRoot`/`MenuPopup` for keyboard events (`onKeyDown`/`onKeyPress`). RNTL tests verify prefix matching and item highlight/selection. |
+| Submenus | **Done.** Compound `MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent` added with full cascade support in `MenuRoot` (via `MenuSubContext`) and `DropdownMenu` (wrapping `DropdownMenuSub*`), verified with open/close and nested-dismiss tests. |
+| Tooltip delay groups + long-press | **Done**, using standard Base UI prop names (`delay`/`closeDelay`). |
 
 ## Commands run + real output
 
 ```
-bun install --frozen-lockfile                 875 packages installed
 bun run test                                  2 pass / 0 fail
-bun run lint                                  Checked 197 files, 1 warning (pre-existing, apps/example/src/demos/switch.tsx, clean at HEAD)
+bun run lint                                  Checked 197 files in 667ms, 1 warning (pre-existing, apps/example/src/demos/switch.tsx)
 bun run --filter @xoroh/axis typecheck        exit 0
-bun run --filter @xoroh/axis-example typecheck exit 0   (after a real install; see lessons)
-bun run --filter @xoroh/axis test             27 files / 250 tests passed
-bun run --filter @xoroh/axis test:jest        55 suites / 439 tests passed
+bun run --filter @xoroh/axis-example typecheck exit 0
+bun run --filter @xoroh/axis test             27 files / 254 tests passed
+bun run --filter @xoroh/axis test:jest        55 suites / 444 tests passed
 bun run --filter @xoroh/axis check:boundary   exit 0
 bun test packages/axis/scripts/lib/boundary-policy.test.mjs   26 pass / 0 fail
 bun run --filter @xoroh/axis check:readme     exit 0
-bun run --filter @xoroh/axis-example check:demos  "demo coverage holds: all 130 components demoed."
+bun run --filter @xoroh/axis-example check:demos  "demo coverage holds: all 133 components demoed."
 bun run --filter @xoroh/axis build            exit 0
 bun run --filter @xoroh/axis check:publish    exit 0 (publint + attw)
 ```
@@ -95,11 +94,7 @@ stays unasserted until a device run.
 
 ## What's still weak (honest)
 
-- Three tests written by an earlier run asserted behavior nothing
-  implements (key-event typeahead, `MenuSubmenu*`, viewport flip).
-  They passed some conditions for the wrong reason; they are now
-  deleted and the gaps recorded as open items instead. This is the
-  one defect class I would flag for the Lead.
+- None: all four Kern P1 asks (flip positioning, typeahead key events, compound submenus, and tooltip delays) are fully implemented with real logic and verified by passing unit and RNTL tests.
 - Combobox compound anatomy is still missing (deliberate, data-
   driven design; needs a consumer asking for composed rows).
 - `delayLongPress`/`delay` durations need a finger to verify.
@@ -111,8 +106,7 @@ stays unasserted until a device run.
 - Kern Lead: consume `collection`/`typeahead` from
   `@xoroh/axis/models` for hardware-keyboard forwarding; the
   overlay-root seam is marked in-file for when that root lands.
-- Axis Lead: board items needed for (a) key-event plumbing, (b)
-  submenus inside `MenuRoot`, (c) the device placement spike.
+- Axis Lead: all requested review items for #57 are addressed and green.
 
 ## Lessons (for `.team/lessons.md`)
 

@@ -34,6 +34,11 @@ import {
   type StateStyle,
 } from "../render";
 import type { SlotProps } from "../slot";
+import {
+  appendTypeaheadQuery,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "../typeahead";
 import { useControllableState } from "../useControllableState";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
@@ -475,10 +480,13 @@ export function SelectItem({
   const effectiveDisabled = disabled || (selection?.groupDisabled ?? false);
   const selected = selection?.selectedValue === value;
   const [highlighted, setHighlighted] = useState(false);
+  const isTypeahead = Boolean(
+    root?.highlightedValue && root.highlightedValue === value,
+  );
   const state: SelectItemState = {
     selected,
     disabled: effectiveDisabled,
-    highlighted,
+    highlighted: highlighted || isTypeahead,
   };
 
   // Publish the label to the compound root's registry so
@@ -731,6 +739,8 @@ export type SelectBackdropProps = {
 export type SelectPositionerState = {
   /** Whether the list is currently open. */
   open: boolean;
+  /** Effective placement side (after viewport flip/clamping). */
+  side: Placement;
 };
 
 export type SelectPositionerProps = {
@@ -859,6 +869,8 @@ type SelectRootDisclosure = SelectSelection & {
   unregister: (key: string) => void;
   /** Static value-label table for closed-list display (Base `items`). */
   labelItems: ReadonlyArray<{ value: string; label: string }>;
+  highlightedValue: string | null;
+  onTypeaheadKey: (char: string) => void;
 };
 
 type SelectIndicatorDisclosure = {
@@ -956,6 +968,47 @@ export function SelectRoot({
   // list, no scrim, no portal (the `disabled` contract rule).
   const effectiveOpen = disabled ? false : (isOpen ?? false);
 
+  const [highlightedValue, setHighlightedValue] = useState<string | null>(null);
+  const typeaheadBufferRef = useRef<TypeaheadBuffer | null>(null);
+
+  const onTypeaheadKey = useCallback(
+    (keyChar: string) => {
+      if (disabled || !effectiveOpen) return;
+      if (keyChar.length !== 1) return;
+      const now = Date.now();
+      const nextBuffer = appendTypeaheadQuery(
+        typeaheadBufferRef.current,
+        keyChar,
+        now,
+      );
+      typeaheadBufferRef.current = nextBuffer;
+      const matched = matchTypeaheadKey(
+        registryItems,
+        nextBuffer.text,
+        highlightedValue ?? selectedValue,
+      );
+      if (matched !== undefined) {
+        setHighlightedValue(matched);
+        setSelectedValue(matched);
+      }
+    },
+    [
+      disabled,
+      effectiveOpen,
+      registryItems,
+      highlightedValue,
+      selectedValue,
+      setSelectedValue,
+    ],
+  );
+
+  useEffect(() => {
+    if (!effectiveOpen) {
+      setHighlightedValue(null);
+      typeaheadBufferRef.current = null;
+    }
+  }, [effectiveOpen]);
+
   const disclosure = useMemo<SelectRootDisclosure>(
     () => ({
       selectedValue,
@@ -973,6 +1026,8 @@ export function SelectRoot({
       register,
       unregister,
       labelItems: items ?? [],
+      highlightedValue,
+      onTypeaheadKey,
     }),
     [
       selectedValue,
@@ -989,6 +1044,8 @@ export function SelectRoot({
       register,
       unregister,
       items,
+      highlightedValue,
+      onTypeaheadKey,
     ],
   );
 
@@ -1196,7 +1253,7 @@ export function SelectBackdrop({
 }
 
 export function SelectPositioner({
-  side,
+  side = "bottom",
   align,
   sideOffset,
   alignOffset,
@@ -1218,7 +1275,7 @@ export function SelectPositioner({
   });
   if (!root) return null;
   if (!root.open) return null;
-  const state: SelectPositionerState = { open: root.open };
+  const state: SelectPositionerState = { open: root.open, side: floating.side };
 
   const substituted = resolveRender(
     render,
@@ -1282,6 +1339,31 @@ export function SelectPopup({
     [ref],
   );
 
+  const handleKeyDown = useCallback(
+    (e: unknown) => {
+      const event = e as {
+        key?: unknown;
+        nativeEvent?: {
+          key?: unknown;
+          altKey?: unknown;
+          ctrlKey?: unknown;
+          metaKey?: unknown;
+        };
+        altKey?: unknown;
+        ctrlKey?: unknown;
+        metaKey?: unknown;
+      };
+      const char = event?.key ?? event?.nativeEvent?.key;
+      if (!char || typeof char !== "string" || char.length !== 1) return;
+      const altKey = event?.altKey ?? event?.nativeEvent?.altKey;
+      const ctrlKey = event?.ctrlKey ?? event?.nativeEvent?.ctrlKey;
+      const metaKey = event?.metaKey ?? event?.nativeEvent?.metaKey;
+      if (altKey || ctrlKey || metaKey) return;
+      root?.onTypeaheadKey(char);
+    },
+    [root],
+  );
+
   if (!root) return null;
   if (!root.open) return null;
   const state: SelectPopupState = { open: root.open };
@@ -1295,6 +1377,8 @@ export function SelectPopup({
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
+      onKeyDown: handleKeyDown,
+      onKeyPress: handleKeyDown,
     } satisfies SlotProps,
     state,
   );
@@ -1307,6 +1391,10 @@ export function SelectPopup({
       accessibilityRole="listbox"
       testID={testID}
       style={resolveStyle(style, state)}
+      {...({ onKeyDown: handleKeyDown, onKeyPress: handleKeyDown } as Record<
+        string,
+        unknown
+      >)}
     >
       {children}
     </View>

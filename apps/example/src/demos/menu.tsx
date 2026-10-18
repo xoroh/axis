@@ -19,6 +19,9 @@ import {
   MenuRadioItemIndicator,
   MenuRoot,
   MenuSeparator,
+  MenuSubmenuContent,
+  MenuSubmenuRoot,
+  MenuSubmenuTrigger,
   MenuTrigger,
 } from "@xoroh/axis";
 import { Text, View } from "react-native";
@@ -52,6 +55,9 @@ export const MenuDemo: Demo = {
     "MenuRadioItemIndicator",
     "MenuRoot",
     "MenuSeparator",
+    "MenuSubmenuContent",
+    "MenuSubmenuRoot",
+    "MenuSubmenuTrigger",
     "MenuTrigger",
   ],
   render: function MenuScreen() {
@@ -77,6 +83,16 @@ export const MenuDemo: Demo = {
                   </MenuLinkItem>
                 </MenuGroup>
                 <MenuSeparator />
+                <MenuSubmenuRoot value="more">
+                  <MenuSubmenuTrigger accessibilityLabel="More options">
+                    <Text>More</Text>
+                  </MenuSubmenuTrigger>
+                  <MenuSubmenuContent>
+                    <MenuItem value="share">
+                      <Text>Share</Text>
+                    </MenuItem>
+                  </MenuSubmenuContent>
+                </MenuSubmenuRoot>
                 <MenuCheckboxItem defaultChecked={false}>
                   <MenuCheckboxItemIndicator>
                     <Text>✓</Text>

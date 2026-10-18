@@ -1,3 +1,10 @@
+function wrapText(node: ReactNode): ReactNode {
+  if (typeof node === "string" || typeof node === "number") {
+    return <Text>{node}</Text>;
+  }
+  return node;
+}
+
 import {
   Children,
   cloneElement,
@@ -38,7 +45,18 @@ import {
   type StateStyle,
 } from "../render";
 import type { SlotProps } from "../slot";
+import {
+  appendTypeaheadQuery,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "../typeahead";
 import { useControllableState } from "../useControllableState";
+import {
+  DropdownDisclosureContext,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "./DropdownMenu";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -220,6 +238,8 @@ type MenuDisclosure = {
    * `MenuRoot`).
    */
   filter: MenuFilter | null;
+  highlightedKey: string | null;
+  onTypeaheadKey: (char: string) => void;
 };
 
 /**
@@ -253,8 +273,10 @@ function isFilterVisible(query: string, text: string): boolean {
 function useMenuFilterItem(
   filter: MenuFilter | null,
   text: string | undefined,
-): boolean {
-  const key = useId();
+  itemKey?: string,
+): { visible: boolean; key: string } {
+  const generatedId = useId();
+  const key = itemKey || generatedId;
   const resolved = text ?? "";
   // Deps are the stable registry callbacks — never the `filter`
   // object, whose identity changes on every keystroke and would
@@ -267,8 +289,8 @@ function useMenuFilterItem(
     register({ key, text: resolved });
     return () => unregister(key);
   }, [register, unregister, key, resolved]);
-  if (!filter) return true;
-  return isFilterVisible(filter.query, resolved);
+  if (!filter) return { visible: true, key };
+  return { visible: isFilterVisible(filter.query, resolved), key };
 }
 
 /**
@@ -291,6 +313,20 @@ function menuItemFilterText(
  * renders inert, like `AccordionItem` outside its group.
  */
 const MenuDisclosureContext = createContext<MenuDisclosure | null>(null);
+type MenuSubIdentity = {
+  value: string;
+  depth: number;
+};
+
+type MenuSubContextValue = {
+  openPath: string[];
+  openSub: (value: string, depth: number) => void;
+  closeSub: (depth: number) => void;
+  subDepth: number;
+  sub: MenuSubIdentity | null;
+};
+
+const MenuSubContext = createContext<MenuSubContextValue | null>(null);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -451,11 +487,20 @@ export function MenuItem({
 }: MenuItemProps): React.ReactNode {
   const { disclosure, highlighted, setHighlighted, selectItem } =
     useMenuItemActivation({ disabled, value, onSelect, onClick, closeOnClick });
-  const filterVisible = useMenuFilterItem(
+  const { visible: filterVisible, key: itemKey } = useMenuFilterItem(
     disclosure?.filter ?? null,
     menuItemFilterText(filterText, children),
+    value,
   );
-  const state: MenuItemState = { disabled, highlighted };
+  const isTypeahead = Boolean(
+    disclosure?.highlightedKey &&
+      (disclosure.highlightedKey === itemKey ||
+        (value !== undefined && disclosure.highlightedKey === value)),
+  );
+  const state: MenuItemState = {
+    disabled,
+    highlighted: highlighted || isTypeahead,
+  };
 
   // Outside a Menu there is no disclosure to close: render inert
   // (announced disabled, press is a no-op) rather than dropping the
@@ -608,6 +653,8 @@ function MenuInlineRoot({
       // composition point: filter parts render nothing here
       // (compound `MenuRoot` owns filtering).
       filter: null,
+      highlightedKey: null,
+      onTypeaheadKey: () => {},
     }),
     [isOpen, toggle, close, dismiss, ignoreAnchorRef],
   );
@@ -778,6 +825,8 @@ export type MenuBackdropProps = {
 export type MenuPositionerState = {
   /** Whether the menu is currently open. */
   open: boolean;
+  /** Effective placement side (after viewport flip/clamping). */
+  side: Placement;
 };
 
 export type MenuPositionerProps = {
@@ -937,6 +986,60 @@ export function MenuRoot({
     ],
   );
 
+  const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
+  const typeaheadBufferRef = useRef<TypeaheadBuffer | null>(null);
+
+  const onTypeaheadKey = useCallback(
+    (keyChar: string) => {
+      if (!isOpen) return;
+      if (keyChar.length !== 1) return;
+      const now = Date.now();
+      const nextBuffer = appendTypeaheadQuery(
+        typeaheadBufferRef.current,
+        keyChar,
+        now,
+      );
+      typeaheadBufferRef.current = nextBuffer;
+      const matched = matchTypeaheadKey(
+        filterItems,
+        nextBuffer.text,
+        highlightedKey,
+      );
+      if (matched !== undefined) {
+        setHighlightedKey(matched);
+      }
+    },
+    [isOpen, filterItems, highlightedKey],
+  );
+
+  const [openPath, setOpenPath] = useState<string[]>([]);
+  const openSub = useCallback((val: string, depth: number) => {
+    if (depth < 0) return;
+    setOpenPath((previous) => [...previous.slice(0, depth), val]);
+  }, []);
+  const closeSub = useCallback((depth: number) => {
+    setOpenPath((previous) => previous.slice(0, depth));
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setHighlightedKey(null);
+      typeaheadBufferRef.current = null;
+      setOpenPath([]);
+    }
+  }, [isOpen]);
+
+  const menuSubValue = useMemo<MenuSubContextValue>(
+    () => ({
+      openPath,
+      openSub,
+      closeSub,
+      subDepth: 0,
+      sub: null,
+    }),
+    [openPath, openSub, closeSub],
+  );
+
   const disclosure = useMemo<MenuDisclosure>(
     () => ({
       open: isOpen ?? false,
@@ -948,6 +1051,8 @@ export function MenuRoot({
       anchorHostRef,
       setAnchorRef,
       filter,
+      highlightedKey,
+      onTypeaheadKey,
     }),
     [
       isOpen,
@@ -958,13 +1063,17 @@ export function MenuRoot({
       modal,
       setAnchorRef,
       filter,
+      highlightedKey,
+      onTypeaheadKey,
     ],
   );
 
   // The root owns state, never layout: no host element (Base UI parity).
   return (
     <MenuDisclosureContext.Provider value={disclosure}>
-      {children}
+      <MenuSubContext.Provider value={menuSubValue}>
+        {children}
+      </MenuSubContext.Provider>
     </MenuDisclosureContext.Provider>
   );
 }
@@ -1052,7 +1161,7 @@ export function MenuBackdrop({
 }
 
 export function MenuPositioner({
-  side,
+  side = "bottom",
   align,
   sideOffset,
   alignOffset,
@@ -1074,7 +1183,10 @@ export function MenuPositioner({
   });
   if (!disclosure) return null;
   if (!disclosure.open) return null;
-  const state: MenuPositionerState = { open: disclosure.open };
+  const state: MenuPositionerState = {
+    open: disclosure.open,
+    side: floating.side,
+  };
 
   const substituted = resolveRender(
     render,
@@ -1115,6 +1227,31 @@ export function MenuPopup({
     [ref],
   );
 
+  const handleKeyDown = useCallback(
+    (e: unknown) => {
+      const event = e as {
+        key?: unknown;
+        nativeEvent?: {
+          key?: unknown;
+          altKey?: unknown;
+          ctrlKey?: unknown;
+          metaKey?: unknown;
+        };
+        altKey?: unknown;
+        ctrlKey?: unknown;
+        metaKey?: unknown;
+      };
+      const char = event?.key ?? event?.nativeEvent?.key;
+      if (!char || typeof char !== "string" || char.length !== 1) return;
+      const altKey = event?.altKey ?? event?.nativeEvent?.altKey;
+      const ctrlKey = event?.ctrlKey ?? event?.nativeEvent?.ctrlKey;
+      const metaKey = event?.metaKey ?? event?.nativeEvent?.metaKey;
+      if (altKey || ctrlKey || metaKey) return;
+      disclosure?.onTypeaheadKey(char);
+    },
+    [disclosure],
+  );
+
   if (!disclosure) return null;
   if (!disclosure.open) return null;
   const state: MenuPopupState = { open: disclosure.open };
@@ -1128,6 +1265,8 @@ export function MenuPopup({
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
+      onKeyDown: handleKeyDown,
+      onKeyPress: handleKeyDown,
     } satisfies SlotProps,
     state,
   );
@@ -1140,6 +1279,10 @@ export function MenuPopup({
       role="menu"
       testID={testID}
       style={resolveStyle(style, state)}
+      {...({ onKeyDown: handleKeyDown, onKeyPress: handleKeyDown } as Record<
+        string,
+        unknown
+      >)}
     >
       {children}
     </View>
@@ -1296,11 +1439,20 @@ export function MenuLinkItem({
 }: MenuLinkItemProps): React.ReactNode {
   const { disclosure, highlighted, setHighlighted, selectItem } =
     useMenuItemActivation({ disabled, value, onSelect, onClick, closeOnClick });
-  const filterVisible = useMenuFilterItem(
+  const { visible: filterVisible, key: itemKey } = useMenuFilterItem(
     disclosure?.filter ?? null,
     menuItemFilterText(filterText, children),
+    value,
   );
-  const state: MenuItemState = { disabled, highlighted };
+  const isTypeahead = Boolean(
+    disclosure?.highlightedKey &&
+      (disclosure.highlightedKey === itemKey ||
+        (value !== undefined && disclosure.highlightedKey === value)),
+  );
+  const state: MenuItemState = {
+    disabled,
+    highlighted: highlighted || isTypeahead,
+  };
 
   // Outside a Menu there is no disclosure to close: render inert
   // rather than dropping the node silently (the `MenuItem`
@@ -1543,7 +1695,7 @@ export function MenuCheckboxItem({
   render,
 }: MenuCheckboxItemProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
-  const filterVisible = useMenuFilterItem(
+  const { visible: filterVisible } = useMenuFilterItem(
     disclosure?.filter ?? null,
     menuItemFilterText(filterText, children),
   );
@@ -1732,7 +1884,7 @@ export function MenuRadioItem({
 }: MenuRadioItemProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
   const group = useContext(MenuRadioGroupContext);
-  const filterVisible = useMenuFilterItem(
+  const { visible: filterVisible } = useMenuFilterItem(
     disclosure?.filter ?? null,
     menuItemFilterText(filterText, children),
   );
@@ -2054,6 +2206,186 @@ export function MenuEmpty({
   if (substituted !== null) return substituted;
   return (
     <View testID={testID} style={style}>
+      {children}
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Submenu parts (Base UI Menu.SubmenuRoot / SubmenuTrigger parity)   */
+/* ------------------------------------------------------------------ */
+
+export type MenuSubmenuRootProps = {
+  /** Value identifying this submenu branch in the cascade. */
+  value: string;
+  /** Submenu content (`MenuSubmenuTrigger` and popup/panel parts). */
+  children: ReactNode;
+};
+
+/**
+ * MenuSubmenuRoot — a nested menu branch (Base UI Menu.SubmenuRoot parity).
+ *
+ * Mapped to the unified cascade model (`DropdownMenuSub` precedent):
+ * manages nested disclosure and auto-registers its depth in the active
+ * path. Re-exports/wraps `DropdownMenuSub` to provide the compound
+ * naming callers expect without duplicating state machines.
+ */
+export function MenuSubmenuRoot({
+  value,
+  children,
+}: MenuSubmenuRootProps): React.JSX.Element | null {
+  const dropdownDisclosure = useContext(DropdownDisclosureContext);
+  const menuSub = useContext(MenuSubContext);
+
+  if (dropdownDisclosure) {
+    return <DropdownMenuSub value={value}>{children}</DropdownMenuSub>;
+  }
+  if (!menuSub) return null;
+  const depth = menuSub.subDepth;
+  const sub: MenuSubIdentity = { value, depth };
+  return (
+    <MenuSubContext.Provider value={{ ...menuSub, sub, subDepth: depth + 1 }}>
+      {children}
+    </MenuSubContext.Provider>
+  );
+}
+
+export type MenuSubmenuTriggerProps = {
+  testID?: string;
+  style?: StateStyle<
+    { open: boolean; disabled: boolean },
+    StyleProp<ViewStyle>
+  >;
+  children?: ReactNode;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+  render?: RenderProp<{ open: boolean; disabled: boolean }, SlotProps>;
+};
+
+/**
+ * MenuSubmenuTrigger — opens an enclosing `MenuSubmenuRoot` on press
+ * (Base UI Menu.SubmenuTrigger parity).
+ */
+export function MenuSubmenuTrigger({
+  testID,
+  style,
+  children,
+  disabled = false,
+  accessibilityLabel,
+  render,
+}: MenuSubmenuTriggerProps): React.ReactNode {
+  const dropdownDisclosure = useContext(DropdownDisclosureContext);
+  const menuSub = useContext(MenuSubContext);
+  const identity = menuSub?.sub ?? null;
+  const expanded =
+    identity !== null && menuSub?.openPath[identity.depth] === identity.value;
+
+  const toggleSub = useCallback(() => {
+    if (disabled || identity === null) return;
+    if (expanded) {
+      menuSub?.closeSub(identity.depth);
+    } else {
+      menuSub?.openSub(identity.value, identity.depth);
+    }
+  }, [disabled, identity, expanded, menuSub]);
+
+  if (dropdownDisclosure) {
+    return (
+      <DropdownMenuSubTrigger
+        testID={testID}
+        style={
+          style as
+            | StyleProp<ViewStyle>
+            | ((state: { open: boolean }) => StyleProp<ViewStyle>)
+        }
+        disabled={disabled}
+        accessibilityLabel={accessibilityLabel}
+        render={render as RenderProp<{ open: boolean }, SlotProps>}
+      >
+        {children}
+      </DropdownMenuSubTrigger>
+    );
+  }
+
+  const inert = identity === null;
+  const state = { open: expanded, disabled: disabled || inert };
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded, disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: toggleSub,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ expanded, disabled: disabled || inert }}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      disabled={disabled || inert}
+      onPress={toggleSub}
+      style={resolveStyle(style, state)}
+    >
+      {wrapText(children)}
+    </Pressable>
+  );
+}
+
+export type MenuSubmenuContentProps = {
+  testID?: string;
+  style?: StyleProp<ViewStyle>;
+  children?: ReactNode;
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+/**
+ * MenuSubmenuContent — content panel rendered only while its enclosing
+ * `MenuSubmenuRoot` is active.
+ */
+export function MenuSubmenuContent({
+  testID,
+  style,
+  children,
+  render,
+}: MenuSubmenuContentProps): React.ReactNode {
+  const dropdownDisclosure = useContext(DropdownDisclosureContext);
+  const menuSub = useContext(MenuSubContext);
+
+  if (dropdownDisclosure) {
+    return (
+      <DropdownMenuSubContent testID={testID} style={style} render={render}>
+        {children}
+      </DropdownMenuSubContent>
+    );
+  }
+  const identity = menuSub?.sub ?? null;
+  if (!menuSub || identity === null) return null;
+  if (menuSub.openPath[identity.depth] !== identity.value) return null;
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "menu",
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <View accessible role="menu" testID={testID} style={style}>
       {children}
     </View>
   );

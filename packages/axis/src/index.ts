@@ -245,6 +245,12 @@ export {
   type MenuRootState,
   MenuSeparator,
   type MenuSeparatorProps,
+  MenuSubmenuContent,
+  type MenuSubmenuContentProps,
+  MenuSubmenuRoot,
+  type MenuSubmenuRootProps,
+  MenuSubmenuTrigger,
+  type MenuSubmenuTriggerProps,
   MenuTrigger,
   type MenuTriggerProps,
   type MenuTriggerState,
@@ -515,6 +521,7 @@ export {
   type PositioningOptions,
   type Rect,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "./positioning";
 export {
   createPresenceModel,

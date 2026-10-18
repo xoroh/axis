@@ -5,6 +5,7 @@ import {
   type Placement,
   type Rect,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "../positioning";
 
 /**
@@ -54,8 +55,16 @@ export function useFloatingPlacement(options: {
   onContentLayout: (event: ContentLayoutEvent) => void;
   style: ViewStyle;
   measured: boolean;
+  side: Placement;
 } {
-  const { anchorRef, placement, offset, align, alignOffset, active } = options;
+  const {
+    anchorRef,
+    placement = "bottom",
+    offset,
+    align,
+    alignOffset,
+    active,
+  } = options;
   const viewport = useWindowDimensions();
   const [anchor, setAnchor] = useState<MeasuredRect | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
@@ -80,10 +89,18 @@ export function useFloatingPlacement(options: {
       onContentLayout,
       style: { position: "absolute", opacity: 0, left: 0, top: 0 },
       measured: false,
+      side: placement,
     };
   }
-  const at = resolveFloatingRect(anchor, size, {
+  const effectiveSide = resolveFloatingSide(anchor, size, {
     placement,
+    offset,
+    align,
+    alignOffset,
+    viewport,
+  });
+  const at = resolveFloatingRect(anchor, size, {
+    placement: effectiveSide,
     offset,
     align,
     alignOffset,
@@ -93,5 +110,6 @@ export function useFloatingPlacement(options: {
     onContentLayout,
     style: { position: "absolute", left: at.x, top: at.y },
     measured: true,
+    side: effectiveSide,
   };
 }

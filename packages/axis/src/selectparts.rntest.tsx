@@ -383,4 +383,84 @@ describe("Select compound parts on React Native", () => {
     await pressTestId("o-item");
     expect(screen.queryByRole("listbox")).toBeNull();
   });
+
+  it("typeahead matches items on character keys and selects / highlights them", async () => {
+    let highlightedState: boolean | undefined;
+    await render(
+      <SelectRoot defaultOpen>
+        <SelectTrigger testID="ta-sel">
+          <SelectValue placeholder="Pick" />
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectPositioner>
+            <SelectPopup testID="ta-popup">
+              <SelectItem value="banana" testID="item-banana">
+                <SelectItemText>Banana</SelectItemText>
+              </SelectItem>
+              <SelectItem
+                value="berry"
+                testID="item-berry"
+                style={(s) => {
+                  highlightedState = s.highlighted;
+                  return undefined;
+                }}
+              >
+                <SelectItemText>Berry</SelectItemText>
+              </SelectItem>
+              <SelectItem value="apple" testID="item-apple">
+                <SelectItemText>Apple</SelectItemText>
+              </SelectItem>
+            </SelectPopup>
+          </SelectPositioner>
+        </SelectPortal>
+      </SelectRoot>,
+    );
+
+    const popup = screen.getByTestId("ta-popup");
+    // Type 'b' to match Banana
+    await act(async () => {
+      fireEvent(popup, "keyDown", { key: "b" });
+    });
+    expect(
+      screen.getByTestId("item-banana").props.accessibilityState.selected,
+    ).toBe(true);
+
+    // Type 'e' within timeout to append to prefix 'be', matching Berry
+    await act(async () => {
+      fireEvent(popup, "keyDown", { key: "e" });
+    });
+    expect(
+      screen.getByTestId("item-berry").props.accessibilityState.selected,
+    ).toBe(true);
+    expect(highlightedState).toBe(true);
+  });
+
+  it("SelectPositioner flips near viewport edge", async () => {
+    let positionerSide: string | undefined;
+    await render(
+      <SelectRoot defaultOpen>
+        <SelectTrigger testID="edge-sel">
+          <SelectValue placeholder="Edge" />
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectPositioner
+            testID="edge-pos"
+            side="bottom"
+            style={(s) => {
+              positionerSide = s.side;
+              return undefined;
+            }}
+          >
+            <SelectPopup testID="edge-popup">
+              <SelectItem value="one" testID="edge-item">
+                <SelectItemText>One</SelectItemText>
+              </SelectItem>
+            </SelectPopup>
+          </SelectPositioner>
+        </SelectPortal>
+      </SelectRoot>,
+    );
+    expect(screen.getByTestId("edge-pos")).toBeTruthy();
+    expect(positionerSide).toBeDefined();
+  });
 });

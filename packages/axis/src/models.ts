@@ -99,6 +99,7 @@ export {
   type PositioningOptions,
   type Rect,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "./positioning";
 export {
   createPresenceModel,

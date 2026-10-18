@@ -9,8 +9,7 @@ Popup menu: `Menu` (`open?`, `defaultOpen?`, `onOpenChange?`,
 `closeOnClick?` default `true`). Bare-element
 children in the trigger zone get toggle composed; scrim fills the
 menu container (no Modal/portal host — taps inside never dismiss).
-No submenus (see `DropdownMenu`), animation, or hover/keyboard nav
-(each deferred with rationale in-file). All props optional.
+Animation and hover nav deferred with rationale in-file. All props optional.
 
 Compound form (Base UI parity — same names, same state
 semantics): `MenuRoot` (`open?`/`defaultOpen?`/`onOpenChange?`/
@@ -26,9 +25,7 @@ the trigger), `MenuPopup` (content box, menu role), `MenuItem`
 sequence), `MenuArrow` (caller-positioned marker),
 `MenuCheckboxItem` (+`Indicator`; stays open by default),
 `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`; closes on
-select). Submenu cascade lives in `DropdownMenu` (same
-dismissal-stack pattern at root level — submenus compose there,
-not as `Menu` parts). Filtering (compound roots only — the
+select). Submenu cascade: `MenuSubmenuRoot` (`value`), `MenuSubmenuTrigger` (`disabled?`, `render`), `MenuSubmenuContent` (`render`) compose nested submenus inside `MenuRoot` (or wrap `DropdownMenuSub` within `DropdownMenu`), with automatic nested-dismiss behavior on item activation. Filtering (compound roots only — the
 monolith partitions children by type with no filter composition
 point): `MenuRoot` owns the query (`filterValue?`/
 `defaultFilterValue?`/`onFilterChange?`) with `MenuInput` (text

@@ -273,6 +273,8 @@ export type TooltipPortalProps = {
 export type TooltipPositionerState = {
   /** Whether the tip is currently showing. */
   open: boolean;
+  /** Effective placement side (after viewport flip/clamping). */
+  side: Placement;
 };
 
 export type TooltipPositionerProps = {
@@ -568,7 +570,10 @@ export function TooltipPositioner({
   });
   if (!root) return null;
   if (!root.open) return null;
-  const state: TooltipPositionerState = { open: root.open };
+  const state: TooltipPositionerState = {
+    open: root.open,
+    side: floating.side,
+  };
 
   const substituted = resolveRender(
     render,

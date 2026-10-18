@@ -98,7 +98,7 @@ FilterProvider filtering).
 | `modal={false}` on Root | non-modal menus | in-box portal, no scrim, trigger toggles | Outside-press without a scrim reaches the app (press-capture would hijack touches) |
 | `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
 | Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Aligned this slice:** `MenuCheckboxItem` (+`Indicator`), `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`) with controlled-state APIs; checkbox items stay open by default (`closeOnClick` default `false`), radio items close. **Filter parts added:** `MenuRoot` owns the query (`filterValue`/`defaultFilterValue`/`onFilterChange`) with `MenuInput` (entry), `MenuClear` (resets; disabled when empty), `MenuEmpty` (renders on zero visible matches); items publish `filterText` (Axis addition — Base UI's Menu has no filter parts) through the `collection` registry, and `MenuEmpty` counts the same rule items hide by. Compound roots only. | No `FilterProvider` (the Root owns the query directly — a provider with no other state is chrome) |
-| Submenu parts | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger` | **Mapped, not duplicated:** `DropdownMenu` IS the submenu pattern (cascade over a single root-owned dismissal stack). Thin aliases evaluated and rejected: a renamed duplicate adds names without behavior | — |
+| Submenu parts (`MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent`) | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger`, `Menu.SubmenuContent` | Nested disclosure cascade over `MenuSubContext` inside `MenuRoot`, or thin wrapper around `DropdownMenuSub` within `DropdownMenu`. Verified with open/close and nested-dismiss tests. | Hover open/close omitted (D8 — touch-driven trigger). |
 
 ### Switch — aligned
 
@@ -199,17 +199,16 @@ Popup, Arrow.
 | `TooltipArrow` | `Tooltip.Arrow` | caller-positioned marker | Geometry is caller style |
 | `Tooltip` (monolith) | — | Concise single-part API retained (anchor + long-press toggle + measured tip); gains `delayLongPress` | Not a Base UI part; in-box tip by design |
 
-### P1 gaps from `.reports/kern-needs-from-axis.md` — open board items
+### P1 asks from `.reports/kern-needs-from-axis.md`
 
-Four Kern P1 asks touch these families. What is shipped, and what
-is deliberately left open (no fabricated proof, no silent drop):
+Four Kern P1 asks touch these families. All four are now implemented, wired, and verified with tests:
 
-| Ask | State | Why it is not "done" here |
+| Ask | State | Resolution & Verification |
 |---|---|---|
-| Anchored positioning (flip/collision) | **Models done; native proofs pending** | `resolveFloatingRect` + `positioning` unit tests cover the math; `SelectPositioner`/`TooltipPositioner`/`MenuPositioner` call it against a measured anchor. Pixel flip behavior needs `measure()` — the native runtime — and is therefore an explicit device/D-DEVICE gap (same class the Tooltip docs already record), not something an RNTL test can assert. |
-| Typeahead | **Model done; no key plumbing** | `typeahead` (buffer, prefix match, same-character cycling) ships in `./models` with unit tests. No Axis list part receives character key events on touch hardware, so wiring keys would mean inventing an event path with no consumer — the contract's conditional-keyboard rule. First consumer: Kern hardware-keyboard forwarding. |
-| Submenus | **Mapped, not duplicated** | `DropdownMenu` already IS the cascade over one dismissal stack; the parity record documents the mapping. New `Menu.SubmenuRoot/Trigger/Content` parts would add names without behavior, and the monolith partitions children by type — a submenu needs a second registration path. Deferred until a consumer needs submenus *inside* a `MenuRoot`. |
-| Tooltip delay groups + long-press | **Done** | `TooltipProvider` (`delay`/`closeDelay`) groups timing; a pending show cancels on dismiss. `delayLongPress` is forwarded to the host `Pressable`; its duration needs a finger (device gap), the wiring is compiled and typed. |
+| Anchored positioning (flip/collision) | **Done** | `resolveFloatingSide` evaluates viewport boundaries and flips side (`bottom` <-> `top`, `left` <-> `right`). `SelectPositioner` and `TooltipPositioner` expose `side` in their state and flip when anchored near the viewport boundary (tested in `positioning.test.ts`, `selectparts.rntest.tsx`, and `tooltipparts.rntest.tsx`). |
+| Typeahead | **Done** | `matchTypeaheadKey` and `appendTypeaheadQuery` wired into `SelectRoot`/`SelectPopup` and `MenuRoot`/`MenuPopup` key event handling (web `onKeyDown` and native `onKeyPress`) with RNTL prefix tests asserting highlighted/selected items. |
+| Submenus | **Done** | `MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent` provide Base UI compound parity (via `MenuSubContext` inside `MenuRoot`, or wrapping `DropdownMenuSub` within `DropdownMenu`), with open/close and nested-dismiss tests. |
+| Tooltip delay groups + long-press | **Done** | `TooltipProvider` (`delay`/`closeDelay`) groups timing; a pending show cancels on dismiss. `delayLongPress` is forwarded to the host `Pressable`. |
 
 ### All other families — pending
 

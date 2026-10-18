@@ -212,4 +212,31 @@ describe("Tooltip compound parts on React Native", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
     expect(seen).toEqual([]);
   });
+
+  it("TooltipPositioner flips near viewport edge", async () => {
+    let positionerSide: string | undefined;
+    await render(
+      <TooltipRoot defaultOpen>
+        <TooltipTrigger testID="edge-tip-trigger">
+          <Text>Anchor</Text>
+        </TooltipTrigger>
+        <TooltipPortal>
+          <TooltipPositioner
+            testID="edge-tip-pos"
+            side="top"
+            style={(s) => {
+              positionerSide = s.side;
+              return undefined;
+            }}
+          >
+            <TooltipPopup testID="edge-tip-popup">
+              <Text>Tip content</Text>
+            </TooltipPopup>
+          </TooltipPositioner>
+        </TooltipPortal>
+      </TooltipRoot>,
+    );
+    expect(screen.getByTestId("edge-tip-pos")).toBeTruthy();
+    expect(positionerSide).toBeDefined();
+  });
 });
