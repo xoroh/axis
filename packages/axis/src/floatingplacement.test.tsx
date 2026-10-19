@@ -9,8 +9,13 @@ import {
   type MeasurableRef,
   useFloatingPlacement,
 } from "./components/useFloatingPlacement";
-import { Tooltip } from "./index";
+import { PortalHost, Tooltip } from "./index";
 import type { Placement } from "./positioning";
+
+// The mocked `react-native` below does not install the `__DEV__`
+// global the real runtime guarantees (Metro and the jest preset both
+// define it); the Portal contract reads it, so the suite provides it.
+(globalThis as { __DEV__?: boolean }).__DEV__ = true;
 
 /**
  * Placement resolving through the hook with an injectable anchor node.
@@ -168,9 +173,11 @@ describe("Tooltip monolith placement default", () => {
     let root: ReturnType<typeof create> | undefined;
     act(() => {
       root = create(
-        <Tooltip open placement={placement} content="Hint">
-          Anchor
-        </Tooltip>,
+        <PortalHost>
+          <Tooltip open placement={placement} content="Hint">
+            Anchor
+          </Tooltip>
+        </PortalHost>,
         {
           createNodeMock: () => anchorNode,
         },

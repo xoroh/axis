@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
   Menubar,
   MenubarMenu,
+  PortalHost,
 } from "./index";
 
 /**
@@ -62,7 +63,11 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
 
 describe("Menubar on React Native", () => {
   it("renders the bar with triggers and no panels while closed", async () => {
-    await render(<Bar />);
+    await render(
+      <PortalHost>
+        <Bar />
+      </PortalHost>,
+    );
     expect(screen.getByRole("menubar")).toBeTruthy();
     expect(screen.getByLabelText("File trigger")).toBeTruthy();
     expect(screen.getByLabelText("Edit trigger")).toBeTruthy();
@@ -71,7 +76,11 @@ describe("Menubar on React Native", () => {
 
   it("opens one menu and reports its value", async () => {
     const seen: Array<string | null> = [];
-    await render(<Bar onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Bar onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("File trigger");
     expect(seen).toEqual(["file"]);
     expect(screen.getByTestId("file-menu")).toBeTruthy();
@@ -79,7 +88,11 @@ describe("Menubar on React Native", () => {
   });
 
   it("switches menus, keeping exactly one panel open", async () => {
-    await render(<Bar />);
+    await render(
+      <PortalHost>
+        <Bar />
+      </PortalHost>,
+    );
     await pressLabel("File trigger");
     expect(screen.getByTestId("file-menu")).toBeTruthy();
     await pressLabel("Edit trigger");
@@ -88,14 +101,22 @@ describe("Menubar on React Native", () => {
   });
 
   it("opens submenu cascades inside the open menu", async () => {
-    await render(<Bar />);
+    await render(
+      <PortalHost>
+        <Bar />
+      </PortalHost>,
+    );
     await pressLabel("File trigger");
     await pressLabel("Recent submenu");
     expect(screen.getByTestId("recent-panel")).toBeTruthy();
   });
 
   it("closes everything on leaf selection", async () => {
-    await render(<Bar />);
+    await render(
+      <PortalHost>
+        <Bar />
+      </PortalHost>,
+    );
     await pressLabel("File trigger");
     await act(async () => {
       fireEvent.press(screen.getByText("New"));
@@ -105,7 +126,11 @@ describe("Menubar on React Native", () => {
 
   it("dismisses through the scrim and reports closed", async () => {
     const seen: Array<string | null> = [];
-    await render(<Bar onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Bar onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("File trigger");
     await pressLabel("Dismiss menu");
     expect(seen).toEqual(["file", null]);
@@ -114,24 +139,26 @@ describe("Menubar on React Native", () => {
 
   it("follows a controlled open value", async () => {
     await render(
-      <Menubar testID="bar" openValue="edit">
-        <MenubarMenu value="file" testID="file-menu">
-          <DropdownMenuTrigger accessibilityLabel="File trigger">
-            <RNText>File</RNText>
-          </DropdownMenuTrigger>
-          <DropdownMenuItem value="new">
-            <RNText>New</RNText>
-          </DropdownMenuItem>
-        </MenubarMenu>
-        <MenubarMenu value="edit" testID="edit-menu">
-          <DropdownMenuTrigger accessibilityLabel="Edit trigger">
-            <RNText>Edit</RNText>
-          </DropdownMenuTrigger>
-          <DropdownMenuItem value="undo">
-            <RNText>Undo</RNText>
-          </DropdownMenuItem>
-        </MenubarMenu>
-      </Menubar>,
+      <PortalHost>
+        <Menubar testID="bar" openValue="edit">
+          <MenubarMenu value="file" testID="file-menu">
+            <DropdownMenuTrigger accessibilityLabel="File trigger">
+              <RNText>File</RNText>
+            </DropdownMenuTrigger>
+            <DropdownMenuItem value="new">
+              <RNText>New</RNText>
+            </DropdownMenuItem>
+          </MenubarMenu>
+          <MenubarMenu value="edit" testID="edit-menu">
+            <DropdownMenuTrigger accessibilityLabel="Edit trigger">
+              <RNText>Edit</RNText>
+            </DropdownMenuTrigger>
+            <DropdownMenuItem value="undo">
+              <RNText>Undo</RNText>
+            </DropdownMenuItem>
+          </MenubarMenu>
+        </Menubar>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("file-menu")).toBeNull();
     expect(screen.getByTestId("edit-menu")).toBeTruthy();
@@ -139,14 +166,16 @@ describe("Menubar on React Native", () => {
 
   it("renders nothing for menus outside a bar", async () => {
     await render(
-      <MenubarMenu value="orphan" testID="orphan">
-        <DropdownMenuTrigger accessibilityLabel="Orphan trigger">
-          <RNText>Orphan</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="x">
-          <RNText>X</RNText>
-        </DropdownMenuItem>
-      </MenubarMenu>,
+      <PortalHost>
+        <MenubarMenu value="orphan" testID="orphan">
+          <DropdownMenuTrigger accessibilityLabel="Orphan trigger">
+            <RNText>Orphan</RNText>
+          </DropdownMenuTrigger>
+          <DropdownMenuItem value="x">
+            <RNText>X</RNText>
+          </DropdownMenuItem>
+        </MenubarMenu>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Orphan trigger")).toBeNull();
     expect(screen.queryByTestId("orphan")).toBeNull();
@@ -155,16 +184,18 @@ describe("Menubar on React Native", () => {
   it("forwards a ref to the bar container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Menubar ref={ref}>
-        <MenubarMenu value="file">
-          <DropdownMenuTrigger accessibilityLabel="File trigger">
-            <RNText>File</RNText>
-          </DropdownMenuTrigger>
-          <DropdownMenuItem value="new">
-            <RNText>New</RNText>
-          </DropdownMenuItem>
-        </MenubarMenu>
-      </Menubar>,
+      <PortalHost>
+        <Menubar ref={ref}>
+          <MenubarMenu value="file">
+            <DropdownMenuTrigger accessibilityLabel="File trigger">
+              <RNText>File</RNText>
+            </DropdownMenuTrigger>
+            <DropdownMenuItem value="new">
+              <RNText>New</RNText>
+            </DropdownMenuItem>
+          </MenubarMenu>
+        </Menubar>
+      </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
   });

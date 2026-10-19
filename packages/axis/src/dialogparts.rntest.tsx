@@ -10,6 +10,7 @@ import {
   DialogRoot,
   DialogTitle,
   DialogTrigger,
+  PortalHost,
 } from "./index";
 
 /**
@@ -50,7 +51,11 @@ async function pressLabel(label: string) {
 
 describe("Dialog compound parts on React Native", () => {
   it("renders the trigger only while closed (root owns state, renders no element)", async () => {
-    await render(<Compound />);
+    await render(
+      <PortalHost>
+        <Compound />
+      </PortalHost>,
+    );
     expect(screen.getByLabelText("Open dialog")).toBeTruthy();
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByTestId("dlg-popup")).toBeNull();
@@ -58,7 +63,11 @@ describe("Dialog compound parts on React Native", () => {
 
   it("opens the popup with title, description, and close", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open dialog");
     expect(seen).toEqual([true]);
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -76,7 +85,11 @@ describe("Dialog compound parts on React Native", () => {
 
   it("closes through the close button", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open dialog");
     await pressLabel("Close dialog");
     expect(seen).toEqual([true, false]);
@@ -87,18 +100,20 @@ describe("Dialog compound parts on React Native", () => {
     const seen: boolean[] = [];
     const dismissed: boolean[] = [];
     await render(
-      <DialogRoot
-        onOpenChange={(v) => seen.push(v)}
-        onDismiss={() => dismissed.push(true)}
-      >
-        <DialogTrigger accessibilityLabel="Open dialog">
-          <RNText>Open</RNText>
-        </DialogTrigger>
-        <DialogPortal>
-          <DialogBackdrop testID="dlg-backdrop" />
-          <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot
+          onOpenChange={(v) => seen.push(v)}
+          onDismiss={() => dismissed.push(true)}
+        >
+          <DialogTrigger accessibilityLabel="Open dialog">
+            <RNText>Open</RNText>
+          </DialogTrigger>
+          <DialogPortal>
+            <DialogBackdrop testID="dlg-backdrop" />
+            <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     await pressLabel("Open dialog");
     await pressLabel("Dismiss");
@@ -109,12 +124,14 @@ describe("Dialog compound parts on React Native", () => {
 
   it("renders an inert backdrop when pointer dismissal is disabled", async () => {
     await render(
-      <DialogRoot defaultOpen disablePointerDismissal>
-        <DialogPortal>
-          <DialogBackdrop testID="dlg-backdrop" />
-          <DialogPopup accessibilityLabel="Example" />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot defaultOpen disablePointerDismissal>
+          <DialogPortal>
+            <DialogBackdrop testID="dlg-backdrop" />
+            <DialogPopup accessibilityLabel="Example" />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -123,9 +140,11 @@ describe("Dialog compound parts on React Native", () => {
 
   it("renders nothing outside a root, even with content", async () => {
     await render(
-      <DialogPortal testID="dlg-portal">
-        <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
-      </DialogPortal>,
+      <PortalHost>
+        <DialogPortal testID="dlg-portal">
+          <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+        </DialogPortal>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("dlg-portal")).toBeNull();
     expect(screen.queryByTestId("dlg-popup")).toBeNull();
@@ -134,19 +153,21 @@ describe("Dialog compound parts on React Native", () => {
   it("substitutes the trigger element via render element", async () => {
     const seen: boolean[] = [];
     await render(
-      <DialogRoot onOpenChange={(v) => seen.push(v)}>
-        <DialogTrigger
-          render={
-            <Pressable
-              testID="custom-trigger"
-              accessibilityLabel="Custom open"
-            />
-          }
-        />
-        <DialogPortal>
-          <DialogPopup accessibilityLabel="Example" />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot onOpenChange={(v) => seen.push(v)}>
+          <DialogTrigger
+            render={
+              <Pressable
+                testID="custom-trigger"
+                accessibilityLabel="Custom open"
+              />
+            }
+          />
+          <DialogPortal>
+            <DialogPopup accessibilityLabel="Example" />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     await pressLabel("Custom open");
     expect(seen).toEqual([true]);
@@ -156,32 +177,36 @@ describe("Dialog compound parts on React Native", () => {
   it("calls function render with (props, state)", async () => {
     const states: Array<{ open: boolean; disabled: boolean }> = [];
     await render(
-      <DialogRoot defaultOpen>
-        <DialogTrigger
-          render={(_props, state) => {
-            states.push(state);
-            return null;
-          }}
-        />
-        <DialogPortal>
-          <DialogPopup accessibilityLabel="Example" />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot defaultOpen>
+          <DialogTrigger
+            render={(_props, state) => {
+              states.push(state);
+              return null;
+            }}
+          />
+          <DialogPortal>
+            <DialogPopup accessibilityLabel="Example" />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(states).toEqual([{ open: true, disabled: false }]);
   });
 
   it("applies function styles with part state", async () => {
     await render(
-      <DialogRoot defaultOpen>
-        <DialogPortal>
-          <DialogPopup
-            testID="dlg-popup"
-            accessibilityLabel="Example"
-            style={(state) => ({ opacity: state.open ? 1 : 0 })}
-          />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot defaultOpen>
+          <DialogPortal>
+            <DialogPopup
+              testID="dlg-popup"
+              accessibilityLabel="Example"
+              style={(state) => ({ opacity: state.open ? 1 : 0 })}
+            />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     const flat: Record<string, unknown> = Object.assign(
       {},
@@ -195,20 +220,24 @@ describe("Dialog compound parts on React Native", () => {
 
   it("follows controlled open state", async () => {
     await render(
-      <DialogRoot open={false}>
-        <DialogPortal>
-          <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
-        </DialogPortal>
-      </DialogRoot>,
+      <PortalHost>
+        <DialogRoot open={false}>
+          <DialogPortal>
+            <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("dlg-popup")).toBeNull();
   });
 
   it("renders trigger inert outside a root", async () => {
     await render(
-      <DialogTrigger accessibilityLabel="Orphan" testID="orphan">
-        <RNText>Orphan</RNText>
-      </DialogTrigger>,
+      <PortalHost>
+        <DialogTrigger accessibilityLabel="Orphan" testID="orphan">
+          <RNText>Orphan</RNText>
+        </DialogTrigger>
+      </PortalHost>,
     );
     await pressLabel("Orphan");
     expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject(

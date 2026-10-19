@@ -12,6 +12,7 @@ import {
   PopoverRoot,
   PopoverTitle,
   PopoverTrigger,
+  PortalHost,
 } from "./index";
 
 /**
@@ -26,23 +27,25 @@ import {
 
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
   return (
-    <PopoverRoot onOpenChange={onOpen}>
-      <PopoverTrigger accessibilityLabel="Open popover">
-        <RNText>Open</RNText>
-      </PopoverTrigger>
-      <PopoverPortal>
-        <PopoverPositioner testID="popover-positioner">
-          <PopoverPopup testID="popover-popup" accessibilityLabel="Example">
-            <PopoverTitle>Example popover</PopoverTitle>
-            <PopoverDescription>A description</PopoverDescription>
-            <PopoverArrow testID="popover-arrow" />
-            <PopoverClose accessibilityLabel="Close popover">
-              <RNText>Close</RNText>
-            </PopoverClose>
-          </PopoverPopup>
-        </PopoverPositioner>
-      </PopoverPortal>
-    </PopoverRoot>
+    <PortalHost>
+      <PopoverRoot onOpenChange={onOpen}>
+        <PopoverTrigger accessibilityLabel="Open popover">
+          <RNText>Open</RNText>
+        </PopoverTrigger>
+        <PopoverPortal>
+          <PopoverPositioner testID="popover-positioner">
+            <PopoverPopup testID="popover-popup" accessibilityLabel="Example">
+              <PopoverTitle>Example popover</PopoverTitle>
+              <PopoverDescription>A description</PopoverDescription>
+              <PopoverArrow testID="popover-arrow" />
+              <PopoverClose accessibilityLabel="Close popover">
+                <RNText>Close</RNText>
+              </PopoverClose>
+            </PopoverPopup>
+          </PopoverPositioner>
+        </PopoverPortal>
+      </PopoverRoot>
+    </PortalHost>
   );
 }
 
@@ -54,14 +57,22 @@ async function pressLabel(label: string) {
 
 describe("Popover compound parts on React Native", () => {
   it("renders the trigger only while closed (root owns state, renders no element)", async () => {
-    await render(<Compound />);
+    await render(
+      <PortalHost>
+        <Compound />
+      </PortalHost>,
+    );
     expect(screen.getByLabelText("Open popover")).toBeTruthy();
     expect(screen.queryByTestId("popover-popup")).toBeNull();
   });
 
   it("opens the popup with title, description, arrow, and close", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open popover");
     expect(seen).toEqual([true]);
     expect(screen.getByTestId("popover-popup")).toBeTruthy();
@@ -75,7 +86,11 @@ describe("Popover compound parts on React Native", () => {
 
   it("toggles closed on trigger press (non-modal, no scrim)", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open popover");
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     await pressLabel("Open popover");
@@ -85,7 +100,11 @@ describe("Popover compound parts on React Native", () => {
 
   it("closes through the close button", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open popover");
     await pressLabel("Close popover");
     expect(seen).toEqual([true, false]);
@@ -95,40 +114,50 @@ describe("Popover compound parts on React Native", () => {
   it("dismisses through the scrim when modal", async () => {
     const order: string[] = [];
     await render(
-      <PopoverRoot
-        defaultOpen
-        modal
-        onDismiss={() => order.push("dismiss")}
-        onOpenChange={() => order.push("change")}
-      >
-        <PopoverPortal>
-          <PopoverBackdrop testID="popover-backdrop" />
-          <PopoverPositioner>
-            <PopoverPopup testID="popover-popup" accessibilityLabel="Example" />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot
+          defaultOpen
+          modal
+          onDismiss={() => order.push("dismiss")}
+          onOpenChange={() => order.push("change")}
+        >
+          <PopoverPortal>
+            <PopoverBackdrop testID="popover-backdrop" />
+            <PopoverPositioner>
+              <PopoverPopup
+                testID="popover-popup"
+                accessibilityLabel="Example"
+              />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
   });
 
   it("substitutes the trigger element via render element", async () => {
     const seen: boolean[] = [];
     await render(
-      <PopoverRoot onOpenChange={(v) => seen.push(v)}>
-        <PopoverTrigger
-          render={
-            <Pressable
-              testID="custom-trigger"
-              accessibilityLabel="Custom open"
-            />
-          }
-        />
-        <PopoverPortal>
-          <PopoverPositioner>
-            <PopoverPopup testID="popover-popup" accessibilityLabel="Example" />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot onOpenChange={(v) => seen.push(v)}>
+          <PopoverTrigger
+            render={
+              <Pressable
+                testID="custom-trigger"
+                accessibilityLabel="Custom open"
+              />
+            }
+          />
+          <PopoverPortal>
+            <PopoverPositioner>
+              <PopoverPopup
+                testID="popover-popup"
+                accessibilityLabel="Example"
+              />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     await pressLabel("Custom open");
     expect(seen).toEqual([true]);
@@ -138,36 +167,43 @@ describe("Popover compound parts on React Native", () => {
   it("calls function render with (props, state)", async () => {
     const states: Array<{ open: boolean; disabled: boolean }> = [];
     await render(
-      <PopoverRoot defaultOpen>
-        <PopoverTrigger
-          render={(_props, state) => {
-            states.push(state);
-            return null;
-          }}
-        />
-        <PopoverPortal>
-          <PopoverPositioner>
-            <PopoverPopup testID="popover-popup" accessibilityLabel="Example" />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot defaultOpen>
+          <PopoverTrigger
+            render={(_props, state) => {
+              states.push(state);
+              return null;
+            }}
+          />
+          <PopoverPortal>
+            <PopoverPositioner>
+              <PopoverPopup
+                testID="popover-popup"
+                accessibilityLabel="Example"
+              />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     expect(states).toEqual([{ open: true, disabled: false }]);
   });
 
   it("applies function styles with part state", async () => {
     await render(
-      <PopoverRoot defaultOpen>
-        <PopoverPortal>
-          <PopoverPositioner>
-            <PopoverPopup
-              testID="popover-popup"
-              accessibilityLabel="Example"
-              style={(state) => ({ opacity: state.open ? 1 : 0 })}
-            />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot defaultOpen>
+          <PopoverPortal>
+            <PopoverPositioner>
+              <PopoverPopup
+                testID="popover-popup"
+                accessibilityLabel="Example"
+                style={(state) => ({ opacity: state.open ? 1 : 0 })}
+              />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     const flat: Record<string, unknown> = Object.assign(
       {},
@@ -181,20 +217,25 @@ describe("Popover compound parts on React Native", () => {
 
   it("follows controlled open state", async () => {
     await render(
-      <PopoverRoot open={false}>
-        <PopoverPortal>
-          <PopoverPositioner>
-            <PopoverPopup testID="popover-popup" accessibilityLabel="Example" />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot open={false}>
+          <PopoverPortal>
+            <PopoverPositioner>
+              <PopoverPopup
+                testID="popover-popup"
+                accessibilityLabel="Example"
+              />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("popover-popup")).toBeNull();
   });
 
   it("renders parts inert outside a root", async () => {
     await render(
-      <>
+      <PortalHost>
         <PopoverTrigger
           accessibilityLabel="Orphan trigger"
           testID="orphan-trigger"
@@ -204,7 +245,7 @@ describe("Popover compound parts on React Native", () => {
         <PopoverClose accessibilityLabel="Orphan close" testID="orphan-close">
           <RNText>Orphan</RNText>
         </PopoverClose>
-      </>,
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("orphan-trigger").props.accessibilityState,
@@ -217,13 +258,15 @@ describe("Popover compound parts on React Native", () => {
   it("forwards a ref to the popup", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <PopoverRoot defaultOpen>
-        <PopoverPortal>
-          <PopoverPositioner>
-            <PopoverPopup testID="popover-popup" ref={ref} />
-          </PopoverPositioner>
-        </PopoverPortal>
-      </PopoverRoot>,
+      <PortalHost>
+        <PopoverRoot defaultOpen>
+          <PopoverPortal>
+            <PopoverPositioner>
+              <PopoverPopup testID="popover-popup" ref={ref} />
+            </PopoverPositioner>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
   });

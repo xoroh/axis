@@ -341,9 +341,17 @@ export function OverlayRoot({
   const dismissRef = useRef(dismiss);
   dismissRef.current = dismiss;
 
-  // Android system back button dismissal (topmost only)
+  // Android system back button dismissal (topmost only). Web has no
+  // system back button: React Native Web's `BackHandler` only logs
+  // "not supported on web", so the subscription is skipped there.
+  // No DOM lib, no DOM import: the check reads an optional
+  // `globalThis` shape, which the boundary gate and the compiler
+  // both accept as plain values.
+  const isWeb =
+    typeof (globalThis as { document?: unknown }).document !== "undefined";
   useEffect(() => {
     if (
+      isWeb ||
       !(isOpen ?? false) ||
       !shouldDismissOn("system-back", true, dismissBranches)
     ) {
@@ -357,7 +365,7 @@ export function OverlayRoot({
       return false;
     });
     return () => sub.remove();
-  }, [isOpen, dismissBranches]);
+  }, [isOpen, dismissBranches, isWeb]);
 
   // Scroll lock when modal and open
   useEffect(() => {

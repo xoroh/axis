@@ -40,6 +40,7 @@ import {
 } from "../typeahead";
 import { useControllableState } from "../useControllableState";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -65,7 +66,9 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * `measure()` + viewport + `resolveFloatingRect`); until measured it
  * stays transparent at origin rather than flashing somewhere wrong
  * (the Tooltip precedent). Unlike Dialog there is no `Modal`: the
- * scrim is an anchor-relative absolute fill layer behind the list.
+ * scrim and the list present through `Portal` at the app's
+ * `PortalHost` — above sibling content, never trapped in the
+ * anchor's box.
  *
  * Accessibility: the trigger carries `accessibilityRole="button"`
  * with `accessibilityState { expanded, disabled }`; the list is an
@@ -438,27 +441,31 @@ export function Select({
         {wrapText(selectedLabel ?? placeholder)}
       </Pressable>
       {isOpen ? (
-        <Pressable
-          accessibilityLabel="Dismiss"
-          testID={testID ? `${testID}-scrim` : undefined}
-          onPress={dismiss}
-          style={scrimFillStyle}
-        />
+        <Portal>
+          <Pressable
+            accessibilityLabel="Dismiss"
+            testID={testID ? `${testID}-scrim` : undefined}
+            onPress={dismiss}
+            style={scrimFillStyle}
+          />
+        </Portal>
       ) : null}
       {isOpen ? (
-        <View
-          // The list must be an accessibility element for its role to
-          // reach assistive technology (and the `*ByRole` proofs): a
-          // plain `View` is not one by default, unlike `Pressable`.
-          accessible
-          accessibilityRole="listbox"
-          onLayout={floating.onContentLayout}
-          style={[floating.style, listStyle]}
-        >
-          <SelectSelectionContext.Provider value={selection}>
-            {children}
-          </SelectSelectionContext.Provider>
-        </View>
+        <Portal>
+          <View
+            // The list must be an accessibility element for its role to
+            // reach assistive technology (and the `*ByRole` proofs): a
+            // plain `View` is not one by default, unlike `Pressable`.
+            accessible
+            accessibilityRole="listbox"
+            onLayout={floating.onContentLayout}
+            style={[floating.style, listStyle]}
+          >
+            <SelectSelectionContext.Provider value={selection}>
+              {children}
+            </SelectSelectionContext.Provider>
+          </View>
+        </Portal>
       ) : null}
     </View>
   );
@@ -586,8 +593,8 @@ export function SelectItem({
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* `<Select>` above is the concise inline API (trigger + in-box scrim  */
-/* + positioned list, labels read from its own children). The parts    */
+/* `<Select>` above is the concise inline API (trigger + scrim +      */
+/* positioned list at the app host; labels read from its children).   */
 /* below mirror Base UI's Select anatomy — Root (state owner, renders  */
 /* no element), Trigger, Value (label lookup over the item registry),  */
 /* Portal (the overlay host), Backdrop (the        */
@@ -611,9 +618,9 @@ export function SelectItem({
 /* (D8 — the press is the highlight), no animation states (D9), no     */
 /* hardware-keyboard typeahead (the registry exists for a section      */
 /* that adopts it; none has), and no `data-*` attributes (D1).        */
-/* Non-modal roots (`modal={false}`) render the portal in-box with     */
-/* no Backdrop; outside-press without a scrim is the documented        */
-/* `Menu` limitation.                                                  */
+/* Non-modal roots (`modal={false}`) present the portal through     */
+/* the plain `Portal` at the app host with no Backdrop; outside-press */
+/* without a scrim is the documented `Menu` limitation.              */
 /* ------------------------------------------------------------------ */
 
 export type SelectRootState = {
@@ -648,9 +655,9 @@ export type SelectRootProps = {
   onDismiss?: () => void;
   /**
    * Whether the open list presents modally (an overlay host with a
-   * scrim). Default `true`. When `false` the portal renders in-box
-   * with no scrim and the trigger stays pressable (the `Menu`
-   * compound precedent).
+   * scrim). Default `true`. When `false` the portal presents through
+   * the plain `Portal` at the app host with no scrim and the trigger
+   * stays pressable (the `Menu` compound precedent).
    */
   modal?: boolean;
   /**
@@ -1206,12 +1213,29 @@ export function SelectPortal({
   // (one root presents every layer: Android back, stacking, focus
   // and scroll lock belong to the `OverlayRoot` above — the `Menu`
   // compound precedent). `container` has no native meaning and is
-  // omitted by design. Non-modal roots render in-box with no scrim
-  // instead (the `Menu` compound precedent).
+  // omitted by design. Non-modal roots present through the plain
+  // `Portal` with no scrim instead (the `Menu` compound precedent).
+  //
+  // The root disclosure is re-provided inside the portal: portaled
+  // content renders at the host, outside this root's subtree, so
+  // without an explicit provider the parts below would read a null
+  // root.
   if (!root.modal) {
-    return <View testID={testID}>{children}</View>;
+    return (
+      <Portal>
+        <SelectRootContext.Provider value={root}>
+          <View testID={testID}>{children}</View>
+        </SelectRootContext.Provider>
+      </Portal>
+    );
   }
-  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
+  return (
+    <OverlayPortal testID={testID}>
+      <SelectRootContext.Provider value={root}>
+        {children}
+      </SelectRootContext.Provider>
+    </OverlayPortal>
+  );
 }
 
 export function SelectBackdrop({

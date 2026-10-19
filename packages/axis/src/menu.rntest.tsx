@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { Pressable, Text, type View } from "react-native";
-import { Menu, MenuItem } from "./index";
+import { Menu, MenuItem, PortalHost } from "./index";
 
 /**
  * Menu behavior through the public entry. Every assertion renders the
@@ -72,7 +72,11 @@ function Example({
 
 describe("Menu on React Native", () => {
   it("closed shows the trigger only: no menu role, content, or scrim", async () => {
-    await render(<Example />);
+    await render(
+      <PortalHost>
+        <Example />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("trigger")).toBeTruthy();
     expect(screen.getByText("Open menu")).toBeTruthy();
     expect(screen.queryByRole("menu")).toBeNull();
@@ -84,7 +88,11 @@ describe("Menu on React Native", () => {
 
   it("trigger press opens the content with the menu role and reports true", async () => {
     const seen: Array<boolean> = [];
-    await render(<Example onOpenChange={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Example onOpenChange={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     expect(screen.queryByRole("menu")).toBeNull();
     await press("trigger");
     expect(seen).toEqual([true]);
@@ -104,11 +112,13 @@ describe("Menu on React Native", () => {
     const selected: Array<string> = [];
     const seen: Array<boolean> = [];
     await render(
-      <Example
-        defaultOpen
-        onOpenChange={(v) => seen.push(v)}
-        onSelect={(v) => selected.push(v)}
-      />,
+      <PortalHost>
+        <Example
+          defaultOpen
+          onOpenChange={(v) => seen.push(v)}
+          onSelect={(v) => selected.push(v)}
+        />
+      </PortalHost>,
     );
     expect(screen.getByTestId("item-a").props.role).toBe("menuitem");
     expect(screen.getByTestId("item-a").props.accessibilityState).toMatchObject(
@@ -124,13 +134,15 @@ describe("Menu on React Native", () => {
     const seen: Array<boolean> = [];
     let dismissCalls = 0;
     await render(
-      <Example
-        defaultOpen
-        onOpenChange={(v) => seen.push(v)}
-        onDismiss={() => {
-          dismissCalls += 1;
-        }}
-      />,
+      <PortalHost>
+        <Example
+          defaultOpen
+          onOpenChange={(v) => seen.push(v)}
+          onDismiss={() => {
+            dismissCalls += 1;
+          }}
+        />
+      </PortalHost>,
     );
     await press("menu-scrim");
     expect(dismissCalls).toBe(1);
@@ -152,7 +164,11 @@ describe("Menu on React Native", () => {
         </Menu>
       );
     }
-    await render(<Host />);
+    await render(
+      <PortalHost>
+        <Host />
+      </PortalHost>,
+    );
     expect(screen.queryByRole("menu")).toBeNull();
     await press("trigger");
     expect(screen.getByRole("menu")).toBeTruthy();
@@ -163,7 +179,9 @@ describe("Menu on React Native", () => {
   it("disabled trigger never opens: no toggle, no callback", async () => {
     const seen: Array<boolean> = [];
     await render(
-      <Example triggerDisabled onOpenChange={(v) => seen.push(v)} />,
+      <PortalHost>
+        <Example triggerDisabled onOpenChange={(v) => seen.push(v)} />
+      </PortalHost>,
     );
     await press("trigger");
     expect(seen).toEqual([]);
@@ -174,12 +192,14 @@ describe("Menu on React Native", () => {
     const selected: Array<string> = [];
     const seen: Array<boolean> = [];
     await render(
-      <Example
-        defaultOpen
-        itemDisabled
-        onOpenChange={(v) => seen.push(v)}
-        onSelect={(v) => selected.push(v)}
-      />,
+      <PortalHost>
+        <Example
+          defaultOpen
+          itemDisabled
+          onOpenChange={(v) => seen.push(v)}
+          onSelect={(v) => selected.push(v)}
+        />
+      </PortalHost>,
     );
     expect(screen.getByTestId("item-a").props.accessibilityState).toMatchObject(
       { disabled: true },
@@ -193,14 +213,16 @@ describe("Menu on React Native", () => {
   it("forwards a ref to the menu container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Menu testID="menu" ref={ref}>
-        <Pressable testID="trigger">
-          <Text>Open menu</Text>
-        </Pressable>
-        <MenuItem value="a" testID="item-a">
-          <Text>Alpha</Text>
-        </MenuItem>
-      </Menu>,
+      <PortalHost>
+        <Menu testID="menu" ref={ref}>
+          <Pressable testID="trigger">
+            <Text>Open menu</Text>
+          </Pressable>
+          <MenuItem value="a" testID="item-a">
+            <Text>Alpha</Text>
+          </MenuItem>
+        </Menu>
+      </PortalHost>,
     );
     expect(ref.current).not.toBeNull();
   });

@@ -26,6 +26,7 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -36,12 +37,12 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * with `useFloatingPlacement` (anchor `measure()` + viewport +
  * `resolveFloatingRect`); until measured it stays transparent at
  * origin rather than flashing somewhere wrong. Unlike Dialog there is
- * no `Modal`: the scrim and the box render inline, as siblings of the
- * anchor inside the anchor wrapper. The scrim is a transparent
- * absolute-fill `Pressable` labelled "Dismiss" — scrim press closes
- * through `onDismiss` + `onOpenChange(false)`; taps inside the box do
- * not dismiss (the box is the scrim's sibling, not its child, unlike
- * the Dialog surface). State follows `useControllableState`: `open`
+ * no `Modal`: the box and scrim present through `Portal` at the app's
+ * `PortalHost` — above sibling content, never trapped in the anchor's
+ * box. The scrim is a transparent absolute-fill `Pressable` labelled
+ * "Dismiss" — scrim press closes through `onDismiss` +
+ * `onOpenChange(false)`; taps inside the box do not dismiss (the box
+ * is the scrim's sibling, not its child, unlike the Dialog surface). State follows `useControllableState`: `open`
  * (+ `onOpenChange`) for controlled use, `defaultOpen` for
  * uncontrolled (default `false`). Closed renders the anchor only —
  * no scrim, no box.
@@ -193,7 +194,7 @@ export function Popover({
     <View ref={setAnchorRef} style={style}>
       <Pressable onPress={toggle}>{children}</Pressable>
       {isOpen ? (
-        <>
+        <Portal>
           <Pressable
             accessibilityLabel="Dismiss"
             testID={testID ? `${testID}-scrim` : undefined}
@@ -212,7 +213,7 @@ export function Popover({
           >
             {content}
           </View>
-        </>
+        </Portal>
       ) : null}
     </View>
   );
@@ -600,12 +601,23 @@ export function PopoverPortal({
   if (!disclosure) return null;
   if (!disclosure.open) return null;
 
-  // Modal roots present at the overlay host; non-modal roots (the default
-  // for popovers) render in-box with no scrim trap, like the
-  // monolith. Presses outside reach the app rather than dismissing
-  // (same documented limitation as non-modal menus).
+  // Non-modal roots (the default for popovers) present through the
+  // plain `Portal` at the app's `PortalHost` — above sibling content,
+  // with no scrim trap, like the monolith. Presses outside reach the
+  // app rather than dismissing (same documented limitation as
+  // non-modal menus).
+  //
+  // The disclosure is re-provided inside the portal: portaled content
+  // renders at the host, outside this root's subtree, so without an
+  // explicit provider the parts below would read a null disclosure.
   if (!disclosure.modal) {
-    return <View testID={testID}>{children}</View>;
+    return (
+      <Portal>
+        <PopoverDisclosureContext.Provider value={disclosure}>
+          <View testID={testID}>{children}</View>
+        </PopoverDisclosureContext.Provider>
+      </Portal>
+    );
   }
   return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
 }

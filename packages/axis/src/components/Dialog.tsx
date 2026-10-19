@@ -531,7 +531,17 @@ export function DialogPortal({
   // invisible modal subtrees entirely, so a keep-alive prop would
   // ship behavior no suite can observe — the contract rejects
   // import-success-only surface.
-  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
+  //
+  // The disclosure is re-provided inside the portal: portaled content
+  // renders at the host, outside this root's subtree, so without an
+  // explicit provider the parts below would read a null disclosure.
+  return (
+    <OverlayPortal testID={testID}>
+      <DialogCompoundContext.Provider value={disclosure}>
+        {children}
+      </DialogCompoundContext.Provider>
+    </OverlayPortal>
+  );
 }
 
 export function DialogBackdrop({

@@ -4,10 +4,10 @@ import { Portal, PortalHost } from "./index";
 
 /**
  * Standalone portal host through the public entry. Every assertion
- * renders the real host + portal in the RN runtime — content declared
+ * renders the host + portal in the RN runtime — content declared
  * under a portal paints at its host in mount order, named hosts
- * scope matching, and content without a matching host renders inline
- * rather than dropping silently.
+ * scope matching, and content without a matching host renders
+ * nothing (with a dev warning) rather than painting in place.
  */
 
 describe("Portal host on React Native", () => {
@@ -44,41 +44,67 @@ describe("Portal host on React Native", () => {
 
   it("named portals scope to the matching host", async () => {
     await render(
-      <View>
-        <PortalHost testID="host-a" name="a">
-          <Portal hostName="a">
-            <Text>for-a</Text>
-          </Portal>
-        </PortalHost>
-        <PortalHost testID="host-b" name="b">
-          <Text>plain-b</Text>
-        </PortalHost>
-      </View>,
+      <PortalHost>
+        <View>
+          <PortalHost testID="host-a" name="a">
+            <Portal hostName="a">
+              <Text>for-a</Text>
+            </Portal>
+          </PortalHost>
+          <PortalHost testID="host-b" name="b">
+            <Text>plain-b</Text>
+          </PortalHost>
+        </View>
+      </PortalHost>,
     );
     expect(screen.getByText("for-a")).toBeTruthy();
     expect(screen.getByText("plain-b")).toBeTruthy();
   });
 
-  it("renders inline without a matching host instead of dropping", async () => {
-    await render(
-      <View testID="plain">
-        <Portal hostName="missing">
-          <Text>Inline fallback</Text>
-        </Portal>
-      </View>,
-    );
-    expect(screen.getByText("Inline fallback")).toBeTruthy();
+  it("renders nothing without a matching host and warns in dev", async () => {
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.map((part) => String(part)).join(" "));
+    };
+    try {
+      await render(
+        <PortalHost>
+          <View testID="plain">
+            <Portal hostName="missing">
+              <Text>Nowhere</Text>
+            </Portal>
+          </View>
+        </PortalHost>,
+      );
+    } finally {
+      console.warn = originalWarn;
+    }
+    expect(screen.getByTestId("plain")).toBeTruthy();
+    expect(screen.queryByText("Nowhere")).toBeNull();
+    expect(warnings.some((w) => w.includes("PortalHost"))).toBe(true);
   });
 
-  it("renders inline with no host at all", async () => {
-    await render(
-      <View testID="plain">
-        <Portal>
-          <Text>Lonely</Text>
-        </Portal>
-      </View>,
-    );
-    expect(screen.getByText("Lonely")).toBeTruthy();
+  it("renders nothing with no host at all and warns in dev", async () => {
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.map((part) => String(part)).join(" "));
+    };
+    try {
+      await render(
+        <View testID="plain">
+          <Portal>
+            <Text>Lonely</Text>
+          </Portal>
+        </View>,
+      );
+    } finally {
+      console.warn = originalWarn;
+    }
+    expect(screen.getByTestId("plain")).toBeTruthy();
+    expect(screen.queryByText("Lonely")).toBeNull();
+    expect(warnings.some((w) => w.includes("PortalHost"))).toBe(true);
   });
 
   it("removes content when the portal unmounts", async () => {
@@ -90,11 +116,7 @@ describe("Portal host on React Native", () => {
       </PortalHost>,
     );
     expect(screen.getByText("Temporary")).toBeTruthy();
-    await view.rerender(
-      <PortalHost testID="host">
-        <Text>Empty</Text>
-      </PortalHost>,
-    );
+    await view.rerender(<Text>Empty</Text>);
     expect(screen.queryByText("Temporary")).toBeNull();
     expect(screen.getByText("Empty")).toBeTruthy();
   });

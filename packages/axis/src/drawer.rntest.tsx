@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { Text as RNText, type View } from "react-native";
-import { Drawer } from "./index";
+import { Drawer, PortalHost } from "./index";
 
 /**
  * Drawer behavior through the public entry. Edge-anchored panel with
@@ -105,18 +105,22 @@ async function pressLabel(label: string) {
 describe("Drawer on React Native", () => {
   it("renders nothing when closed", async () => {
     await render(
-      <Drawer testID="drawer" accessibilityLabel="App navigation">
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer testID="drawer" accessibilityLabel="App navigation">
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("renders the dialog surface when open", async () => {
     await render(
-      <Drawer testID="drawer" defaultOpen accessibilityLabel="App navigation">
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen accessibilityLabel="App navigation">
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByText("Destinations")).toBeTruthy();
@@ -125,14 +129,16 @@ describe("Drawer on React Native", () => {
   it("dismisses through the scrim with onDismiss before onOpenChange", async () => {
     const order: string[] = [];
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        onDismiss={() => order.push("dismiss")}
-        onOpenChange={() => order.push("change")}
-      >
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          onDismiss={() => order.push("dismiss")}
+          onOpenChange={() => order.push("change")}
+        >
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     await pressLabel("Dismiss");
@@ -142,9 +148,11 @@ describe("Drawer on React Native", () => {
 
   it("renders an inert scrim when not dismissable", async () => {
     await render(
-      <Drawer testID="drawer" defaultOpen dismissable={false}>
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen dismissable={false}>
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -162,9 +170,11 @@ describe("Drawer on React Native", () => {
 
   it("anchors to the trailing edge on the right side", async () => {
     await render(
-      <Drawer testID="drawer" defaultOpen side="right">
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen side="right">
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     const flat: Record<string, unknown> = Object.assign(
       {},
@@ -180,9 +190,11 @@ describe("Drawer on React Native", () => {
   it("forwards a ref to the surface", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Drawer defaultOpen ref={ref}>
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer defaultOpen ref={ref}>
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
   });

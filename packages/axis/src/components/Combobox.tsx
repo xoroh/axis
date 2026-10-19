@@ -20,6 +20,7 @@ import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -67,7 +68,9 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * `measure()` + viewport + `resolveFloatingRect`); until measured it
  * stays transparent at origin rather than flashing somewhere wrong
  * (the Tooltip precedent). Unlike Dialog there is no `Modal`: the
- * scrim is an anchor-relative absolute fill layer behind the list.
+ * scrim and the list present through `Portal` at the app's
+ * `PortalHost` — above sibling content, never trapped in the anchor's
+ * box.
  *
  * Accessibility: the entry `Input` carries `accessibilityLabel` when
  * given; the toggle carries `accessibilityRole="button"` with
@@ -367,43 +370,49 @@ export function Combobox({
         </Pressable>
       </View>
       {isOpen ? (
-        <Pressable
-          accessibilityLabel="Dismiss"
-          testID={testID ? `${testID}-scrim` : undefined}
-          onPress={closeWithoutSelection}
-          style={scrimFillStyle}
-        />
+        <Portal>
+          <Pressable
+            accessibilityLabel="Dismiss"
+            testID={testID ? `${testID}-scrim` : undefined}
+            onPress={closeWithoutSelection}
+            style={scrimFillStyle}
+          />
+        </Portal>
       ) : null}
       {isOpen ? (
-        <View
-          // The list must be an accessibility element for its role to
-          // reach assistive technology (and the `*ByRole` proofs): a
-          // plain `View` is not one by default, unlike `Pressable`.
-          accessible
-          accessibilityRole="listbox"
-          onLayout={floating.onContentLayout}
-          style={[floating.style, listStyle]}
-        >
-          {filtered.map((option) => {
-            const optionDisabled = disabled || option.disabled === true;
-            return (
-              <Pressable
-                key={option.value}
-                role="option"
-                accessibilityState={{
-                  selected: selectedValue === option.value,
-                  disabled: optionDisabled,
-                }}
-                accessibilityLabel={option.label}
-                testID={testID ? `${testID}-option-${option.value}` : undefined}
-                disabled={optionDisabled}
-                onPress={() => choose(option.value)}
-              >
-                <Text>{option.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <Portal>
+          <View
+            // The list must be an accessibility element for its role to
+            // reach assistive technology (and the `*ByRole` proofs): a
+            // plain `View` is not one by default, unlike `Pressable`.
+            accessible
+            accessibilityRole="listbox"
+            onLayout={floating.onContentLayout}
+            style={[floating.style, listStyle]}
+          >
+            {filtered.map((option) => {
+              const optionDisabled = disabled || option.disabled === true;
+              return (
+                <Pressable
+                  key={option.value}
+                  role="option"
+                  accessibilityState={{
+                    selected: selectedValue === option.value,
+                    disabled: optionDisabled,
+                  }}
+                  accessibilityLabel={option.label}
+                  testID={
+                    testID ? `${testID}-option-${option.value}` : undefined
+                  }
+                  disabled={optionDisabled}
+                  onPress={() => choose(option.value)}
+                >
+                  <Text>{option.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Portal>
       ) : null}
     </View>
   );

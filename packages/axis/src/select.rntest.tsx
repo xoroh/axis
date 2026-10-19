@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, useState } from "react";
 import { Text } from "react-native";
-import { Select, SelectItem } from "./index";
+import { PortalHost, Select, SelectItem } from "./index";
 
 /**
  * Select behavior through the public entry. Every assertion renders
@@ -62,7 +62,11 @@ async function press(testID: string) {
 
 describe("Select on React Native", () => {
   it("closed shows the trigger with the placeholder and no listbox", async () => {
-    await render(<FruitSelect />);
+    await render(
+      <PortalHost>
+        <FruitSelect />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("sel")).toBeTruthy();
     expect(screen.getByText("Pick a fruit")).toBeTruthy();
     expect(screen.getByRole("button")).toBeTruthy();
@@ -76,7 +80,11 @@ describe("Select on React Native", () => {
 
   it("trigger press opens the listbox with unselected options", async () => {
     const changed: boolean[] = [];
-    await render(<FruitSelect onOpenChange={(v) => changed.push(v)} />);
+    await render(
+      <PortalHost>
+        <FruitSelect onOpenChange={(v) => changed.push(v)} />
+      </PortalHost>,
+    );
     await press("sel");
     expect(changed).toEqual([true]);
     expect(screen.getByRole("listbox")).toBeTruthy();
@@ -98,10 +106,12 @@ describe("Select on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <FruitSelect
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <FruitSelect
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     await press("sel");
     await press("mango");
@@ -119,7 +129,11 @@ describe("Select on React Native", () => {
 
   it("re-pressing the selected item keeps it with no extra fire", async () => {
     const seen: string[] = [];
-    await render(<FruitSelect onValueChange={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <FruitSelect onValueChange={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await press("sel");
     await press("apple");
     expect(seen).toEqual(["apple"]);
@@ -139,10 +153,12 @@ describe("Select on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <FruitSelect
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <FruitSelect
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     await press("sel");
     expect(screen.getByRole("listbox")).toBeTruthy();
@@ -167,7 +183,11 @@ describe("Select on React Native", () => {
         </Select>
       );
     }
-    await render(<Host />);
+    await render(
+      <PortalHost>
+        <Host />
+      </PortalHost>,
+    );
     expect(screen.getByText("Apple")).toBeTruthy();
     await press("sel");
     expect(screen.getByTestId("apple").props.accessibilityState).toMatchObject({
@@ -185,11 +205,17 @@ describe("Select on React Native", () => {
   it("follows the controlled open prop", async () => {
     const changed: boolean[] = [];
     const view = await render(
-      <FruitSelect open={false} onOpenChange={(v) => changed.push(v)} />,
+      <PortalHost>
+        <FruitSelect open={false} onOpenChange={(v) => changed.push(v)} />
+      </PortalHost>,
     );
     expect(screen.queryByRole("listbox")).toBeNull();
     await act(async () => {
-      view.rerender(<FruitSelect open onOpenChange={(v) => changed.push(v)} />);
+      view.rerender(
+        <PortalHost>
+          <FruitSelect open onOpenChange={(v) => changed.push(v)} />
+        </PortalHost>,
+      );
     });
     expect(screen.getByRole("listbox")).toBeTruthy();
     expect(screen.getByTestId("sel").props.accessibilityState).toMatchObject({
@@ -199,7 +225,9 @@ describe("Select on React Native", () => {
     expect(changed).toEqual([]);
     await act(async () => {
       view.rerender(
-        <FruitSelect open={false} onOpenChange={(v) => changed.push(v)} />,
+        <PortalHost>
+          <FruitSelect open={false} onOpenChange={(v) => changed.push(v)} />
+        </PortalHost>,
       );
     });
     expect(screen.queryByRole("listbox")).toBeNull();
@@ -210,11 +238,13 @@ describe("Select on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <FruitSelect
-        disabled
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <FruitSelect
+          disabled
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     expect(screen.getByTestId("sel").props.accessibilityState).toMatchObject({
       expanded: false,
@@ -229,11 +259,13 @@ describe("Select on React Native", () => {
   it("renders string placeholder and string item children without unexpected text node warning", async () => {
     const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     await render(
-      <Select testID="str-sel" placeholder="Select an option">
-        <SelectItem value="opt1" testID="opt1">
-          Option 1
-        </SelectItem>
-      </Select>,
+      <PortalHost>
+        <Select testID="str-sel" placeholder="Select an option">
+          <SelectItem value="opt1" testID="opt1">
+            Option 1
+          </SelectItem>
+        </Select>
+      </PortalHost>,
     );
     expect(screen.getByText("Select an option")).toBeTruthy();
     await press("str-sel");

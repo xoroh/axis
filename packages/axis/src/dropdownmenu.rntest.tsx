@@ -8,6 +8,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+  PortalHost,
 } from "./index";
 
 /**
@@ -59,13 +60,21 @@ function Tree({ onSelect }: { onSelect?: (value: string) => void }) {
 
 describe("DropdownMenu on React Native", () => {
   it("renders the trigger only while closed", async () => {
-    await render(<Tree />);
+    await render(
+      <PortalHost>
+        <Tree />
+      </PortalHost>,
+    );
     expect(screen.getByLabelText("Open menu")).toBeTruthy();
     expect(screen.queryByRole("menuitem")).toBeNull();
   });
 
   it("opens the content box with items and sub triggers", async () => {
-    await render(<Tree />);
+    await render(
+      <PortalHost>
+        <Tree />
+      </PortalHost>,
+    );
     await pressLabel("Open menu");
     expect(screen.getByTestId("dd")).toBeTruthy();
     expect(screen.getByText("New")).toBeTruthy();
@@ -75,7 +84,11 @@ describe("DropdownMenu on React Native", () => {
 
   it("selects a leaf, reports, and closes everything", async () => {
     const seen: string[] = [];
-    await render(<Tree onSelect={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Tree onSelect={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open menu");
     await act(async () => {
       fireEvent.press(screen.getByText("New"));
@@ -85,7 +98,11 @@ describe("DropdownMenu on React Native", () => {
   });
 
   it("opens a submenu panel on trigger press", async () => {
-    await render(<Tree />);
+    await render(
+      <PortalHost>
+        <Tree />
+      </PortalHost>,
+    );
     await pressLabel("Open menu");
     await pressLabel("Share submenu");
     expect(screen.getByTestId("share-panel")).toBeTruthy();
@@ -97,7 +114,11 @@ describe("DropdownMenu on React Native", () => {
 
   it("cascades to a second level and selects through it", async () => {
     const seen: string[] = [];
-    await render(<Tree onSelect={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Tree onSelect={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open menu");
     await pressLabel("Share submenu");
     await pressLabel("More submenu");
@@ -112,19 +133,21 @@ describe("DropdownMenu on React Native", () => {
   it("dismisses the whole cascade through the scrim", async () => {
     const order: string[] = [];
     await render(
-      <DropdownMenu
-        testID="dd2"
-        defaultOpen
-        onDismiss={() => order.push("dismiss")}
-        onOpenChange={() => order.push("change")}
-      >
-        <DropdownMenuTrigger accessibilityLabel="Open">
-          <RNText>Open</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="x">
-          <RNText>X</RNText>
-        </DropdownMenuItem>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu
+          testID="dd2"
+          defaultOpen
+          onDismiss={() => order.push("dismiss")}
+          onOpenChange={() => order.push("change")}
+        >
+          <DropdownMenuTrigger accessibilityLabel="Open">
+            <RNText>Open</RNText>
+          </DropdownMenuTrigger>
+          <DropdownMenuItem value="x">
+            <RNText>X</RNText>
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </PortalHost>,
     );
     await pressLabel("Dismiss menu");
     expect(order).toEqual(["dismiss", "change"]);
@@ -133,21 +156,23 @@ describe("DropdownMenu on React Native", () => {
 
   it("keeps disabled sub triggers closed", async () => {
     await render(
-      <DropdownMenu defaultOpen>
-        <DropdownMenuTrigger accessibilityLabel="Open">
-          <RNText>Open</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuSub value="share">
-          <DropdownMenuSubTrigger accessibilityLabel="Share" disabled>
-            <RNText>Share</RNText>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent testID="share-panel">
-            <DropdownMenuItem value="email">
-              <RNText>Email</RNText>
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu defaultOpen>
+          <DropdownMenuTrigger accessibilityLabel="Open">
+            <RNText>Open</RNText>
+          </DropdownMenuTrigger>
+          <DropdownMenuSub value="share">
+            <DropdownMenuSubTrigger accessibilityLabel="Share" disabled>
+              <RNText>Share</RNText>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent testID="share-panel">
+              <DropdownMenuItem value="email">
+                <RNText>Email</RNText>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenu>
+      </PortalHost>,
     );
     await pressLabel("Share");
     expect(screen.queryByTestId("share-panel")).toBeNull();
@@ -155,9 +180,11 @@ describe("DropdownMenu on React Native", () => {
 
   it("renders items inert outside a menu", async () => {
     await render(
-      <DropdownMenuItem value="orphan" testID="orphan">
-        <RNText>Orphan</RNText>
-      </DropdownMenuItem>,
+      <PortalHost>
+        <DropdownMenuItem value="orphan" testID="orphan">
+          <RNText>Orphan</RNText>
+        </DropdownMenuItem>
+      </PortalHost>,
     );
     expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject(
       { disabled: true },
@@ -166,14 +193,16 @@ describe("DropdownMenu on React Native", () => {
 
   it("follows controlled open state", async () => {
     await render(
-      <DropdownMenu testID="dd" open={false}>
-        <DropdownMenuTrigger accessibilityLabel="Open">
-          <RNText>Open</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="x">
-          <RNText>X</RNText>
-        </DropdownMenuItem>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu testID="dd" open={false}>
+          <DropdownMenuTrigger accessibilityLabel="Open">
+            <RNText>Open</RNText>
+          </DropdownMenuTrigger>
+          <DropdownMenuItem value="x">
+            <RNText>X</RNText>
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </PortalHost>,
     );
     expect(screen.queryByRole("menuitem")).toBeNull();
   });
@@ -181,11 +210,13 @@ describe("DropdownMenu on React Native", () => {
   it("forwards a ref to the container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <DropdownMenu ref={ref}>
-        <DropdownMenuTrigger accessibilityLabel="Open">
-          <RNText>Open</RNText>
-        </DropdownMenuTrigger>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu ref={ref}>
+          <DropdownMenuTrigger accessibilityLabel="Open">
+            <RNText>Open</RNText>
+          </DropdownMenuTrigger>
+        </DropdownMenu>
+      </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
   });

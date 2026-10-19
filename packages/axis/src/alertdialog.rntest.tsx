@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text, type View } from "react-native";
-import { AlertDialog } from "./index";
+import { AlertDialog, PortalHost } from "./index";
 
 /**
  * AlertDialog behavior through the public entry. Every assertion renders
@@ -24,15 +24,17 @@ async function press(testID: string) {
 describe("AlertDialog on React Native", () => {
   it("renders title, content, and actions with the dialog role", async () => {
     await render(
-      <AlertDialog
-        testID="ad"
-        defaultOpen
-        title="Discard changes?"
-        actions={<Text>Discard</Text>}
-        accessibilityLabel="Discard confirmation"
-      >
-        <Text>Unsaved work will be lost.</Text>
-      </AlertDialog>,
+      <PortalHost>
+        <AlertDialog
+          testID="ad"
+          defaultOpen
+          title="Discard changes?"
+          actions={<Text>Discard</Text>}
+          accessibilityLabel="Discard confirmation"
+        >
+          <Text>Unsaved work will be lost.</Text>
+        </AlertDialog>
+      </PortalHost>,
     );
     expect(screen.getByTestId("ad")).toBeTruthy();
     expect(screen.getByText("Discard changes?")).toBeTruthy();
@@ -45,14 +47,16 @@ describe("AlertDialog on React Native", () => {
   it("scrim press does not dismiss: no callback, still open, no dismiss label", async () => {
     const changed: boolean[] = [];
     await render(
-      <AlertDialog
-        testID="ad"
-        defaultOpen
-        actions={<Text>Discard</Text>}
-        onOpenChange={(v) => changed.push(v)}
-      >
-        <Text>Unsaved work will be lost.</Text>
-      </AlertDialog>,
+      <PortalHost>
+        <AlertDialog
+          testID="ad"
+          defaultOpen
+          actions={<Text>Discard</Text>}
+          onOpenChange={(v) => changed.push(v)}
+        >
+          <Text>Unsaved work will be lost.</Text>
+        </AlertDialog>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     await press("ad-scrim");
@@ -63,17 +67,19 @@ describe("AlertDialog on React Native", () => {
   it("action press fires the caller's own handler", async () => {
     let calls = 0;
     await render(
-      <AlertDialog
-        testID="ad"
-        defaultOpen
-        actions={
-          <Text testID="discard-action" onPress={() => (calls += 1)}>
-            Discard
-          </Text>
-        }
-      >
-        <Text>Unsaved work will be lost.</Text>
-      </AlertDialog>,
+      <PortalHost>
+        <AlertDialog
+          testID="ad"
+          defaultOpen
+          actions={
+            <Text testID="discard-action" onPress={() => (calls += 1)}>
+              Discard
+            </Text>
+          }
+        >
+          <Text>Unsaved work will be lost.</Text>
+        </AlertDialog>
+      </PortalHost>,
     );
     await press("discard-action");
     expect(calls).toBe(1);
@@ -83,26 +89,30 @@ describe("AlertDialog on React Native", () => {
   it("follows the controlled open prop", async () => {
     const changed: boolean[] = [];
     const view = await render(
-      <AlertDialog
-        testID="ad"
-        open={false}
-        actions={<Text>Discard</Text>}
-        onOpenChange={(v) => changed.push(v)}
-      >
-        <Text>Unsaved work will be lost.</Text>
-      </AlertDialog>,
-    );
-    expect(screen.queryByTestId("ad")).toBeNull();
-    await act(async () => {
-      view.rerender(
+      <PortalHost>
         <AlertDialog
           testID="ad"
-          open
+          open={false}
           actions={<Text>Discard</Text>}
           onOpenChange={(v) => changed.push(v)}
         >
           <Text>Unsaved work will be lost.</Text>
-        </AlertDialog>,
+        </AlertDialog>
+      </PortalHost>,
+    );
+    expect(screen.queryByTestId("ad")).toBeNull();
+    await act(async () => {
+      view.rerender(
+        <PortalHost>
+          <AlertDialog
+            testID="ad"
+            open
+            actions={<Text>Discard</Text>}
+            onOpenChange={(v) => changed.push(v)}
+          >
+            <Text>Unsaved work will be lost.</Text>
+          </AlertDialog>
+        </PortalHost>,
       );
     });
     expect(screen.getByTestId("ad")).toBeTruthy();
@@ -112,14 +122,16 @@ describe("AlertDialog on React Native", () => {
   it("forwards a ref to the surface View", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <AlertDialog
-        testID="ad"
-        defaultOpen
-        actions={<Text>Discard</Text>}
-        ref={ref}
-      >
-        <Text>Unsaved work will be lost.</Text>
-      </AlertDialog>,
+      <PortalHost>
+        <AlertDialog
+          testID="ad"
+          defaultOpen
+          actions={<Text>Discard</Text>}
+          ref={ref}
+        >
+          <Text>Unsaved work will be lost.</Text>
+        </AlertDialog>
+      </PortalHost>,
     );
     expect(ref.current).not.toBeNull();
   });

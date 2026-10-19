@@ -35,6 +35,12 @@ import type { SlotProps } from "../slot";
  * into the nearest host with the same name. Nesting hosts scopes
  * matching to the nearest one (context precedent).
  *
+ * Host required (Base UI parity: every floating popup portals to the
+ * app host): a `Portal` with no matching host warns in dev and renders
+ * nothing — silently painting in-box would reintroduce the sibling
+ * stacking the portal exists to escape, and pre-release there are no
+ * compatibility fallbacks.
+ *
  * Native scope (documented, not silent): the host paints in-box —
  * portaled content lays out inside the host's box (the `Menu`
  * precedent). Painting above the app root stays each overlay's own
@@ -207,7 +213,16 @@ export function Portal({ hostName, children }: PortalProps): React.ReactNode {
   }, [host, matched, id, children]);
 
   // Hosted portals paint at the host: nothing renders here. Without
-  // a matching host the children render inline (documented above).
-  if (!matched) return <>{children}</>;
+  // a matching host there is no portal: warn in dev (a missing
+  // `PortalHost` is always a wiring bug) and render nothing — the
+  // pre-release contract has no in-box fallback.
+  if (!matched) {
+    if (__DEV__) {
+      console.warn(
+        "Axis Portal: no matching PortalHost mounted; rendering nothing. Mount a PortalHost above every portal.",
+      );
+    }
+    return null;
+  }
   return null;
 }
