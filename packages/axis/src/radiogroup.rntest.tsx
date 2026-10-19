@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import type * as React from "react";
 import { act, createRef, type ElementRef, useState } from "react";
 import { type Pressable, Text } from "react-native";
 import { RadioGroup, RadioIndicator, RadioRoot } from "./index";
@@ -298,7 +299,11 @@ describe("RadioGroup on React Native", () => {
         <RadioRoot
           value="s"
           testID="s"
-          render={(props) => <Text testID="s-sub">{props.children}</Text>}
+          render={(props) => (
+            <Text testID="s-sub">
+              {props.children as React.ReactNode}
+            </Text>
+          )}
         >
           <RadioIndicator testID="s-mark">
             <Text>●</Text>
