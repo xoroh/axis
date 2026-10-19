@@ -306,7 +306,7 @@ function Confirm() {
 }
 ```
 
-Named hosts (a sheet paints at its own host; everything else
+Named hosts (a panel paints at its own host; everything else
 uses the default):
 
 ```tsx
@@ -315,10 +315,10 @@ import { Portal, PortalHost } from "@xoroh/axis";
 
 function Hosts() {
   return (
-    <PortalHost name="sheet">
-      <Text>Sheet zone</Text>
-      <Portal hostName="sheet">
-        <Text>Sheet content</Text>
+    <PortalHost name="panel">
+      <Text>Panel zone</Text>
+      <Portal hostName="panel">
+        <Text>Panel content</Text>
       </Portal>
     </PortalHost>
   );
