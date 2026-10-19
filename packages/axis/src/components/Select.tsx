@@ -5,6 +5,7 @@ import {
   isValidElement,
   type ReactNode,
   type Ref,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -87,7 +88,6 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  *
  * Deferred, each for a named reason (not oversight):
  * - No filtering/search text entry — that is Combobox, not Select.
- * - No multi-select — single value only.
  * - No animation: the list mounts/unmounts synchronously with open
  *   state (the Accordion panel precedent).
  * - No keyboard traversal: the `roving`/`collection` models are not
@@ -108,8 +108,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  */
 
 export type SelectState = {
-  /** Currently selected item value (`null` for none). */
-  value: string | null;
+  /** Currently selected item value (`null` for none; an array with `multiple`). */
+  value: string | string[] | null;
   /** Whether the list is currently open. */
   open: boolean;
   /** Whether the whole select is disabled. */
@@ -129,12 +129,14 @@ export type SelectItemState = {
 };
 
 export type SelectProps = {
-  /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. */
-  value?: string | null;
-  /** Uncontrolled initial selection. Default `null` (nothing selected, placeholder shown). */
-  defaultValue?: string | null;
-  /** Fires with the chosen item value on every committed selection. */
-  onValueChange?: (value: string) => void;
+  /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. With `multiple`, an array of values (empty selects nothing). */
+  value?: string | string[] | null;
+  /** Uncontrolled initial selection. Default `null` (nothing selected, placeholder shown). With `multiple`, an array of values. */
+  defaultValue?: string | string[] | null;
+  /** Fires with the chosen item value on every committed selection. With `multiple`, the full array after each toggle (choosing never closes the list). */
+  onValueChange?: (value: string | string[]) => void;
+  /** Multi-select. Default `false` (single value, choosing closes). When `true`, choosing toggles membership, the list stays open, and the trigger shows the joined labels. */
+  multiple?: boolean;
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
@@ -148,6 +150,8 @@ export type SelectProps = {
   /** Accessible name source for the trigger. */
   accessibilityLabel?: string;
   testID?: string;
+  /** Align the selected item over the trigger (Base UI parity). Default `true`; falls back to trigger anchoring with no selection. */
+  alignItemWithTrigger?: boolean;
   /** Trigger box style: value or function of select state. */
   style?: StateStyle<SelectState, StyleProp<ViewStyle>>;
   /** Popup (listbox) box style, caller-provided. */
@@ -192,9 +196,10 @@ export type SelectItemProps = {
 };
 
 type SelectSelection = {
-  selectedValue: string | null | undefined;
+  selectedValue: string | string[] | null | undefined;
   groupDisabled: boolean;
   choose: (value: string) => void;
+  reportItemLayout: (value: string, layout: ItemLayout) => void;
 };
 
 /**
@@ -243,6 +248,52 @@ function selectItemText(
 }
 
 /**
+ * Selected-item geometry for `alignItemWithTrigger`: items report
+ * their list-local origin on layout; the positioner shifts the popup
+ * so the selected item opens over the trigger (Base UI parity).
+ * Mount-time reports only — a version bump re-renders the positioner
+ * once the offsets land (same commit as content measurement when the
+ * schedulers agree, one extra paint when they do not).
+ */
+export type ItemLayout = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+function useItemLayoutRegistry(): {
+  layouts: Map<string, ItemLayout>;
+  reportItemLayout: (value: string, layout: ItemLayout) => void;
+  layoutVersion: number;
+} {
+  const layouts = useRef(new Map<string, ItemLayout>());
+  const [layoutVersion, setLayoutVersion] = useState(0);
+  const reportItemLayout = useCallback((value: string, layout: ItemLayout) => {
+    const previous = layouts.current.get(value);
+    if (
+      previous &&
+      previous.x === layout.x &&
+      previous.y === layout.y &&
+      previous.width === layout.width &&
+      previous.height === layout.height
+    ) {
+      return;
+    }
+    layouts.current.set(value, layout);
+    setLayoutVersion((version) => version + 1);
+  }, []);
+  return useMemo(
+    () => ({
+      layouts: layouts.current,
+      reportItemLayout,
+      layoutVersion,
+    }),
+    [reportItemLayout, layoutVersion],
+  );
+}
+
+/**
  * Assign one value to every ref in the list. Inline here (not imported)
  * deliberately: the shared `mergeRefs` composition has no approved
  * consumer yet, and the contract requires an inline, documented,
@@ -273,6 +324,35 @@ function assignRef(
  * anything else (fragments, arrays, custom wrappers) is skipped, and
  * an unmatched value yields `undefined` (the placeholder shows).
  */
+/**
+ * The selected item's matchable text for joining multi-select labels:
+ * the explicit `label` first, then direct string children, then the
+ * string content of a top-level `SelectItemText`, else the raw value.
+ * Always a string (unlike `findItemLabel`, which preserves elements
+ * for single-select display).
+ */
+function findItemText(
+  children: ReactNode,
+  value: string | null | undefined,
+): string {
+  if (value === null || value === undefined) return "";
+  let text: string | undefined;
+  Children.forEach(children, (child) => {
+    if (text !== undefined) return;
+    if (
+      isValidElement<SelectItemProps>(child) &&
+      child.type === SelectItem &&
+      child.props.value === value
+    ) {
+      text = selectItemText(
+        child.props.label,
+        child.props.children,
+        child.props.value,
+      );
+    }
+  });
+  return text ?? value;
+}
 /**
  * Wrap raw strings or numbers in `<Text>` so React Native / React Native Web
  * never emit an "Unexpected text node" warning when rendering into a `Pressable` host.
@@ -316,6 +396,8 @@ export function Select({
   value,
   defaultValue = null,
   onValueChange,
+  multiple = false,
+  alignItemWithTrigger = true,
   open,
   defaultOpen = false,
   onOpenChange,
@@ -329,23 +411,21 @@ export function Select({
   render,
   ref,
 }: SelectProps): React.ReactNode {
-  // `onValueChange` takes a plain `string` while the state domain includes
-  // `null` (nothing selected), so forward only committed selections —
-  // `choose` below never offers `null`, the guard is type-level honesty
-  // (the RadioGroup precedent).
+  // `onValueChange` takes the committed selection while the state
+  // domain includes `null` (nothing selected), so forward everything
+  // except `null`: single strings and (with `multiple`) arrays after
+  // every toggle (the RadioGroup precedent).
   const handleValueChange = useCallback(
-    (next: string | null) => {
+    (next: string | string[] | null) => {
       if (next !== null) {
         onValueChange?.(next);
       }
     },
     [onValueChange],
   );
-  const [selectedValue, setSelectedValue] = useControllableState<string | null>(
-    value,
-    defaultValue,
-    handleValueChange,
-  );
+  const [selectedValue, setSelectedValue] = useControllableState<
+    string | string[] | null
+  >(value, defaultValue, handleValueChange);
 
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
@@ -356,13 +436,30 @@ export function Select({
   const choose = useCallback(
     (next: string) => {
       if (disabled) return;
+      if (multiple) {
+        // Multi-select toggles membership and stays open: the next
+        // array commits through the hook (the identity guard drops
+        // only identical references, and a fresh array always
+        // differs).
+        const current = Array.isArray(selectedValue)
+          ? selectedValue
+          : selectedValue == null
+            ? []
+            : [selectedValue];
+        setSelectedValue(
+          current.includes(next)
+            ? current.filter((entry) => entry !== next)
+            : [...current, next],
+        );
+        return;
+      }
       // Re-selecting the selected value keeps it: the hook's identity
       // guard suppresses the repeat callback, but the close below
       // still commits (the selection-model rule).
       setSelectedValue(next);
       setOpen(false);
     },
-    [disabled, setOpen, setSelectedValue],
+    [disabled, multiple, selectedValue, setOpen, setSelectedValue],
   );
 
   const toggle = useCallback(() => {
@@ -386,23 +483,52 @@ export function Select({
     [ref],
   );
 
+  // Selected-item geometry for `alignItemWithTrigger` (Base UI: the
+  // popup opens with the selected item over the trigger).
+  const { layouts: itemLayouts, reportItemLayout } = useItemLayoutRegistry();
+  const alignedKey = Array.isArray(selectedValue)
+    ? (selectedValue[0] ?? null)
+    : selectedValue;
+  const alignedOffset =
+    alignItemWithTrigger && alignedKey != null
+      ? (itemLayouts.get(alignedKey) ?? null)
+      : null;
+
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
     // List matches the trigger row width (Base UI anchor-width
     // parity), keeping the viewport padding clear at the edges.
     matchAnchorWidth: true,
     viewportPadding: 8,
+    contentOffset:
+      alignedOffset === null
+        ? undefined
+        : { x: alignedOffset.x, y: alignedOffset.y },
     active: isOpen ?? false,
   });
 
-  const selectedLabel = useMemo(
-    () => findItemLabel(children, selectedValue),
-    [children, selectedValue],
-  );
+  // Trigger label: the selected item's label, joined with ", "
+  // under `multiple` (an unmatched value shows the raw value, so a
+  // selection is never silently blank).
+  const selectedLabel = useMemo(() => {
+    if (selectedValue == null) return undefined;
+    if (!Array.isArray(selectedValue)) {
+      return findItemLabel(children, selectedValue);
+    }
+    if (selectedValue.length === 0) return undefined;
+    return selectedValue
+      .map((entry) => findItemText(children, entry))
+      .join(", ");
+  }, [children, selectedValue]);
 
   const selection = useMemo<SelectSelection>(
-    () => ({ selectedValue, groupDisabled: disabled, choose }),
-    [selectedValue, disabled, choose],
+    () => ({
+      selectedValue,
+      groupDisabled: disabled,
+      choose,
+      reportItemLayout,
+    }),
+    [selectedValue, disabled, choose, reportItemLayout],
   );
 
   const state: SelectState = {
@@ -489,7 +615,11 @@ export function SelectItem({
   const root = useContext(SelectRootContext);
   const selection = group ?? root;
   const effectiveDisabled = disabled || (selection?.groupDisabled ?? false);
-  const selected = selection?.selectedValue === value;
+  // Multi-select membership: the value is one of the selected set.
+  const selectedValue = selection?.selectedValue;
+  const selected = Array.isArray(selectedValue)
+    ? selectedValue.includes(value)
+    : selectedValue === value;
   const [highlighted, setHighlighted] = useState(false);
   const isTypeahead = Boolean(
     root?.highlightedValue && root.highlightedValue === value,
@@ -521,6 +651,19 @@ export function SelectItem({
     selection?.choose(value);
   }, [effectiveDisabled, selection, value]);
 
+  // Report the list-local origin for `alignItemWithTrigger` (Base UI:
+  // the popup opens with the selected item over the trigger). Reports
+  // on every item — selection changes which offset the positioner
+  // reads, and unreported items would leave stale origins. Custom
+  // `render` substitutions receive the same `onLayout` and should
+  // forward it for aligned placement to track them.
+  const handleItemLayout = useCallback(
+    (event: { nativeEvent: { layout: ItemLayout } }) => {
+      selection?.reportItemLayout(value, event.nativeEvent.layout);
+    },
+    [selection, value],
+  );
+
   const pressableProps = {
     role: "option",
     accessibilityState: { selected, disabled: effectiveDisabled },
@@ -530,6 +673,7 @@ export function SelectItem({
     onPress: chooseItem,
     onPressIn: () => setHighlighted(true),
     onPressOut: () => setHighlighted(false),
+    onLayout: handleItemLayout,
     style: resolveStyle(style, state),
     children,
   } satisfies SlotProps;
@@ -578,6 +722,7 @@ export function SelectItem({
       onPress={chooseItem}
       onPressIn={() => setHighlighted(true)}
       onPressOut={() => setHighlighted(false)}
+      onLayout={handleItemLayout}
       style={resolveStyle(style, state)}
     >
       {wrapText(children)}
@@ -598,7 +743,8 @@ export function SelectItem({
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
 /* `<Select>` above is the concise inline API (trigger + scrim +      */
-/* positioned list at the app host; labels read from its children).   */
+/* positioned list at the app host; labels read from its children,    */
+/* `multiple` toggles membership without closing). The parts          */
 /* below mirror Base UI's Select anatomy — Root (state owner, renders  */
 /* no element), Trigger, Value (label lookup over the item registry),  */
 /* Portal (the overlay host), Backdrop (the        */
@@ -606,23 +752,19 @@ export function SelectItem({
 /* anchor), Popup (the listbox), Arrow (caller-positioned marker),      */
 /* Item (shared with the monolith, extended with `label`, `render`,    */
 /* and function styles), ItemText, ItemIndicator, Group, GroupLabel,   */
-/* Separator — with `render` element/function composition and          */
-/* value-or-function `style` on every part. Omitted Base UI pieces     */
-/* are documented deviations, not oversights: no `Label` (the          */
-/* trigger's `accessibilityLabel`, or the Axis `Label` component,       */
-/* names the control), no `Icon` (caller content inside `Trigger`),    */
-/* no `List` (the popup IS the list container, the `Menu` compound     */
-/* precedent), no `ScrollUpArrow`/`ScrollDownArrow` (hover-scroll       */
-/* chrome Base UI itself hides on touch input), no                     */
-/* `alignItemWithTrigger` overlap positioning (Base UI disables it      */
-/* for touch input; standard side/align placement only), no            */
-/* `multiple` (single value only), no form integration                 */
-/* (`name`/`required`/`readOnly` — native forms are caller-owned),      */
-/* no `actionsRef`/imperative handle (D7), no highlight-on-hover       */
-/* (D8 — the press is the highlight), no animation states (D9), no     */
-/* hardware-keyboard typeahead (the registry exists for a section      */
-/* that adopts it; none has), and no `data-*` attributes (D1).        */
-/* Non-modal roots (`modal={false}`) present the portal through     */
+/* Separator, ScrollUpArrow, ScrollDownArrow — with `render`          */
+/* element/function composition and value-or-function `style` on       */
+/* every part. Omitted Base UI pieces are documented deviations,       */
+/* not oversights: no `Label` (the trigger's `accessibilityLabel`,     */
+/* or the Axis `Label` component, names the control), no `Icon`        */
+/* (caller content inside `Trigger`), no `List` (the popup IS the      */
+/* list container, the `Menu` compound precedent), no form             */
+/* integration (`name`/`required`/`readOnly` — native forms are        */
+/* caller-owned), no `actionsRef`/imperative handle (D7), no           */
+/* highlight-on-hover (D8 — the press is the highlight), no animation  */
+/* states (D9), no hardware-keyboard typeahead (the registry exists    */
+/* for a section that adopts it; none has), and no `data-*`            */
+/* attributes (D1). Non-modal roots (`modal={false}`) present the      */
 /* the plain `Portal` at the app host with no Backdrop; outside-press */
 /* without a scrim is the documented `Menu` limitation.              */
 /* ------------------------------------------------------------------ */
@@ -635,12 +777,14 @@ export type SelectRootState = {
 };
 
 export type SelectRootProps = {
-  /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. */
-  value?: string | null;
-  /** Uncontrolled initial selection. Default `null` (nothing selected, placeholder shown). */
-  defaultValue?: string | null;
-  /** Fires with the chosen item value on every committed selection. */
-  onValueChange?: (value: string) => void;
+  /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. With `multiple`, an array of values (empty selects nothing). */
+  value?: string | string[] | null;
+  /** Uncontrolled initial selection. Default `null` (nothing selected, placeholder shown). With `multiple`, an array of values. */
+  defaultValue?: string | string[] | null;
+  /** Fires with the chosen item value on every committed selection. With `multiple`, the full array after each toggle (choosing never closes the list). */
+  onValueChange?: (value: string | string[]) => void;
+  /** Multi-select. Default `false` (single value, choosing closes). When `true`, choosing toggles membership, the list stays open, and `SelectValue` shows the joined labels. */
+  multiple?: boolean;
   /**
    * Value-label lookup table (Base UI `items` parity): the trigger
    * value display reads the selected item's registered label while
@@ -700,8 +844,8 @@ export type SelectTriggerProps = {
 };
 
 export type SelectValueState = {
-  /** The selected value (`null` nothing selected). */
-  value: string | null;
+  /** The selected value (`null` nothing selected; an array with `multiple`). */
+  value: string | string[] | null;
   /** Whether the placeholder is showing. */
   placeholder: boolean;
 };
@@ -712,10 +856,11 @@ export type SelectValueProps = {
   /**
    * Value content: a node, or a function of the selected value
    * (Base UI parity — formatting without a lookup table).
-   * Defaults to the selected item's registered label, else the raw
-   * value, else the placeholder.
+   * Defaults to the selected item's registered label (joined with
+   * `", "` under `multiple`), else the raw value, else the
+   * placeholder.
    */
-  children?: ReactNode | ((value: string | null) => ReactNode);
+  children?: ReactNode | ((value: string | string[] | null) => ReactNode);
   testID?: string;
   /** Value or function of value state, caller-provided. */
   style?: StateStyle<SelectValueState, StyleProp<TextStyle>>;
@@ -763,6 +908,12 @@ export type SelectPositionerProps = {
   sideOffset?: number;
   /** Shift along the cross axis after alignment. Default `0`. */
   alignOffset?: number;
+  /**
+   * Align the selected item over the trigger (Base UI parity).
+   * Default `true`; falls back to trigger anchoring with no
+   * selection (or before the selected item's layout arrives).
+   */
+  alignItemWithTrigger?: boolean;
   testID?: string;
   /** Value or function of positioner state, caller-provided. */
   style?: StateStyle<SelectPositionerState, StyleProp<ViewStyle>>;
@@ -878,6 +1029,10 @@ type SelectRootDisclosure = SelectSelection & {
   items: readonly CollectionItem[];
   register: (item: CollectionItem) => void;
   unregister: (key: string) => void;
+  /** Measured per-item origins for `alignItemWithTrigger`. */
+  itemLayouts: Map<string, ItemLayout>;
+  /** Bumps the disclosure when a layout lands so the positioner re-resolves. */
+  layoutVersion: number;
   /** Static value-label table for closed-list display (Base `items`). */
   labelItems: ReadonlyArray<{ value: string; label: string }>;
   highlightedValue: string | null;
@@ -903,6 +1058,7 @@ export function SelectRoot({
   value,
   defaultValue = null,
   onValueChange,
+  multiple = false,
   items,
   open,
   defaultOpen = false,
@@ -917,22 +1073,21 @@ export function SelectRoot({
   // Accepted for ref-spreading callers; the root renders no element
   // to attach it to (the `MenuRoot` precedent).
   void ref;
-  // `onValueChange` takes a plain `string` while the state domain
-  // includes `null` (nothing selected), so forward only committed
-  // selections (the monolith precedent).
+  // `onValueChange` takes the committed selection while the state
+  // domain includes `null` (nothing selected), so forward everything
+  // except `null`: single strings and (with `multiple`) arrays after
+  // every toggle (the monolith precedent).
   const handleValueChange = useCallback(
-    (next: string | null) => {
+    (next: string | string[] | null) => {
       if (next !== null) {
         onValueChange?.(next);
       }
     },
     [onValueChange],
   );
-  const [selectedValue, setSelectedValue] = useControllableState<string | null>(
-    value,
-    defaultValue,
-    handleValueChange,
-  );
+  const [selectedValue, setSelectedValue] = useControllableState<
+    string | string[] | null
+  >(value, defaultValue, handleValueChange);
 
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
@@ -961,19 +1116,43 @@ export function SelectRoot({
   const choose = useCallback(
     (next: string) => {
       if (disabled) return;
+      if (multiple) {
+        // Multi-select toggles membership and stays open (Base UI:
+        // choosing in `multiple` mode never dismisses).
+        const current = Array.isArray(selectedValue)
+          ? selectedValue
+          : selectedValue == null
+            ? []
+            : [selectedValue];
+        setSelectedValue(
+          current.includes(next)
+            ? current.filter((entry) => entry !== next)
+            : [...current, next],
+        );
+        return;
+      }
       // Re-selecting the selected value keeps it: the hook's identity
       // guard suppresses the repeat callback, but the close still
       // commits (the selection-model rule).
       setSelectedValue(next);
       setOpen(false);
     },
-    [disabled, setSelectedValue, setOpen],
+    [disabled, multiple, selectedValue, setOpen, setSelectedValue],
   );
 
   const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
   const setAnchorRef = useCallback((node: ElementRef<typeof View> | null) => {
     anchorHostRef.current = node;
   }, []);
+
+  // Selected-item geometry for `alignItemWithTrigger` (Base UI: the
+  // popup opens with the selected item over the trigger). Shared
+  // with the monolith precedent above.
+  const {
+    layouts: itemLayouts,
+    reportItemLayout,
+    layoutVersion,
+  } = useItemLayoutRegistry();
 
   // Terminal: a disabled root reads closed under any open state — no
   // list, no scrim, no portal (the `disabled` contract rule).
@@ -993,13 +1172,20 @@ export function SelectRoot({
         now,
       );
       typeaheadBufferRef.current = nextBuffer;
+      const fromKey = Array.isArray(selectedValue)
+        ? (selectedValue[0] ?? highlightedValue ?? null)
+        : (highlightedValue ?? selectedValue);
       const matched = matchTypeaheadKey(
         registryItems,
         nextBuffer.text,
-        highlightedValue ?? selectedValue,
+        fromKey,
       );
-      if (matched !== undefined) {
-        setHighlightedValue(matched);
+      if (matched === undefined) return;
+      // Multi-select highlights without committing: there is no
+      // single value to converge on, and committing would clobber
+      // the set (single-select keeps the commit-on-match behavior).
+      setHighlightedValue(matched);
+      if (!multiple) {
         setSelectedValue(matched);
       }
     },
@@ -1008,6 +1194,7 @@ export function SelectRoot({
       effectiveOpen,
       registryItems,
       highlightedValue,
+      multiple,
       selectedValue,
       setSelectedValue,
     ],
@@ -1036,6 +1223,9 @@ export function SelectRoot({
       items: registryItems,
       register,
       unregister,
+      reportItemLayout,
+      itemLayouts,
+      layoutVersion,
       labelItems: items ?? [],
       highlightedValue,
       onTypeaheadKey,
@@ -1054,6 +1244,9 @@ export function SelectRoot({
       registryItems,
       register,
       unregister,
+      reportItemLayout,
+      itemLayouts,
+      layoutVersion,
       items,
       highlightedValue,
       onTypeaheadKey,
@@ -1167,16 +1360,21 @@ export function SelectValue({
   // list is open), then the root `items` table (closed-list display
   // — registrations unmount with the list), then the raw value (an
   // item that never registered still shows something honest), then
-  // the placeholder.
-  const registered =
+  // the placeholder. Under `multiple` each selected value resolves
+  // the same way and the labels join with ", ".
+  const lookup = (one: string): string => {
+    const registered = findCollectionText(root?.items ?? [], one);
+    const tabled = root?.labelItems.find((entry) => entry.value === one)?.label;
+    return registered ?? tabled ?? one;
+  };
+  const label =
     value === null || value === undefined
       ? undefined
-      : findCollectionText(root?.items ?? [], value);
-  const tabled =
-    value === null || value === undefined
-      ? undefined
-      : root?.labelItems.find((entry) => entry.value === value)?.label;
-  const label = registered ?? tabled ?? value ?? undefined;
+      : Array.isArray(value)
+        ? value.length === 0
+          ? undefined
+          : value.map(lookup).join(", ")
+        : lookup(value);
   const showingPlaceholder = label === undefined;
   const state: SelectValueState = { value, placeholder: showingPlaceholder };
   const content =
@@ -1295,12 +1493,25 @@ export function SelectPositioner({
   align,
   sideOffset,
   alignOffset,
+  alignItemWithTrigger = true,
   testID,
   style,
   children,
   render,
 }: SelectPositionerProps): React.ReactNode {
   const root = useContext(SelectRootContext);
+  // Align the selected item over the trigger (Base UI default): the
+  // offset is the selected item's list-local origin, read from the
+  // item-layout registry the items report into on layout. Falls back
+  // to trigger anchoring with no selection.
+  const selected = root?.selectedValue;
+  const alignedKey: string | null = Array.isArray(selected)
+    ? (selected[0] ?? null)
+    : (selected ?? null);
+  const alignedOffset =
+    root && alignItemWithTrigger && alignedKey !== null
+      ? (root.itemLayouts.get(alignedKey) ?? null)
+      : null;
   // Hooks before guards: measurement runs (harmlessly) even while
   // closed so activation never reorders hook calls.
   const floating = useFloatingPlacement({
@@ -1309,6 +1520,10 @@ export function SelectPositioner({
     offset: sideOffset,
     align,
     alignOffset,
+    contentOffset:
+      alignedOffset === null
+        ? undefined
+        : { x: alignedOffset.x, y: alignedOffset.y },
     active: root?.open ?? false,
   });
   if (!root) return null;
@@ -1555,5 +1770,186 @@ export function SelectItemIndicator({
     <View testID={testID} style={style}>
       {children}
     </View>
+  );
+}
+
+export type SelectScrollArrowState = {
+  /** Whether the list is currently open. */
+  open: boolean;
+  /** Whether the arrow is currently disabled. */
+  disabled: boolean;
+};
+
+export type SelectScrollUpArrowProps = {
+  testID?: string;
+  /** Value or function of arrow state, caller-provided. */
+  style?: StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>;
+  /** Arrow marker content (usually a chevron glyph). */
+  children?: ReactNode;
+  /** Terminal: it never scrolls and is announced as disabled. Default `false`. */
+  disabled?: boolean;
+  /** Accessible name source. Default `"Scroll up"`. */
+  accessibilityLabel?: string;
+  /**
+   * Ref to the scrolling `ScrollView` the caller composes around the
+   * items (usually inside the same `SelectPopup`). The default press
+   * jumps that scroller to the top. Caller content stays unstyled —
+   * the ref only needs the host's scroll methods at press time.
+   */
+  scrollRef?: RefObject<unknown>;
+  /**
+   * Runs after the default scroll-to-top. Composes like the trigger
+   * `onPress` (internal first, then the caller's handler).
+   */
+  onPress?: () => void;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<SelectScrollArrowState, SlotProps>;
+};
+
+export type SelectScrollDownArrowProps = {
+  testID?: string;
+  /** Value or function of arrow state, caller-provided. */
+  style?: StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>;
+  /** Arrow marker content (usually a chevron glyph). */
+  children?: ReactNode;
+  /** Terminal: it never scrolls and is announced as disabled. Default `false`. */
+  disabled?: boolean;
+  /** Accessible name source. Default `"Scroll down"`. */
+  accessibilityLabel?: string;
+  /**
+   * Ref to the scrolling `ScrollView` the caller composes around the
+   * items (usually inside the same `SelectPopup`). The default press
+   * jumps that scroller to the end. Caller content stays unstyled —
+   * the ref only needs the host's scroll methods at press time.
+   */
+  scrollRef?: RefObject<unknown>;
+  /**
+   * Runs after the default scroll-to-end. Composes like the trigger
+   * `onPress` (internal first, then the caller's handler).
+   */
+  onPress?: () => void;
+  /**
+   * Element or function substitution (Base UI parity).
+   */
+  render?: RenderProp<SelectScrollArrowState, SlotProps>;
+};
+
+/**
+ * Read the host scroll methods off a caller-provided ref without
+ * importing a host component the boundary gate does not allow.
+ * Anything without the method is a no-op — a caller typo must not
+ * crash the list.
+ */
+type ScrollerHost = {
+  scrollTo?: (options: { x?: number; y?: number; animated?: boolean }) => void;
+  scrollToEnd?: (options?: { animated?: boolean }) => void;
+} | null;
+
+type UnknownScroller = {
+  scrollTo?: unknown;
+  scrollToEnd?: unknown;
+};
+
+function scrollerHost(ref: RefObject<unknown> | undefined): ScrollerHost {
+  const current = ref?.current;
+  if (typeof current !== "object" || current === null) return null;
+  // `typeof x === "function"` narrows `unknown` only to `Function`,
+  // which never satisfies a concrete signature — so read each prop
+  // as the target function type directly (a real `ScrollView` host
+  // satisfies it structurally) and gate the call on being callable.
+  const host = current as UnknownScroller;
+  return {
+    scrollTo:
+      typeof host.scrollTo === "function"
+        ? (host.scrollTo as NonNullable<ScrollerHost>["scrollTo"])
+        : undefined,
+    scrollToEnd:
+      typeof host.scrollToEnd === "function"
+        ? (host.scrollToEnd as NonNullable<ScrollerHost>["scrollToEnd"])
+        : undefined,
+  };
+}
+
+function SelectScrollArrow({
+  direction,
+  defaultLabel,
+  testID,
+  style,
+  children,
+  disabled = false,
+  accessibilityLabel,
+  scrollRef,
+  onPress,
+  render,
+}: {
+  direction: "up" | "down";
+  defaultLabel: string;
+  testID?: string;
+  style?: StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>;
+  children?: ReactNode;
+  disabled?: boolean;
+  accessibilityLabel?: string;
+  scrollRef?: RefObject<unknown>;
+  onPress?: () => void;
+  render?: RenderProp<SelectScrollArrowState, SlotProps>;
+}): React.ReactNode {
+  const root = useContext(SelectRootContext);
+  const open = root?.open ?? false;
+  const state: SelectScrollArrowState = { open, disabled };
+
+  const commitScroll = useCallback(() => {
+    if (disabled) return;
+    const host = scrollerHost(scrollRef);
+    if (direction === "up") {
+      host?.scrollTo?.({ y: 0, animated: false });
+    } else {
+      host?.scrollToEnd?.({ animated: false });
+    }
+    onPress?.();
+  }, [disabled, direction, onPress, scrollRef]);
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityLabel: accessibilityLabel ?? defaultLabel,
+      testID,
+      disabled,
+      onPress: commitScroll,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? defaultLabel}
+      testID={testID}
+      disabled={disabled}
+      onPress={commitScroll}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+export function SelectScrollUpArrow(
+  props: SelectScrollUpArrowProps,
+): React.ReactNode {
+  return (
+    <SelectScrollArrow direction="up" defaultLabel="Scroll up" {...props} />
+  );
+}
+
+export function SelectScrollDownArrow(
+  props: SelectScrollDownArrowProps,
+): React.ReactNode {
+  return (
+    <SelectScrollArrow direction="down" defaultLabel="Scroll down" {...props} />
   );
 }

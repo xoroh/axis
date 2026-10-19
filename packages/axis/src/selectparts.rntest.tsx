@@ -19,6 +19,8 @@ import {
   SelectPortal,
   SelectPositioner,
   SelectRoot,
+  SelectScrollDownArrow,
+  SelectScrollUpArrow,
   SelectSeparator,
   SelectTrigger,
   SelectValue,
@@ -42,7 +44,7 @@ function FruitCompound(props: {
   defaultValue?: string | null;
   open?: boolean;
   defaultOpen?: boolean;
-  onValueChange?: (value: string) => void;
+  onValueChange?: (value: string | string[]) => void;
   onOpenChange?: (open: boolean) => void;
   onDismiss?: () => void;
   disabled?: boolean;
@@ -538,5 +540,235 @@ describe("Select compound parts on React Native", () => {
     );
     expect(screen.getByTestId("edge-pos")).toBeTruthy();
     expect(positionerSide).toBeDefined();
+  });
+});
+
+describe("Select multiple on React Native", () => {
+  function FruitMultiCompound(props: {
+    value?: string[];
+    defaultValue?: string[];
+    onValueChange?: (value: string | string[]) => void;
+  }) {
+    return (
+      <SelectRoot
+        multiple
+        value={props.value}
+        defaultValue={props.defaultValue}
+        onValueChange={props.onValueChange}
+        items={[
+          { value: "apple", label: "Apple" },
+          { value: "mango", label: "Mango" },
+        ]}
+      >
+        <SelectTrigger testID="msel" accessibilityLabel="Fruit">
+          <SelectValue placeholder="Pick fruits" />
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectPositioner>
+            <SelectPopup testID="msel-list">
+              <SelectItem value="apple" testID="m-apple">
+                <SelectItemText>Apple</SelectItemText>
+                <SelectItemIndicator testID="apple-check">
+                  <Text>✓</Text>
+                </SelectItemIndicator>
+              </SelectItem>
+              <SelectItem value="mango" testID="m-mango">
+                <SelectItemText>Mango</SelectItemText>
+                <SelectItemIndicator testID="mango-check">
+                  <Text>✓</Text>
+                </SelectItemIndicator>
+              </SelectItem>
+            </SelectPopup>
+          </SelectPositioner>
+        </SelectPortal>
+      </SelectRoot>
+    );
+  }
+
+  it("toggles items without closing and joins labels in the value", async () => {
+    const seen: Array<string | string[]> = [];
+    await render(
+      <PortalHost>
+        <FruitMultiCompound onValueChange={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
+    await pressTestId("msel");
+    await pressTestId("m-apple");
+    // Choosing never dismisses in multiple mode.
+    expect(screen.getByRole("listbox")).toBeTruthy();
+    expect(seen).toEqual([["apple"]]);
+    await pressTestId("m-mango");
+    expect(screen.queryByRole("listbox")).toBeTruthy();
+    expect(seen).toEqual([["apple"], ["apple", "mango"]]);
+    expect(
+      screen.getByText("Apple, Mango", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.getByTestId("apple-check")).toBeTruthy();
+    expect(screen.getByTestId("mango-check")).toBeTruthy();
+  });
+
+  it("deselecting keeps the list open and reports the remainder", async () => {
+    const seen: Array<string | string[]> = [];
+    await render(
+      <PortalHost>
+        <FruitMultiCompound
+          defaultValue={["apple", "mango"]}
+          onValueChange={(v) => seen.push(v)}
+        />
+      </PortalHost>,
+    );
+    await pressTestId("msel");
+    expect(
+      screen.getByText("Apple, Mango", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    await pressTestId("m-apple");
+    expect(seen).toEqual([["mango"]]);
+    expect(screen.getByText("Mango")).toBeTruthy();
+    expect(screen.queryByTestId("apple-check")).toBeNull();
+  });
+
+  it("typeahead highlights without committing in multiple mode", async () => {
+    const seen: Array<string | string[]> = [];
+    await render(
+      <PortalHost>
+        <FruitMultiCompound
+          defaultValue={["apple"]}
+          onValueChange={(v) => seen.push(v)}
+        />
+      </PortalHost>,
+    );
+    await pressTestId("msel");
+    const popup = screen.getByTestId("msel-list");
+    await act(async () => {
+      fireEvent(popup, "keyDown", { key: "m" });
+    });
+    // Highlighted but not selected: no commit, no callback.
+    expect(seen).toEqual([]);
+    expect(
+      screen.getByTestId("m-mango").props.accessibilityState,
+    ).toMatchObject({ selected: false });
+  });
+});
+
+describe("Select scroll arrows on React Native", () => {
+  function ArrowCase({
+    onUp,
+    onDown,
+  }: {
+    onUp?: () => void;
+    onDown?: () => void;
+  }) {
+    const scroller = {
+      current: {
+        scrollTo: jest.fn(),
+        scrollToEnd: jest.fn(),
+      },
+    };
+    ArrowCase.lastScroller = scroller;
+    return (
+      <SelectRoot defaultOpen>
+        <SelectTrigger testID="ar-trigger" accessibilityLabel="Fruit">
+          <Text>Pick</Text>
+        </SelectTrigger>
+        <SelectPortal>
+          <SelectPositioner>
+            <SelectPopup testID="ar-list">
+              <SelectItem value="a" testID="ar-a">
+                <SelectItemText>A</SelectItemText>
+              </SelectItem>
+              <SelectScrollUpArrow
+                testID="ar-up"
+                scrollRef={scroller}
+                onPress={onUp}
+              />
+              <SelectScrollDownArrow
+                testID="ar-down"
+                scrollRef={scroller}
+                onPress={onDown}
+              />
+            </SelectPopup>
+          </SelectPositioner>
+        </SelectPortal>
+      </SelectRoot>
+    );
+  }
+  ArrowCase.lastScroller = null as {
+    current: { scrollTo: jest.Mock; scrollToEnd: jest.Mock } | null;
+  } | null;
+
+  it("scrolls to the top and bottom edges by default", async () => {
+    await render(
+      <PortalHost>
+        <ArrowCase />
+      </PortalHost>,
+    );
+    await pressTestId("ar-up");
+    expect(ArrowCase.lastScroller?.current?.scrollTo).toHaveBeenCalledWith({
+      y: 0,
+      animated: false,
+    });
+    await pressTestId("ar-down");
+    expect(ArrowCase.lastScroller?.current?.scrollToEnd).toHaveBeenCalledWith({
+      animated: false,
+    });
+  });
+
+  it("composes the caller onPress after the default scroll", async () => {
+    const order: string[] = [];
+    const scroller = {
+      current: {
+        scrollTo: jest.fn(() => order.push("scroll")),
+        scrollToEnd: jest.fn(),
+      },
+    };
+    await render(
+      <PortalHost>
+        <SelectRoot defaultOpen>
+          <SelectTrigger testID="ar2-trigger" accessibilityLabel="Fruit">
+            <Text>Pick</Text>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectScrollUpArrow
+                  testID="ar2-up"
+                  scrollRef={scroller}
+                  onPress={() => order.push("press")}
+                />
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
+    );
+    await pressTestId("ar2-up");
+    expect(order).toEqual(["scroll", "press"]);
+  });
+
+  it("does nothing when disabled", async () => {
+    const scrollTo = jest.fn();
+    const scroller = { current: { scrollTo, scrollToEnd: jest.fn() } };
+    await render(
+      <PortalHost>
+        <SelectRoot defaultOpen>
+          <SelectTrigger testID="ar3-trigger" accessibilityLabel="Fruit">
+            <Text>Pick</Text>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectScrollUpArrow
+                  testID="ar3-up"
+                  scrollRef={scroller}
+                  disabled
+                />
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
+    );
+    await pressTestId("ar3-up");
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 });

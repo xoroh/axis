@@ -188,7 +188,7 @@ describe("render composition: disclosure", () => {
 
 describe("render composition: lists", () => {
   it("SelectItem element render preserves choose-and-close", async () => {
-    const seen: string[] = [];
+    const seen: Array<string | string[]> = [];
     await render(
       <PortalHost>
         <Select

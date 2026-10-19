@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useWindowDimensions, type ViewStyle } from "react-native";
 import {
   type Align,
+  clampRectToViewport,
   type Placement,
   type Rect,
   resolveFloatingRect,
@@ -259,6 +260,14 @@ export function useFloatingPlacement(options: {
    * the rects. Default `0` (no padding).
    */
   viewportPadding?: number;
+  /**
+   * Shift the popup so the content at this list-local origin sits over
+   * the trigger's origin (Base UI `alignItemWithTrigger` parity):
+   * `{x, y}` is the selected item's offset inside the popup, applied
+   * after the regular resolve and clamped into the viewport. Absent
+   * or `{x: 0, y: 0}` is the plain path.
+   */
+  contentOffset?: { x?: number; y?: number };
   active: boolean;
 }): {
   onContentLayout: (event: ContentLayoutEvent) => void;
@@ -274,6 +283,7 @@ export function useFloatingPlacement(options: {
     alignOffset,
     matchAnchorWidth = false,
     viewportPadding = 0,
+    contentOffset,
     active,
   } = options;
   const viewport = useWindowDimensions();
@@ -359,12 +369,28 @@ export function useFloatingPlacement(options: {
     viewport,
     viewportPadding,
   });
+  // Content offset (align-to-selected-item): shift the resolved point
+  // so the selected item's origin lands on the trigger's origin, then
+  // clamp back into the padded viewport (overflow edges still pin
+  // inside rather than leaving the screen). Zero offset is the plain
+  // path and skips the second clamp untouched.
+  const shiftX = contentOffset?.x ?? 0;
+  const shiftY = contentOffset?.y ?? 0;
+  const shifted =
+    shiftX === 0 && shiftY === 0
+      ? at
+      : clampRectToViewport(
+          { x: at.x - shiftX, y: anchor.y - shiftY },
+          boxSize,
+          viewport,
+          viewportPadding,
+        );
   return {
     onContentLayout,
     style: {
       position: "absolute",
-      left: at.x - origin.x,
-      top: at.y - origin.y,
+      left: shifted.x - origin.x,
+      top: shifted.y - origin.y,
       ...(matchAnchorWidth ? { width: boxWidth } : null),
     },
     measured: true,

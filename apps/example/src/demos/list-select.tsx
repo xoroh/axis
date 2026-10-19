@@ -142,10 +142,10 @@ export const ListSelectDemo: Demo = {
           style={rowStyle}
           listStyle={listStyle}
         >
-          <SelectItem value="date" style={itemStyle}>
+          <SelectItem value="date" label="Date" style={itemStyle}>
             <Text style={textStyle}>Date</Text>
           </SelectItem>
-          <SelectItem value="name" style={itemStyle}>
+          <SelectItem value="name" label="Name" style={itemStyle}>
             <Text style={textStyle}>Name</Text>
           </SelectItem>
         </Select>
@@ -173,7 +173,7 @@ export const ListSelectDemo: Demo = {
                       Fields
                     </Text>
                   </SelectGroupLabel>
-                  <SelectItem value="date" style={itemStyle}>
+                  <SelectItem value="date" label="Date" style={itemStyle}>
                     <SelectItemText style={axisLabelStyle}>Date</SelectItemText>
                     <SelectItemIndicator>
                       <Text style={textStyle}>✓</Text>
@@ -181,7 +181,7 @@ export const ListSelectDemo: Demo = {
                   </SelectItem>
                 </SelectGroup>
                 <SelectSeparator />
-                <SelectItem value="name" style={itemStyle}>
+                <SelectItem value="name" label="Name" style={itemStyle}>
                   <SelectItemText style={axisLabelStyle}>Name</SelectItemText>
                   <SelectItemIndicator>
                     <Text style={textStyle}>✓</Text>

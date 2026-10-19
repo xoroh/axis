@@ -23,7 +23,7 @@ function FruitSelect(props: {
   disabled?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
-  onValueChange?: (value: string) => void;
+  onValueChange?: (value: string | string[]) => void;
   onOpenChange?: (open: boolean) => void;
 }) {
   const {
@@ -103,7 +103,7 @@ describe("Select on React Native", () => {
   });
 
   it("option press selects, closes, and fires the value", async () => {
-    const seen: string[] = [];
+    const seen: Array<string | string[]> = [];
     const changed: boolean[] = [];
     await render(
       <PortalHost>
@@ -128,7 +128,7 @@ describe("Select on React Native", () => {
   });
 
   it("re-pressing the selected item keeps it with no extra fire", async () => {
-    const seen: string[] = [];
+    const seen: Array<string | string[]> = [];
     await render(
       <PortalHost>
         <FruitSelect onValueChange={(v) => seen.push(v)} />
@@ -150,7 +150,7 @@ describe("Select on React Native", () => {
   });
 
   it("scrim press dismisses without selecting", async () => {
-    const seen: string[] = [];
+    const seen: Array<string | string[]> = [];
     const changed: boolean[] = [];
     await render(
       <PortalHost>
@@ -171,7 +171,7 @@ describe("Select on React Native", () => {
 
   it("follows the controlled value prop", async () => {
     function Host() {
-      const [value, setValue] = useState<string | null>("apple");
+      const [value, setValue] = useState<string | string[] | null>("apple");
       return (
         <Select testID="sel" value={value} onValueChange={setValue}>
           <SelectItem value="apple" testID="apple">
@@ -235,7 +235,7 @@ describe("Select on React Native", () => {
   });
 
   it("disabled blocks the trigger: no open, no options, no callbacks", async () => {
-    const seen: string[] = [];
+    const seen: Array<string | string[]> = [];
     const changed: boolean[] = [];
     await render(
       <PortalHost>
@@ -276,5 +276,101 @@ describe("Select on React Native", () => {
       expect.stringContaining("Unexpected text node"),
     );
     errorSpy.mockRestore();
+  });
+});
+
+describe("Select multiple on React Native", () => {
+  function FruitMultiSelect(props: {
+    value?: string[];
+    defaultValue?: string[];
+    onValueChange?: (value: string | string[]) => void;
+  }) {
+    return (
+      <Select
+        testID="multi"
+        multiple
+        placeholder={<Text>Pick fruits</Text>}
+        value={props.value}
+        defaultValue={props.defaultValue}
+        onValueChange={props.onValueChange}
+      >
+        <SelectItem value="apple" label="Apple" testID="m-apple">
+          <Text>Apple</Text>
+        </SelectItem>
+        <SelectItem value="mango" label="Mango" testID="m-mango">
+          <Text>Mango</Text>
+        </SelectItem>
+      </Select>
+    );
+  }
+
+  it("toggles items without closing and reports arrays", async () => {
+    const seen: Array<string | string[]> = [];
+    await render(
+      <PortalHost>
+        <FruitMultiSelect onValueChange={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
+    await press("multi");
+    await press("m-apple");
+    // Choosing never dismisses in multiple mode.
+    expect(screen.queryByRole("listbox")).toBeTruthy();
+    expect(seen).toEqual([["apple"]]);
+    await press("m-mango");
+    expect(screen.queryByRole("listbox")).toBeTruthy();
+    expect(seen).toEqual([["apple"], ["apple", "mango"]]);
+    expect(
+      screen.getByTestId("m-apple").props.accessibilityState,
+    ).toMatchObject({ selected: true });
+    expect(
+      screen.getByTestId("m-mango").props.accessibilityState,
+    ).toMatchObject({ selected: true });
+  });
+
+  it("deselecting removes the item and shows joined labels", async () => {
+    const seen: Array<string | string[]> = [];
+    await render(
+      <PortalHost>
+        <FruitMultiSelect
+          defaultValue={["apple", "mango"]}
+          onValueChange={(v) => seen.push(v)}
+        />
+      </PortalHost>,
+    );
+    await press("multi");
+    // Joined selection shows in the trigger.
+    expect(screen.getByText("Apple, Mango")).toBeTruthy();
+    await press("m-apple");
+    expect(seen).toEqual([["mango"]]);
+    // Trigger shows the joined label; the open list still shows the
+    // matching item, so both render "Mango".
+    expect(screen.getAllByText("Mango")).toHaveLength(2);
+    // Empty selection falls back to the placeholder.
+    await press("m-mango");
+    expect(seen).toEqual([["mango"], []]);
+    expect(screen.getByText("Pick fruits")).toBeTruthy();
+  });
+
+  it("controlled multiple follows the value array", async () => {
+    const view = await render(
+      <PortalHost>
+        <FruitMultiSelect value={["mango"]} />
+      </PortalHost>,
+    );
+    await press("multi");
+    expect(
+      screen.getByTestId("m-apple").props.accessibilityState,
+    ).toMatchObject({ selected: false });
+    expect(
+      screen.getByTestId("m-mango").props.accessibilityState,
+    ).toMatchObject({ selected: true });
+    await act(async () => {
+      view.rerender(
+        <PortalHost>
+          <FruitMultiSelect value={["apple", "mango"]} />
+        </PortalHost>,
+      );
+    });
+    expect(screen.getByText("Apple, Mango")).toBeTruthy();
   });
 });
