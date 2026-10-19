@@ -286,6 +286,30 @@ export {
   type OtpFieldState,
 } from "./components/OtpField";
 export {
+  Overlay,
+  OverlayBackdrop,
+  type OverlayBackdropProps,
+  type OverlayBackdropState,
+  OverlayClose,
+  type OverlayCloseProps,
+  type OverlayCloseState,
+  type OverlayContextValue,
+  type OverlayDismissOptions,
+  OverlayPopup,
+  type OverlayPopupProps,
+  type OverlayPopupState,
+  OverlayPortal,
+  type OverlayPortalProps,
+  OverlayRoot,
+  type OverlayRootProps,
+  type OverlayRootState,
+  OverlayTrigger,
+  type OverlayTriggerProps,
+  type OverlayTriggerState,
+  useOverlay,
+  useScrollLock,
+} from "./components/Overlay";
+export {
   Popover,
   PopoverArrow,
   type PopoverArrowProps,
@@ -504,7 +528,9 @@ export {
 } from "./focusTrap";
 export {
   createOverlayModality,
+  getSharedOverlayModality,
   type OverlayId,
+  type OverlayModalityRegistry,
   type OverlayModalityState,
   useOverlayModality,
   useOverlayRegistration,

@@ -90,6 +90,20 @@ async function pressTestId(testID: string) {
   });
 }
 
+/**
+ * Press a trigger hidden behind its own open modal layer. The overlay
+ * layer claims `accessibilityViewIsModal`, so the trigger reads as
+ * hidden to accessibility queries while open (the `Dialog` precedent
+ * in `dialogparts` — same VoiceOver behavior, asserted explicitly).
+ */
+async function pressHiddenTestId(testID: string) {
+  await act(async () => {
+    fireEvent.press(
+      screen.getByTestId(testID, { includeHiddenElements: true }),
+    );
+  });
+}
+
 async function pressText(text: string) {
   await act(async () => {
     fireEvent.press(screen.getByText(text));
@@ -106,11 +120,12 @@ describe("Select compound parts on React Native", () => {
   it("toggles the list with expanded state", async () => {
     await render(<FruitCompound testID="sel" />);
     await pressTestId("sel");
-    expect(screen.getByTestId("sel").props.accessibilityState.expanded).toBe(
-      true,
-    );
+    expect(
+      screen.getByTestId("sel", { includeHiddenElements: true }).props
+        .accessibilityState.expanded,
+    ).toBe(true);
     expect(screen.getByRole("listbox")).toBeTruthy();
-    await pressTestId("sel");
+    await pressHiddenTestId("sel");
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
@@ -147,11 +162,14 @@ describe("Select compound parts on React Native", () => {
       </SelectRoot>,
     );
     // Open: the mounted item's registration supplies the label
-    // (trigger value and open item read the same text).
-    expect(screen.getAllByText("Apple")).toHaveLength(2);
+    // (trigger value and open item read the same text — the trigger
+    // sits behind its own modal layer, so it needs the hidden opt-in).
+    expect(
+      screen.getAllByText("Apple", { includeHiddenElements: true }),
+    ).toHaveLength(2);
     // Closed: registrations unmount with the list, so the trigger
     // falls back to the raw value without an items table.
-    await pressTestId("live-sel");
+    await pressHiddenTestId("live-sel");
     expect(screen.queryByRole("listbox")).toBeNull();
     expect(screen.getByText("apple")).toBeTruthy();
   });
@@ -224,9 +242,11 @@ describe("Select compound parts on React Native", () => {
         <FruitCompound value="mango" open onOpenChange={onOpenChange} />,
       );
     });
-    expect(screen.getByText("Mango (Alphonso)")).toBeTruthy();
+    expect(
+      screen.getByText("Mango (Alphonso)", { includeHiddenElements: true }),
+    ).toBeTruthy();
     expect(screen.getByRole("listbox")).toBeTruthy();
-    await pressTestId("sel");
+    await pressHiddenTestId("sel");
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 

@@ -82,7 +82,9 @@ export {
 } from "./focusTrap";
 export {
   createOverlayModality,
+  getSharedOverlayModality,
   type OverlayId,
+  type OverlayModalityRegistry,
   type OverlayModalityState,
   useOverlayModality,
   useOverlayRegistration,

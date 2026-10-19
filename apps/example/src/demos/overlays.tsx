@@ -3,6 +3,12 @@ import {
   Button,
   ContextMenu,
   Drawer,
+  OverlayBackdrop,
+  OverlayClose,
+  OverlayPopup,
+  OverlayPortal,
+  OverlayRoot,
+  OverlayTrigger,
   Portal,
   PortalHost,
   Sheet,
@@ -28,8 +34,8 @@ import type { Demo } from "./registry";
 /**
  * Overlays demo: blocking dialog, sheet, drawer, toast (single-shot
  * and queued), tooltip (monolith and compound), long-press menu,
- * standalone portal host, and semantics-free trigger — all with
- * clean caller styles.
+ * shared overlay root primitives, standalone portal host, and
+ * semantics-free trigger — all with clean caller styles.
  */
 export const OverlaysDemo: Demo = {
   slug: "overlays",
@@ -43,6 +49,13 @@ export const OverlaysDemo: Demo = {
     "ToastViewport",
     "Portal",
     "PortalHost",
+    "Overlay",
+    "OverlayRoot",
+    "OverlayPortal",
+    "OverlayBackdrop",
+    "OverlayPopup",
+    "OverlayTrigger",
+    "OverlayClose",
     "Tooltip",
     "TooltipArrow",
     "TooltipPopup",
@@ -470,6 +483,101 @@ export const OverlaysDemo: Demo = {
               Are you sure? Unsaved modifications will be permanently lost.
             </Text>
           </AlertDialog>
+        </View>
+
+        {/* Overlay Root Primitives */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Overlay Root & Stacking:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            One root owns Android back, stacking, focus and scroll lock; the
+            portal paints at the app host.
+          </Text>
+          <OverlayRoot>
+            <OverlayTrigger
+              accessibilityLabel="Open overlay root demo"
+              style={{
+                alignSelf: "flex-start",
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 6,
+                backgroundColor: theme.surfaceSubtle,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+              >
+                Open Overlay
+              </Text>
+            </OverlayTrigger>
+            <OverlayPortal testID="overlay-demo-portal">
+              <OverlayBackdrop testID="overlay-demo-backdrop" />
+              <OverlayPopup
+                accessibilityLabel="Overlay root demo"
+                testID="overlay-demo-popup"
+                style={{
+                  position: "absolute",
+                  top: "30%",
+                  width: "90%",
+                  maxWidth: 420,
+                  alignSelf: "center",
+                  padding: 24,
+                  borderRadius: 14,
+                  backgroundColor: theme.surface,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
+                  gap: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "700",
+                    color: theme.text,
+                  }}
+                >
+                  Presented by the shared overlay root
+                </Text>
+                <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                  Backdrop press, Android back and the button below all dismiss
+                  through the same root.
+                </Text>
+                <OverlayClose
+                  accessibilityLabel="Close overlay root demo"
+                  style={{
+                    alignSelf: "flex-end",
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 6,
+                    backgroundColor: theme.primary,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: theme.primaryFg,
+                    }}
+                  >
+                    Close Overlay
+                  </Text>
+                </OverlayClose>
+              </OverlayPopup>
+            </OverlayPortal>
+          </OverlayRoot>
         </View>
 
         {/* Portal Host */}

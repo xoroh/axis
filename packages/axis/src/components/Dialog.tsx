@@ -8,7 +8,6 @@ import {
   useMemo,
 } from "react";
 import {
-  Modal,
   Pressable,
   type StyleProp,
   Text,
@@ -20,41 +19,37 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 
 /**
  * Dialog — an unstyled modal dialog with scrim dismissal.
  *
- * Structure only: an RN `Modal` (transparent) holding a scrim layer
- * with the dialog surface inside it. No default visuals — every
- * visual value (`overlayStyle`, `surfaceStyle`, `titleStyle`) is
- * caller-provided. State follows the `useControllableState` pattern:
- * `open` (+ `onOpenChange`) for controlled use, `defaultOpen` for
- * uncontrolled (default `false`). Presence is mount/unmount: closed
- * renders `null`, open mounts the `Modal`. When `dismissable`
- * (default `true`) the scrim is a `Pressable` labelled "Dismiss" and
- * scrim press closes via `onDismiss` + `onOpenChange(false)`; when
- * `false` the scrim is a plain `View` with no label and no handler —
- * no fake affordance — which is the non-dismissable shape an
- * `AlertDialog` consumer needs (dismissal then comes only from the
- * caller's own action buttons). `Modal.onRequestClose` is always
- * wired to the same dismiss path and no-ops when not `dismissable`.
+ * Structure only: the `Overlay` root painting at the app's
+ * `PortalHost`, holding a scrim layer with the dialog surface inside
+ * it. No default visuals — every visual value (`overlayStyle`,
+ * `surfaceStyle`, `titleStyle`) is caller-provided. State follows the
+ * `useControllableState` pattern: `open` (+ `onOpenChange`) for
+ * controlled use, `defaultOpen` for uncontrolled (default `false`).
+ * Presence is mount/unmount: closed renders `null`, open paints the
+ * surface at the host. When `dismissable` (default `true`) the scrim
+ * is a `Pressable` labelled "Dismiss" and scrim press closes via
+ * `onDismiss` + `onOpenChange(false)`; when `false` the scrim is a
+ * plain `View` with no label and no handler — no fake affordance —
+ * which is the non-dismissable shape an `AlertDialog` consumer needs
+ * (dismissal then comes only from the caller's own action buttons).
+ * Android system back is wired to the same dismiss path and no-ops
+ * when not `dismissable` (the `Overlay` root owns it, topmost
+ * surface only).
  *
  * Deferred, each for a named reason (not oversight):
  * - No animation: the surface mounts/unmounts synchronously with
- *   state. Exit transitions would need the `presence` model to keep
- *   the surface mounted until the animation finishes; until a
- *   consumer needs animated dismissal, that machinery buys zero
- *   observed behavior (the Accordion panel precedent).
- * - No `BackHandler`: hardware-back dismissal beyond what the host
- *   `Modal` already reports through `onRequestClose` on Android needs
- *   a dismissal-stack owner (`overlayModality`/`dismissWiring`); a
- *   lone dialog owning the global back button would fight the stack
- *   the moment a second overlay exists.
- * - No focus trap: containing accessibility focus needs the
- *   `focusTrap` + `overlayModality` models adapted to RN
- *   accessibility-focus traversal (no DOM tab order to borrow);
- *   until that adaptation lands, this surface only declares the
- *   dialog role and label and leaves traversal to the host.
+ *   state (parity D9). The overlay root's `presence` machine is wired
+ *   for the first consumer that drives an exit animation.
+ * - No focus CONTAINMENT: the overlay root moves accessibility focus
+ *   into the surface on open and restores it to the trigger /
+ *   `finalFocus` on close, and declares `accessibilityViewIsModal`;
+ *   traversal trapping still needs the `focusTrap` RN adaptation
+ *   (parity D5, no DOM tab order to borrow).
  *
  * Accessibility notes: the surface is an accessibility element
  * (`accessible`) so the `dialog` role reaches assistive tech — a
@@ -150,7 +145,7 @@ export function Dialog({
     onOpenChange,
   );
 
-  // Always wired to `Modal.onRequestClose`, and the scrim's press
+  // Always wired to the overlay root's system-back branch, and the scrim's press
   // handler when dismissable: closes through `onDismiss` first, then
   // reports `false`. Guards on `dismissable` so the non-dismissable
   // shape (and the platform back button) cannot close the dialog.
@@ -171,7 +166,7 @@ export function Dialog({
   );
 
   // Closed presence: nothing mounted, so no scrim, no surface, and no
-  // Modal host for assistive tech or tests to find.
+  // portal host for assistive tech or tests to find.
   if (!isOpen) return null;
 
   const surface = (
@@ -190,25 +185,38 @@ export function Dialog({
   );
 
   return (
-    <Modal transparent onRequestClose={dismiss}>
-      {dismissable ? (
-        <Pressable
-          accessibilityLabel="Dismiss"
-          testID={testID ? `${testID}-scrim` : undefined}
-          onPress={dismiss}
-          style={overlayStyle}
-        >
-          {surface}
-        </Pressable>
-      ) : (
-        <View
-          testID={testID ? `${testID}-scrim` : undefined}
-          style={overlayStyle}
-        >
-          {surface}
-        </View>
-      )}
-    </Modal>
+    <OverlayRoot
+      open={isOpen}
+      onOpenChange={setOpen}
+      onDismiss={dismiss}
+      modal
+      dismissable={dismissable}
+      dismiss={{
+        outsidePointer: dismissable,
+        systemBack: dismissable,
+        escape: dismissable,
+      }}
+    >
+      <OverlayPortal>
+        {dismissable ? (
+          <Pressable
+            accessibilityLabel="Dismiss"
+            testID={testID ? `${testID}-scrim` : undefined}
+            onPress={dismiss}
+            style={overlayStyle}
+          >
+            {surface}
+          </Pressable>
+        ) : (
+          <View
+            testID={testID ? `${testID}-scrim` : undefined}
+            style={overlayStyle}
+          >
+            {surface}
+          </View>
+        )}
+      </OverlayPortal>
+    </OverlayRoot>
   );
 }
 
@@ -217,7 +225,7 @@ export function Dialog({
 /*                                                                      */
 /* `<Dialog>` above is the concise single-part API. The parts below    */
 /* mirror Base UI's Dialog anatomy — Root (state owner, renders no     */
-/* element), Trigger, Portal (an RN `Modal`: the native portal host),  */
+/* element), Trigger, Portal (the overlay root at `PortalHost`),      */
 /* Backdrop (the scrim), Popup (the surface), Title, Description,      */
 /* Close — with `render` element/function composition and              */
 /* value-or-function `style` on every part. Omitted Base UI pieces     */
@@ -225,7 +233,7 @@ export function Dialog({
 /* scrolls through caller `ScrollView` content), no                    */
 /* `initialFocus`/`finalFocus` or `"trap-focus"` focus containment     */
 /* (needs the `focusTrap` RN adaptation), no nested-dialog             */
-/* coordination (nested Modals render independently), no               */
+/* coordination beyond the overlay root's stack, no                   */
 /* `createHandle` detached triggers (needs an imperative registry      */
 /* owner), no `Portal` `container`/`keepMounted` (no DOM container     */
 /* exists; keep-alive would ship behavior no suite can observe —        */
@@ -437,9 +445,22 @@ export function DialogRoot({
 
   // The root owns state, never layout: no host element (Base UI parity).
   return (
-    <DialogCompoundContext.Provider value={disclosure}>
-      {children}
-    </DialogCompoundContext.Provider>
+    <OverlayRoot
+      open={isOpen}
+      onOpenChange={setOpen}
+      onDismiss={onDismiss}
+      modal={modal}
+      dismissable={!disablePointerDismissal}
+      dismiss={{
+        outsidePointer: !disablePointerDismissal,
+        systemBack: !disablePointerDismissal,
+        escape: !disablePointerDismissal,
+      }}
+    >
+      <DialogCompoundContext.Provider value={disclosure}>
+        {children}
+      </DialogCompoundContext.Provider>
+    </OverlayRoot>
   );
 }
 
@@ -504,23 +525,14 @@ export function DialogPortal({
   if (!disclosure) return null;
   if (!disclosure.open) return null;
 
-  // The RN portal host: a transparent `Modal` presents above the app
+  // The portal host: the overlay root paints at the app's `PortalHost`
   // (the native equivalent of appending to `body`). `container` and
   // `keepMounted` have no honest native mapping and are omitted by
   // design (documented above): RNTL and the platform both hide
   // invisible modal subtrees entirely, so a keep-alive prop would
   // ship behavior no suite can observe — the contract rejects
   // import-success-only surface.
-  return (
-    <Modal
-      transparent
-      visible={disclosure.open}
-      onRequestClose={disclosure.dismiss}
-      testID={testID}
-    >
-      {children}
-    </Modal>
-  );
+  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
 }
 
 export function DialogBackdrop({

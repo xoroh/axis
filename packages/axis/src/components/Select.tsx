@@ -13,7 +13,6 @@ import {
   useState,
 } from "react";
 import {
-  Modal,
   Pressable,
   type StyleProp,
   Text,
@@ -40,6 +39,7 @@ import {
   type TypeaheadBuffer,
 } from "../typeahead";
 import { useControllableState } from "../useControllableState";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -590,7 +590,7 @@ export function SelectItem({
 /* + positioned list, labels read from its own children). The parts    */
 /* below mirror Base UI's Select anatomy — Root (state owner, renders  */
 /* no element), Trigger, Value (label lookup over the item registry),  */
-/* Portal (an RN `Modal`: the native portal host), Backdrop (the        */
+/* Portal (the overlay host), Backdrop (the        */
 /* scrim), Positioner (measured placement against the trigger          */
 /* anchor), Popup (the listbox), Arrow (caller-positioned marker),      */
 /* Item (shared with the monolith, extended with `label`, `render`,    */
@@ -647,7 +647,7 @@ export type SelectRootProps = {
   /** Fires on scrim dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
-   * Whether the open list presents modally (a `Modal` host with a
+   * Whether the open list presents modally (an overlay host with a
    * scrim). Default `true`. When `false` the portal renders in-box
    * with no scrim and the trigger stays pressable (the `Menu`
    * compound precedent).
@@ -1050,10 +1050,28 @@ export function SelectRoot({
   );
 
   // The root owns state, never layout: no host element (Base UI parity).
+  // The overlay root wraps it so Android back, stacking, dismissal
+  // and focus belong to one owner (the `MenuRoot` precedent). The
+  // overlay tracks the effective (disabled-terminal) open state — the
+  // same value the parts read — while open-state writes flow back
+  // through `setOpen`.
   return (
-    <SelectRootContext.Provider value={disclosure}>
-      {children}
-    </SelectRootContext.Provider>
+    <OverlayRoot
+      open={effectiveOpen}
+      onOpenChange={setOpen}
+      onDismiss={onDismiss}
+      modal={modal}
+      dismissable={!disablePointerDismissal}
+      dismiss={{
+        outsidePointer: !disablePointerDismissal,
+        systemBack: !disablePointerDismissal,
+        escape: !disablePointerDismissal,
+      }}
+    >
+      <SelectRootContext.Provider value={disclosure}>
+        {children}
+      </SelectRootContext.Provider>
+    </OverlayRoot>
   );
 }
 
@@ -1182,26 +1200,18 @@ export function SelectPortal({
   if (!root) return null;
   if (!root.open) return null;
 
-  // The RN portal host: a transparent `Modal` presents above the app
-  // (the native equivalent of appending to `body`). When the shared
-  // overlay root lands, this host can move onto it; positioning
-  // (`SelectPositioner` + the `positioning` model) stays separable
-  // from the host either way, so the move touches only this part.
-  // Non-modal roots render in-box with no scrim instead (the `Menu`
-  // compound precedent).
+  // The portal host: `OverlayPortal` paints at the app's
+  // `PortalHost`, so the compound list escapes clipped parents —
+  // that is the point of the part — without an RN `Modal` of its own
+  // (one root presents every layer: Android back, stacking, focus
+  // and scroll lock belong to the `OverlayRoot` above — the `Menu`
+  // compound precedent). `container` has no native meaning and is
+  // omitted by design. Non-modal roots render in-box with no scrim
+  // instead (the `Menu` compound precedent).
   if (!root.modal) {
     return <View testID={testID}>{children}</View>;
   }
-  return (
-    <Modal
-      transparent
-      visible={root.open}
-      onRequestClose={root.dismiss}
-      testID={testID}
-    >
-      {children}
-    </Modal>
-  );
+  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
 }
 
 export function SelectBackdrop({

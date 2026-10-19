@@ -64,8 +64,13 @@ describe("Dialog compound parts on React Native", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(screen.getByText("Example dialog")).toBeTruthy();
     expect(screen.getByText("A description")).toBeTruthy();
+    // The trigger sits behind the open modal layer, so it is hidden
+    // from assistive tech (`accessibilityViewIsModal` on the top
+    // overlay layer) — the same thing VoiceOver does with a dialog.
+    // Its state is still readable with the hidden-element opt-in.
     expect(
-      screen.getByLabelText("Open dialog").props.accessibilityState,
+      screen.getByLabelText("Open dialog", { includeHiddenElements: true })
+        .props.accessibilityState,
     ).toMatchObject({ expanded: true });
   });
 
