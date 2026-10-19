@@ -116,7 +116,7 @@ Base UI `Checkbox`: root + indicator parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `CheckboxRoot` | `Checkbox.Root` | `checked`, `defaultChecked`, `onCheckedChange`, `indeterminate`, `disabled`, `ref`; checkbox role with `checked` (`mixed` while indeterminate — RN types `checked` as `boolean \| 'mixed'`); `render` + function `style` over `{ checked, disabled, indeterminate }` | No `readOnly`/`required`/`name`/`value`/`form` (no `Form` owner — native forms are caller-owned, the `Input` precedent); `data-*` → D1; no transition attributes (D9) |
+| `CheckboxRoot` | `Checkbox.Root` | `checked`, `defaultChecked`, `onCheckedChange`, `indeterminate`, `disabled`, `ref`; checkbox role with `checked` (`mixed` while indeterminate — RN types `checked` as `boolean \| 'mixed'`); `render` + function `style` over `{ checked, disabled, indeterminate }` | No `readOnly`/`required`/`name`/`value`/`form`/`inputRef`/`id`/`uncheckedValue` (no `Form` owner — native forms are caller-owned, the `Input` precedent); no `parent` (needs the group's `allValues`, which Axis `CheckboxGroup` does not expose — indeterminate stays caller-owned); no `nativeButton` prop (RN `Pressable` is native by construction — the `MenuItem` precedent); `data-*` → D1; no transition attributes (D9) |
 | `CheckboxIndicator` | `Checkbox.Indicator` | mounts while checked or indeterminate; caller styles checked vs mixed through indicator state; `render` over `{ checked, disabled, indeterminate }` | No `keepMounted` (D3 — untestable keep-alive); static `style` (chrome carries no state) |
 
 ### Toggle — aligned
@@ -135,7 +135,7 @@ with `multiple` (default `false`) and `orientation` (default
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `ToggleGroup` | `ToggleGroup` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false` — single replaces, multi accumulates), `orientation` (default `'horizontal'`, structural `flexDirection` base), `disabled`, `ref`; group role; state carries `{ value, disabled, multiple, orientation }` | `loopFocus` omitted (no roving layer); `data-*` → D1 |
+| `ToggleGroup` | `ToggleGroup` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false` — single replaces, multi accumulates), `orientation` (default `'horizontal'`, structural `flexDirection` base), `disabled`, `ref`; group role; state carries `{ value, disabled, multiple, orientation }` | No `loopFocus` (no roving layer — the `Toolbar` precedent); `data-*` → D1 |
 | `ToggleGroupItem` | (composed `Toggle`) | button role, pressed state, per-item `disabled`; pressed announced through `selected`, never `checked` (RN maps no `pressed` key; `checked` stays reserved for checkbox/radio/switch commitments — the `Toggle` precedent) | Axis keeps the Item part (Base UI composes bare `Toggle`s — the Item carries Axis group wiring and terminal-disabled) |
 
 ### Accordion — aligned
@@ -146,10 +146,10 @@ Base UI `Accordion`: Root/Item/Header/Trigger/Panel with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `AccordionRoot` | `Accordion.Root` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false`), `orientation` (default `'vertical'`, structural `flexDirection` base), `disabled`, `ref`; no root role (RN defines no accordion role) | `loopFocus` omitted (no roving layer); `orientation` carries no focus behavior (deprecated upstream too); `data-*` → D1 |
+| `AccordionRoot` | `Accordion.Root` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false`), `orientation` (default `'vertical'`, structural `flexDirection` base), `disabled`, `ref`; no root role (RN defines no accordion role) | No `loopFocus` (no roving layer); `orientation` carries no focus behavior (deprecated upstream too); `data-*` → D1 |
 | `AccordionItem` | `Accordion.Item` | `value` (string domain), `disabled`, per-item `onOpenChange` (fires even when another item's activation changes it) | No `index` in state (no `data-index` on native — D1) |
 | `AccordionHeader` | `Accordion.Header` | heading host (`header` role) wrapping the trigger | — |
-| `AccordionTrigger` | `Accordion.Trigger` | button role, `expanded` state, tap toggles; inert outside an item | No `nativeButton` (RN presses are native by construction) |
+| `AccordionTrigger` | `Accordion.Trigger` | button role, `expanded` state, tap toggles; inert outside an item | No `nativeButton` prop (not a Base UI Accordion prop; RN `Pressable` is native by construction in any case) |
 | `AccordionPanel` | `Accordion.Panel` | mounts only while the item is open | No `hiddenUntilFound` (N/A — no find-in-page on native); no `keepMounted` (D3); no transition attributes (D9) |
 
 The old `Accordion`/`AccordionItem` monoliths are removed (Base UI-exact parts replace them — ADR 001, ADR 011; migration in CHANGELOG).

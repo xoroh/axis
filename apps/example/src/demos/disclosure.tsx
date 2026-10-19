@@ -160,6 +160,8 @@ export const DisclosureDemo: Demo = {
           </Text>
           <AccordionRoot
             accessibilityLabel="Demo accordion"
+            multiple
+            defaultValue={["general"]}
             style={{
               borderRadius: 8,
               borderWidth: 1,
@@ -167,40 +169,62 @@ export const DisclosureDemo: Demo = {
               overflow: "hidden",
             }}
           >
-            <AccordionItem value="a">
-              <AccordionHeader>
-                <AccordionTrigger
-                  accessibilityLabel="General section"
-                  style={{
-                    padding: 12,
-                    backgroundColor: theme.surfaceSubtle,
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
+            {(
+              [
+                [
+                  "general",
+                  "General Settings",
+                  "General",
+                  "Accordion details rendered cleanly.",
+                ],
+                [
+                  "privacy",
+                  "Privacy",
+                  "Privacy",
+                  "Privacy controls live here.",
+                ],
+                [
+                  "notifications",
+                  "Notifications",
+                  "Notifications",
+                  "Notification preferences live here.",
+                ],
+              ] as Array<[string, string, string, string]>
+            ).map(([itemValue, title, label, panel]) => (
+              <AccordionItem key={itemValue} value={itemValue}>
+                <AccordionHeader>
+                  <AccordionTrigger
+                    accessibilityLabel={label}
                     style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: theme.text,
+                      padding: 12,
+                      backgroundColor: theme.surfaceSubtle,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    General Settings
-                  </Text>
-                  <Text style={{ fontSize: 12, color: theme.textSubtle }}>
-                    ▼
-                  </Text>
-                </AccordionTrigger>
-              </AccordionHeader>
-              <AccordionPanel>
-                <View style={{ padding: 12, backgroundColor: theme.surface }}>
-                  <Text style={{ fontSize: 13, color: theme.text }}>
-                    Accordion details rendered cleanly with smooth animated
-                    reveal.
-                  </Text>
-                </View>
-              </AccordionPanel>
-            </AccordionItem>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      {title}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: theme.textSubtle }}>
+                      ▼
+                    </Text>
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionPanel>
+                  <View style={{ padding: 12, backgroundColor: theme.surface }}>
+                    <Text style={{ fontSize: 13, color: theme.text }}>
+                      {panel}
+                    </Text>
+                  </View>
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
           </AccordionRoot>
         </View>
 

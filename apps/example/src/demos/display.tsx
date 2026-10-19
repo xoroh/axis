@@ -119,6 +119,26 @@ export const DisplayDemo: Demo = {
                 <Text style={{ fontSize: 16, color: theme.text }}>P</Text>
               </AvatarFallback>
             </AvatarRoot>
+            <AvatarRoot>
+              <AvatarImage
+                accessibilityLabel="Demo broken avatar"
+                source={{ uri: "https://example.com/missing.png" }}
+                style={{ width: 48, height: 48, borderRadius: 24 }}
+              />
+              <AvatarFallback
+                delay={250}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: theme.surfaceSubtle,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontSize: 16, color: theme.text }}>Q</Text>
+              </AvatarFallback>
+            </AvatarRoot>
             <View>
               <Text
                 style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
