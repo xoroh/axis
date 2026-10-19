@@ -50,13 +50,13 @@ import {
   type TypeaheadBuffer,
 } from "../typeahead";
 import { useControllableState } from "../useControllableState";
-import { OverlayPortal, OverlayRoot } from "./Overlay";
 import {
   DropdownDisclosureContext,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "./DropdownMenu";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
