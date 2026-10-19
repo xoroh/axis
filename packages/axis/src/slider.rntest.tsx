@@ -551,4 +551,149 @@ describe("Slider on React Native", () => {
     expect(controlRef.current).not.toBeNull();
     expect(thumbRef.current).not.toBeNull();
   });
+
+  it("handles web keyboard: arrows move by step, flipped for RTL", async () => {
+    const seen: (number | readonly number[])[] = [];
+    const committed: (number | readonly number[])[] = [];
+    await render(
+      <SliderRoot
+        testID="sl"
+        defaultValue={30}
+        step={10}
+        onValueChange={(v) => seen.push(v)}
+        onValueCommitted={(v) => committed.push(v)}
+      >
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    const press = (key: string, shiftKey = false) =>
+      fireEvent(screen.getByTestId("sl-thumb"), "onKeyDown", {
+        key,
+        shiftKey,
+        preventDefault: () => {},
+      });
+    await act(async () => {
+      press("ArrowRight");
+    });
+    expect(seen).toEqual([40]);
+    expect(committed).toEqual([40]);
+    // Shift + arrows move by largeStep (default 10 here: same magnitude, own branch).
+    await act(async () => {
+      press("ArrowLeft", true);
+    });
+    expect(seen).toEqual([40, 30]);
+    await act(async () => {
+      press("Home");
+    });
+    expect(seen).toEqual([40, 30, 0]);
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
+      now: 0,
+    });
+  });
+
+  it("PageUp/PageDown move by largeStep and End jumps to max", async () => {
+    const seen: (number | readonly number[])[] = [];
+    await render(
+      <SliderRoot
+        testID="sl"
+        defaultValue={30}
+        step={5}
+        largeStep={25}
+        onValueChange={(v) => seen.push(v)}
+      >
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    const press = (key: string) =>
+      fireEvent(screen.getByTestId("sl-thumb"), "onKeyDown", {
+        key,
+        shiftKey: false,
+        preventDefault: () => {},
+      });
+    await act(async () => {
+      press("PageUp");
+    });
+    expect(seen).toEqual([55]);
+    await act(async () => {
+      press("PageDown");
+    });
+    expect(seen).toEqual([55, 30]);
+    await act(async () => {
+      press("End");
+    });
+    expect(seen).toEqual([55, 30, 100]);
+  });
+
+  it("flips horizontal arrows in RTL without touching vertical", async () => {
+    const seen: (number | readonly number[])[] = [];
+    await render(
+      <SliderRoot
+        testID="sl"
+        defaultValue={30}
+        step={10}
+        dir="rtl"
+        onValueChange={(v) => seen.push(v)}
+      >
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    const press = (key: string) =>
+      fireEvent(screen.getByTestId("sl-thumb"), "onKeyDown", {
+        key,
+        shiftKey: false,
+        preventDefault: () => {},
+      });
+    await act(async () => {
+      press("ArrowRight");
+    });
+    expect(seen).toEqual([20]);
+    await act(async () => {
+      press("ArrowUp");
+    });
+    // Unaffected by direction: vertical keys never flip.
+    expect(seen).toEqual([20, 30]);
+  });
+
+  it("ignores unhandled keys", async () => {
+    const seen: (number | readonly number[])[] = [];
+    await render(
+      <SliderRoot
+        testID="sl"
+        defaultValue={30}
+        onValueChange={(v) => seen.push(v)}
+      >
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    await act(async () => {
+      fireEvent(screen.getByTestId("sl-thumb"), "onKeyDown", {
+        key: "a",
+        shiftKey: false,
+        preventDefault: () => {},
+      });
+    });
+    expect(seen).toEqual([]);
+  });
 });

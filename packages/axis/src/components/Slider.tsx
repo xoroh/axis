@@ -81,13 +81,15 @@ export type SliderRootState = {
   activeThumbIndex: number;
   /** Reading direction of the track. Default `"horizontal"`. */
   orientation: SliderOrientation;
+  /** Text direction for key and gesture mapping. Default `"ltr"`. */
+  dir: "ltr" | "rtl";
   /** Range lower bound. */
   min: number;
   /** Range upper bound. */
   max: number;
   /** Snap increment (`<= 0` means continuous). */
   step: number;
-  /** Large-step increment (accepted for Base UI parity; no native consumer yet — no page-key equivalent). */
+  /** Large-step increment. Consumed by keyboard handling on web (Shift + arrows, PageUp/PageDown). */
   largeStep: number;
   /** Minimum gap between range values, in `step` units (raw units when `step <= 0`). */
   minStepsBetweenValues: number;
@@ -159,10 +161,9 @@ export type SliderRootProps = {
    */
   step?: number;
   /**
-   * Large-step increment. Default `10` (Base UI parity). Accepted
-   * but currently without a native consumer (no page-key
-   * equivalent; increment/decrement actions use `step`) —
-   * recorded, not silent.
+   * Large-step increment. Default `10` (Base UI parity). Consumed
+   * by keyboard handling on web: Shift + arrows and PageUp/PageDown
+   * move by `largeStep` (increment/decrement actions use `step`).
    */
   largeStep?: number;
   /**
@@ -176,6 +177,12 @@ export type SliderRootProps = {
    * Vertical drags map track-bottom to `min` and track-top to `max`.
    */
   orientation?: SliderOrientation;
+  /**
+   * Text direction for key and gesture mapping. Default `"ltr"`.
+   * With `dir="rtl"` on a horizontal slider, ArrowLeft/ArrowRight
+   * swap meaning (Base UI parity); vertical is unaffected.
+   */
+  dir?: "ltr" | "rtl";
   /**
    * Thumb alignment against the control edge. Default `"center"`
    * (the thumb centers on the value point). `"edge"` pins the
@@ -304,6 +311,7 @@ type SliderDisclosure = {
   dragging: boolean;
   activeThumbIndex: number;
   orientation: SliderOrientation;
+  dir: "ltr" | "rtl";
   min: number;
   max: number;
   step: number;
@@ -366,6 +374,7 @@ export function SliderRoot({
   largeStep = 10,
   minStepsBetweenValues = 0,
   orientation = "horizontal",
+  dir = "ltr",
   thumbAlignment = "center",
   disabled = false,
   testID,
@@ -447,6 +456,7 @@ export function SliderRoot({
     dragging,
     activeThumbIndex,
     orientation,
+    dir,
     min,
     max,
     step,
@@ -460,6 +470,7 @@ export function SliderRoot({
       dragging,
       activeThumbIndex,
       orientation,
+      dir,
       min,
       max,
       step,
@@ -477,6 +488,7 @@ export function SliderRoot({
       dragging,
       activeThumbIndex,
       orientation,
+      dir,
       min,
       max,
       step,
@@ -737,10 +749,27 @@ export function SliderIndicator({
   const state: SliderIndicatorState = { from, length };
   // Structural fill geometry: the caller style merges over it and
   // owns every visual value (color, radius, track height).
+  // Structural fill geometry: absolute overlay inside the track
+  // (the track is relatively positioned by default), merged under
+  // caller style. The caller owns every visual value (color, radius,
+  // track height); without an explicit height the track would show
+  // no fill, which is a caller styling decision, not a silent default.
   const geometry: StyleProp<ViewStyle> =
     disclosure.orientation === "horizontal"
-      ? { left: `${from}%`, width: `${length}%`, top: 0, bottom: 0 }
-      : { bottom: `${from}%`, height: `${length}%`, left: 0, right: 0 };
+      ? {
+          position: "absolute",
+          left: `${from}%`,
+          width: `${length}%`,
+          top: 0,
+          bottom: 0,
+        }
+      : {
+          position: "absolute",
+          bottom: `${from}%`,
+          height: `${length}%`,
+          left: 0,
+          right: 0,
+        };
   const substituted = resolveRender(
     render,
     {
@@ -810,6 +839,59 @@ export function SliderThumb({
     }
   };
 
+  // Keyboard (web): RN passes `onKeyDown` through to the DOM host and
+  // native ignores the unknown prop. Matches Base UI: arrows move by
+  // `step`, Shift + arrows and PageUp/PageDown move by `largeStep`,
+  // Home jumps to `min` and End to `max`. Arrows flip for RTL
+  // horizontals (vertical is unaffected). Every key commit reports
+  // through `onValueCommitted`, like Base UI's commit event.
+  const onKeyDown = (event: {
+    key?: string;
+    shiftKey?: boolean;
+    preventDefault?: () => void;
+    nativeEvent?: { key?: string };
+  }) => {
+    if (disclosure.disabled) return;
+    const key = event.key ?? event.nativeEvent?.key;
+    if (typeof key !== "string") return;
+    const horizontal = disclosure.orientation === "horizontal";
+    const rtl = disclosure.dir === "rtl" && horizontal;
+    const large = disclosure.largeStep;
+    const forward = rtl ? -1 : 1;
+    let delta: number | null = null;
+    if (key === "ArrowRight") delta = forward * stepAmount;
+    else if (key === "ArrowLeft") delta = -forward * stepAmount;
+    else if (key === "ArrowUp") delta = stepAmount;
+    else if (key === "ArrowDown") delta = -stepAmount;
+    else if (key === "PageUp") delta = large;
+    else if (key === "PageDown") delta = -large;
+    else if (key === "Home" || key === "End") {
+      disclosure.setActiveThumbIndex(at);
+      disclosure.commit(
+        at,
+        key === "Home" ? disclosure.min : disclosure.max,
+        true,
+      );
+      event.preventDefault?.();
+      return;
+    } else {
+      return;
+    }
+    if (
+      event.shiftKey &&
+      (key === "ArrowRight" ||
+        key === "ArrowLeft" ||
+        key === "ArrowUp" ||
+        key === "ArrowDown")
+    ) {
+      delta = (delta === null || delta === 0 ? 1 : Math.sign(delta)) * large;
+    }
+    if (delta === null || delta === 0) return;
+    disclosure.setActiveThumbIndex(at);
+    disclosure.commit(at, thumbValue + (delta ?? 0), true);
+    event.preventDefault?.();
+  };
+
   // Structural thumb geometry: the caller style merges over it and
   // owns every visual value (size, color, shape). Percent translates
   // are valid RN (`translateX: `${number}%``); the cross-axis 50%
@@ -854,6 +936,7 @@ export function SliderThumb({
     accessibilityState: { disabled: disclosure.disabled },
     accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
     onAccessibilityAction,
+    onKeyDown,
     accessibilityLabel,
     testID,
     disabled: disclosure.disabled,
@@ -881,6 +964,8 @@ export function SliderThumb({
       accessibilityState={{ disabled: disclosure.disabled }}
       accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
       onAccessibilityAction={onAccessibilityAction}
+      // RN passes onKeyDown through on web; native ignores the unknown prop.
+      onKeyDown={onKeyDown}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
       style={[

@@ -40,6 +40,8 @@ export const RangesDemo: Demo = {
   ],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
+    const [price, setPrice] = useState<readonly number[]>([25, 75]);
+    const [vertical, setVertical] = useState(40);
     const now = new Date();
     const thisMonth = toCalendarMonth(now.getUTCFullYear(), now.getUTCMonth());
     const [month, setMonth] = useState(thisMonth);
@@ -167,6 +169,184 @@ export const RangesDemo: Demo = {
               </SliderControl>
             </View>
           </SliderRoot>
+        </View>
+
+        {/* Range slider: two thumbs, minimum gap, committed values */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <SliderRoot
+            value={price}
+            onValueChange={(v) => {
+              if (Array.isArray(v)) setPrice([...v]);
+            }}
+            minStepsBetweenValues={5}
+          >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <SliderLabel
+                testID="demo-range-label"
+                style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+              >
+                Price range
+              </SliderLabel>
+              <SliderValue
+                testID="demo-range-value"
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: theme.primary,
+                }}
+              >
+                {(values) => `$${values[0]} – $${values[1]}`}
+              </SliderValue>
+            </View>
+            <View style={{ paddingVertical: 10 }}>
+              <SliderControl>
+                <SliderTrack
+                  style={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <SliderIndicator
+                    style={{
+                      backgroundColor: theme.accent,
+                      borderRadius: 4,
+                    }}
+                  />
+                  <SliderThumb
+                    index={0}
+                    accessibilityLabel="Demo minimum price"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.accent,
+                    }}
+                  />
+                  <SliderThumb
+                    index={1}
+                    accessibilityLabel="Demo maximum price"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.accent,
+                    }}
+                  />
+                </SliderTrack>
+              </SliderControl>
+            </View>
+          </SliderRoot>
+        </View>
+
+        {/* Vertical + disabled sliders */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 16,
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 24 }}>
+            <View style={{ alignItems: "center", gap: 8 }}>
+              <SliderRoot
+                value={vertical}
+                onValueChange={(v) => typeof v === "number" && setVertical(v)}
+                orientation="vertical"
+              >
+                <SliderValue
+                  testID="demo-vertical-value"
+                  style={{ fontSize: 13, color: theme.text }}
+                >
+                  {(values) => `${values[0]}`}
+                </SliderValue>
+                <SliderControl>
+                  <SliderTrack
+                    testID="demo-vertical-track"
+                    style={{
+                      width: 8,
+                      height: 140,
+                      borderRadius: 4,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <SliderIndicator
+                      style={{
+                        backgroundColor: theme.primary,
+                        borderRadius: 4,
+                      }}
+                    />
+                    <SliderThumb
+                      accessibilityLabel="Demo vertical slider"
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: theme.surface,
+                        borderWidth: 2,
+                        borderColor: theme.primary,
+                      }}
+                    />
+                  </SliderTrack>
+                </SliderControl>
+              </SliderRoot>
+              <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                Vertical
+              </Text>
+            </View>
+            <View style={{ alignItems: "center", gap: 8, opacity: 0.7 }}>
+              <SliderRoot value={30} disabled>
+                <SliderValue
+                  testID="demo-disabled-value"
+                  style={{ fontSize: 13, color: theme.text }}
+                >
+                  {(values) => `${values[0]}`}
+                </SliderValue>
+                <SliderControl>
+                  <SliderTrack
+                    style={{
+                      width: 8,
+                      height: 140,
+                      borderRadius: 4,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <SliderIndicator
+                      style={{ backgroundColor: theme.textSubtle }}
+                    />
+                    <SliderThumb accessibilityLabel="Demo disabled slider" />
+                  </SliderTrack>
+                </SliderControl>
+              </SliderRoot>
+              <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                Disabled
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Calendar-model grid */}

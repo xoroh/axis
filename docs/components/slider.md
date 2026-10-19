@@ -102,9 +102,10 @@ aligned).
 | `min` | `number` | no | `0` | Range lower bound. |
 | `max` | `number` | no | `100` | Range upper bound. `min > max` collapses the range to the single point `min` (no throw). |
 | `step` | `number` | no | `0` | Snap increment. Values `<= 0` are continuous. Documented deviation from Base UI's default `1`: Axis preserves continuous-by-default. |
-| `largeStep` | `number` | no | `10` | Accepted for Base UI parity but currently without a native consumer (no page-key equivalent; increment/decrement actions use `step`) — recorded, not silent. |
+| `largeStep` | `number` | no | `10` | Consumed by keyboard handling on web: Shift + arrows and PageUp/PageDown move by `largeStep` (increment/decrement actions use `step`). |
 | `minStepsBetweenValues` | `number` | no | `0` | Minimum gap between range values, in `step` units (raw value units when `step <= 0`). The dragged thumb stops at the gap instead of crossing or pushing its neighbour. |
 | `orientation` | `"horizontal" \| "vertical"` | no | `"horizontal"` | Reading direction of the track. Vertical drags map track-bottom to `min` and track-top to `max`. |
+| `dir` | `"ltr" \| "rtl"` | no | `"ltr"` | Text direction for key and gesture mapping. With `dir="rtl"` on a horizontal slider, ArrowLeft/ArrowRight swap meaning (Base UI parity); vertical is unaffected. |
 | `thumbAlignment` | `"center" \| "edge"` | no | `"center"` | Thumb alignment against the control edge. `"center"` centers the thumb on the value point; `"edge"` pins the thumb fully inside the track, touching the correct edge at the bounds (computed as `translate(-percent%)` — no measurement needed). |
 | `disabled` | `boolean` | no | `false` | Terminal: no gesture commits, no action commits, no callbacks, announced as disabled. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the container. |
@@ -113,7 +114,7 @@ aligned).
 | `render` | `RenderProp<SliderRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root container host element. |
 
-`SliderRootState`: `{ values: number[]; disabled: boolean; dragging: boolean; activeThumbIndex: number; orientation: "horizontal" | "vertical"; min: number; max: number; step: number; largeStep: number; minStepsBetweenValues: number }`.
+`SliderRootState`: `{ values: number[]; disabled: boolean; dragging: boolean; activeThumbIndex: number; orientation: "horizontal" | "vertical"; dir: "ltr" | "rtl"; min: number; max: number; step: number; largeStep: number; minStepsBetweenValues: number }`.
 
 #### `SliderLabel`
 
@@ -270,6 +271,12 @@ function PriceRange() {
   actions — a screen reader announces the value and offers
   stepping, which commits through the same snapped path as
   dragging.
+- Keyboard (web only — RN passes `onKeyDown` through to the DOM
+  host; native ignores the unknown prop): ArrowRight/ArrowUp
+  move by `step`, ArrowLeft/ArrowDown move back (flipped for
+  RTL horizontals via `dir`), Shift + arrows and PageUp/PageDown
+  move by `largeStep`, Home jumps to `min`, End to `max`. Every
+  key commit reports through `onValueCommitted`.
 - The root, control, track, and indicator carry no roles of
   their own: semantics live on the thumbs (and the caller's
   `SliderLabel` text).
