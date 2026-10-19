@@ -56,9 +56,9 @@ overlay families (`Select` and `Menu` compound with `modal`,
 layer, so Android back, stacking, dismissal, and focus belong to
 one owner (see `docs/components/overlay.md`). The RN `Modal`
 host survives only where a platform guarantee needs it: the
-`useModal` opt-in on direct `OverlayRoot` compositions, and
-`Sheet`, which keeps its own `Modal` host and is not on this
-stack. The host owns ordering and mount state, not root
+`useModal` opt-in on direct `OverlayRoot` compositions (every
+family, `Drawer` included, presents through the overlay stack).
+The host owns ordering and mount state, not root
 presentation. A `Portal` with no matching host renders its
 children inline rather than dropping them silently.
 
