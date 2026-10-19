@@ -1,7 +1,8 @@
 ## Dialog
 
 Unstyled modal dialog with scrim dismissal. Closed renders
-`null`; open mounts a transparent RN `Modal` holding a scrim layer
+`null`; open presents through `OverlayRoot` + `OverlayPortal`
+painting at the app's `PortalHost`, holding a scrim layer
 with the dialog surface inside it. Structure, behavior, and
 accessibility only — every visual value (`overlayStyle`,
 `surfaceStyle`, `titleStyle`) is caller-provided. State follows
@@ -50,7 +51,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `Dialog` | — | Concise single-part API (`title`/`children`/`actions`); kept for existing consumers, not a Base UI part. |
 | `DialogRoot` | `Dialog.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. |
 | `DialogTrigger` | `Dialog.Trigger` | Button role, expanded state, tap toggles. |
-| `DialogPortal` | `Dialog.Portal` | RN `Modal` host — the native portal. |
+| `DialogPortal` | `Dialog.Portal` | `OverlayPortal` host at `PortalHost` — the native portal. |
 | `DialogBackdrop` | `Dialog.Backdrop` | Scrim dismissal (`disablePointerDismissal` lives on Root; the monolith spells it `dismissable`). |
 | `DialogPopup` | `Dialog.Popup` | Surface view carrying the dialog role. |
 | `DialogTitle` | `Dialog.Title` | Heading text (`header` role). |
@@ -64,6 +65,24 @@ oversights: no `Viewport` (a Popup scrolls through caller
 `createHandle` detached triggers, no `Portal`
 `container`/`keepMounted` — all recorded in
 `docs/BASE_UI_PARITY.md` (§ Dialog — aligned).
+
+### Overlay hosting
+
+Both APIs present through `OverlayRoot` + `OverlayPortal`
+painting at the app's `PortalHost` — the surface escapes
+clipped parents without an RN `Modal` of its own (one root
+presents every layer: Android back, stacking, focus, and scroll
+lock belong to the `OverlayRoot` above). `modal` defaults to
+`true` on the compound root (`"trap-focus"` behaves as modal —
+focus containment still needs the `focusTrap` RN adaptation);
+the monolith is always modal. `disablePointerDismissal`
+(default `false`; the monolith spells it `dismissable`,
+default `true`) flows into `dismissable` and every dismiss
+branch (`outsidePointer`, `systemBack`, `escape`); `onDismiss`
+fires on scrim (or request-close) dismissal before
+`onOpenChange(false)`. No family part takes `useModal` itself —
+the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
+`Overlay` compositions (see `docs/components/overlay.md`).
 
 ### Props
 
@@ -119,7 +138,7 @@ whether the dialog is open, and whether the trigger is disabled.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `children` | `ReactNode` | no | — | Portal content (Backdrop + Popup composed by the caller). |
-| `testID` | `string` | no | — | Test identifier, forwarded to the `Modal` host. |
+| `testID` | `string` | no | — | Test identifier, forwarded to the portal host. |
 
 The portal renders `null` outside a root and while closed —
 there is no keep-alive (`docs/BASE_UI_PARITY.md`, D3).
@@ -294,26 +313,26 @@ function CompoundDialog() {
   `ViewAccessibility` types), so it is left out rather than
   smuggled past the typechecker.
 - The dismissable scrim is a `Pressable` labelled "Dismiss";
-  scrim press and `Modal.onRequestClose` share one dismiss path
+  scrim press and system back share one dismiss path
   (`onDismiss`, then `onOpenChange(false)`), guarded on
   `dismissable`/`disablePointerDismissal`. The non-dismissable
   scrim is a plain `View` with no label and no handler — no fake
   affordance.
-- Closed renders `null`: no scrim, no surface, no `Modal` host
+- Closed renders `null`: no scrim, no surface, no portal host
   for assistive tech or tests to find.
 - Explicitly deferred, each for a named reason: no animation
   (the surface mounts/unmounts synchronously with state — exit
   transitions would need the `presence` model to keep it mounted,
   unneeded until a consumer needs animated dismissal); no
-  `BackHandler` beyond what the host `Modal` already reports
-  through `onRequestClose` (a lone dialog owning the global back
+  `BackHandler` beyond what the overlay root already wires to
+  the system-back branch (a lone dialog owning the global back
   button would fight the dismissal stack the moment a second
   overlay exists); no focus trap and no
   `initialFocus`/`finalFocus` (containing accessibility focus
   needs the `focusTrap` + `overlayModality` RN adaptation — no
   DOM tab order to borrow); no `Viewport` part (a Popup scrolls
   through caller `ScrollView` content); no nested-dialog
-  coordination (nested Modals render independently — parity D6).
+  coordination beyond the overlay root's stack (parity D6).
 
 ### Composition
 
