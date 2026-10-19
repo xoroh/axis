@@ -19,21 +19,62 @@ import {
   SelectPositioner,
   type SelectProps,
   SelectRoot,
+  SelectScrollDownArrow,
+  SelectScrollUpArrow,
   SelectSeparator,
   SelectTrigger,
   type SelectTriggerProps,
   SelectValue,
 } from "@xoroh/axis";
-import { useState } from "react";
-import { Text, type TextStyle, View } from "react-native";
+import { useRef, useState } from "react";
+import { ScrollView, Text, type TextStyle, View } from "react-native";
 import { useTheme } from "../theme";
 import type { Demo } from "./registry";
+
+/**
+ * Long option list shared by the multiple demos: enough rows to
+ * overflow the popup so scroll arrows have something to move.
+ */
+const LONG_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "apple", label: "Apple" },
+  { value: "apricot", label: "Apricot" },
+  { value: "banana", label: "Banana" },
+  { value: "blackberry", label: "Blackberry" },
+  { value: "blueberry", label: "Blueberry" },
+  { value: "cherry", label: "Cherry" },
+  { value: "coconut", label: "Coconut" },
+  { value: "cranberry", label: "Cranberry" },
+  { value: "date", label: "Date" },
+  { value: "dragonfruit", label: "Dragonfruit" },
+  { value: "elderberry", label: "Elderberry" },
+  { value: "fig", label: "Fig" },
+  { value: "grape", label: "Grape" },
+  { value: "grapefruit", label: "Grapefruit" },
+  { value: "guava", label: "Guava" },
+  { value: "kiwi", label: "Kiwi" },
+  { value: "lemon", label: "Lemon" },
+  { value: "lime", label: "Lime" },
+  { value: "lychee", label: "Lychee" },
+  { value: "mango", label: "Mango" },
+  { value: "melon", label: "Melon" },
+  { value: "nectarine", label: "Nectarine" },
+  { value: "orange", label: "Orange" },
+  { value: "papaya", label: "Papaya" },
+  { value: "peach", label: "Peach" },
+  { value: "pear", label: "Pear" },
+  { value: "pineapple", label: "Pineapple" },
+  { value: "plum", label: "Plum" },
+  { value: "raspberry", label: "Raspberry" },
+  { value: "strawberry", label: "Strawberry" },
+];
 
 /**
  * List selection demo: dropdown, filterable combo, and filter-as-type
  * autocomplete with plain caller styles — plus the compound select
  * anatomy (root/trigger/value/portal/backdrop/positioner/popup with
- * grouped items and indicators).
+ * grouped items and indicators), a multiple monolith over a long
+ * list, and a compound multiple with scroll arrows around a
+ * scrolling option list.
  */
 export const ListSelectDemo: Demo = {
   slug: "list-select",
@@ -54,14 +95,18 @@ export const ListSelectDemo: Demo = {
     "SelectGroup",
     "SelectGroupLabel",
     "SelectSeparator",
+    "SelectScrollUpArrow",
+    "SelectScrollDownArrow",
     "Combobox",
     "Autocomplete",
   ],
   render: function ListSelectScreen() {
     const { theme } = useTheme();
     const [sort, setSort] = useState<string | null>(null);
+    const [toppings, setToppings] = useState<string[]>([]);
     const [fruit, setFruit] = useState("");
     const [berry, setBerry] = useState("");
+    const longListRef = useRef<ScrollView>(null);
     const triggerStyle: SelectTriggerProps["style"] = {
       alignSelf: "flex-start",
       paddingVertical: 8,
@@ -127,6 +172,14 @@ export const ListSelectDemo: Demo = {
       fontSize: 14,
       color: theme.text,
     };
+    const arrowStyle = {
+      alignItems: "center" as const,
+      paddingVertical: 6,
+    };
+    const arrowTextStyle: TextStyle = {
+      fontSize: 12,
+      color: theme.textSubtle,
+    };
     const placeholderStyle: TextStyle = {
       fontSize: 14,
       color: theme.textSubtle,
@@ -187,6 +240,87 @@ export const ListSelectDemo: Demo = {
                     <Text style={textStyle}>✓</Text>
                   </SelectItemIndicator>
                 </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+        <Text style={headingStyle}>Multiple Select (long list):</Text>
+        <Text style={{ fontSize: 12, color: theme.textSubtle }}>
+          Choosing toggles without closing; the trigger joins the labels.
+        </Text>
+        <Select
+          accessibilityLabel="Demo multiple select"
+          multiple
+          value={toppings}
+          onValueChange={(next) => setToppings(Array.isArray(next) ? next : [])}
+          placeholder={<Text style={placeholderStyle}>Pick fruits</Text>}
+          style={rowStyle}
+          listStyle={listStyle}
+        >
+          {LONG_OPTIONS.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              label={option.label}
+              style={itemStyle}
+            >
+              <Text style={textStyle}>{option.label}</Text>
+            </SelectItem>
+          ))}
+        </Select>
+        <Text style={headingStyle}>
+          Compound multiple + scroll arrows (long list):
+        </Text>
+        <Text style={{ fontSize: 12, color: theme.textSubtle }}>
+          The selected item opens aligned over the trigger; arrows jump the
+          scroller to either end.
+        </Text>
+        <SelectRoot multiple defaultValue={["mango"]} items={[...LONG_OPTIONS]}>
+          <SelectTrigger
+            accessibilityLabel="Demo compound multiple select"
+            style={triggerStyle}
+          >
+            <SelectValue placeholder="Pick fruits" style={axisLabelStyle} />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectBackdrop />
+            <SelectPositioner align="start">
+              <SelectPopup style={popupStyle}>
+                <SelectScrollUpArrow
+                  accessibilityLabel="Scroll list to top"
+                  scrollRef={longListRef}
+                  style={arrowStyle}
+                >
+                  <Text style={arrowTextStyle}>▲ Top</Text>
+                </SelectScrollUpArrow>
+                <ScrollView
+                  ref={longListRef}
+                  style={{ maxHeight: 220 }}
+                  accessibilityLabel="Fruit options"
+                >
+                  {LONG_OPTIONS.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      label={option.label}
+                      style={itemStyle}
+                    >
+                      <SelectItemText style={axisLabelStyle}>
+                        {option.label}
+                      </SelectItemText>
+                      <SelectItemIndicator>
+                        <Text style={textStyle}>✓</Text>
+                      </SelectItemIndicator>
+                    </SelectItem>
+                  ))}
+                </ScrollView>
+                <SelectScrollDownArrow
+                  accessibilityLabel="Scroll list to bottom"
+                  scrollRef={longListRef}
+                  style={arrowStyle}
+                >
+                  <Text style={arrowTextStyle}>▼ Bottom</Text>
+                </SelectScrollDownArrow>
               </SelectPopup>
             </SelectPositioner>
           </SelectPortal>

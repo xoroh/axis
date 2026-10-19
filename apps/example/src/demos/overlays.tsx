@@ -74,55 +74,6 @@ export const OverlaysDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        <Tooltip
-          content={
-            <Text style={{ fontSize: 12, color: theme.text }}>Hint text</Text>
-          }
-          style={{ alignSelf: "flex-start" }}
-          tipStyle={{
-            backgroundColor: theme.surface,
-            borderRadius: 6,
-            borderWidth: 1,
-            borderColor: theme.border,
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          }}
-        >
-          <Text style={{ color: theme.text }}>Long-press me</Text>
-        </Tooltip>
-        <TooltipProvider delay={100}>
-          <TooltipRoot>
-            <TooltipTrigger
-              accessibilityLabel="Demo compound tip anchor"
-              style={{ alignSelf: "flex-start" }}
-            >
-              <Text style={{ fontSize: 13, color: theme.text }}>
-                Long-press me (compound)
-              </Text>
-            </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipPositioner side="top">
-                <TooltipPopup
-                  accessibilityLabel="Compound hint"
-                  style={{
-                    backgroundColor: theme.surface,
-                    borderRadius: 6,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    paddingVertical: 6,
-                    paddingHorizontal: 10,
-                  }}
-                >
-                  <TooltipArrow />
-                  <Text style={{ fontSize: 12, color: theme.text }}>
-                    Compound hint text
-                  </Text>
-                </TooltipPopup>
-              </TooltipPositioner>
-            </TooltipPortal>
-          </TooltipRoot>
-        </TooltipProvider>
         {/* ContextMenu */}
         <View
           style={{
@@ -137,6 +88,59 @@ export const OverlaysDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Context Menu:
           </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            Tooltip anchors live here too: the long-press surfaces below open
+            tips, labelled so they read as triggers.
+          </Text>
+          <Tooltip
+            content={
+              <Text style={{ fontSize: 12, color: theme.text }}>Hint text</Text>
+            }
+            style={{ alignSelf: "flex-start" }}
+            tipStyle={{
+              backgroundColor: theme.surface,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: theme.border,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+          >
+            <Text style={{ color: theme.text }}>Long-press me (tooltip)</Text>
+          </Tooltip>
+          <TooltipProvider delay={100}>
+            <TooltipRoot>
+              <TooltipTrigger
+                accessibilityLabel="Demo compound tip anchor"
+                style={{ alignSelf: "flex-start" }}
+              >
+                <Text style={{ fontSize: 13, color: theme.text }}>
+                  Long-press me (compound tooltip)
+                </Text>
+              </TooltipTrigger>
+              <TooltipPortal>
+                <TooltipPositioner side="top">
+                  <TooltipPopup
+                    accessibilityLabel="Compound hint"
+                    style={{
+                      backgroundColor: theme.surface,
+                      borderRadius: 6,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      paddingVertical: 6,
+                      paddingHorizontal: 10,
+                    }}
+                  >
+                    <TooltipArrow />
+                    <Text style={{ fontSize: 12, color: theme.text }}>
+                      Compound hint text
+                    </Text>
+                  </TooltipPopup>
+                </TooltipPositioner>
+              </TooltipPortal>
+            </TooltipRoot>
+          </TooltipProvider>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             <Button
               accessibilityLabel="Open context menu"
