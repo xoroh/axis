@@ -54,7 +54,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `Popover` | — | Concise inline API (anchor `children` + body `content`); always non-modal inline, not a Base UI part. |
 | `PopoverRoot` | `Popover.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. `modal` defaults `false` — the inverse of Dialog/Menu. |
 | `PopoverTrigger` | `Popover.Trigger` | Tap toggle, button role, expanded state, anchor-registering. |
-| `PopoverPortal` | `Popover.Portal` | `Modal` host when modal, in-box otherwise. |
+| `PopoverPortal` | `Popover.Portal` | `OverlayPortal` host at `PortalHost` when modal, in-box otherwise. |
 | `PopoverBackdrop` | `Popover.Backdrop` | Scrim dismissal, modal-only. |
 | `PopoverPositioner` | `Popover.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets). |
 | `PopoverPopup` | `Popover.Popup` | Content region (labelled, no role — see Accessibility). |
@@ -70,6 +70,27 @@ no focus containment (D5), no animation states (D9), no
 `modal`-with-trap-focus distinction, and no popover role claim
 — all recorded in `docs/BASE_UI_PARITY.md` (§ Popover —
 aligned).
+
+### Overlay hosting
+
+The compound popover presents through `OverlayRoot` +
+`OverlayPortal` painting at the app's `PortalHost` — the box
+escapes clipped parents without an RN `Modal` of its own (one
+root presents every layer: Android back, stacking, focus, and
+scroll lock belong to the `OverlayRoot` above). `modal`
+defaults to `false` — the inverse of Dialog/Menu: modal roots
+paint at `PortalHost` with a scrim; non-modal roots (the
+default) render in-box with no scrim and the trigger stays
+pressable. `disablePointerDismissal` (default `false`) flows
+into `dismissable` and every dismiss branch
+(`outsidePointer`, `systemBack`, `escape`); `onDismiss` fires
+on scrim dismissal before `onOpenChange(false)`. No family part
+takes `useModal` itself — the RN `Modal` host is an
+`OverlayRoot`-level opt-in for direct `Overlay` compositions
+(see `docs/components/overlay.md`). The monolith never touches
+this stack: scrim and box render inline, as siblings of the
+anchor inside the anchor wrapper — always non-modal inline by
+design.
 
 ### Props
 
@@ -103,7 +124,7 @@ as siblings of the anchor inside the anchor wrapper.
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismissal. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss. |
-| `modal` | `boolean` | no | `false` | Whether the open popover presents modally (a `Modal` host with a scrim). Default `false` — popovers are non-modal overlays; the portal renders in-box and the trigger stays pressable. |
+| `modal` | `boolean` | no | `false` | Whether the open popover presents modally (an overlay host with a scrim). Default `false` — popovers are non-modal overlays; the portal renders in-box and the trigger stays pressable. |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Accepted for ref-spreading callers; the root renders no element. |
 
@@ -130,8 +151,8 @@ as siblings of the anchor inside the anchor wrapper.
 | `testID` | `string` | no | — | Test identifier, forwarded to the portal host. |
 
 Renders `null` outside a root and while closed. Modal roots
-present above the app; non-modal roots (the default) render
-in-box with no scrim trap.
+paint at the app's `PortalHost`; non-modal roots (the default)
+render in-box with no scrim trap.
 
 #### `PopoverBackdrop`
 
@@ -142,7 +163,7 @@ in-box with no scrim trap.
 | `render` | `RenderProp<PopoverBackdropState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
 `PopoverBackdropState`: `{ open: boolean }`. The backdrop
-exists only for modal roots: without a `Modal` host a
+exists only for modal roots: without an overlay host a
 full-fill scrim would trap the app's touches with no dismissal
 path except the trigger, so non-modal roots render no
 backdrop — the trigger stays pressable instead. Renders `null`
@@ -343,8 +364,8 @@ nothing); `data-*` attributes are deliberately absent on
 native — state flows through those functions instead (contract
 §11, parity D1). The compound `modal` defaults to `false`
 (popovers are non-modal overlays — the inverse of Dialog/Menu),
-and the backdrop exists only for modal roots, since without a
-`Modal` host a full-fill scrim would trap the app's touches
+and the backdrop exists only for modal roots, since without an
+overlay host a full-fill scrim would trap the app's touches
 with no dismissal path. The omitted Base UI pieces
 (`container`, `Viewport`, focus containment, animation states)
 are recorded in `docs/BASE_UI_PARITY.md` (§ Popover —
