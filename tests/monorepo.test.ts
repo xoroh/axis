@@ -27,7 +27,7 @@ test("the axis package is public, MIT licensed, and correctly addressed", () => 
     provenance: true,
   });
   expect(manifest.repository).toMatchObject({
-    url: "https://github.com/xoroh/axis.git",
+    url: "git+https://github.com/xoroh/axis.git",
     directory: "packages/axis",
   });
   expect(manifest.exports["."]).toBeDefined();
