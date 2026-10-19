@@ -170,14 +170,37 @@ describe("Collapsible on React Native", () => {
         </CollapsiblePanel>
       </Collapsible>,
     );
-    const panel = screen.getByTestId("panel");
-    expect(panel).toBeTruthy();
-    expect(panel.props.style).toEqual(
-      expect.arrayContaining([{ display: "none" }]),
+    // Mounted but invisible and hidden from assistive tech on all three
+    // platforms, with closed state. (RNTL hides hidden-from-AT elements
+    // from queries by default — which is itself the proof — so the
+    // hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("panel")).toBeNull();
+    const hidden = screen.getByTestId("panel", {
+      includeHiddenElements: true,
+    }).props;
+    expect(hidden.accessibilityElementsHidden).toBe(true);
+    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    expect(hidden["aria-hidden"]).toBe(true);
+    const flatHidden = Object.assign(
+      {},
+      ...(Array.isArray(hidden.style)
+        ? hidden.style.flat(Infinity)
+        : [hidden.style]),
     );
-    expect(panel.props.accessibilityElementsHidden).toBe(true);
-    expect(panel.props.importantForAccessibility).toBe("no-hide-descendants");
-    expect(panel.props["aria-hidden"]).toBe(true);
+    expect(flatHidden.display).toBe("none");
+    // Content stays mounted while hidden (query it inclusively).
+    expect(
+      screen.getByText("Hidden details", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByText("Hidden details")).toBeNull();
+    await press("trigger");
+    const shown = screen.getByTestId("panel").props;
+    expect(shown.accessibilityElementsHidden).toBe(false);
+    expect(shown.importantForAccessibility).toBe("auto");
+    expect(shown["aria-hidden"]).toBe(false);
   });
 
   it("keepMounted panel becomes visible when opened", async () => {

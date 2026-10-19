@@ -188,14 +188,32 @@ describe("Tabs on React Native", () => {
         <TabsPanel value="b" testID="panel-b" keepMounted />
       </Tabs>,
     );
-    const panel = screen.getByTestId("panel-b");
-    expect(panel).toBeTruthy();
-    expect(panel.props.style).toEqual(
-      expect.arrayContaining([{ display: "none" }]),
+    // Mounted but invisible and hidden from assistive tech on all three
+    // platforms while deselected. (RNTL hides hidden-from-AT elements
+    // from queries by default — which is itself the proof — so the
+    // hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("panel-b", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("panel-b")).toBeNull();
+    const panel = screen.getByTestId("panel-b", {
+      includeHiddenElements: true,
+    }).props;
+    expect(panel.accessibilityElementsHidden).toBe(true);
+    expect(panel.importantForAccessibility).toBe("no-hide-descendants");
+    expect(panel["aria-hidden"]).toBe(true);
+    const flatHidden = Object.assign(
+      {},
+      ...(Array.isArray(panel.style)
+        ? panel.style.flat(Infinity)
+        : [panel.style]),
     );
-    expect(panel.props.accessibilityElementsHidden).toBe(true);
-    expect(panel.props.importantForAccessibility).toBe("no-hide-descendants");
-    expect(panel.props["aria-hidden"]).toBe(true);
+    expect(flatHidden.display).toBe("none");
+    await press("tab-b");
+    const shown = screen.getByTestId("panel-b").props;
+    expect(shown.accessibilityElementsHidden).toBe(false);
+    expect(shown.importantForAccessibility).toBe("auto");
+    expect(shown["aria-hidden"]).toBe(false);
   });
 
   it("keepMounted panel becomes visible when selected", async () => {
