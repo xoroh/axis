@@ -128,7 +128,7 @@ export const PopoverDemo: Demo = {
               </Text>
             </PopoverTrigger>
             <PopoverPortal>
-              <PopoverPositioner>
+              <PopoverPositioner align="start">
                 <PopoverPopup
                   accessibilityLabel="Demo popover"
                   style={{
@@ -229,7 +229,7 @@ export const PopoverDemo: Demo = {
                   backgroundColor: theme.overlay,
                 }}
               />
-              <PopoverPositioner>
+              <PopoverPositioner align="start">
                 <PopoverPopup
                   accessibilityLabel="Modal demo popover"
                   style={{
