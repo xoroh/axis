@@ -85,7 +85,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Fieldset](https://github.com/xoroh/axis/blob/main/docs/components/fieldset.md) |
 | [Input](https://github.com/xoroh/axis/blob/main/docs/components/input.md) |
 | [Label](https://github.com/xoroh/axis/blob/main/docs/components/label.md) |
-| [Loader](https://github.com/xoroh/axis/blob/main/docs/components/loader.md) |
 | [Menu](https://github.com/xoroh/axis/blob/main/docs/components/menu.md) |
 | [Menubar](https://github.com/xoroh/axis/blob/main/docs/components/menubar.md) |
 | [Meter](https://github.com/xoroh/axis/blob/main/docs/components/meter.md) |
@@ -97,7 +96,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Portal](https://github.com/xoroh/axis/blob/main/docs/components/portal.md) |
 | [Progress](https://github.com/xoroh/axis/blob/main/docs/components/progress.md) |
 | [Radio Group](https://github.com/xoroh/axis/blob/main/docs/components/radio-group.md) |
-| [Search](https://github.com/xoroh/axis/blob/main/docs/components/search.md) |
 | [Select](https://github.com/xoroh/axis/blob/main/docs/components/select.md) |
 | [Separator](https://github.com/xoroh/axis/blob/main/docs/components/separator.md) |
 | [Sheet](https://github.com/xoroh/axis/blob/main/docs/components/sheet.md) |
@@ -105,7 +103,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Switch](https://github.com/xoroh/axis/blob/main/docs/components/switch.md) |
 | [Table](https://github.com/xoroh/axis/blob/main/docs/components/table.md) |
 | [Tabs](https://github.com/xoroh/axis/blob/main/docs/components/tabs.md) |
-| [Text](https://github.com/xoroh/axis/blob/main/docs/components/text.md) |
 | [Textarea](https://github.com/xoroh/axis/blob/main/docs/components/textarea.md) |
 | [Time Picker](https://github.com/xoroh/axis/blob/main/docs/components/time-picker.md) |
 | [Toast](https://github.com/xoroh/axis/blob/main/docs/components/toast.md) |
@@ -113,7 +110,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Toggle Group](https://github.com/xoroh/axis/blob/main/docs/components/toggle-group.md) |
 | [Toolbar](https://github.com/xoroh/axis/blob/main/docs/components/toolbar.md) |
 | [Tooltip](https://github.com/xoroh/axis/blob/main/docs/components/tooltip.md) |
-| [Trigger](https://github.com/xoroh/axis/blob/main/docs/components/trigger.md) |
 <!-- index:end -->
 
 ## Docs

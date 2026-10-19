@@ -30,7 +30,7 @@ describe("Progress on React Native", () => {
   });
 
   it("indeterminate announces busy with no value", async () => {
-    await render(<Progress testID="pg" indeterminate />);
+    await render(<Progress testID="pg" value={null} />);
     const props = screen.getByTestId("pg").props;
     expect(props.accessibilityState).toMatchObject({ busy: true });
     expect(props.accessibilityValue).toBeUndefined();

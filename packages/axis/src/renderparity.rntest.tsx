@@ -4,26 +4,22 @@ import { Pressable, Text, View } from "react-native";
 import {
   AspectRatio,
   Avatar,
-  Text as AxisText,
   Button,
   Checkbox,
   Field,
   Fieldset,
   Input,
   Label,
-  Loader,
   Meter,
   NumberField,
   OtpField,
   Progress,
-  Search,
   Separator,
   Slider,
   Switch,
   Textarea,
   Toggle,
   Toolbar,
-  Trigger,
 } from "./index";
 
 /**
@@ -148,30 +144,6 @@ describe("render composition: pressables", () => {
     await press("sub");
     expect(seen).toEqual([true]);
   });
-
-  it("Trigger element render substitutes and preserves press", async () => {
-    let calls = 0;
-    await render(
-      <Trigger onPress={() => (calls += 1)} render={<Pressable testID="sub" />}>
-        <Text>Go</Text>
-      </Trigger>,
-    );
-    await press("sub");
-    expect(calls).toBe(1);
-  });
-
-  it("Trigger function style resolves against disabled state", async () => {
-    await render(
-      <Trigger
-        testID="trg"
-        disabled
-        style={(s) => ({ opacity: s.disabled ? 0 : 1 })}
-      >
-        <Text>Go</Text>
-      </Trigger>,
-    );
-    expect(screen.getByTestId("trg").props.style).toMatchObject({ opacity: 0 });
-  });
 });
 
 describe("render composition: display parts", () => {
@@ -192,19 +164,6 @@ describe("render composition: display parts", () => {
       </Label>,
     );
     expect(screen.getByText("name!")).toBeTruthy();
-  });
-
-  it("Text element render keeps consumer children", async () => {
-    await render(
-      <AxisText render={<Text testID="sub">custom</Text>}>orig</AxisText>,
-    );
-    expect(screen.getByText("custom")).toBeTruthy();
-    expect(screen.queryByText("orig")).toBeNull();
-  });
-
-  it("Loader element render substitutes the host", async () => {
-    await render(<Loader render={<View testID="sub" />} />);
-    expect(screen.getByTestId("sub")).toBeTruthy();
   });
 
   it("AspectRatio function render receives the ratio style", async () => {
@@ -254,7 +213,7 @@ describe("render composition: display parts", () => {
   it("Progress function render observes indeterminate state", async () => {
     await render(
       <Progress
-        indeterminate
+        value={null}
         render={(_props, state) => (
           <Text testID="st">{state.indeterminate ? "busy" : "set"}</Text>
         )}
@@ -336,17 +295,6 @@ describe("render composition: entries", () => {
       { opacity: 1 },
       null,
     ]);
-  });
-
-  it("Search function render observes query state", async () => {
-    await render(
-      <Search
-        accessibilityLabel="Find"
-        defaultValue="query"
-        render={(_props, state) => <Text testID="st">{state.value}</Text>}
-      />,
-    );
-    expect(screen.getByText("query")).toBeTruthy();
   });
 
   it("NumberField function render observes numeric state", async () => {

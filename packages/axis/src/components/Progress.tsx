@@ -11,6 +11,8 @@ import type { SlotProps } from "../slot";
  * value, with an inner bar whose width is the data-driven fill
  * percentage merged under caller `barStyle`. No colors, no animation:
  * indeterminate is announced state, motion belongs to the caller.
+ * `value` follows Base UI exactly: a number is the determinate value,
+ * `null` is indeterminate (no value announced, busy announced).
  * Values clamp into `[min, max]`; `max <= min` disables the fill math
  * (announced without a value) rather than dividing by zero.
  */
@@ -23,14 +25,16 @@ export type ProgressState = {
 };
 
 export type ProgressProps = {
-  /** Current value. Default `0`. */
-  value?: number;
+  /**
+   * Current value (Base UI exact semantics). A number is the
+   * determinate value; `null` is indeterminate — no value announced,
+   * busy announced. Default `0`.
+   */
+  value?: number | null;
   /** Maximum value. Default `100`. */
   max?: number;
   /** Minimum value. Default `0`. */
   min?: number;
-  /** When true, no value is announced — activity without measure. */
-  indeterminate?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
@@ -77,7 +81,6 @@ export function Progress({
   value = 0,
   max = 100,
   min = 0,
-  indeterminate = false,
   accessibilityLabel,
   testID,
   style,
@@ -95,9 +98,12 @@ export function Progress({
     [ref],
   );
 
+  const indeterminate = value === null;
   const range = max - min;
-  const clamped = range > 0 ? Math.min(Math.max(value, min), max) : min;
-  const percent = range > 0 ? ((clamped - min) / range) * 100 : 0;
+  const numeric = indeterminate ? min : (value ?? min);
+  const clamped = range > 0 ? Math.min(Math.max(numeric, min), max) : min;
+  const percent =
+    !indeterminate && range > 0 ? ((clamped - min) / range) * 100 : 0;
   const state: ProgressState = {
     value: indeterminate ? undefined : clamped,
     indeterminate,

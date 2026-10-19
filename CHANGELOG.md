@@ -4,7 +4,11 @@ Notable changes to Axis will be documented here.
 
 ## Unreleased
 
-Changes accumulate as changesets (`.changeset/`, none published
-yet). This section stays empty until the first release attaches
-real version notes — a hand-maintained list would be a second
-opinion on what changesets already record.
+Pre-1.0 scope cuts (ADR-012; no version bump, publish, or tag — release hold stands).
+Each line is the migration for the removed/renamed export:
+
+- `Search` removed — Kern rebuilds it on `Input` + `Field` + `Button`; no Axis replacement.
+- `Loader` removed — use `Progress` with `value={null}` (indeterminate: busy announced, no value).
+- `Text` removed — use RN `Text` directly with caller styles.
+- `Trigger` removed — use `Button` for labelled actions, `Switch` for binary state, or RN `Pressable` for caller-owned semantics; `usePress`, `mergeSlotProps`, `SlotProps` stay exported.
+- `Progress` `indeterminate` boolean removed — pass `value={null}` (Base UI exact semantics).

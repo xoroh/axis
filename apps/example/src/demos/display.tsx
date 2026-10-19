@@ -1,9 +1,7 @@
 import {
   AspectRatio,
   Avatar,
-  Text as AxisText,
   Label,
-  Loader,
   Meter,
   Progress,
   Separator,
@@ -28,7 +26,6 @@ export const DisplayDemo: Demo = {
     "AspectRatio",
     "Avatar",
     "Label",
-    "Loader",
     "Meter",
     "Progress",
     "Separator",
@@ -36,7 +33,6 @@ export const DisplayDemo: Demo = {
     "TableCell",
     "TableHeader",
     "TableRow",
-    "Text",
     "Toolbar",
   ],
   render: function DisplayScreen() {
@@ -61,15 +57,15 @@ export const DisplayDemo: Demo = {
           >
             System Label
           </Label>
-          <AxisText
+          <Text
             accessibilityLabel="Demo text"
             style={{ fontSize: 18, fontWeight: "700", color: theme.text }}
           >
             Axis Primitive Typography
-          </AxisText>
+          </Text>
         </View>
 
-        {/* Avatar & Loader */}
+        {/* Avatar */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -108,11 +104,6 @@ export const DisplayDemo: Demo = {
               </Text>
             </View>
           </View>
-          <Loader
-            accessibilityLabel="Demo loader"
-            size="small"
-            color={theme.primary}
-          />
         </View>
 
         {/* Progress & Meter */}
