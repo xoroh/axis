@@ -24,7 +24,7 @@ see contract §11):
 | D7 | No `createHandle` detached triggers | Needs an imperative registry owner; payload patterns unneeded pre-1.0. |
 | D8 | No hover or keyboard traversal on menus/popups | No touch equivalent; `roving`/`collection` unadopted for these families (contract's conditional-keyboard rule). |
 | D9 | No animation states (`transitionStatus`, starting/ending styles) | Surfaces mount/unmount synchronously (Accordion-panel precedent); `presence`-driven transitions wait for a consumer. |
-| D10 | No `Modal`/`portal` host on inline menus | Menus paint inside the parent's box; painting outside it is the `portal` model's job, deferred until a consumer needs it. |
+| D10 | No `Modal`/`portal` host on inline monoliths | Monolith menus paint inside the parent's box; painting outside it is the compound `Portal` parts' job (`OverlayPortal` at `PortalHost` when modal) — the Portal model they build on. |
 
 ## Per-component parity
 
@@ -86,7 +86,7 @@ FilterProvider filtering).
 |---|---|---|---|
 | `MenuRoot` | `Menu.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `onDismiss` (Axis extension, consistent with the monolith); no `modal` — compound menus always present a Backdrop (non-modal variant deferred: outside-press detection without a scrim needs press-capture that would hijack app touches) |
 | `MenuTrigger` | `Menu.Trigger` | button role, `disabled`, `render`, expanded state; registers the positioner anchor | `openOnHover` omitted (D8 — no touch equivalent); `data-popup-open`/`data-disabled` → D1 |
-| `MenuPortal` | `Menu.Portal` | RN `Modal` host (native body-append equivalent) | D2 (no `container`) |
+| `MenuPortal` | `Menu.Portal` | `OverlayPortal` at `PortalHost` when modal, in-box `View` otherwise | D2 (no `container`) |
 | `MenuBackdrop` | `Menu.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root; `data-open/closed` → D1; no transition attributes (D9) |
 | `MenuPositioner` | `Menu.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor (model extended with `align` for this) | No `Arrow` coupling (arrow geometry is caller style) |
 | `MenuPopup` | `Menu.Popup` | content box with menu role, `render`, function styles, `ref` | `data-open/closed` → D1; no transition attributes (D9) |
@@ -193,7 +193,7 @@ Popup, Arrow.
 | `TooltipProvider` | `Tooltip.Provider` | `delay`/`closeDelay` group timing; renders no element | delays run from the long-press commit (hover has no touch equivalent — D8); a pending show cancels on dismiss (no ghost tips) |
 | `TooltipRoot` | `Tooltip.Root` | `open`, `defaultOpen`, `onOpenChange`, `disabled` (terminal — forces hidden); renders no element | — |
 | `TooltipTrigger` | `Tooltip.Trigger` | long-press toggle, `disabled`, `render`, anchor registration; `delayLongPress` forwarded to the host | no hover (D8); timing itself needs a finger (device gap, recorded — RNTL dispatches `longPress` directly) |
-| `TooltipPortal` | `Tooltip.Portal` | in-box host (renders nothing while hidden or outside a root) | no `Modal` host — a non-modal hint must never trap touches (overlay-root adoption seam noted in-file; positioning stays separable) |
+| `TooltipPortal` | `Tooltip.Portal` | in-box host (renders nothing while hidden or outside a root) | no `Modal` host — a non-modal hint must never trap touches (deliberately never on the overlay stack; positioning stays separable) |
 | `TooltipPositioner` | `Tooltip.Positioner` | `side` (default `"top"`), `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | No `Arrow` coupling (arrow geometry is caller style) |
 | `TooltipPopup` | `Tooltip.Popup` | tip with tooltip role, `render`, function styles, `ref` | `data-*` → D1; no transition attributes (D9) |
 | `TooltipArrow` | `Tooltip.Arrow` | caller-positioned marker | Geometry is caller style |
