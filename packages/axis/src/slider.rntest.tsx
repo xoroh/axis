@@ -15,7 +15,7 @@ import {
 /**
  * Slider behavior through the public entry. Every assertion renders
  * the real component in the RN runtime and interacts through RN
- * events — adjustable thumb role/value/actions, controlled +
+ * events — slider thumb role/value/actions, controlled +
  * uncontrolled commits, step snapping, range values with the
  * minimum gap, disabled terminality, clamping, the degenerate
  * range, ref forwarding, indicator/thumb geometry, track-press
@@ -33,7 +33,7 @@ function tree(value: number, extra: Record<string, unknown> = {}) {
       <SliderControl testID="sl-control">
         <SliderTrack testID="sl-track">
           <SliderIndicator testID="sl-fill" />
-          <SliderThumb testID="sl-thumb" accessibilityLabel="Volume" />
+          <SliderThumb testID="sl-thumb" aria-label="Volume" />
         </SliderTrack>
       </SliderControl>
     </SliderRoot>
@@ -74,22 +74,14 @@ function touchEvent(
 }
 
 describe("Slider on React Native", () => {
-  it("renders an adjustable thumb with the default value", async () => {
+  it("renders a slider thumb with the default value", async () => {
     await render(tree(0));
-    expect(screen.getByRole("adjustable")).toBeTruthy();
+    expect(screen.getByRole("slider")).toBeTruthy();
     expect(screen.getByLabelText("Volume")).toBeTruthy();
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 0,
-    });
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityState,
-    ).toMatchObject({
-      disabled: false,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemin"]).toBe(0);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemax"]).toBe(100);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(0);
+    expect(screen.getByTestId("sl-thumb").props["aria-disabled"]).toBe(false);
   });
 
   it("follows the controlled value through the parent", async () => {
@@ -115,19 +107,11 @@ describe("Slider on React Native", () => {
       );
     }
     await render(<Host />);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 30,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(30);
     // Continuous mode steps by one twentieth of the range: 100 / 20 = 5.
     await accessibilityAction("sl-thumb", "increment");
     expect(seen).toEqual([35]);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 35,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(35);
     await accessibilityAction("sl-thumb", "decrement");
     expect(seen).toEqual([35, 30]);
   });
@@ -149,19 +133,11 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 3,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(3);
     await accessibilityAction("sl-thumb", "increment");
     // 3 + 10 = 13 snaps to the nearest multiple of 10.
     expect(seen).toEqual([10]);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 10,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(10);
   });
 
   it("reports commits on discrete actions", async () => {
@@ -203,11 +179,7 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityState,
-    ).toMatchObject({
-      disabled: true,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-disabled"]).toBe(true);
     await accessibilityAction("sl-thumb", "increment");
     await act(async () => {
       await fireEvent(
@@ -217,11 +189,7 @@ describe("Slider on React Native", () => {
       );
     });
     expect(calls).toBe(0);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 40,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(40);
   });
 
   it("clamps out-of-range values at min and max", async () => {
@@ -235,13 +203,9 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 100,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemin"]).toBe(0);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemax"]).toBe(100);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(100);
     await act(async () => {
       view.rerender(
         <SliderRoot testID="sl" value={-10}>
@@ -254,11 +218,7 @@ describe("Slider on React Native", () => {
         </SliderRoot>,
       );
     });
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 0,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(0);
   });
 
   it("treats min > max as a degenerate single point without throwing", async () => {
@@ -278,14 +238,10 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(screen.getByRole("adjustable")).toBeTruthy();
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      min: 80,
-      max: 80,
-      now: 80,
-    });
+    expect(screen.getByRole("slider")).toBeTruthy();
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemin"]).toBe(80);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemax"]).toBe(80);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(80);
     await accessibilityAction("sl-thumb", "increment");
     await accessibilityAction("sl-thumb", "decrement");
     expect(seen).toEqual([]);
@@ -372,11 +328,7 @@ describe("Slider on React Native", () => {
     });
     // dx of 100 over a 200dp track moves half the 0..100 range from 0.
     expect(seen).toEqual([50]);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 50,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(50);
     await act(async () => {
       await fireEvent(
         screen.getByTestId("sl-control"),
@@ -434,28 +386,23 @@ describe("Slider on React Native", () => {
     expect(fillStyle).toMatchObject({ width: "50%" });
   });
 
-  it("announces slider semantics on the thumb: adjustable role, value, orientation", async () => {
+  it("announces slider semantics on the thumb: slider role, value, orientation", async () => {
     await render(
       <SliderRoot testID="sl" defaultValue={30} min={0} max={100}>
         <SliderControl>
           <SliderTrack>
             <SliderIndicator />
-            <SliderThumb testID="sl-thumb" accessibilityLabel="Volume" />
+            <SliderThumb testID="sl-thumb" aria-label="Volume" />
           </SliderTrack>
         </SliderControl>
       </SliderRoot>,
     );
     const props = screen.getByTestId("sl-thumb").props;
-    // `adjustable` is the RN role; RN-web renders it as role=slider.
-    expect(props.accessibilityRole).toBe("adjustable");
-    // Native mapping (object form).
-    expect(props.accessibilityValue).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 30,
-    });
-    // Split twins for the RN-web DOM mapper (which ignores the object
-    // form — verified against react-native-web createDOMProps).
+    // Aria-only (ADR-112): `role` + split `aria-value*` announce the
+    // value on native and web alike (no `accessibilityValue` object,
+    // no `accessibilityRole`). Pinned RNTL 14 resolves `role` in
+    // `getByRole("slider")` and `aria-label` in `getByLabelText`.
+    expect(props.role).toBe("slider");
     expect(props["aria-valuemin"]).toBe(0);
     expect(props["aria-valuemax"]).toBe(100);
     expect(props["aria-valuenow"]).toBe(30);
@@ -486,20 +433,14 @@ describe("Slider on React Native", () => {
       </SliderRoot>,
     );
     // Default (View) path.
-    expect(
-      screen.getByTestId("sl-thumb-0").props.accessibilityValue,
-    ).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 25,
-    });
-    // Render-prop path carries the same value object.
-    const reported = seen[0] as { accessibilityValue?: unknown };
-    expect(reported.accessibilityValue).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 75,
-    });
+    expect(screen.getByTestId("sl-thumb-0").props["aria-valuemin"]).toBe(0);
+    expect(screen.getByTestId("sl-thumb-0").props["aria-valuemax"]).toBe(100);
+    expect(screen.getByTestId("sl-thumb-0").props["aria-valuenow"]).toBe(25);
+    // Render-prop path carries the same aria props.
+    const reported = seen[0] as Record<string, unknown>;
+    expect(reported["aria-valuemin"]).toBe(0);
+    expect(reported["aria-valuemax"]).toBe(100);
+    expect(reported["aria-valuenow"]).toBe(75);
   });
 
   it("announces the collapsed range on a degenerate slider in both paths", async () => {
@@ -514,13 +455,9 @@ describe("Slider on React Native", () => {
       </SliderRoot>,
     );
     // One rule everywhere: the slider's min, and max collapsed to min.
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      min: 80,
-      max: 80,
-      now: 80,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemin"]).toBe(80);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuemax"]).toBe(80);
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(80);
   });
 
   it("renders label and value text", async () => {
@@ -669,11 +606,7 @@ describe("Slider on React Native", () => {
     );
     expect(fillStyle).toMatchObject({ bottom: "0%", height: "30%" });
     // Read-only + disabled: focusable, announced as enabled, no commits.
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityState,
-    ).toMatchObject({
-      disabled: true,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-disabled"]).toBe(true);
   });
 
   it("handles web keyboard: arrows move by step, flipped for RTL", async () => {
@@ -715,11 +648,7 @@ describe("Slider on React Native", () => {
       press("Home");
     });
     expect(seen).toEqual([40, 30, 0]);
-    expect(
-      screen.getByTestId("sl-thumb").props.accessibilityValue,
-    ).toMatchObject({
-      now: 0,
-    });
+    expect(screen.getByTestId("sl-thumb").props["aria-valuenow"]).toBe(0);
   });
 
   it("PageUp/PageDown move by largeStep and End jumps to max", async () => {

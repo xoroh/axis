@@ -155,7 +155,7 @@ export const RangesDemo: Demo = {
                     }}
                   />
                   <SliderThumb
-                    accessibilityLabel="Demo volume slider"
+                    aria-label="Demo volume slider"
                     testID="demo-volume-thumb"
                     style={{
                       width: 22,
@@ -230,7 +230,7 @@ export const RangesDemo: Demo = {
                   />
                   <SliderThumb
                     index={0}
-                    accessibilityLabel="Demo minimum price"
+                    aria-label="Demo minimum price"
                     style={{
                       width: 22,
                       height: 22,
@@ -242,7 +242,7 @@ export const RangesDemo: Demo = {
                   />
                   <SliderThumb
                     index={1}
-                    accessibilityLabel="Demo maximum price"
+                    aria-label="Demo maximum price"
                     style={{
                       width: 22,
                       height: 22,
@@ -302,7 +302,7 @@ export const RangesDemo: Demo = {
                         }}
                       />
                       <SliderThumb
-                        accessibilityLabel="Demo vertical slider"
+                        aria-label="Demo vertical slider"
                         style={{
                           width: 22,
                           height: 22,
@@ -343,7 +343,7 @@ export const RangesDemo: Demo = {
                       style={{ backgroundColor: theme.textSubtle }}
                     />
                     <SliderThumb
-                      accessibilityLabel="Demo disabled slider"
+                      aria-label="Demo disabled slider"
                       testID="demo-disabled-thumb"
                       style={{
                         width: 22,

@@ -101,7 +101,7 @@ function RtlSlider() {
       <SliderRoot defaultValue={30}>
         <SliderControl>
           <SliderTrack>
-            <SliderThumb accessibilityLabel="Volume" />
+            <SliderThumb aria-label="Volume" />
           </SliderTrack>
         </SliderControl>
       </SliderRoot>

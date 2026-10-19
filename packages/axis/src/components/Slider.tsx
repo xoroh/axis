@@ -285,7 +285,7 @@ export type SliderThumbProps = {
    */
   index?: number;
   /** Accessible name source (e.g. "Minimum price" on a range thumb). */
-  accessibilityLabel?: string;
+  "aria-label"?: string;
   testID?: string;
   /** Thumb style, caller-provided (merged over the state-driven position). */
   style?: StyleProp<ViewStyle>;
@@ -783,7 +783,7 @@ export function SliderIndicator({
 
 export function SliderThumb({
   index = 0,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   testID,
   style,
   render,
@@ -927,29 +927,25 @@ export function SliderThumb({
           ],
         };
 
+  // Aria-only (ADR-112): one internal state derives every
+  // announced prop — `role` + split `aria-value*`/`aria-orientation`/
+  // `aria-disabled`/`aria-label`. No `accessibilityState`,
+  // `accessibilityValue`, `accessibilityLabel`, or
+  // `accessibilityRole` is ever emitted. Consumer overrides ride
+  // through the `render` element path, merged last via
+  // `mergeSlotProps` inside `resolveRender`.
   const hostProps = {
     accessible: true,
-    accessibilityRole: "adjustable" as const,
-    accessibilityValue: {
-      min: disclosure.min,
-      max: hi,
-      now: thumbValue,
-    },
-    // Split `aria-value*` twins for the web mapper: RNW's DOM layer
-    // reads `aria-valuenow/min/max` (it ignores the
-    // `accessibilityValue` object); native uses the object above and
-    // ignores the unknown props. `aria-orientation` is untyped extra
-    // (verified absent from the installed RN `ViewAccessibility`
-    // union, which stops at `aria-valuetext`).
+    role: "slider" as const,
     "aria-valuemin": disclosure.min,
     "aria-valuemax": hi,
     "aria-valuenow": thumbValue,
     ...{ "aria-orientation": disclosure.orientation },
-    accessibilityState: { disabled: disclosure.disabled },
+    ...{ "aria-disabled": disclosure.disabled },
+    ...{ "aria-label": ariaLabel },
     accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
     onAccessibilityAction,
     onKeyDown,
-    accessibilityLabel,
     testID,
     disabled: disclosure.disabled,
     style: [
@@ -967,22 +963,17 @@ export function SliderThumb({
     <View
       ref={setHostRef}
       accessible
-      accessibilityRole="adjustable"
-      accessibilityValue={{
-        min: disclosure.min,
-        max: hi,
-        now: thumbValue,
-      }}
+      role="slider"
       aria-valuemin={disclosure.min}
       aria-valuemax={hi}
       aria-valuenow={thumbValue}
       {...{ "aria-orientation": disclosure.orientation }}
-      accessibilityState={{ disabled: disclosure.disabled }}
+      {...{ "aria-disabled": disclosure.disabled }}
+      {...{ "aria-label": ariaLabel }}
       accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
       onAccessibilityAction={onAccessibilityAction}
       // RN passes onKeyDown through on web; native ignores the unknown prop.
       onKeyDown={onKeyDown}
-      accessibilityLabel={accessibilityLabel}
       testID={testID}
       style={[
         { position: "absolute" as const },

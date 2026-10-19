@@ -73,13 +73,13 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `SliderControl` | `Slider.Control` | Interactive surface: drag gestures, track-press jumps, measurement. |
 | `SliderTrack` | `Slider.Track` | Range container. |
 | `SliderIndicator` | `Slider.Indicator` | Data-driven fill (from the lowest to the highest value). |
-| `SliderThumb` | `Slider.Thumb` | Draggable handle per value index (`adjustable` role, `increment`/`decrement` actions). |
+| `SliderThumb` | `Slider.Thumb` | Draggable handle per value index (`slider` role, `increment`/`decrement` actions). |
 
 Omitted Base UI pieces are documented deviations, not
 oversights: no `name`/`form`/`inputRef`/`id`/`tabIndex`
 (no `Form` owner, no DOM inputs — native forms are
 caller-owned); no `getAriaLabel`/`getAriaValueText`
-(no `Intl` layer — caller text and `accessibilityLabel`
+(no `Intl` layer — caller text and `aria-label`
 instead); no `locale`/`format` (no `Intl` — caller formats
 through `SliderValue` function children); no
 `thumbCollisionBehavior`/`loopFocus` (no roving layer; dragged
@@ -178,7 +178,7 @@ fill start and length as track percentages.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `index` | `number` | no | `0` | Thumb index into the values array. Out-of-range indexes read the nearest value (single values behave as a one-entry range). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source (e.g. "Minimum price" on a range thumb). |
+| `aria-label` | `string` | no | — | Accessible name source (e.g. "Minimum price" on a range thumb). |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Thumb style, caller-provided (merged over the state-driven position: `left`/`top` percent + centering translate). |
 | `render` | `RenderProp<SliderThumbState, SlotProps>` | no | — | Element or function substitution; role, value, actions, and the commit wiring travel in the props. |
@@ -212,7 +212,7 @@ function Volume() {
         >
           <SliderIndicator style={{ backgroundColor: "#6200ee" }} />
           <SliderThumb
-            accessibilityLabel="Volume"
+            aria-label="Volume"
             style={{ width: 22, height: 22, borderRadius: 11 }}
           />
         </SliderTrack>
@@ -253,8 +253,8 @@ function PriceRange() {
       <SliderControl>
         <SliderTrack>
           <SliderIndicator />
-          <SliderThumb index={0} accessibilityLabel="Minimum price" />
-          <SliderThumb index={1} accessibilityLabel="Maximum price" />
+          <SliderThumb index={0} aria-label="Minimum price" />
+          <SliderThumb index={1} aria-label="Maximum price" />
         </SliderTrack>
       </SliderControl>
     </SliderRoot>
@@ -264,14 +264,15 @@ function PriceRange() {
 
 ### Accessibility
 
-- Each thumb is an accessibility element carrying the
-  `adjustable` role with `accessibilityValue`
-  (`{ min, max, now }`, degenerate collapses `max` to `min`) and
-  the `increment`/`decrement` actions — a screen reader announces
-  the value and offers stepping, which commits through the same
-  snapped path as dragging. The split `aria-valuemin`/`aria-valuemax`/
-  `aria-valuenow` twins travel alongside (RN-web's DOM mapper
-  ignores the object form), plus `aria-orientation`.
+- Each thumb is an accessibility element with `role="slider"` and
+  the split `aria-valuemin`/`aria-valuemax`/`aria-valuenow`
+  (derived from the one internal state; degenerate collapses `max`
+  to `min`), plus `aria-orientation` and `aria-disabled` — aria-only
+  (ADR-112): no `accessibilityState`, `accessibilityValue`,
+  `accessibilityLabel`, or `accessibilityRole` is emitted. The
+  `increment`/`decrement` actions let a screen reader offer
+  stepping, which commits through the same snapped path as
+  dragging.
 - Keyboard (web only — RN passes `onKeyDown` through to the DOM
   host; native ignores the unknown prop): ArrowRight/ArrowUp
   move by `step`, ArrowLeft/ArrowDown move back (flipped for

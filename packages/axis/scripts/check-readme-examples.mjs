@@ -72,10 +72,11 @@ function propsOf(component) {
           const walk = (t) => {
             if (ts.isTypeLiteralNode(t)) {
               for (const member of t.members) {
-                if (
-                  ts.isPropertySignature(member) &&
-                  ts.isIdentifier(member.name)
-                ) {
+                if (!ts.isPropertySignature(member)) continue;
+                if (ts.isIdentifier(member.name)) {
+                  out.add(member.name.text);
+                } else if (ts.isStringLiteralLike(member.name)) {
+                  // Quoted names (`"aria-label"`) — the aria-only props.
                   out.add(member.name.text);
                 }
               }
@@ -110,10 +111,11 @@ function propsOfNamed(name, sf) {
       const walk = (t) => {
         if (ts.isTypeLiteralNode(t)) {
           for (const member of t.members) {
-            if (
-              ts.isPropertySignature(member) &&
-              ts.isIdentifier(member.name)
-            ) {
+            if (!ts.isPropertySignature(member)) continue;
+            if (ts.isIdentifier(member.name)) {
+              out.add(member.name.text);
+            } else if (ts.isStringLiteralLike(member.name)) {
+              // Quoted names (`"aria-label"`) — the aria-only props.
               out.add(member.name.text);
             }
           }
