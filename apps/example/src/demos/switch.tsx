@@ -1,6 +1,6 @@
 import { Switch } from "@xoroh/axis";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import type { Demo } from "./registry";
 
 /**
