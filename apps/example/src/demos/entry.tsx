@@ -10,11 +10,12 @@ import {
 } from "@xoroh/axis";
 import { useState } from "react";
 import { Text, View } from "react-native";
+import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
 /**
  * Text entry demo: inputs, multiline, numeric, OTP, search, and
- * field wrappers with plain caller styles.
+ * field wrappers with clean caller styles.
  */
 export const EntryDemo: Demo = {
   slug: "entry",
@@ -30,51 +31,141 @@ export const EntryDemo: Demo = {
     "Label",
   ],
   render: function EntryScreen() {
-    const [name, setName] = useState("");
-    const [notes, setNotes] = useState("");
-    const [count, setCount] = useState<number | null>(null);
-    const [code, setCode] = useState("");
-    const [query, setQuery] = useState("");
+    const [name, setName] = useState("Ada Lovelace");
+    const [notes, setNotes] = useState("Pioneering computer programmer.");
+    const [count, setCount] = useState<number | null>(42);
+    const [code, setCode] = useState("1234");
+    const [query, setQuery] = useState("primitive");
+    const { theme } = useTheme();
+
+    const inputStyle = {
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 8,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+      color: theme.text,
+      fontSize: 14,
+    };
+
     return (
-      <View style={{ gap: 16 }}>
-        <Field label="Name">
-          <Input
-            accessibilityLabel="Name input"
-            value={name}
-            onValueChange={setName}
-            placeholder="Ada"
+      <View style={{ gap: 20 }}>
+        {/* Basic Fields */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 16,
+          }}
+        >
+          <Field label="Full Name">
+            <Input
+              accessibilityLabel="Name input"
+              value={name}
+              onValueChange={setName}
+              placeholder="e.g. Ada"
+              style={inputStyle}
+            />
+          </Field>
+
+          <Field label="Biography Notes">
+            <Textarea
+              accessibilityLabel="Notes input"
+              value={notes}
+              onValueChange={setNotes}
+              placeholder="Enter notes..."
+              style={[inputStyle, { minHeight: 70 }]}
+            />
+          </Field>
+        </View>
+
+        {/* Fieldset with Number & OTP */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 16,
+          }}
+        >
+          <Fieldset legend="Numeric & Verification Codes">
+            <View style={{ gap: 14 }}>
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.textSubtle,
+                  }}
+                >
+                  Quantity Stepper:
+                </Text>
+                <NumberField
+                  accessibilityLabel="Count input"
+                  value={count}
+                  onValueChange={setCount}
+                  style={inputStyle}
+                />
+              </View>
+
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.textSubtle,
+                  }}
+                >
+                  4-Digit OTP Code:
+                </Text>
+                <OtpField
+                  accessibilityLabel="Code input"
+                  value={code}
+                  onValueChange={setCode}
+                  length={4}
+                  style={{
+                    padding: 8,
+                    borderRadius: 8,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                />
+              </View>
+            </View>
+          </Fieldset>
+        </View>
+
+        {/* Search */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 8,
+          }}
+        >
+          <Label
+            nativeID="search-label"
+            style={{ fontSize: 13, fontWeight: "600", color: theme.textSubtle }}
+          >
+            Search primitives
+          </Label>
+          <Search
+            accessibilityLabel="Demo search"
+            value={query}
+            onValueChange={setQuery}
+            style={inputStyle}
           />
-        </Field>
-        <Field label="Notes">
-          <Textarea
-            accessibilityLabel="Notes input"
-            value={notes}
-            onValueChange={setNotes}
-            placeholder="Details"
-          />
-        </Field>
-        <Fieldset legend="Counts">
-          <NumberField
-            accessibilityLabel="Count input"
-            value={count}
-            onValueChange={setCount}
-          />
-          <OtpField
-            accessibilityLabel="Code input"
-            value={code}
-            onValueChange={setCode}
-            length={4}
-          />
-        </Fieldset>
-        <Label nativeID="search-label">Search label</Label>
-        <Search
-          accessibilityLabel="Demo search"
-          value={query}
-          onValueChange={setQuery}
-        />
-        <Text>
-          {name}/{notes}/{count}/{code}/{query}
-        </Text>
+        </View>
       </View>
     );
   },

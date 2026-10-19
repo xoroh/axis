@@ -14,6 +14,7 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import { defaultCollectionMatch } from "../collection";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -49,8 +50,9 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * the explicit open control, with first-text-change auto-open as the
  * typing path.
  *
- * Filtering is case-insensitive substring match on `label` only; a
- * custom `filter` prop is NOT supported in v1 (deferred until a
+ * Filtering is the shared `collection` default match
+ * (case-insensitive substring on `label`, trimmed); a custom
+ * `filter` prop is NOT supported in v1 (deferred until a
  * consumer needs ranked/fuzzy matching). An empty result renders the
  * list container with zero items — no `"no results"` chrome, caller
  * content only. Choosing an option always closes the list and commits
@@ -242,9 +244,12 @@ export function Combobox({
   );
 
   const filtered = useMemo(() => {
-    const needle = query.toLowerCase();
+    // Shared `collection` match (case-insensitive substring): the
+    // same query filters identically here, in menu filtering, and
+    // in select lookups. Options are data, so they filter directly
+    // without registering into a collection registry.
     return options.filter((option) =>
-      option.label.toLowerCase().includes(needle),
+      defaultCollectionMatch(query, option.label),
     );
   }, [options, query]);
 

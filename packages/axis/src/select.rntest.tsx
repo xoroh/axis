@@ -226,4 +226,23 @@ describe("Select on React Native", () => {
     expect(seen).toEqual([]);
     expect(changed).toEqual([]);
   });
+  it("renders string placeholder and string item children without unexpected text node warning", async () => {
+    const errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    await render(
+      <Select testID="str-sel" placeholder="Select an option">
+        <SelectItem value="opt1" testID="opt1">
+          Option 1
+        </SelectItem>
+      </Select>,
+    );
+    expect(screen.getByText("Select an option")).toBeTruthy();
+    await press("str-sel");
+    expect(screen.getByText("Option 1")).toBeTruthy();
+    await press("opt1");
+    expect(screen.getByText("Option 1")).toBeTruthy();
+    expect(errorSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("Unexpected text node"),
+    );
+    errorSpy.mockRestore();
+  });
 });

@@ -11,5 +11,6 @@
     "noEmit": true,
     "types": []
   },
-  "include": ["index.js", "src/**/*", "scripts/**/*"]
+  "include": ["index.js", "src/**/*", "scripts/**/*"],
+  "extends": "expo/tsconfig.base"
 }

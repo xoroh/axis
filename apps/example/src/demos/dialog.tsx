@@ -9,12 +9,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@xoroh/axis";
-import { Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
 /**
- * Dialog demo: the compound anatomy (Root/Trigger/Portal/Popup/
- * Title/Close) with plain caller styles.
+ * Dialog demo: compound anatomy (Root/Trigger/Portal/Popup/
+ * Title/Close) with clean caller styles.
  */
 export const DialogDemo: Demo = {
   slug: "dialog",
@@ -31,29 +33,224 @@ export const DialogDemo: Demo = {
     "DialogClose",
   ],
   render: function DialogScreen() {
+    const { theme } = useTheme();
+    const [inlineOpen, setInlineOpen] = useState(false);
+
     return (
-      <View>
-        <DialogRoot>
-          <DialogTrigger accessibilityLabel="Open demo dialog">
-            <Text>Open dialog</Text>
-          </DialogTrigger>
-          <DialogPortal>
-            <DialogBackdrop />
-            <DialogPopup
-              accessibilityLabel="Demo dialog"
-              style={{ margin: 32, padding: 16 }}
+      <View style={{ gap: 20 }}>
+        {/* Compound Dialog */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Compound Modal Dialog:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            Accessible dialog using Modal portal, backdrop dismiss, and focus
+            management.
+          </Text>
+
+          <DialogRoot>
+            <DialogTrigger
+              accessibilityLabel="Open demo dialog"
+              style={{
+                alignSelf: "flex-start",
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                backgroundColor: theme.primary,
+              }}
             >
-              <DialogTitle>Example</DialogTitle>
-              <DialogDescription>Details here.</DialogDescription>
-              <DialogClose accessibilityLabel="Close demo dialog">
-                <Text>Close</Text>
-              </DialogClose>
-            </DialogPopup>
-          </DialogPortal>
-        </DialogRoot>
-        <Dialog accessibilityLabel="Inline demo dialog">
-          <Text>Inline</Text>
-        </Dialog>
+              <Text
+                style={{
+                  color: theme.primaryFg,
+                  fontSize: 14,
+                  fontWeight: "600",
+                }}
+              >
+                Open Dialog Window
+              </Text>
+            </DialogTrigger>
+
+            <DialogPortal>
+              <DialogBackdrop
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: theme.overlay,
+                }}
+              />
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 24,
+                }}
+              >
+                <DialogPopup
+                  accessibilityLabel="Demo dialog"
+                  style={{
+                    width: "100%",
+                    maxWidth: 440,
+                    backgroundColor: theme.surface,
+                    borderRadius: 14,
+                    padding: 24,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+                    gap: 12,
+                  }}
+                >
+                  <DialogTitle
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "700",
+                      color: theme.text,
+                    }}
+                  >
+                    Confirm Action
+                  </DialogTitle>
+                  <DialogDescription
+                    style={{
+                      fontSize: 14,
+                      color: theme.textSubtle,
+                      lineHeight: 20,
+                    }}
+                  >
+                    This is an accessible Axis modal dialog mounted inside the
+                    portal host.
+                  </DialogDescription>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "flex-end",
+                      marginTop: 8,
+                    }}
+                  >
+                    <DialogClose
+                      accessibilityLabel="Close demo dialog"
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 6,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: theme.text,
+                        }}
+                      >
+                        Dismiss
+                      </Text>
+                    </DialogClose>
+                  </View>
+                </DialogPopup>
+              </View>
+            </DialogPortal>
+          </DialogRoot>
+        </View>
+
+        {/* Monolith Dialog */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Inline Dialog Primitive:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            Same behavior as the monolith API — caller owns the open state and
+            trigger.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open inline demo dialog"
+            onPress={() => setInlineOpen(true)}
+            style={{
+              alignSelf: "flex-start",
+              paddingVertical: 8,
+              paddingHorizontal: 14,
+              borderRadius: 6,
+              backgroundColor: theme.surfaceSubtle,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Text
+              style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            >
+              Open Inline Dialog
+            </Text>
+          </Pressable>
+          <Dialog
+            open={inlineOpen}
+            onOpenChange={setInlineOpen}
+            accessibilityLabel="Inline demo dialog"
+            overlayStyle={{ backgroundColor: theme.overlay }}
+            surfaceStyle={{
+              alignSelf: "center",
+              marginTop: 120,
+              width: "90%",
+              maxWidth: 380,
+              padding: 20,
+              borderRadius: 12,
+              backgroundColor: theme.surface,
+              borderWidth: 1,
+              borderColor: theme.border,
+              gap: 10,
+            }}
+            title="Inline dialog"
+            titleStyle={{ fontSize: 16, fontWeight: "700", color: theme.text }}
+            actions={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close inline demo dialog"
+                onPress={() => setInlineOpen(false)}
+                style={{
+                  alignSelf: "flex-end",
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 6,
+                  backgroundColor: theme.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+                >
+                  Close
+                </Text>
+              </Pressable>
+            }
+          >
+            <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+              Rendered inline by the monolith Dialog with caller styles.
+            </Text>
+          </Dialog>
+        </View>
       </View>
     );
   },

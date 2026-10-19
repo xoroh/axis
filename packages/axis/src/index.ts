@@ -71,6 +71,14 @@ export {
   isChatStreaming,
 } from "./chatStatus";
 export {
+  type CollectionItem,
+  type CollectionMatch,
+  defaultCollectionMatch,
+  filterCollectionKeys,
+  findCollectionText,
+  useCollectionRegistry,
+} from "./collection";
+export {
   Accordion,
   AccordionItem,
   type AccordionItemProps,
@@ -200,10 +208,17 @@ export {
   type MenuCheckboxItemIndicatorProps,
   type MenuCheckboxItemProps,
   type MenuCheckboxItemState,
+  MenuClear,
+  type MenuClearProps,
+  type MenuClearState,
+  MenuEmpty,
+  type MenuEmptyProps,
   MenuGroup,
   MenuGroupLabel,
   type MenuGroupLabelProps,
   type MenuGroupProps,
+  MenuInput,
+  type MenuInputProps,
   MenuItem,
   type MenuItemProps,
   type MenuItemState,
@@ -230,6 +245,12 @@ export {
   type MenuRootState,
   MenuSeparator,
   type MenuSeparatorProps,
+  MenuSubmenuContent,
+  type MenuSubmenuContentProps,
+  MenuSubmenuRoot,
+  type MenuSubmenuRootProps,
+  MenuSubmenuTrigger,
+  type MenuSubmenuTriggerProps,
   MenuTrigger,
   type MenuTriggerProps,
   type MenuTriggerState,
@@ -344,9 +365,42 @@ export {
 } from "./components/Search";
 export {
   Select,
+  SelectArrow,
+  type SelectArrowProps,
+  SelectBackdrop,
+  type SelectBackdropProps,
+  type SelectBackdropState,
+  SelectGroup,
+  SelectGroupLabel,
+  type SelectGroupLabelProps,
+  type SelectGroupProps,
   SelectItem,
+  SelectItemIndicator,
+  type SelectItemIndicatorProps,
   type SelectItemProps,
+  type SelectItemState,
+  SelectItemText,
+  type SelectItemTextProps,
+  SelectPopup,
+  type SelectPopupProps,
+  type SelectPopupState,
+  SelectPortal,
+  type SelectPortalProps,
+  SelectPositioner,
+  type SelectPositionerProps,
+  type SelectPositionerState,
   type SelectProps,
+  SelectRoot,
+  type SelectRootProps,
+  type SelectRootState,
+  SelectSeparator,
+  type SelectSeparatorProps,
+  SelectTrigger,
+  type SelectTriggerProps,
+  type SelectTriggerState,
+  SelectValue,
+  type SelectValueProps,
+  type SelectValueState,
 } from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
 export { Sheet, type SheetProps, type SheetState } from "./components/Sheet";
@@ -426,8 +480,25 @@ export {
 } from "./components/Toolbar";
 export {
   Tooltip,
+  TooltipArrow,
+  type TooltipArrowProps,
+  TooltipPopup,
+  type TooltipPopupProps,
+  type TooltipPopupState,
+  TooltipPortal,
+  type TooltipPortalProps,
+  TooltipPositioner,
+  type TooltipPositionerProps,
+  type TooltipPositionerState,
   type TooltipProps,
+  TooltipProvider,
+  type TooltipProviderProps,
+  TooltipRoot,
+  type TooltipRootProps,
   type TooltipState,
+  TooltipTrigger,
+  type TooltipTriggerProps,
+  type TooltipTriggerState,
 } from "./components/Tooltip";
 export {
   Trigger,
@@ -476,6 +547,7 @@ export {
   type PositioningOptions,
   type Rect,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "./positioning";
 export {
   createPresenceModel,
@@ -552,4 +624,10 @@ export {
   type ToolCallState,
   useToolCall,
 } from "./toolCall";
+export {
+  appendTypeaheadQuery,
+  isTypeaheadExpired,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "./typeahead";
 export { type StateAction, useControllableState } from "./useControllableState";

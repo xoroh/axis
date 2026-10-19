@@ -31,8 +31,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
 | Search | complete | composed entry + clear/submit, RNTL 4 |
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |
-| Combobox | complete | filterable single-select, RNTL 9 |
-| Select | complete | single-select dropdown, RNTL 8 |
+| Combobox | complete | filterable single-select via the shared `collection` match, RNTL 9 |
+| Select | complete | single-select dropdown + compound parts (value-label registry + `items` table), RNTL 24 |
 | Calendar | complete | UTC date grid, RNTL 7 |
 | Time Picker | complete | Input+Button composition, RNTL 6 |
 | Accordion | complete | single-expand disclosure, RNTL 7 |
@@ -45,11 +45,11 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
 | Sheet | complete | bottom sheet: detents + PanResponder drag + scrim, RNTL 12 |
-| Menu | complete | popup menu + items, RNTL 8 |
+| Menu | complete | popup menu + items + checkbox/radio + filter parts (`Input`/`Clear`/`Empty`), RNTL 42 |
 | Context Menu | complete | long-press popup menu, RNTL 5 |
 | Popover | complete | anchored overlay + scrim, RNTL 7 |
 | Dropdown Menu | complete | submenu cascade (single dismissal stack), RNTL 10 |
-| Tooltip | complete | long-press + measured placement, RNTL 4 |
+| Tooltip | complete | long-press + measured placement + compound parts + provider delay groups, RNTL 13 |
 | Scroll Area | na-native | native ScrollView covers it; no wrapper adds value |
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
@@ -75,7 +75,12 @@ generation vocabulary), `stickToBottom`, `chatMessage`, `toolCall`,
 `attachments`, `promptInput`, `chatBranch`, `chatSource`,
 `reasoning` (auto-open helper over the existing `Collapsible` —
 no new primitive) — all present with unit tests.
-`collection`, `mergeRefs` — gated, transfer only with a real consumer.
+`collection` (registry + match + filter/lookup — transferred with
+real consumers: Combobox filtering, menu filter parts, select
+label lookup), `typeahead` (buffer + prefix/cycle match; no part
+forwards keys yet — first consumer is hardware-keyboard
+forwarding) — both present with unit tests.
+`mergeRefs` — gated, transfer only with a real consumer.
 
 ## Policy
 
