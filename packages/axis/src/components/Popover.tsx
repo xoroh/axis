@@ -18,6 +18,10 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type {
+  OverlayOpenChangeDetails,
+  OverlayOpenChangeReason,
+} from "../dismissWiring";
 import type { Align, Placement } from "../positioning";
 import {
   type RenderProp,
@@ -26,11 +30,6 @@ import {
   type StateStyle,
 } from "../render";
 import type { SlotProps } from "../slot";
-import type {
-  OverlayOpenChangeDetails,
-  OverlayOpenChangeReason,
-} from "../dismissWiring";
-import { shouldDismissOn } from "../dismissWiring";
 import { useControllableState } from "../useControllableState";
 import {
   OverlayPortal,
@@ -901,8 +900,11 @@ export function PopoverPopup({
   const web = isWebEnvironment();
   const handleKeyDown =
     web && modalActive
-      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
-          trapTabKey(popupNodeRef.current, event)
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(popupNodeRef.current, event)
       : undefined;
 
   const substituted = resolveRender(

@@ -3,13 +3,18 @@ import {
   type ElementRef,
   type JSX,
   type ReactNode,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
   useRef,
-  type RefObject,
 } from "react";
-import { AccessibilityInfo, findNodeHandle, type Text, type View } from "react-native";
+import {
+  AccessibilityInfo,
+  findNodeHandle,
+  type Text,
+  type View,
+} from "react-native";
 
 /**
  * Screen-reader + DOM focus wiring for overlay surfaces (internal —
@@ -78,9 +83,7 @@ export function resolveFocusNode(
 
 /** True on web (React Native Web): a DOM `document` exists. No DOM import. */
 export function isWebEnvironment(): boolean {
-  return (
-    typeof (globalThis as { document?: unknown }).document !== "undefined"
-  );
+  return typeof (globalThis as { document?: unknown }).document !== "undefined";
 }
 
 /**
@@ -155,8 +158,7 @@ function isFocusableElement(value: unknown): boolean {
   // focusable tags (the querySelectorAll union matches `button`
   // regardless of its tabindex, so this cannot live in the selector).
   if (tab === "-1") return false;
-  const tag =
-    typeof el.tagName === "string" ? el.tagName.toUpperCase() : "";
+  const tag = typeof el.tagName === "string" ? el.tagName.toUpperCase() : "";
   if (tag === "INPUT" && get("type") === "hidden") return false;
   if (FOCUSABLE_TAGS.has(tag)) return true;
   if (tag === "A" && get("href") !== null) return true;
@@ -541,7 +543,7 @@ export function useModalFocus(options: {
     scope,
     skipStops,
     interactionRef,
-    sharedState,
+    st,
     popupRef,
     restoreRef,
   ]);

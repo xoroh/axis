@@ -3,7 +3,6 @@ import {
   type ElementRef,
   type ReactNode,
   type Ref,
-  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -429,10 +428,7 @@ export function OverlayRoot({
   const toggle = useCallback(
     (reason: OverlayOpenChangeReason = "trigger-press") => {
       if (!dismissable && (isOpen ?? false)) return;
-      setIsOpen(
-        (prev) => !(prev ?? false),
-        { reason },
-      );
+      setIsOpen((prev) => !(prev ?? false), { reason });
     },
     [dismissable, isOpen, setIsOpen],
   );
@@ -507,7 +503,7 @@ export function OverlayRoot({
       interaction: interactionRef,
       focus: focusStateRef.current,
     }),
-    [id, triggerRef, popupRef],
+    [id],
   );
 
   const contextValue = useMemo<OverlayContextValue>(
@@ -755,7 +751,8 @@ export function OverlayPopup({
     [overlay, ref],
   );
 
-  const modal = overlay !== null && overlay !== undefined && overlay.modal !== false;
+  const modal =
+    overlay !== null && overlay !== undefined && overlay.modal !== false;
   // The single focus executor for this surface: move in on open,
   // restore to the trigger on close. Runs whether or not a trap is
   // armed; containment and hiding are separate props below. Disabled
@@ -801,8 +798,11 @@ export function OverlayPopup({
   const modalActive = modal && overlay.isTop;
   const handleKeyDown =
     web && modalActive && overlay.trapFocus
-      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
-          trapTabKey(overlay.popupRef.current, event)
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(overlay.popupRef.current, event)
       : undefined;
 
   const substituted = resolveRender(

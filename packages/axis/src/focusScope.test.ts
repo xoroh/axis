@@ -27,7 +27,10 @@ import {
  * stand in for host nodes (no native runtime, no RNW).
  */
 
-function button(id: string, parent: HTMLElement = document.body): HTMLButtonElement {
+function button(
+  id: string,
+  parent: HTMLElement = document.body,
+): HTMLButtonElement {
   const el = document.createElement("button");
   el.id = id;
   parent.appendChild(el);
@@ -191,7 +194,11 @@ describe("web DOM helpers", () => {
     const first = button("shift-first", root);
     const last = button("shift-last", root);
     first.focus();
-    trapTabKey(root, { key: "Shift", shiftKey: true, preventDefault: () => {} } as never);
+    trapTabKey(root, {
+      key: "Shift",
+      shiftKey: true,
+      preventDefault: () => {},
+    } as never);
     // Non-Tab keys pass through: focus stays put.
     expect(document.activeElement).toBe(first);
     trapTabKey(root, { key: "Tab", shiftKey: true, preventDefault: () => {} });

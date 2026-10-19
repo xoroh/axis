@@ -586,6 +586,10 @@ export {
   type TooltipTriggerProps,
   type TooltipTriggerState,
 } from "./components/Tooltip";
+export type {
+  FocusInteraction,
+  OverlayFocusValue,
+} from "./components/useAccessibilityFocus";
 export {
   createDismissPolicy,
   type DismissPolicy,
@@ -609,10 +613,6 @@ export {
   resolveAutofocus,
   type TrapMove,
 } from "./focusTrap";
-export type {
-  FocusInteraction,
-  OverlayFocusValue,
-} from "./components/useAccessibilityFocus";
 export {
   clampNumberValue,
   formatNumberValue,

@@ -304,10 +304,7 @@ describe("render composition: overlays", () => {
         <DrawerRoot defaultOpen>
           <DrawerPortal testID="dr-portal">
             <DrawerBackdrop testID="dr-scrim" />
-            <DrawerPopup
-              testID="dr"
-              render={<View testID="sub">{null}</View>}
-            >
+            <DrawerPopup testID="dr" render={<View testID="sub">{null}</View>}>
               <Text>Nav</Text>
             </DrawerPopup>
           </DrawerPortal>
@@ -324,10 +321,7 @@ describe("render composition: overlays", () => {
         <DrawerRoot defaultOpen side="bottom">
           <DrawerPortal testID="sh-portal">
             <DrawerBackdrop testID="sh-scrim" />
-            <DrawerPopup
-              testID="sh"
-              render={<View testID="sub">{null}</View>}
-            >
+            <DrawerPopup testID="sh" render={<View testID="sub">{null}</View>}>
               <Text>Content</Text>
             </DrawerPopup>
           </DrawerPortal>

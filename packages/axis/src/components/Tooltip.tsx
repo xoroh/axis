@@ -21,10 +21,10 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
 import {
+  type FocusTransitionState,
   isWebEnvironment,
   useModalFocus,
   webTabIndexProps,
-  type FocusTransitionState,
 } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 

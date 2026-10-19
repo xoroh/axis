@@ -51,18 +51,18 @@ describe("Dialog focus on web", () => {
     render(
       <PortalHost>
         <DialogRoot defaultOpen>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example">
-            <button type="button" data-testid="first">
-              First
-            </button>
-            <DialogTitle>Title</DialogTitle>
-            <DialogClose>Close</DialogClose>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example">
+              <button type="button" data-testid="first">
+                First
+              </button>
+              <DialogTitle>Title</DialogTitle>
+              <DialogClose>Close</DialogClose>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(document.activeElement).toBe(screen.getByTestId("first"));
   });
@@ -71,15 +71,15 @@ describe("Dialog focus on web", () => {
     render(
       <PortalHost>
         <DialogRoot defaultOpen>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example">
-            <DialogTitle>Title</DialogTitle>
-            <span>Body</span>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example">
+              <DialogTitle>Title</DialogTitle>
+              <span>Body</span>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     // The title host is the scope fallback (jsdom focuses any element;
     // real browsers need the web tabIndex the popup sets — covered by
@@ -91,17 +91,17 @@ describe("Dialog focus on web", () => {
     render(
       <PortalHost>
         <DialogRoot defaultOpen>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example">
-            <button type="button" data-testid="first">
-              First
-            </button>
-            <DialogClose>Close</DialogClose>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example">
+              <button type="button" data-testid="first">
+                First
+              </button>
+              <DialogClose>Close</DialogClose>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     const popup = screen.getByRole("dialog", { name: "Example" });
     expect(popup.getAttribute("aria-modal")).toBe("true");
@@ -119,38 +119,38 @@ describe("Dialog focus on web", () => {
     const { rerender } = render(
       <PortalHost>
         <DialogRoot open>
-        <DialogTrigger>Open</DialogTrigger>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example">
-            <button type="button">Action</button>
-            <DialogClose>Close</DialogClose>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogTrigger>Open</DialogTrigger>
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example">
+              <button type="button">Action</button>
+              <DialogClose>Close</DialogClose>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(document.activeElement?.textContent).toBe("Action");
     rerender(
       <PortalHost>
         <DialogRoot open={false}>
-        <DialogTrigger>Open</DialogTrigger>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example">
-            <button type="button">Action</button>
-            <DialogClose>Close</DialogClose>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogTrigger>Open</DialogTrigger>
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example">
+              <button type="button">Action</button>
+              <DialogClose>Close</DialogClose>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(document.activeElement?.textContent).toBe("Open");
   });
 
   it("falls back to the nearest focusable ancestor when the trigger unmounted (D11)", () => {
     const { rerender } = render(
-      <div tabIndex={0} data-testid="anchor-wrap">
+      <button type="button" data-testid="anchor-wrap">
         <PortalHost>
           <DialogRoot open>
             <DialogTrigger>Open</DialogTrigger>
@@ -162,13 +162,13 @@ describe("Dialog focus on web", () => {
             </DialogPortal>
           </DialogRoot>
         </PortalHost>
-      </div>,
+      </button>,
     );
     expect(document.activeElement?.textContent).toBe("Action");
     // The trigger unmounts in the same commit that closes: restore
     // cannot reach it, so the stashed focusable ancestor takes focus.
     rerender(
-      <div tabIndex={0} data-testid="anchor-wrap">
+      <button type="button" data-testid="anchor-wrap">
         <PortalHost>
           <DialogRoot open={false}>
             <DialogPortal>
@@ -179,7 +179,7 @@ describe("Dialog focus on web", () => {
             </DialogPortal>
           </DialogRoot>
         </PortalHost>
-      </div>,
+      </button>,
     );
     expect(document.activeElement).toBe(screen.getByTestId("anchor-wrap"));
   });
@@ -188,16 +188,16 @@ describe("Dialog focus on web", () => {
     render(
       <PortalHost>
         <DialogRoot defaultOpen>
-        <DialogPortal>
-          <DialogBackdrop />
-          <DialogPopup accessibilityLabel="Example" initialFocus={false}>
-            <button type="button" data-testid="first">
-              First
-            </button>
-          </DialogPopup>
-        </DialogPortal>
-      </DialogRoot>
-    </PortalHost>,
+          <DialogPortal>
+            <DialogBackdrop />
+            <DialogPopup accessibilityLabel="Example" initialFocus={false}>
+              <button type="button" data-testid="first">
+                First
+              </button>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
+      </PortalHost>,
     );
     expect(document.activeElement).toBe(document.body);
   });
@@ -242,15 +242,15 @@ describe("AlertDialog focus on web", () => {
     render(
       <PortalHost>
         <AlertDialogRoot defaultOpen>
-        <AlertDialogPortal>
-          <AlertDialogPopup accessibilityLabel="Discard?">
-            <button type="button">Destructive</button>
-            <AlertDialogTitle>Discard?</AlertDialogTitle>
-            <AlertDialogClose initialFocus>Cancel</AlertDialogClose>
-          </AlertDialogPopup>
-        </AlertDialogPortal>
-      </AlertDialogRoot>
-    </PortalHost>,
+          <AlertDialogPortal>
+            <AlertDialogPopup accessibilityLabel="Discard?">
+              <button type="button">Destructive</button>
+              <AlertDialogTitle>Discard?</AlertDialogTitle>
+              <AlertDialogClose initialFocus>Cancel</AlertDialogClose>
+            </AlertDialogPopup>
+          </AlertDialogPortal>
+        </AlertDialogRoot>
+      </PortalHost>,
     );
     expect(document.activeElement?.textContent).toBe("Cancel");
   });
@@ -261,15 +261,15 @@ describe("Drawer focus on web", () => {
     render(
       <PortalHost>
         <DrawerRoot defaultOpen>
-        <DrawerPortal>
-          <DrawerPopup accessibilityLabel="Navigation">
-            <button type="button">Destructive</button>
-            <DrawerTitle>Navigation</DrawerTitle>
-            <DrawerHandle />
-          </DrawerPopup>
-        </DrawerPortal>
-      </DrawerRoot>
-    </PortalHost>,
+          <DrawerPortal>
+            <DrawerPopup accessibilityLabel="Navigation">
+              <button type="button">Destructive</button>
+              <DrawerTitle>Navigation</DrawerTitle>
+              <DrawerHandle />
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
+      </PortalHost>,
     );
     // skipStops: the DOM query is skipped too — the title wins over
     // the earlier tabbable button.
@@ -282,16 +282,16 @@ describe("Popover focus on web", () => {
     render(
       <PortalHost>
         <PopoverRoot defaultOpen>
-        <PopoverTrigger>Open</PopoverTrigger>
-        <PopoverPortal>
-          <PopoverPopup accessibilityLabel="Details">
-            <button type="button" data-testid="pop-first">
-              First
-            </button>
-          </PopoverPopup>
-        </PopoverPortal>
-      </PopoverRoot>
-    </PortalHost>,
+          <PopoverTrigger>Open</PopoverTrigger>
+          <PopoverPortal>
+            <PopoverPopup accessibilityLabel="Details">
+              <button type="button" data-testid="pop-first">
+                First
+              </button>
+            </PopoverPopup>
+          </PopoverPortal>
+        </PopoverRoot>
+      </PortalHost>,
     );
     expect(document.activeElement).toBe(screen.getByTestId("pop-first"));
     const box = screen.getByTestId("pop-first").parentElement;

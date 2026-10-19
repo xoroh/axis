@@ -46,7 +46,10 @@ function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
 async function pressLabel(label: string, hidden = false) {
   await act(async () => {
     fireEvent.press(
-      screen.getByLabelText(label, hidden ? { includeHiddenElements: true } : undefined),
+      screen.getByLabelText(
+        label,
+        hidden ? { includeHiddenElements: true } : undefined,
+      ),
     );
   });
 }

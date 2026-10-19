@@ -5,7 +5,6 @@ import {
   type Ref,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
 } from "react";
@@ -17,6 +16,10 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type {
+  OverlayOpenChangeDetails,
+  OverlayOpenChangeReason,
+} from "../dismissWiring";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -40,10 +43,6 @@ import {
   useScopeTitle,
   webTabIndexProps,
 } from "./useAccessibilityFocus";
-import type {
-  OverlayOpenChangeDetails,
-  OverlayOpenChangeReason,
-} from "../dismissWiring";
 
 /**
  * Dialog — an unstyled modal dialog with scrim dismissal.
@@ -222,8 +221,11 @@ export function Dialog({
   // `aria-modal` plus the Tab trap.
   const web = isWebEnvironment();
   const handleSurfaceKeyDown = web
-    ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
-        trapTabKey(surfaceFocusRef.current, event)
+    ? (event: {
+        key?: unknown;
+        shiftKey?: unknown;
+        preventDefault?: unknown;
+      }) => trapTabKey(surfaceFocusRef.current, event)
     : undefined;
 
   const surface = (
@@ -787,8 +789,11 @@ export function DialogPopup({
   const web = isWebEnvironment();
   const handleKeyDown =
     web && modalActive
-      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
-          trapTabKey(popupNodeRef.current, event)
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(popupNodeRef.current, event)
       : undefined;
 
   const substituted = resolveRender(

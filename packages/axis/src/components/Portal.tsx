@@ -114,7 +114,8 @@ export function PortalHost({
   style,
   render,
   ref,
-}: PortalHostProps): React.ReactNode {  const registry = useMemo<PortalRegistry>(() => createPortalRegistry(), []);
+}: PortalHostProps): React.ReactNode {
+  const registry = useMemo<PortalRegistry>(() => createPortalRegistry(), []);
   const nodes = useRef(new Map<string, ReactNode>());
   const [, setVersion] = useState(0);
 

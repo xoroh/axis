@@ -5,7 +5,6 @@ import {
   type Ref,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -683,7 +682,9 @@ export function DrawerBackdrop({
     state,
   );
   if (substituted !== null) return substituted;
-  return <View testID={testID} style={[{ flex: 1 }, resolveStyle(style, state)]} />;
+  return (
+    <View testID={testID} style={[{ flex: 1 }, resolveStyle(style, state)]} />
+  );
 }
 
 export type DrawerPopupState = {
@@ -799,8 +800,11 @@ export function DrawerPopup({
   const web = isWebEnvironment();
   const handleKeyDown =
     web && modalActive
-      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
-          trapTabKey(popupNodeRef.current, event)
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(popupNodeRef.current, event)
       : undefined;
 
   // Anchor edge: full-bleed on the cross axis, flush on the side.

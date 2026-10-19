@@ -156,10 +156,7 @@ function Shell({
       </DrawerTrigger>
       <DrawerPortal testID="drawer-portal">
         <DrawerBackdrop testID="drawer-scrim" />
-        <DrawerPopup
-          testID="drawer"
-          accessibilityLabel="App navigation"
-        >
+        <DrawerPopup testID="drawer" accessibilityLabel="App navigation">
           <DrawerHandle testID="drawer-handle" />
           <DrawerTitle>Navigation</DrawerTitle>
           <DrawerDescription>Destinations</DrawerDescription>
@@ -199,7 +196,9 @@ describe("Drawer compound parts on React Native", () => {
       <PortalHost>
         <Shell
           onDismiss={() => order.push("dismiss")}
-          onOpen={(open, details) => order.push(`change:${details?.reason}`)}
+          onOpen={(open, details) =>
+            order.push(`change:${String(open)}:${details?.reason}`)
+          }
         />
       </PortalHost>,
     );
@@ -369,7 +368,11 @@ describe("Drawer snap points (folded Sheet)", () => {
     const seen: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Shell side="bottom" snapPoints={[0.5, 1]} onSnap={(p) => seen.push(p)} />
+        <Shell
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnap={(p) => seen.push(p)}
+        />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -385,7 +388,11 @@ describe("Drawer snap points (folded Sheet)", () => {
     const seen: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Shell side="bottom" snapPoints={[0.5, 1]} onSnap={(p) => seen.push(p)} />
+        <Shell
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnap={(p) => seen.push(p)}
+        />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -433,7 +440,11 @@ describe("Drawer snap points (folded Sheet)", () => {
     const snaps: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Shell side="bottom" snapPoints={[0.5, 1]} onSnap={(p) => snaps.push(p)} />
+        <Shell
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnap={(p) => snaps.push(p)}
+        />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -458,9 +469,13 @@ describe("Drawer snap points (folded Sheet)", () => {
     );
     await layoutContainer(400, 800);
     await act(async () => {
-      await fireEvent(screen.getByTestId("drawer-handle"), "accessibilityAction", {
-        nativeEvent: { actionName: "dismiss" },
-      });
+      await fireEvent(
+        screen.getByTestId("drawer-handle"),
+        "accessibilityAction",
+        {
+          nativeEvent: { actionName: "dismiss" },
+        },
+      );
     });
     expect(changed).toEqual([{ open: false, reason: "close-press" }]);
   });
@@ -506,10 +521,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("resolves non-positive snap points to fully open without throwing", async () => {
     await render(
       <PortalHost>
-        <Shell
-          side="bottom"
-          snapPoints={[Number.NaN, -1, 0]}
-        />
+        <Shell side="bottom" snapPoints={[Number.NaN, -1, 0]} />
       </PortalHost>,
     );
     await layoutContainer(400, 800);

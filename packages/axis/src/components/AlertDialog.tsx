@@ -1,9 +1,8 @@
 import type { ElementRef, ReactNode, Ref } from "react";
 import type { StyleProp, View, ViewStyle } from "react-native";
+import type { OverlayOpenChangeDetails } from "../dismissWiring";
 import type { RenderProp, StateStyle } from "../render";
 import type { SlotProps } from "../slot";
-import type { OverlayOpenChangeDetails } from "../dismissWiring";
-import type { OverlayFocusValue } from "./useAccessibilityFocus";
 import {
   DialogBackdrop,
   type DialogBackdropProps,
@@ -20,6 +19,7 @@ import {
   DialogTrigger,
   type DialogTriggerProps,
 } from "./Dialog";
+import type { OverlayFocusValue } from "./useAccessibilityFocus";
 
 /**
  * AlertDialog — a blocking dialog that only closes through its actions.

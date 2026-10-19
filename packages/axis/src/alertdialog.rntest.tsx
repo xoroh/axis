@@ -61,7 +61,10 @@ function Blocking({
 async function press(testID: string, hidden = false) {
   await act(async () => {
     fireEvent.press(
-      screen.getByTestId(testID, hidden ? { includeHiddenElements: true } : undefined),
+      screen.getByTestId(
+        testID,
+        hidden ? { includeHiddenElements: true } : undefined,
+      ),
     );
   });
 }
@@ -116,7 +119,9 @@ describe("AlertDialog compound parts on React Native", () => {
     await render(
       <PortalHost>
         <Blocking
-          onOpen={(open, details) => changed.push({ open, reason: details?.reason })}
+          onOpen={(open, details) =>
+            changed.push({ open, reason: details?.reason })
+          }
         />
       </PortalHost>,
     );
