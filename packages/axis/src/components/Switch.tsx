@@ -16,14 +16,13 @@ import { useControllableState } from "../useControllableState";
  * SwitchRoot — an unstyled on/off control with a thumb part.
  *
  * Structure only: a `Pressable` row carrying the switch role and
- * state, with a track/thumb `View` pair the caller styles. No
- * default visuals — every visual value (`style`, `trackStyle`,
- * `thumbStyle`) is caller-provided. State follows the
+ * state. No default visuals — every visual value (`style`) is
+ * caller-provided; the track is caller composition (a plain `View`)
+ * and the thumb is the `SwitchThumb` part, which reads root state
+ * for function styles. State follows the
  * `useControllableState` pattern with Base UI names: `checked` (+
  * `onCheckedChange`) for controlled use, `defaultChecked` for
- * uncontrolled. A caller-composed `SwitchThumb` reads the root state
- * for function styles; pass it as `children` (rendered after the
- * default track row) or through `render`.
+ * uncontrolled.
  *
  * One clean current API (owner no-compat rule): no aliases, no
  * warn-once shims. Nothing was published, so there is nobody to
@@ -93,18 +92,14 @@ export type SwitchRootProps = {
   testID?: string;
   /** Value or function of switch state, caller-provided. */
   style?: StateStyle<SwitchRootState, StyleProp<ViewStyle>>;
-  /** Track container style. */
-  trackStyle?: StyleProp<ViewStyle>;
-  /** Thumb indicator style. */
-  thumbStyle?: StyleProp<ViewStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
   render?: RenderProp<SwitchRootState, SlotProps>;
-  /** Switch thumb (`SwitchThumb`) composed by the caller. Rendered
-   * after the default track row. */
+  /** Switch content (`SwitchThumb`, optionally inside a caller
+   * track `View`) composed by the caller. */
   children?: ReactNode;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
@@ -158,8 +153,6 @@ export function SwitchRoot({
   accessibilityLabelledBy,
   testID,
   style,
-  trackStyle,
-  thumbStyle,
   render,
   ref,
   children,
@@ -231,9 +224,6 @@ export function SwitchRoot({
         onPress={toggle}
         style={resolveStyle(style, state)}
       >
-        <View style={trackStyle}>
-          <View style={thumbStyle} />
-        </View>
         {children}
       </Pressable>
     </SwitchDisclosureContext.Provider>

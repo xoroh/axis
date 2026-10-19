@@ -8,15 +8,15 @@ Determinate/indeterminate indicator: `value` (default 0; `null`
 is indeterminate — announces busy, no value — Base UI exact
 semantics), `min` (default 0), `max` (default 100), role
 `progressbar` with `{min, max, now}` value, `accessibilityLabel`,
-`ref?` (container). Values clamp; fill width is data-driven under
-caller `barStyle`. Example: `<ProgressRoot value={42}
+`ref?` (container). Values clamp; the fill width is data-driven —
+computed by `ProgressIndicator` from root state. Example: `<ProgressRoot value={42}
 accessibilityLabel="Loading" />`.
 
 ### Anatomy
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `ProgressRoot` | `Progress.Root` | State owner (`value`/`min`/`max`); progressbar role; keeps its own fill bar and renders caller children after it. |
+| `ProgressRoot` | `Progress.Root` | State owner (`value`/`min`/`max`); progressbar role; renders only caller children — no built-in bar. |
 | `ProgressTrack` | `Progress.Track` | Container for the indicator; style value-or-function over `{ value, indeterminate }`; renders nothing outside a root. |
 | `ProgressIndicator` | `Progress.Indicator` | Fill bar; width computed from root state (clamped into `[min, max]`, `0%` while indeterminate); renders nothing outside a root. |
 | `ProgressLabel` | `Progress.Label` | Static label text; renders anywhere. |

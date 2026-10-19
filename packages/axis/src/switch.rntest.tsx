@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import type { Pressable } from "react-native";
+import { type Pressable, View } from "react-native";
 import { SwitchRoot, SwitchThumb } from "./index";
 
 /**
@@ -120,16 +120,24 @@ describe("SwitchRoot on React Native", () => {
 
   it("accepts caller styles without imposing any", async () => {
     await render(
-      <SwitchRoot
-        testID="sw"
-        style={{ opacity: 0.5 }}
-        trackStyle={{ backgroundColor: "red" }}
-        thumbStyle={{ width: 20 }}
-      />,
+      <SwitchRoot testID="sw" style={{ opacity: 0.5 }}>
+        <View testID="sw-track" style={{ backgroundColor: "red" }}>
+          <SwitchThumb testID="sw-thumb" style={{ width: 20 }} />
+        </View>
+      </SwitchRoot>,
     );
     expect(screen.getByTestId("sw").props.style).toMatchObject({
       opacity: 0.5,
     });
+    expect(screen.getByTestId("sw-track")).toBeTruthy();
+    expect(screen.getByTestId("sw-thumb").props.style).toMatchObject({
+      width: 20,
+    });
+  });
+
+  it("renders no built-in track or thumb", async () => {
+    await render(<SwitchRoot testID="sw" />);
+    expect(screen.getByTestId("sw").children).toHaveLength(0);
   });
 
   it("composes a thumb reading root state", async () => {

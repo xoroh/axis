@@ -35,23 +35,29 @@ export const SwitchDemo: Demo = {
           <Text style={{ fontSize: 13, color: theme.textSubtle }}>
             Starts off, toggles on click/tap with native accessibility state.
           </Text>
-          <SwitchRoot
-            accessibilityLabel="Demo uncontrolled switch"
-            trackStyle={{
-              width: 52,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: theme.border,
-              padding: 2,
-            }}
-            thumbStyle={{
-              width: 26,
-              height: 26,
-              borderRadius: 13,
-              backgroundColor: theme.surface,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            }}
-          />
+          <SwitchRoot accessibilityLabel="Demo uncontrolled switch">
+            <View
+              style={{
+                width: 52,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: theme.border,
+                padding: 2,
+              }}
+            >
+              <SwitchThumb
+                style={(state) => ({
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: state.checked
+                    ? theme.primary
+                    : theme.surface,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                })}
+              />
+            </View>
+          </SwitchRoot>
         </View>
 
         <View
@@ -74,21 +80,27 @@ export const SwitchDemo: Demo = {
             accessibilityLabel="Demo controlled switch"
             checked={checked}
             onCheckedChange={setChecked}
-            trackStyle={{
-              width: 52,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: checked ? theme.primary : theme.border,
-              padding: 2,
-            }}
-            thumbStyle={{
-              width: 26,
-              height: 26,
-              borderRadius: 13,
-              backgroundColor: checked ? theme.primaryFg : theme.surface,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            }}
-          />
+          >
+            <View
+              style={{
+                width: 52,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: checked ? theme.primary : theme.border,
+                padding: 2,
+              }}
+            >
+              <SwitchThumb
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: checked ? theme.primaryFg : theme.surface,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              />
+            </View>
+          </SwitchRoot>
         </View>
 
         <View
@@ -107,26 +119,28 @@ export const SwitchDemo: Demo = {
           <Text style={{ fontSize: 13, color: theme.textSubtle }}>
             The thumb part reads root state for function styles.
           </Text>
-          <SwitchRoot
-            accessibilityLabel="Demo composed switch"
-            defaultChecked
-            trackStyle={{
-              width: 52,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: theme.border,
-              padding: 2,
-            }}
-          >
-            <SwitchThumb
-              style={(state) => ({
-                width: 26,
-                height: 26,
-                borderRadius: 13,
-                backgroundColor: state.checked ? theme.primary : theme.surface,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-              })}
-            />
+          <SwitchRoot accessibilityLabel="Demo composed switch" defaultChecked>
+            <View
+              style={{
+                width: 52,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: theme.border,
+                padding: 2,
+              }}
+            >
+              <SwitchThumb
+                style={(state) => ({
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: state.checked
+                    ? theme.primary
+                    : theme.surface,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                })}
+              />
+            </View>
           </SwitchRoot>
         </View>
 
@@ -150,21 +164,27 @@ export const SwitchDemo: Demo = {
             accessibilityLabel="Demo read-only switch"
             defaultChecked
             readOnly
-            trackStyle={{
-              width: 52,
-              height: 30,
-              borderRadius: 15,
-              backgroundColor: theme.primary,
-              padding: 2,
-            }}
-            thumbStyle={{
-              width: 26,
-              height: 26,
-              borderRadius: 13,
-              backgroundColor: theme.primaryFg,
-              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-            }}
-          />
+          >
+            <View
+              style={{
+                width: 52,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: theme.primary,
+                padding: 2,
+              }}
+            >
+              <SwitchThumb
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
+                  backgroundColor: theme.primaryFg,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                }}
+              />
+            </View>
+          </SwitchRoot>
         </View>
       </View>
     );

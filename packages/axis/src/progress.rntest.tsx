@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 import { act } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import {
   ProgressIndicator,
   ProgressLabel,
@@ -96,7 +96,7 @@ describe("ProgressRoot parts on React Native", () => {
     ).toMatchObject({ width: "0%", opacity: 0.5 });
   });
 
-  it("root keeps its own fill bar with composed children", async () => {
+  it("root renders no built-in bar, only composed children", async () => {
     await render(
       <ProgressRoot testID="pg" value={50} accessibilityLabel="Loading">
         <Text testID="pg-note">Halfway</Text>
@@ -104,6 +104,10 @@ describe("ProgressRoot parts on React Native", () => {
     );
     expect(screen.getByRole("progressbar")).toBeTruthy();
     expect(screen.getByText("Halfway")).toBeTruthy();
+    // The only child is the composed text — no built-in bar `View`.
+    const children = screen.getByTestId("pg").children;
+    expect(children).toHaveLength(1);
+    expect(screen.getByTestId("pg-note")).toBeTruthy();
   });
 
   it("value renders a caller override over the numeric value", async () => {

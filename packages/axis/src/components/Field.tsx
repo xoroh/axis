@@ -18,14 +18,14 @@ import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 
 /**
- * FieldRoot — an unstyled label/control/error row with parts.
+ * FieldRoot — an unstyled field container with parts.
  *
- * Structure only: an optional label `Text`, the caller-provided
- * control (`children`), and an optional error `Text` announced
- * politely when present. No validation logic lives here — validity
- * is the caller's state, expressed by passing `error`. Control-id
- * wiring beyond plain composition is deferred until a consumer
- * demonstrates the need.
+ * Structure only: the caller-provided control (`children`) with
+ * `FieldLabel`/`FieldControl`/`FieldDescription`/`FieldError`
+ * composed inside. No validation logic lives here — validity is the
+ * caller's state, expressed by passing `invalid` (Base UI
+ * `Field.Root` parity). Control-id wiring beyond plain composition
+ * is deferred until a consumer demonstrates the need.
  */
 
 export type FieldRootState = {
@@ -90,19 +90,17 @@ export type FieldErrorProps = {
 };
 
 export type FieldRootProps = {
-  /** Label content rendered above the control. */
-  label?: ReactNode;
-  /** The control element. */
+  /**
+   * Whether the field is currently invalid. Caller-owned validity
+   * state (Base UI `Field.Root` parity): `FieldError` mounts only
+   * while `true`. Default `false`.
+   */
+  invalid?: boolean;
+  /** The control element (`FieldLabel`/`FieldControl`/`FieldError` composed inside). */
   children?: ReactNode;
-  /** Error content; rendered only when provided. */
-  error?: ReactNode;
   testID?: string;
   /** Container style: value or function of field state. */
   style?: StateStyle<FieldRootState, StyleProp<ViewStyle>>;
-  /** Label text style, caller-provided. */
-  labelStyle?: StyleProp<TextStyle>;
-  /** Error text style, caller-provided. */
-  errorStyle?: StyleProp<TextStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
@@ -176,13 +174,10 @@ function FieldText({
 }
 
 export function FieldRoot({
-  label,
+  invalid = false,
   children,
-  error,
   testID,
   style,
-  labelStyle,
-  errorStyle,
   render,
   ref,
 }: FieldRootProps): React.ReactNode {
@@ -196,17 +191,13 @@ export function FieldRoot({
     [ref],
   );
 
-  const state: FieldRootState = { invalid: error !== undefined };
-  const disclosure: FieldDisclosure = { invalid: error !== undefined };
+  const state: FieldRootState = { invalid };
+  const disclosure: FieldDisclosure = { invalid };
   const substituted = resolveRender(
     render,
     {
       testID,
       style: resolveStyle(style, state),
-      label,
-      labelStyle,
-      error,
-      errorStyle,
       children,
       ref: setHostRef,
     } satisfies SlotProps,
@@ -223,13 +214,7 @@ export function FieldRoot({
   return (
     <FieldDisclosureContext.Provider value={disclosure}>
       <View ref={setHostRef} testID={testID} style={resolveStyle(style, state)}>
-        {label !== undefined ? <Text style={labelStyle}>{label}</Text> : null}
         {children}
-        {error !== undefined ? (
-          <Text accessibilityLiveRegion="polite" style={errorStyle}>
-            {error}
-          </Text>
-        ) : null}
       </View>
     </FieldDisclosureContext.Provider>
   );

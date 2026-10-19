@@ -77,11 +77,12 @@ export const EntryDemo: Demo = {
             gap: 16,
           }}
         >
-          <FieldRoot
-            label="Full Name"
-            labelStyle={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-            style={{ gap: 8 }}
-          >
+          <FieldRoot style={{ gap: 8 }}>
+            <FieldLabel
+              style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            >
+              Full Name
+            </FieldLabel>
             <Input
               accessibilityLabel="Name input"
               value={name}
@@ -91,10 +92,7 @@ export const EntryDemo: Demo = {
             />
           </FieldRoot>
 
-          <FieldRoot
-            error={notes === "" ? "Notes are required" : undefined}
-            style={{ gap: 8 }}
-          >
+          <FieldRoot invalid={notes === ""} style={{ gap: 8 }}>
             <FieldLabel
               style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
             >

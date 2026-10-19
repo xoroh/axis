@@ -22,9 +22,11 @@ import type { SlotProps } from "../slot";
  * indicator with track/indicator/label/value parts.
  *
  * Structure only: an outer `View` carrying the progressbar role and
- * value, with an inner bar whose width is the data-driven fill
- * percentage merged under caller `barStyle`. No colors, no animation:
- * indeterminate is announced state, motion belongs to the caller.
+ * value. No default visuals — the track/indicator pair is caller
+ * composition (`ProgressTrack` + `ProgressIndicator`, which compute
+ * the data-driven fill width from root state). No colors, no
+ * animation: indeterminate is announced state, motion belongs to the
+ * caller.
  * `value` follows Base UI exactly: a number is the determinate value,
  * `null` is indeterminate (no value announced, busy announced).
  * Values clamp into `[min, max]`; `max <= min` disables the fill math
@@ -129,15 +131,13 @@ export type ProgressRootProps = {
   testID?: string;
   /** Outer container style: value or function of progress state. */
   style?: StateStyle<ProgressRootState, StyleProp<ViewStyle>>;
-  /** Fill bar style, caller-provided (merged under the fill width). */
-  barStyle?: StyleProp<ViewStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
   render?: RenderProp<ProgressRootState, SlotProps>;
-  /** Progress content (`ProgressTrack` composed by the caller). Rendered after the fill bar. */
+  /** Progress content (`ProgressTrack` composed by the caller). */
   children?: ReactNode;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
@@ -210,7 +210,6 @@ export function ProgressRoot({
   accessibilityLabel,
   testID,
   style,
-  barStyle,
   render,
   ref,
   children,
@@ -229,8 +228,6 @@ export function ProgressRoot({
   const range = max - min;
   const numeric = indeterminate ? min : (value ?? min);
   const clamped = range > 0 ? Math.min(Math.max(numeric, min), max) : min;
-  const percent =
-    !indeterminate && range > 0 ? ((clamped - min) / range) * 100 : 0;
   const state: ProgressRootState = {
     value: indeterminate ? undefined : clamped,
     indeterminate,
@@ -282,7 +279,6 @@ export function ProgressRoot({
         testID={testID}
         style={resolveStyle(style, state)}
       >
-        <View style={[{ width: `${percent}%` }, barStyle]} />
         {children}
       </View>
     </ProgressDisclosureContext.Provider>

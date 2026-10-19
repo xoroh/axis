@@ -252,8 +252,7 @@ describe("render composition: display parts", () => {
   it("FieldRoot function render observes invalid state", async () => {
     await render(
       <FieldRoot
-        label="Name"
-        error="Required"
+        invalid
         render={(_props, state) => (
           <Text testID="st">{state.invalid ? "bad" : "good"}</Text>
         )}

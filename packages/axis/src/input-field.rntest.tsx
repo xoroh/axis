@@ -168,10 +168,12 @@ describe("Input on React Native", () => {
 });
 
 describe("FieldRoot on React Native", () => {
-  it("renders label, control, and polite error", async () => {
+  it("renders composed parts with a polite error while invalid", async () => {
     await render(
-      <FieldRoot testID="f" label="Email" error="Required">
+      <FieldRoot testID="f" invalid>
+        <FieldLabel testID="f-label">Email</FieldLabel>
         <Input testID="in" accessibilityLabel="Email" />
+        <FieldError testID="f-error">Required</FieldError>
       </FieldRoot>,
     );
     expect(screen.getByText("Email")).toBeTruthy();
@@ -179,7 +181,7 @@ describe("FieldRoot on React Native", () => {
     expect(screen.getByTestId("in")).toBeTruthy();
   });
 
-  it("omits label and error when absent", async () => {
+  it("renders only children with no built-in label or error", async () => {
     await render(
       <FieldRoot testID="f">
         <Input testID="in" />
@@ -193,7 +195,7 @@ describe("FieldRoot on React Native", () => {
 describe("FieldRoot ref forwarding", () => {
   it("forwards a ref to the host element", async () => {
     const ref = createRef<ElementRef<typeof View>>();
-    await render(<FieldRoot ref={ref} testID="f" label="Name" />);
+    await render(<FieldRoot ref={ref} testID="f" />);
     expect(ref.current).toBeTruthy();
   });
 });
@@ -201,7 +203,7 @@ describe("FieldRoot ref forwarding", () => {
 describe("FieldRoot parts on React Native", () => {
   it("composes label, control, description, and error parts", async () => {
     await render(
-      <FieldRoot testID="f" error="Required">
+      <FieldRoot testID="f" invalid>
         <FieldLabel testID="f-label">Email</FieldLabel>
         <FieldControl>
           <Input testID="in" accessibilityLabel="Email" />
