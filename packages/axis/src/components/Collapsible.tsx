@@ -7,7 +7,13 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -111,10 +117,12 @@ export type CollapsiblePanelProps = {
    * When `true`, the panel stays mounted while closed: mounted but
    * invisible (`display: "none"` merged after the caller style — the
    * Base UI `hidden` attribute equivalent) and hidden from assistive
-   * tech (`accessibilityElementsHidden` on iOS,
-   * `importantForAccessibility="no-hide-descendants"` on Android,
-   * `aria-hidden` on web — `accessible={false}` alone does not hide
-   * children), with `{ open: false }` state.
+   * tech via `aria-hidden` alone (RN 0.87 resolves `aria-hidden` to
+   * `accessibilityElementsHidden`, and `true` additionally sets
+   * `importantForAccessibility="no-hide-descendants"` — View.js lines
+   * 71-76 — so descendants stay unannounced on iOS and Android;
+   * ADR-112 aria-only, no legacy hiding props), with
+   * `{ open: false }` state.
    * Default `false` (mounts only while open — D3: keep-alive
    * stays opt-in).
    */
@@ -299,11 +307,23 @@ export function CollapsiblePanel({
     open,
     disabled: disclosure?.rootDisabled ?? false,
   };
+  // A closed keepMounted panel must not be visible: Base UI sets the
+  // `hidden` attribute, so the native equivalent is `display: "none"`
+  // merged AFTER the caller style (state-driven visibility, not a
+  // default style).
+  const closedStyle = open ? null : { display: "none" as const };
   const substituted = resolveRender(
     render,
     {
       testID,
-      style,
+      // The hidden contract rides the substitution props too, flattened
+      // to one object (mergeSlotProps spreads styles shallowly, so an
+      // array would not survive): a `render` panel receives the closed
+      // `display: "none"` and `aria-hidden`, staying invisible and
+      // unannounced. Consumer props still win per key through
+      // mergeSlotProps (consumer-last).
+      style: StyleSheet.flatten([style, closedStyle]),
+      "aria-hidden": !open,
       children,
     } satisfies SlotProps,
     state,
@@ -313,15 +333,11 @@ export function CollapsiblePanel({
   return (
     <View
       testID={testID}
-      // A closed keepMounted panel must not be visible: Base UI sets
-      // the `hidden` attribute, so the native equivalent is
-      // `display: "none"` merged AFTER the caller style (state-driven
-      // visibility, not a default style). `accessible={false}` alone
-      // does NOT hide children from VoiceOver/TalkBack, so the panel
-      // is hidden on all three platforms explicitly.
-      style={[style, open ? null : { display: "none" as const }]}
-      accessibilityElementsHidden={!open}
-      importantForAccessibility={open ? "auto" : "no-hide-descendants"}
+      style={[style, closedStyle]}
+      // `aria-hidden` alone hides descendants on iOS and Android
+      // (resolved to accessibilityElementsHidden +
+      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // aria-only — no legacy hiding props.
       aria-hidden={!open}
     >
       {children}

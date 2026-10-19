@@ -7,7 +7,13 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -112,10 +118,12 @@ export type TabsPanelProps = {
    * When `true`, the panel stays mounted while unselected: mounted but
    * invisible (`display: "none"` merged after the caller style — the
    * Base UI hidden-attribute equivalent) and hidden from assistive
-   * tech (`accessibilityElementsHidden` on iOS,
-   * `importantForAccessibility="no-hide-descendants"` on Android,
-   * `aria-hidden` on web — `accessible={false}` alone does not hide
-   * children). Default `false` (mounts only while selected).
+   * tech via `aria-hidden` alone (RN 0.87 resolves `aria-hidden` to
+   * `accessibilityElementsHidden`, and `true` additionally sets
+   * `importantForAccessibility="no-hide-descendants"` — View.js lines
+   * 71-76 — so descendants stay unannounced on iOS and Android;
+   * ADR-112 aria-only, no legacy hiding props).
+   * Default `false` (mounts only while selected).
    */
   keepMounted?: boolean;
   /**
@@ -330,11 +338,23 @@ export function TabsPanel({
     return null;
   }
   const state: TabsState = { value: group?.selectedValue };
+  // A deselected keepMounted panel must not be visible: Base UI sets
+  // the `hidden` attribute, so the native equivalent is
+  // `display: "none"` merged AFTER the caller style (state-driven
+  // visibility, not a default style).
+  const closedStyle = selected ? null : { display: "none" as const };
   const substituted = resolveRender(
     render,
     {
       testID,
-      style,
+      // The hidden contract rides the substitution props too, flattened
+      // to one object (mergeSlotProps spreads styles shallowly, so an
+      // array would not survive): a `render` panel receives the
+      // deselected `display: "none"` and `aria-hidden`, staying
+      // invisible and unannounced. Consumer props still win per key
+      // through mergeSlotProps (consumer-last).
+      style: StyleSheet.flatten([style, closedStyle]),
+      "aria-hidden": !selected,
       children,
     } satisfies SlotProps,
     state,
@@ -344,15 +364,11 @@ export function TabsPanel({
   return (
     <View
       testID={testID}
-      // A deselected keepMounted panel must not be visible: Base UI sets
-      // the `hidden` attribute, so the native equivalent is
-      // `display: "none"` merged AFTER the caller style (state-driven
-      // visibility, not a default style). `accessible={false}` alone
-      // does NOT hide children from VoiceOver/TalkBack, so the panel
-      // is hidden on all three platforms explicitly.
-      style={[style, selected ? null : { display: "none" as const }]}
-      accessibilityElementsHidden={!selected}
-      importantForAccessibility={selected ? "auto" : "no-hide-descendants"}
+      style={[style, closedStyle]}
+      // `aria-hidden` alone hides descendants on iOS and Android
+      // (resolved to accessibilityElementsHidden +
+      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // aria-only — no legacy hiding props.
       aria-hidden={!selected}
     >
       {children}
