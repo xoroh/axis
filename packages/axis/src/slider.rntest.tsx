@@ -514,7 +514,9 @@ describe("Slider on React Native", () => {
     );
     expect(fillStyle).toMatchObject({ height: "0%" });
     // Vertical fills bottom-up: the thumb sits 100% from the top.
-    const vthumb = StyleSheet.flatten(screen.getByTestId("sl-thumb").props.style);
+    const vthumb = StyleSheet.flatten(
+      screen.getByTestId("sl-thumb").props.style,
+    );
     expect(vthumb).toMatchObject({ position: "absolute", top: "100%" });
   });
 
