@@ -1,68 +1,71 @@
-# Status report — 2026-10-19 02:50 CEST (Axis consolidation, turn 15)
+# Status report — 2026-10-19 03:20 CEST (Axis cleanup Lane B + consolidation)
 
-Supersedes the turn-14 report (2026-10-16). Consolidation only: no
-merges, no publish, no version/tag, no new feature work. Full
-component-by-component evidence: `.reports/axis-status-2026-10-19.md`
-(untracked, main checkout; research thread 84e31a71, read-only).
+Supersedes the 02:50 CEST turn-15 note. Cleanup Lane B (owner
+priority 02:58/02:59 CEST): zero open PRs, only `main` on the
+remote, clean tree. All feature work was on hold during cleanup;
+docs batch 2 was triaged on content and MERGED. Full evidence:
+`.reports/axis-status-2026-10-19.md` (component-by-component
+parity, 37 Base UI components) and
+`.reports/2026-10-19-axis-cleanup.md` (triage table + verification
+output).
 
-## Done (on main 82c3179)
-- #53 render composition + toast queue + PortalHost (merged
-  2026-10-16 23:32 CEST, incl. its 3 review fixes: entry demos
-  `onValueChange`, overlay/toast demos, changeset frontmatter).
-- #54 README-example gate (Q15), #55 pack-vendor, #56 status,
-  #51 demo-coverage gate, #50 AI chat models (ADR 010), #45 scope
-  migration, #47 no-compat sweep, #44 models zone.
-- Inventory: 37 Base UI components checked; Axis ships 35 of them
-  (Form missing; Preview Card and Scroll Area na-native) plus the
-  native extras (Sheet, Portal, Calendar, Time Picker, Search,
-  Loader).
+## Done (on main ea44c0f)
+- #58 web demo PR 1 + #61 styling pass (merged; Expo web demo runs,
+  open-state overlay evidence in).
+- #59 docs batch 1 (Tabs/Toast/Field, Base UI level — merged).
+- #63 docs batch 2 (Button/Dialog/Popover, Base UI level — merged;
+  triaged MERGE, screenshot commit dropped, shots stay out of main
+  per batch-1 precedent). 6 of ~46 docs now at Base UI level.
+- Cleanup: ~38 stale remote branches deleted, 12 gone-remote locals
+  + review-58 + merged-PR locals deleted, old untracked shots
+  deleted, no stashes, no patch archive.
 
-## Open PRs (all unmerged, release HOLD)
-| PR | Branch @ head | CI | State / blocker |
-|---|---|---|---|
-| #58 web demo PR 1 | feat/axis-example-web @ 7844571 | validate green | CLEAN. Needs lead user-eye review of web screenshots, then merge |
-| #61 web demo styling (PR 2) | feat/axis-example-web-styling @ 51a9e25 | no checks (base is #58 branch) | Stacked on #58; retarget to main after #58 lands. Known weak: Tooltip tip collapses on web, ContextMenu Close clipped, `Sort by` text-node warning (fixed in #57) |
-| #57 parity Select/Combobox/Tooltip/Menu | feat/axis-parity-select-menu @ fc3a834 | validate green | CLEAN. Review fixes 1-5 pushed 2026-10-19 01:50 CEST; Select/Menu/Tooltip web screenshots still owed (gated on #58) |
-| #60 overlay root | feat/axis-overlay-root @ 326563c | validate FAILS | `check:demos`: 7 Overlay exports lack demos. Overlay demo + Select OverlayRoot edits made 2026-10-18 were never committed and were lost when /tmp was wiped on reboot. Conflicts with #57 in Menu.tsx (real), index.ts/models.ts/menuparts (trivial) |
-| #59 docs Tabs/Toast/Field | docs/axis-docs-batch1-select-tabs-toast-field @ d0dbb4f | validate green | CLEAN. Lead review, then merge |
+## Open PRs (Lane A; release HOLD still stands)
+| PR | State / blocker |
+|---|---|
+| #57 parity Select/Combobox/Tooltip/Menu | Lane A merges. Review fixes pushed; needs CLEAN + validate SUCCESS. |
+| #60 overlay root | Lane A merges after #57 (Menu.tsx overlap). Was CI-red on demos; Lane A resolves. Migrates Dialog/Popover/Menu/Drawer onto OverlayRoot — prop tables in #63 describe pre-#60 API; expect a small docs follow-up if #60 changes `*Props`. |
 
 ## Remaining program (in order)
-1. Web demo: review + merge #58, retarget #61 to main, review its
-   screenshots, merge.
-2. Render (#53): DONE.
-3. Overlay root: merge #57 first (it rewrites Menu.tsx), then rebase
-   #60, redo the 7 Overlay demos, wire Select into OverlayRoot, get
-   validate green, merge.
-4. Parity: #57 lands in step 3. Left after it: Select `multiple`,
+1. Docs batch 2: DONE (#63 merged 2026-10-19). Caveat: #60 may
+   change Dialog/Popover `*Props` — re-check tables post-#60, one
+   small follow-up PR if needed.
+2. Parity leftovers (#57 open + after): Select `multiple`,
    `alignItemWithTrigger`, scroll arrows; Combobox/Autocomplete onto
    the new collection/typeahead models; compound parts for
    Accordion, Avatar, Checkbox, Meter, Progress, NumberField,
-   ContextMenu, Drawer; Form (no owner); docs batch 2
-   (Select/Menu/Tooltip/Overlay) after #59.
-5. Slider: orientation/vertical/RTL, range/multi-thumb, Track/Thumb
-   parts (Kern P1-1).
-6. Press state: `hovered`/`focusVisible`/`dragged` beyond `pressed`
+   ContextMenu, Drawer; Form (no owner); docs batch 3 (next item —
+   likely Select/Menu/Tooltip/Overlay, which #57/#60 just changed).
+3. Slider: orientation/vertical/RTL, range/multi-thumb,
+   Track/Thumb parts (Kern P1-1).
+4. Press state: `hovered`/`focusVisible`/`dragged` beyond `pressed`
    (Kern P1-5).
-7. Date/time: Calendar locale/week-start/range/min-max/keyboard grid;
-   Time Picker dial (Kern P1-2/P1-3).
-8. Then Form/Link/PasswordToggle, transitions (D9), focus
-   initial/final (D5), and the readiness report rewrite.
+5. Date/time: Calendar locale/week-start/range/min-max/keyboard
+   grid; Time Picker dial (Kern P1-2/P1-3).
+6. Kern friction entries (from
+   `kern-axis-adopt/.reports/axis-api-friction.md`, 2 entries):
+   - Entry 1 (pack-vendor 127/`tsup: command not found` in a clean
+     worktree; proposes a pre-check with a "run `bun install`
+     first" hint): NOT covered by #57 (parity parts) or #60
+     (overlay root) — neither touches `scripts/pack-vendor.mjs`.
+     Backlog: one small PR on the script.
+   - Entry 2 (`ToastViewport` render-prop `style` untyped
+     (`SlotProps.style` is `unknown`); proposes
+     `StyleProp<ViewStyle>` on native): NOT covered by #57 or #60
+     — neither touches `slot`/toast viewport types. Backlog: type
+     the slot style prop (check web target before widening).
 
 ## Release readiness (0.1.0 with Kern): NOT READY
-Blockers in order: open PRs above; #60 CI red; 40+ component docs
-thin (only Tabs/Toast/Field at Base UI level via #59); no device or
-screen-reader pass ever run; dependency advisories unverified; Kern
-still pins a stale Axis tarball (re-vendor after merges); npm
-trusted publishing needs owner `npm login`. Release flow itself
-(workflow, changesets, publint/attw) is ready and held.
+Blockers in order: #57 + #60 open; 40 of ~46 docs still thin;
+no device or screen-reader pass ever run; dependency advisories
+unverified; Kern still pins a stale Axis tarball (re-vendor after
+#57/#60); npm trusted publishing held (no versions/tags/publish
+without explicit authorization). Release HOLD stands.
 
-## Tree hygiene (report only, nothing deleted)
-- Worktrees: main checkout on feat/axis-example-web-styling with
-  untracked `.reports/` files; axis-vendor-clean (detached, untracked
-  vendor/); /tmp/opencode/axis-overlay-root and axis-parity-select
-  (clean, pushed; re-created 2026-10-19 01:18 CEST after reboot);
-  /tmp/opencode/axis-web-demo is gone.
-- No stashes. No unpushed commits on tracked branches. Local branch
-  `review-58` (e48d1ef, no upstream) and 12 local branches whose
-  remotes are gone (squash-merged PRs) remain; ~30 stale remote
-  docs/feature branches from merged PRs remain.
+## Tree state (this branch merges LAST, after #60)
+- Remote: only `main` + Lane A feat branches until #57/#60 land,
+  then only `main`.
+- No stashes. No patch archive (`.team/archive/axis-2026-10-19`
+  removed after use — triage rule is MERGE-or-DROP, no parking).
+- No untracked files outside `.gitignore` (old shots deleted;
+  useful reports ride this PR).
