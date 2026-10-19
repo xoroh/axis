@@ -6,14 +6,17 @@
   "main": "index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "check:demos": "node scripts/check-demo-coverage.mjs",
-    "start": "expo start"
+    "check:demos": "node scripts/check-demo-coverage.mjs && node scripts/check-web-bundle.mjs",
+    "start": "expo start",
+    "check:web": "node scripts/check-web-bundle.mjs"
   },
   "dependencies": {
     "@xoroh/axis": "workspace:*",
     "expo": "^57.0.0",
     "react": "^19.0.0",
-    "react-native": "^0.86.0"
+    "react-dom": "^19.3.1",
+    "react-native": "^0.86.0",
+    "react-native-web": "^0.21.4"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
