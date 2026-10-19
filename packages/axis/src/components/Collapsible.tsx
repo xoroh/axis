@@ -14,7 +14,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * Collapsible — an unstyled single disclosure unit.
+ * CollapsibleRoot — an unstyled single disclosure unit.
  *
  * Structure only: a `View` root carrying one `CollapsibleTrigger`
  * `Pressable` (button role, `expanded` state) with a
@@ -45,7 +45,7 @@ import { useControllableState } from "../useControllableState";
  * trigger carries the button role.
  */
 
-export type CollapsibleState = {
+export type CollapsibleRootState = {
   /** Whether the unit is currently open. */
   open: boolean;
   /** Whether the whole unit is disabled. */
@@ -59,7 +59,7 @@ export type CollapsibleTriggerState = {
   disabled: boolean;
 };
 
-export type CollapsibleProps = {
+export type CollapsibleRootProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false` (starts collapsed). */
@@ -70,7 +70,7 @@ export type CollapsibleProps = {
   disabled?: boolean;
   testID?: string;
   /** Root disclosure view style: value or function of disclosure state. */
-  style?: StateStyle<CollapsibleState, StyleProp<ViewStyle>>;
+  style?: StateStyle<CollapsibleRootState, StyleProp<ViewStyle>>;
   /** The disclosure parts (`CollapsibleTrigger`, `CollapsiblePanel`). */
   children: ReactNode;
   /**
@@ -78,7 +78,7 @@ export type CollapsibleProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<CollapsibleState, SlotProps>;
+  render?: RenderProp<CollapsibleRootState, SlotProps>;
   /** Forwarded to the root disclosure host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -127,7 +127,7 @@ export type CollapsiblePanelProps = {
    * receives `(props, state)`. Without `keepMounted` the panel still
    * mounts only while open.
    */
-  render?: RenderProp<CollapsibleState, SlotProps>;
+  render?: RenderProp<CollapsibleRootState, SlotProps>;
 };
 
 type CollapsibleDisclosure = {
@@ -138,7 +138,7 @@ type CollapsibleDisclosure = {
 
 /**
  * Shared disclosure state for the unit's parts. Internal to this
- * module (not exported): parts must render inside a `Collapsible`
+ * module (not exported): parts must render inside a `CollapsibleRoot`
  * to participate in disclosure; outside one the trigger renders
  * collapsed and inert and the panel never mounts.
  */
@@ -153,7 +153,7 @@ const CollapsibleDisclosureContext =
  * this body is its first consumer.
  */
 function assignRef(
-  ref: CollapsibleProps["ref"],
+  ref: CollapsibleRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -170,7 +170,7 @@ function assignRef(
   }
 }
 
-function CollapsibleRoot({
+export function CollapsibleRoot({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -180,7 +180,7 @@ function CollapsibleRoot({
   children,
   render,
   ref,
-}: CollapsibleProps): React.ReactNode {
+}: CollapsibleRootProps): React.ReactNode {
   const [isOpen, setIsOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -207,7 +207,7 @@ function CollapsibleRoot({
     [isOpen, disabled, toggle],
   );
 
-  const state: CollapsibleState = { open: isOpen ?? false, disabled };
+  const state: CollapsibleRootState = { open: isOpen ?? false, disabled };
   const substituted = resolveRender(
     render,
     {
@@ -297,7 +297,7 @@ export function CollapsiblePanel({
   const disclosure = useContext(CollapsibleDisclosureContext);
   const open = disclosure?.open ?? false;
   if (!open && !keepMounted) return null;
-  const state: CollapsibleState = {
+  const state: CollapsibleRootState = {
     open,
     disabled: disclosure?.rootDisabled ?? false,
   };
@@ -338,5 +338,3 @@ export function CollapsiblePanel({
     </View>
   );
 }
-
-export { CollapsibleRoot as Collapsible };

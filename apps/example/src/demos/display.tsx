@@ -11,9 +11,9 @@ import {
   MeterValue,
   Progress,
   Separator,
-  Table,
   TableCell,
   TableHeader,
+  TableRoot,
   TableRow,
   Toolbar,
 } from "@xoroh/axis";
@@ -41,7 +41,7 @@ export const DisplayDemo: Demo = {
     "MeterValue",
     "Progress",
     "Separator",
-    "Table",
+    "TableRoot",
     "TableCell",
     "TableHeader",
     "TableRow",
@@ -287,7 +287,7 @@ export const DisplayDemo: Demo = {
 
         <Separator style={{ height: 1, backgroundColor: theme.borderSubtle }} />
 
-        {/* Toolbar & Table */}
+        {/* Toolbar & TableRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -299,7 +299,7 @@ export const DisplayDemo: Demo = {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
-            Toolbar & Table
+            Toolbar & TableRoot
           </Text>
           <Toolbar
             accessibilityLabel="Demo toolbar"
@@ -318,7 +318,7 @@ export const DisplayDemo: Demo = {
             </Text>
           </Toolbar>
 
-          <Table
+          <TableRoot
             accessibilityLabel="Demo table"
             style={{
               borderRadius: 8,
@@ -377,7 +377,7 @@ export const DisplayDemo: Demo = {
                 </Text>
               </TableCell>
             </TableRow>
-          </Table>
+          </TableRoot>
         </View>
       </View>
     );

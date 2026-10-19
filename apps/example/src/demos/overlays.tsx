@@ -1,7 +1,7 @@
 import {
   AlertDialog,
   Button,
-  ContextMenu,
+  ContextMenuRoot,
   Drawer,
   OverlayBackdrop,
   OverlayClose,
@@ -11,8 +11,8 @@ import {
   OverlayTrigger,
   Portal,
   PortalHost,
-  Toast,
   ToastProvider,
+  ToastRoot,
   ToastViewport,
   Tooltip,
   TooltipArrow,
@@ -41,7 +41,7 @@ export const OverlaysDemo: Demo = {
   components: [
     "AlertDialog",
     "Drawer",
-    "Toast",
+    "ToastRoot",
     "ToastProvider",
     "ToastViewport",
     "Portal",
@@ -61,7 +61,7 @@ export const OverlaysDemo: Demo = {
     "TooltipProvider",
     "TooltipRoot",
     "TooltipTrigger",
-    "ContextMenu",
+    "ContextMenuRoot",
   ],
   render: function OverlaysScreen() {
     const { theme } = useTheme();
@@ -123,7 +123,7 @@ export const OverlaysDemo: Demo = {
             </TooltipPortal>
           </TooltipRoot>
         </TooltipProvider>
-        {/* ContextMenu */}
+        {/* ContextMenuRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -157,7 +157,7 @@ export const OverlaysDemo: Demo = {
               </Text>
             </Button>
 
-            <ContextMenu
+            <ContextMenuRoot
               open={contextMenuOpen}
               onOpenChange={setContextMenuOpen}
               content={
@@ -223,11 +223,11 @@ export const OverlaysDemo: Demo = {
                   Context Menu
                 </Text>
               </View>
-            </ContextMenu>
+            </ContextMenuRoot>
           </View>
         </View>
 
-        {/* Toast & Queued Toast */}
+        {/* ToastRoot & Queued ToastRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -243,7 +243,7 @@ export const OverlaysDemo: Demo = {
           </Text>
 
           {toastVisible && (
-            <Toast
+            <ToastRoot
               accessibilityLabel="Demo toast"
               defaultOpen={true}
               style={{
@@ -272,7 +272,7 @@ export const OverlaysDemo: Demo = {
               >
                 <Text style={{ color: theme.primaryFg, fontSize: 12 }}>✕</Text>
               </Button>
-            </Toast>
+            </ToastRoot>
           )}
 
           <ToastProvider>
@@ -665,7 +665,7 @@ function QueueDemoButton() {
       }}
     >
       <Text style={{ fontSize: 13, fontWeight: "600", color: theme.text }}>
-        + Dispatch Queued Toast
+        + Dispatch Queued ToastRoot
       </Text>
     </Button>
   );

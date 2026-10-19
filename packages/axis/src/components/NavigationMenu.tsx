@@ -18,7 +18,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * NavigationMenu — an unstyled top-level navigation bar with flyout panels.
+ * NavigationMenuRoot — an unstyled top-level navigation bar with flyout panels.
  *
  * Structure only: a bar row of triggers, each opening one panel below
  * the bar; exactly one panel is open at a time. No default visuals —
@@ -30,7 +30,7 @@ import { useControllableState } from "../useControllableState";
  * state (it drives navigation), unlike a dropdown cascade path.
  *
  * Compound shape (the `Menu` precedent): the caller composes
- * `NavigationMenuItem` elements inside `NavigationMenu`; each item
+ * `NavigationMenuItem` elements inside `NavigationMenuRoot`; each item
  * partitions its children by type into trigger content and one
  * `NavigationMenuPanel`. A context-wired `NavigationMenuTrigger`
  * opens its item; any other trigger-zone element gets its `onPress`
@@ -55,7 +55,7 @@ import { useControllableState } from "../useControllableState";
  * "Dismiss menu".
  */
 
-export type NavigationMenuState = {
+export type NavigationMenuRootState = {
   /** Currently open item value (`null` closed). */
   openValue: string | null;
 };
@@ -67,7 +67,7 @@ export type NavigationMenuTriggerState = {
   disabled: boolean;
 };
 
-export type NavigationMenuProps = {
+export type NavigationMenuRootProps = {
   /** Controlled open item value (`null` closed). Wins over `defaultOpenValue`. */
   openValue?: string | null;
   /** Uncontrolled initial open item value. Default `null` (closed). */
@@ -78,7 +78,7 @@ export type NavigationMenuProps = {
   onDismiss?: () => void;
   testID?: string;
   /** Bar container style: value or function of menu state (row layout is default). */
-  style?: StateStyle<NavigationMenuState, StyleProp<ViewStyle>>;
+  style?: StateStyle<NavigationMenuRootState, StyleProp<ViewStyle>>;
   /** `NavigationMenuItem` elements. */
   children: ReactNode;
   /**
@@ -86,7 +86,7 @@ export type NavigationMenuProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`. Replaces the bar container.
    */
-  render?: RenderProp<NavigationMenuState, SlotProps>;
+  render?: RenderProp<NavigationMenuRootState, SlotProps>;
   /** Forwarded to the bar container `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -142,7 +142,7 @@ type NavigationDisclosure = {
 
 /**
  * Shared open state. Internal (not exported): parts must render
- * inside a `NavigationMenu` to participate; outside one triggers
+ * inside a `NavigationMenuRoot` to participate; outside one triggers
  * render collapsed and inert and panels render nothing, like
  * `MenuItem` outside `Menu`.
  */
@@ -158,7 +158,7 @@ const NavigationDisclosureContext = createContext<NavigationDisclosure | null>(
  * this body is its first consumer.
  */
 function assignRef(
-  ref: NavigationMenuProps["ref"],
+  ref: NavigationMenuRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -336,7 +336,7 @@ export function NavigationMenuItem({
   );
 }
 
-function NavigationMenuRoot({
+export function NavigationMenuRoot({
   openValue,
   defaultOpenValue = null,
   onOpenValueChange,
@@ -346,7 +346,7 @@ function NavigationMenuRoot({
   children,
   render,
   ref,
-}: NavigationMenuProps): React.ReactNode {
+}: NavigationMenuRootProps): React.ReactNode {
   const [current, setCurrent] = useControllableState<string | null>(
     openValue,
     defaultOpenValue,
@@ -381,7 +381,7 @@ function NavigationMenuRoot({
     [ref],
   );
 
-  const barState: NavigationMenuState = {
+  const barState: NavigationMenuRootState = {
     openValue: current ?? null,
   };
   const barSubstituted = resolveRender(
@@ -419,5 +419,3 @@ function NavigationMenuRoot({
     </View>
   );
 }
-
-export { NavigationMenuRoot as NavigationMenu };

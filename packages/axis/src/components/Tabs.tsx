@@ -14,7 +14,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * Tabs — an unstyled single-select tab group.
+ * TabsRoot — an unstyled single-select tab group.
  *
  * Structure only: a plain `View` root, a `TabsList` view carrying the
  * tablist role, `TabsTrigger` pressables carrying the tab role and
@@ -33,7 +33,7 @@ import { useControllableState } from "../useControllableState";
  * behavior stays out per the contract's conditional rule.
  */
 
-export type TabsState = {
+export type TabsRootState = {
   /** Currently selected trigger value (`undefined` for none). */
   value: string | undefined;
 };
@@ -45,7 +45,7 @@ export type TabsTriggerState = {
   disabled: boolean;
 };
 
-export type TabsProps = {
+export type TabsRootProps = {
   /** Controlled selection (a trigger value). Wins over `defaultValue` when defined. */
   value?: string;
   /** Uncontrolled initial selection. No default — nothing selected. */
@@ -54,7 +54,7 @@ export type TabsProps = {
   onValueChange?: (value: string) => void;
   testID?: string;
   /** Root container view style: value or function of tab state. */
-  style?: StateStyle<TabsState, StyleProp<ViewStyle>>;
+  style?: StateStyle<TabsRootState, StyleProp<ViewStyle>>;
   /** The tab group content (`TabsList` triggers plus `TabsPanel`s). */
   children: ReactNode;
   /**
@@ -62,7 +62,7 @@ export type TabsProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<TabsState, SlotProps>;
+  render?: RenderProp<TabsRootState, SlotProps>;
   /** Forwarded to the root container host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -126,7 +126,7 @@ export type TabsPanelProps = {
    * receives `(props, state)`. Without `keepMounted` the panel still
    * mounts only while selected.
    */
-  render?: RenderProp<TabsState, SlotProps>;
+  render?: RenderProp<TabsRootState, SlotProps>;
 };
 
 type TabsSelection = {
@@ -137,7 +137,7 @@ type TabsSelection = {
 /**
  * Shared selection state for the group's triggers and panels.
  * Internal to this module (not exported): triggers and panels must
- * render inside a `Tabs` to participate in selection; outside one,
+ * render inside a `TabsRoot` to participate in selection; outside one,
  * triggers render unselected and inert and panels render nothing.
  */
 const TabsSelectionContext = createContext<TabsSelection | null>(null);
@@ -150,7 +150,7 @@ const TabsSelectionContext = createContext<TabsSelection | null>(null);
  * this body is its first consumer.
  */
 function assignRef(
-  ref: TabsProps["ref"],
+  ref: TabsRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -167,7 +167,7 @@ function assignRef(
   }
 }
 
-function TabsRoot({
+export function TabsRoot({
   value,
   defaultValue,
   onValueChange,
@@ -176,7 +176,7 @@ function TabsRoot({
   children,
   render,
   ref,
-}: TabsProps): React.ReactNode {
+}: TabsRootProps): React.ReactNode {
   const [selectedValue, setSelectedValue] = useControllableState<string>(
     value,
     defaultValue,
@@ -209,7 +209,7 @@ function TabsRoot({
   // element claim of its own. The tablist role lives on `TabsList`,
   // the tab role on each `TabsTrigger`; inventing a second group role
   // here would double-announce the control.
-  const state: TabsState = { value: selectedValue };
+  const state: TabsRootState = { value: selectedValue };
   const substituted = resolveRender(
     render,
     {
@@ -331,12 +331,7 @@ export function TabsPanel({
   if (!selected && !keepMounted) {
     return null;
   }
-  const state: TabsState = { value: group?.selectedValue };
-  // A deselected keepMounted panel must not be visible: Base UI sets
-  // the `hidden` attribute, so the native equivalent is
-  // `display: "none"` merged AFTER the caller style (state-driven
-  // visibility, not a default style).
-  const closedStyle = selected ? null : { display: "none" as const };
+  const state: TabsRootState = { value: group?.selectedValue };
   const substituted = resolveRender(
     render,
     {
@@ -369,5 +364,3 @@ export function TabsPanel({
     </View>
   );
 }
-
-export { TabsRoot as Tabs };

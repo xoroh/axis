@@ -24,7 +24,7 @@ import { createToastQueue, type ToastQueue } from "../toastQueue";
 import { useControllableState } from "../useControllableState";
 
 /**
- * Toast — a transient notification with timed auto-dismiss.
+ * ToastRoot — a transient notification with timed auto-dismiss.
  *
  * Structure only: a `View` carrying the message content with an optional
  * `Pressable` action, announced politely to screen readers. No default
@@ -47,12 +47,12 @@ import { useControllableState } from "../useControllableState";
  * drive imperatively. This omission is intentional, not a gap.
  */
 
-export type ToastState = {
+export type ToastRootState = {
   /** Whether the toast is currently open. */
   open: boolean;
 };
 
-export type ToastProps = {
+export type ToastRootProps = {
   /** Controlled visibility. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial visibility. Default `false`. */
@@ -81,13 +81,13 @@ export type ToastProps = {
   accessibilityLabel?: string;
   testID?: string;
   /** Root view style: value or function of toast state. */
-  style?: StateStyle<ToastState, StyleProp<ViewStyle>>;
+  style?: StateStyle<ToastRootState, StyleProp<ViewStyle>>;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<ToastState, SlotProps>;
+  render?: RenderProp<ToastRootState, SlotProps>;
   /** Forwarded to the toast surface `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -100,7 +100,7 @@ export type ToastProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: ToastProps["ref"],
+  ref: ToastRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -117,7 +117,7 @@ function assignRef(
   }
 }
 
-export function Toast({
+export function ToastRoot({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -130,7 +130,7 @@ export function Toast({
   style,
   render,
   ref,
-}: ToastProps): React.ReactNode {
+}: ToastRootProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -171,7 +171,7 @@ export function Toast({
 
   if (!isOpen) return null;
 
-  const state: ToastState = { open: true };
+  const state: ToastRootState = { open: true };
   const substituted = resolveRender(
     render,
     {
@@ -214,16 +214,16 @@ export function Toast({
 /* ------------------------------------------------------------------ */
 /* Queued toasts (Base UI Provider + Viewport parity)                   */
 /*                                                                      */
-/* The single-shot `Toast` above covers one notification. An app        */
+/* The single-shot `ToastRoot` above covers one notification. An app        */
 /* needs a queue: several toasts alive at once, added from anywhere,    */
 /* dismissed individually or all at once, painted in queue order.      */
 /* `ToastProvider` owns a `createToastQueue` (the shared model) plus    */
 /* the caller payloads per id; `useToast` adds/dismisses/clears from    */
 /* anywhere under the provider (the Base UI `toast.add()` object API);  */
-/* `ToastViewport` paints one single-shot `Toast` per queued id.        */
+/* `ToastViewport` paints one single-shot `ToastRoot` per queued id.        */
 /*                                                                      */
 /* Base UI mapping (documented, not silent): the provider owns the      */
-/* queue; each queued `Toast` IS the `Root`; `children` composes the    */
+/* queue; each queued `ToastRoot` IS the `Root`; `children` composes the    */
 /* `Title`/`Description` text (caller `Text`); `actionLabel`/`onAction` */
 /* IS the `Action`; timed auto-dismiss IS the `Close`. There is no      */
 /* separate `Title`/`Description`/`Close` part: on native the message    */
@@ -426,7 +426,7 @@ function ToastViewportInner({
     const payload = payloadFor(id);
     if (!payload) return null;
     return (
-      <Toast
+      <ToastRoot
         key={id}
         open
         onOpenChange={(next) => {
@@ -439,7 +439,7 @@ function ToastViewportInner({
         testID={testID ? `${testID}-${id}` : undefined}
       >
         {payload.message}
-      </Toast>
+      </ToastRoot>
     );
   });
 

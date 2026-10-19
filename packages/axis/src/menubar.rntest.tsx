@@ -18,7 +18,7 @@ import {
  * leaf selection closing everything, scrim dismissal, controlled
  * following, orphan menus rendering nothing, and ref forwarding —
  * observed in the RN runtime. Panel behavior itself (cascade,
- * scrim, items) is `DropdownMenu`'s tested contract, composed here,
+ * scrim, items) is `DropdownMenuRoot`'s tested contract, composed here,
  * not re-proven.
  */
 

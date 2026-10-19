@@ -158,7 +158,7 @@ export {
   type CheckboxIndicatorState,
   CheckboxRoot,
   type CheckboxRootProps,
-  type CheckboxState,
+  type CheckboxRootState,
 } from "./components/Checkbox";
 export {
   CheckboxGroup,
@@ -169,11 +169,11 @@ export {
   type CheckboxGroupState,
 } from "./components/CheckboxGroup";
 export {
-  Collapsible,
   CollapsiblePanel,
   type CollapsiblePanelProps,
-  type CollapsibleProps,
-  type CollapsibleState,
+  CollapsibleRoot,
+  type CollapsibleRootProps,
+  type CollapsibleRootState,
   CollapsibleTrigger,
   type CollapsibleTriggerProps,
   type CollapsibleTriggerState,
@@ -184,9 +184,9 @@ export {
   type ComboboxState,
 } from "./components/Combobox";
 export {
-  ContextMenu,
-  type ContextMenuProps,
-  type ContextMenuState,
+  ContextMenuRoot,
+  type ContextMenuRootProps,
+  type ContextMenuRootState,
 } from "./components/ContextMenu";
 export {
   Dialog,
@@ -220,12 +220,12 @@ export {
   type DrawerState,
 } from "./components/Drawer";
 export {
-  DropdownMenu,
   DropdownMenuItem,
   type DropdownMenuItemProps,
   type DropdownMenuItemState,
-  type DropdownMenuProps,
-  type DropdownMenuState,
+  DropdownMenuRoot,
+  type DropdownMenuRootProps,
+  type DropdownMenuRootState,
   DropdownMenuSub,
   DropdownMenuSubContent,
   type DropdownMenuSubContentProps,
@@ -320,13 +320,13 @@ export {
   type MeterValueProps,
 } from "./components/Meter";
 export {
-  NavigationMenu,
   NavigationMenuItem,
   type NavigationMenuItemProps,
   NavigationMenuPanel,
   type NavigationMenuPanelProps,
-  type NavigationMenuProps,
-  type NavigationMenuState,
+  NavigationMenuRoot,
+  type NavigationMenuRootProps,
+  type NavigationMenuRootState,
   NavigationMenuTrigger,
   type NavigationMenuTriggerProps,
   type NavigationMenuTriggerState,
@@ -476,35 +476,35 @@ export {
   type SwitchState,
 } from "./components/Switch";
 export {
-  Table,
   TableCell,
   type TableCellProps,
   TableHeader,
   type TableHeaderProps,
-  type TableProps,
+  TableRoot,
+  type TableRootProps,
   TableRow,
   type TableRowProps,
   type TableRowState,
 } from "./components/Table";
 export {
-  Tabs,
   TabsList,
   type TabsListProps,
   TabsPanel,
   type TabsPanelProps,
-  type TabsProps,
-  type TabsState,
+  TabsRoot,
+  type TabsRootProps,
+  type TabsRootState,
   TabsTrigger,
   type TabsTriggerProps,
   type TabsTriggerState,
 } from "./components/Tabs";
 export {
-  Toast,
   type ToastManager,
   type ToastOptions,
-  type ToastProps,
   ToastProvider,
-  type ToastState,
+  ToastRoot,
+  type ToastRootProps,
+  type ToastRootState,
   ToastViewport,
   type ToastViewportProps,
   type ToastViewportState,

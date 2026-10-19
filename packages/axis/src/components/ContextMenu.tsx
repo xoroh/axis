@@ -15,7 +15,7 @@ import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
- * ContextMenu — a long-press popup menu.
+ * ContextMenuRoot — a long-press popup menu.
  *
  * Structure mirrors `Tooltip` (anchor wrapper + measured floating
  * box + scrim, the box and scrim presenting through `Portal` at the
@@ -27,12 +27,12 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * documented, and not faked. No submenus, no animation.
  */
 
-export type ContextMenuState = {
+export type ContextMenuRootState = {
   /** Whether the menu is currently open. */
   open: boolean;
 };
 
-export type ContextMenuProps = {
+export type ContextMenuRootProps = {
   /** Anchor content. Long-press opens the menu. */
   children: ReactNode;
   /** Menu body content. */
@@ -51,7 +51,7 @@ export type ContextMenuProps = {
   accessibilityLabel?: string;
   testID?: string;
   /** Anchor wrapper style: value or function of menu state. */
-  style?: StateStyle<ContextMenuState, StyleProp<ViewStyle>>;
+  style?: StateStyle<ContextMenuRootState, StyleProp<ViewStyle>>;
   /** Menu box style, caller-provided. */
   menuStyle?: StyleProp<ViewStyle>;
   /**
@@ -60,13 +60,13 @@ export type ContextMenuProps = {
    * receives `(props, state)`. Replaces the anchor wrapper (anchor
    * plus menu); long-press and dismissal wiring travel in the props.
    */
-  render?: RenderProp<ContextMenuState, SlotProps>;
+  render?: RenderProp<ContextMenuRootState, SlotProps>;
   /** Forwarded to the anchor wrapper host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
 
 function assignRef(
-  ref: ContextMenuProps["ref"],
+  ref: ContextMenuRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -83,7 +83,7 @@ function assignRef(
   }
 }
 
-export function ContextMenu({
+export function ContextMenuRoot({
   children,
   content,
   open,
@@ -97,7 +97,7 @@ export function ContextMenu({
   menuStyle,
   render,
   ref,
-}: ContextMenuProps): React.ReactNode {
+}: ContextMenuRootProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -128,7 +128,7 @@ export function ContextMenu({
     setOpen((previous) => !(previous ?? false));
   }, [setOpen]);
 
-  const state: ContextMenuState = { open: isOpen ?? false };
+  const state: ContextMenuRootState = { open: isOpen ?? false };
   const substituted = resolveRender(
     render,
     {

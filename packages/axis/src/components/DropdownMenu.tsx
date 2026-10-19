@@ -20,7 +20,7 @@ import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
 
 /**
- * DropdownMenu — an unstyled popup menu with submenu cascade.
+ * DropdownMenuRoot — an unstyled popup menu with submenu cascade.
  *
  * Structure only: like `Menu` (trigger zone + scrim + content box
  * while open), plus `DropdownMenuSub` levels that open nested panels
@@ -61,7 +61,7 @@ import { Portal } from "./Portal";
  * "Dismiss menu".
  */
 
-export type DropdownMenuState = {
+export type DropdownMenuRootState = {
   /** Whether the menu is currently open. */
   open: boolean;
 };
@@ -78,7 +78,7 @@ export type DropdownMenuItemState = {
   disabled: boolean;
 };
 
-export type DropdownMenuProps = {
+export type DropdownMenuRootProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
@@ -89,7 +89,7 @@ export type DropdownMenuProps = {
   onDismiss?: () => void;
   testID?: string;
   /** Menu content box style: value or function of menu state. */
-  style?: StateStyle<DropdownMenuState, StyleProp<ViewStyle>>;
+  style?: StateStyle<DropdownMenuRootState, StyleProp<ViewStyle>>;
   /** Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements. */
   children: ReactNode;
   /**
@@ -98,7 +98,7 @@ export type DropdownMenuProps = {
    * receives `(props, state)`. Replaces the content box (not the
    * trigger zone or scrim).
    */
-  render?: RenderProp<DropdownMenuState, SlotProps>;
+  render?: RenderProp<DropdownMenuRootState, SlotProps>;
   /** Forwarded to the menu container `View`. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -204,7 +204,7 @@ type DropdownDisclosure = {
 
 /**
  * Shared cascade state. Internal (not exported): parts must render
- * inside a `DropdownMenu` to participate; outside one triggers render
+ * inside a `DropdownMenuRoot` to participate; outside one triggers render
  * collapsed and inert and items render inert, like `MenuItem` outside
  * `Menu`.
  */
@@ -219,7 +219,7 @@ export const DropdownDisclosureContext =
  * this body is its first consumer.
  */
 function assignRef(
-  ref: DropdownMenuProps["ref"],
+  ref: DropdownMenuRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -497,7 +497,7 @@ export function DropdownMenuSub({
   );
 }
 
-function DropdownMenuRoot({
+export function DropdownMenuRoot({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -507,7 +507,7 @@ function DropdownMenuRoot({
   children,
   render,
   ref,
-}: DropdownMenuProps): React.ReactNode {
+}: DropdownMenuRootProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -604,7 +604,7 @@ function DropdownMenuRoot({
     return node;
   });
 
-  const boxState: DropdownMenuState = { open: isOpen ?? false };
+  const boxState: DropdownMenuRootState = { open: isOpen ?? false };
   const boxSubstituted = resolveRender(
     render,
     {
@@ -651,5 +651,3 @@ function DropdownMenuRoot({
     </View>
   );
 }
-
-export { DropdownMenuRoot as DropdownMenu };

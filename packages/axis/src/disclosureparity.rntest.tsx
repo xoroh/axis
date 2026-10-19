@@ -11,38 +11,38 @@ import {
   Autocomplete,
   CheckboxGroup,
   CheckboxGroupItem,
-  Collapsible,
   CollapsiblePanel,
+  CollapsibleRoot,
   CollapsibleTrigger,
   Combobox,
-  ContextMenu,
+  ContextMenuRoot,
   Drawer,
-  DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuRoot,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   Menubar,
   MenubarMenu,
-  NavigationMenu,
   NavigationMenuItem,
   NavigationMenuPanel,
+  NavigationMenuRoot,
   NavigationMenuTrigger,
   PortalHost,
   RadioGroup,
   RadioGroupItem,
   Select,
   SelectItem,
-  Table,
   TableCell,
   TableHeader,
+  TableRoot,
   TableRow,
-  Tabs,
   TabsList,
   TabsPanel,
+  TabsRoot,
   TabsTrigger,
-  Toast,
+  ToastRoot,
   ToggleGroup,
   ToggleGroupItem,
   Tooltip,
@@ -147,7 +147,7 @@ describe("render composition: disclosure", () => {
   it("CollapsibleTrigger element render preserves toggle", async () => {
     const seen: boolean[] = [];
     await render(
-      <Collapsible onOpenChange={(v) => seen.push(v)}>
+      <CollapsibleRoot onOpenChange={(v) => seen.push(v)}>
         <CollapsibleTrigger
           accessibilityLabel="More"
           render={<Pressable testID="sub" />}
@@ -157,7 +157,7 @@ describe("render composition: disclosure", () => {
         <CollapsiblePanel>
           <Text>Details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     await press("sub");
     expect(seen).toEqual([true]);
@@ -166,7 +166,7 @@ describe("render composition: disclosure", () => {
 
   it("TabsTrigger function render observes selected state", async () => {
     await render(
-      <Tabs defaultValue="a">
+      <TabsRoot defaultValue="a">
         <TabsList>
           <TabsTrigger
             value="a"
@@ -179,7 +179,7 @@ describe("render composition: disclosure", () => {
         <TabsPanel value="a">
           <Text>Panel A</Text>
         </TabsPanel>
-      </Tabs>,
+      </TabsRoot>,
     );
     expect(screen.getByText("on")).toBeTruthy();
     expect(screen.getByText("Panel A")).toBeTruthy();
@@ -272,9 +272,9 @@ describe("render composition: overlays", () => {
     expect(screen.queryByText("Body")).toBeNull();
   });
 
-  it("ContextMenu function render observes open state", async () => {
+  it("ContextMenuRoot function render observes open state", async () => {
     await render(
-      <ContextMenu
+      <ContextMenuRoot
         defaultOpen
         content={<Text>Menu</Text>}
         render={(_props, state) => (
@@ -282,7 +282,7 @@ describe("render composition: overlays", () => {
         )}
       >
         <Text>Anchor</Text>
-      </ContextMenu>,
+      </ContextMenuRoot>,
     );
     expect(screen.getByText("open")).toBeTruthy();
   });
@@ -334,16 +334,16 @@ describe("render composition: overlays", () => {
     expect(screen.getByText("shown")).toBeTruthy();
   });
 
-  it("Toast function render observes open state", async () => {
+  it("ToastRoot function render observes open state", async () => {
     await render(
-      <Toast
+      <ToastRoot
         defaultOpen
         render={(_props, state) => (
           <Text testID="st">{state.open ? "up" : "down"}</Text>
         )}
       >
         Saved
-      </Toast>,
+      </ToastRoot>,
     );
     expect(screen.getByText("up")).toBeTruthy();
   });
@@ -352,7 +352,7 @@ describe("render composition: overlays", () => {
     const seen: boolean[] = [];
     await render(
       <PortalHost>
-        <DropdownMenu onOpenChange={(v) => seen.push(v)}>
+        <DropdownMenuRoot onOpenChange={(v) => seen.push(v)}>
           <DropdownMenuTrigger
             accessibilityLabel="Open"
             render={<Pressable testID="sub" />}
@@ -362,7 +362,7 @@ describe("render composition: overlays", () => {
           <DropdownMenuItem value="a" accessibilityLabel="A">
             <Text>Alpha</Text>
           </DropdownMenuItem>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     await press("sub");
@@ -373,7 +373,7 @@ describe("render composition: overlays", () => {
   it("DropdownMenuSub panels still open after composition", async () => {
     await render(
       <PortalHost>
-        <DropdownMenu defaultOpen>
+        <DropdownMenuRoot defaultOpen>
           <DropdownMenuTrigger accessibilityLabel="Open">
             <Text>Open</Text>
           </DropdownMenuTrigger>
@@ -397,7 +397,7 @@ describe("render composition: overlays", () => {
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     expect(screen.getByText("shut")).toBeTruthy();
@@ -428,7 +428,7 @@ describe("render composition: bars and structure", () => {
   it("NavigationMenuTrigger element render preserves open", async () => {
     const seen: (string | null)[] = [];
     await render(
-      <NavigationMenu onOpenValueChange={(v) => seen.push(v)}>
+      <NavigationMenuRoot onOpenValueChange={(v) => seen.push(v)}>
         <NavigationMenuItem value="docs">
           <NavigationMenuTrigger
             accessibilityLabel="Docs"
@@ -440,16 +440,16 @@ describe("render composition: bars and structure", () => {
             <Text>Panel</Text>
           </NavigationMenuPanel>
         </NavigationMenuItem>
-      </NavigationMenu>,
+      </NavigationMenuRoot>,
     );
     await press("sub");
     expect(seen).toEqual(["docs"]);
     expect(screen.getByTestId("panel")).toBeTruthy();
   });
 
-  it("Table parts accept element substitution", async () => {
+  it("TableRoot parts accept element substitution", async () => {
     await render(
-      <Table render={<View testID="sub-table" />}>
+      <TableRoot render={<View testID="sub-table" />}>
         <TableHeader render={<View testID="sub-head" />}>
           <TableRow header render={<View testID="sub-row" />}>
             <TableCell render={<View testID="sub-cell" />}>
@@ -457,7 +457,7 @@ describe("render composition: bars and structure", () => {
             </TableCell>
           </TableRow>
         </TableHeader>
-      </Table>,
+      </TableRoot>,
     );
     expect(screen.getByTestId("sub-table")).toBeTruthy();
   });

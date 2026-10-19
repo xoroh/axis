@@ -13,7 +13,8 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * Checkbox — an unstyled binary selection control with compound parts.
+ * CheckboxRoot — an unstyled binary selection control (with its
+ * `CheckboxIndicator` part).
  *
  * Structure only: a `CheckboxRoot` `Pressable` carrying the checkbox
  * role and state, with a caller-composed `CheckboxIndicator` that
@@ -36,7 +37,7 @@ import { useControllableState } from "../useControllableState";
  * (the caller clears it when committing a choice).
  */
 
-export type CheckboxState = {
+export type CheckboxRootState = {
   /** Whether the checkbox is currently checked. */
   checked: boolean;
   /** Whether the checkbox is currently disabled. */
@@ -93,7 +94,7 @@ export type CheckboxRootProps = {
   accessibilityLabelledBy?: string;
   testID?: string;
   /** Value or function of checkbox state, caller-provided. */
-  style?: StateStyle<CheckboxState, StyleProp<ViewStyle>>;
+  style?: StateStyle<CheckboxRootState, StyleProp<ViewStyle>>;
   /** Box content (`CheckboxIndicator` composed by the caller). */
   children?: ReactNode;
   /**
@@ -101,7 +102,7 @@ export type CheckboxRootProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<CheckboxState, SlotProps>;
+  render?: RenderProp<CheckboxRootState, SlotProps>;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -211,7 +212,7 @@ export function CheckboxRoot({
     [ref],
   );
 
-  const state: CheckboxState = {
+  const state: CheckboxRootState = {
     checked: isChecked ?? false,
     disabled,
     indeterminate,

@@ -1,24 +1,24 @@
 import { render, screen } from "@testing-library/react-native";
 import { createRef, type ElementRef } from "react";
 import { Text, type View } from "react-native";
-import { Table, TableCell, TableHeader, TableRow } from "./index";
+import { TableCell, TableHeader, TableRoot, TableRow } from "./index";
 
 /**
- * Table through the public entry. Every assertion renders the real
+ * TableRoot through the public entry. Every assertion renders the real
  * compound parts in the RN runtime: structure, header/body order,
  * style passthrough per part, testIDs, and ref forwarding are
  * observed, not assumed.
  *
- * No role is asserted on `Table`/`TableHeader`/`TableCell`: React
+ * No role is asserted on `TableRoot`/`TableHeader`/`TableCell`: React
  * Native's `accessibilityRole` defines no tabular value, so none is
  * declared (see `Table.tsx`). The one role assertion here is the
  * header row's generic `header` role.
  */
 
-describe("Table on React Native", () => {
+describe("TableRoot on React Native", () => {
   it("renders the header/body structure with a header-announced row", async () => {
     await render(
-      <Table testID="tbl" accessibilityLabel="Order history">
+      <TableRoot testID="tbl" accessibilityLabel="Order history">
         <TableHeader testID="hdr">
           <TableRow header testID="hdr-row">
             <TableCell>
@@ -37,7 +37,7 @@ describe("Table on React Native", () => {
             <Text>$4</Text>
           </TableCell>
         </TableRow>
-      </Table>,
+      </TableRoot>,
     );
     expect(screen.getByText("Item")).toBeTruthy();
     expect(screen.getByText("Price")).toBeTruthy();
@@ -52,7 +52,7 @@ describe("Table on React Native", () => {
 
   it("keeps header before body rows in tree order", async () => {
     await render(
-      <Table testID="tbl">
+      <TableRoot testID="tbl">
         <TableHeader testID="hdr">
           <TableRow header testID="hdr-row">
             <TableCell>
@@ -70,7 +70,7 @@ describe("Table on React Native", () => {
             <Text>Pears</Text>
           </TableCell>
         </TableRow>
-      </Table>,
+      </TableRoot>,
     );
     const order = screen
       .getByTestId("tbl")
@@ -85,7 +85,7 @@ describe("Table on React Native", () => {
     const rowStyle = { flexDirection: "row" as const };
     const cellStyle = { flex: 1 };
     await render(
-      <Table testID="tbl" style={rootStyle}>
+      <TableRoot testID="tbl" style={rootStyle}>
         <TableHeader testID="hdr" style={headerStyle}>
           <TableRow testID="hdr-row" header style={rowStyle}>
             <TableCell testID="cell" style={cellStyle}>
@@ -93,7 +93,7 @@ describe("Table on React Native", () => {
             </TableCell>
           </TableRow>
         </TableHeader>
-      </Table>,
+      </TableRoot>,
     );
     expect(screen.getByTestId("tbl").props.style).toEqual(rootStyle);
     expect(screen.getByTestId("hdr").props.style).toEqual(headerStyle);
@@ -103,7 +103,7 @@ describe("Table on React Native", () => {
 
   it("renders testIDs on every part", async () => {
     await render(
-      <Table testID="tbl">
+      <TableRoot testID="tbl">
         <TableHeader testID="hdr">
           <TableRow testID="hdr-row" header>
             <TableCell testID="cell">
@@ -111,7 +111,7 @@ describe("Table on React Native", () => {
             </TableCell>
           </TableRow>
         </TableHeader>
-      </Table>,
+      </TableRoot>,
     );
     expect(screen.getByTestId("tbl")).toBeTruthy();
     expect(screen.getByTestId("hdr")).toBeTruthy();
@@ -122,13 +122,13 @@ describe("Table on React Native", () => {
   it("forwards a ref to the table root", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Table testID="tbl" ref={ref}>
+      <TableRoot testID="tbl" ref={ref}>
         <TableRow testID="row-1">
           <TableCell>
             <Text>Apples</Text>
           </TableCell>
         </TableRow>
-      </Table>,
+      </TableRoot>,
     );
     expect(ref.current).not.toBeNull();
   });

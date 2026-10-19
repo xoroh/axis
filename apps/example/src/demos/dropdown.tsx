@@ -1,6 +1,6 @@
 import {
-  DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuRoot,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -18,7 +18,7 @@ export const DropdownDemo: Demo = {
   slug: "dropdown",
   title: "Dropdown",
   components: [
-    "DropdownMenu",
+    "DropdownMenuRoot",
     "DropdownMenuItem",
     "DropdownMenuSub",
     "DropdownMenuSubContent",
@@ -44,7 +44,7 @@ export const DropdownDemo: Demo = {
             Dropdown Menu with Cascading Submenu:
           </Text>
 
-          <DropdownMenu
+          <DropdownMenuRoot
             testID="demo-dropdown"
             style={{
               marginTop: 8,
@@ -122,7 +122,7 @@ export const DropdownDemo: Demo = {
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
-          </DropdownMenu>
+          </DropdownMenuRoot>
         </View>
       </View>
     );

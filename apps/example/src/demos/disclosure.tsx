@@ -4,12 +4,12 @@ import {
   AccordionPanel,
   AccordionRoot,
   AccordionTrigger,
-  Collapsible,
   CollapsiblePanel,
+  CollapsibleRoot,
   CollapsibleTrigger,
-  Tabs,
   TabsList,
   TabsPanel,
+  TabsRoot,
   TabsTrigger,
 } from "@xoroh/axis";
 import { Pressable, Text, View } from "react-native";
@@ -29,10 +29,10 @@ export const DisclosureDemo: Demo = {
     "AccordionHeader",
     "AccordionTrigger",
     "AccordionPanel",
-    "Collapsible",
+    "CollapsibleRoot",
     "CollapsiblePanel",
     "CollapsibleTrigger",
-    "Tabs",
+    "TabsRoot",
     "TabsList",
     "TabsPanel",
     "TabsTrigger",
@@ -42,7 +42,7 @@ export const DisclosureDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        {/* Tabs */}
+        {/* TabsRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -54,9 +54,9 @@ export const DisclosureDemo: Demo = {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
-            Interactive Tabs:
+            Interactive TabsRoot:
           </Text>
-          <Tabs testID="demo-tabs" defaultValue="a">
+          <TabsRoot testID="demo-tabs" defaultValue="a">
             <TabsList
               style={{
                 flexDirection: "row",
@@ -141,7 +141,7 @@ export const DisclosureDemo: Demo = {
                 Preferences and configuration options.
               </Text>
             </TabsPanel>
-          </Tabs>
+          </TabsRoot>
         </View>
 
         {/* Accordion */}
@@ -255,7 +255,7 @@ export const DisclosureDemo: Demo = {
           </AccordionRoot>
         </View>
 
-        {/* Collapsible */}
+        {/* CollapsibleRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -267,9 +267,9 @@ export const DisclosureDemo: Demo = {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
-            Collapsible Section:
+            CollapsibleRoot Section:
           </Text>
-          <Collapsible defaultOpen style={{ gap: 8 }}>
+          <CollapsibleRoot defaultOpen style={{ gap: 8 }}>
             <CollapsibleTrigger
               accessibilityLabel="Toggle more details"
               style={{
@@ -302,11 +302,11 @@ export const DisclosureDemo: Demo = {
               }}
             >
               <Text style={{ fontSize: 13, color: theme.text }}>
-                Collapsible panel content is visible by default or toggled
+                CollapsibleRoot panel content is visible by default or toggled
                 interactively.
               </Text>
             </CollapsiblePanel>
-          </Collapsible>
+          </CollapsibleRoot>
         </View>
       </View>
     );

@@ -4,9 +4,9 @@ import { type RenderProp, resolveRender } from "../render";
 import type { SlotProps } from "../slot";
 
 /**
- * Table — an unstyled tabular structure.
+ * TableRoot — an unstyled tabular structure.
  *
- * Structure only: a root `View` (`Table`) carrying an optional header
+ * Structure only: a root `View` (`TableRoot`) carrying an optional header
  * group (`TableHeader`, the column-label row container) followed by body
  * rows (`TableRow` of `TableCell`). No default visuals — every visual
  * value (`style` per part) is caller-provided. Column widths, alignment,
@@ -39,7 +39,7 @@ export type TableRowState = {
   header: boolean;
 };
 
-export type TableProps = {
+export type TableRootProps = {
   /** Table content: a `TableHeader` followed by body `TableRow`s, in order. */
   children: ReactNode;
   /** Accessible name source (e.g. "Order history"). */
@@ -114,7 +114,7 @@ export type TableCellProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: TableProps["ref"],
+  ref: TableRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -131,14 +131,14 @@ function assignRef(
   }
 }
 
-export function Table({
+export function TableRoot({
   children,
   accessibilityLabel,
   testID,
   style,
   render,
   ref,
-}: TableProps): React.ReactNode {
+}: TableRootProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.

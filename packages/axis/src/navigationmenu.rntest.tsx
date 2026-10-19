@@ -2,14 +2,14 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text as RNText, type View } from "react-native";
 import {
-  NavigationMenu,
   NavigationMenuItem,
   NavigationMenuPanel,
+  NavigationMenuRoot,
   NavigationMenuTrigger,
 } from "./index";
 
 /**
- * NavigationMenu behavior through the public entry. Bar rendering,
+ * NavigationMenuRoot behavior through the public entry. Bar rendering,
  * single-open panels, switching items, scrim dismissal, disabled
  * terminality, inert parts outside a menu, controlled following,
  * and ref forwarding — observed in the RN runtime.
@@ -23,7 +23,7 @@ async function pressLabel(label: string) {
 
 function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
   return (
-    <NavigationMenu testID="nav" onOpenValueChange={onOpen}>
+    <NavigationMenuRoot testID="nav" onOpenValueChange={onOpen}>
       <NavigationMenuItem value="products">
         <NavigationMenuTrigger accessibilityLabel="Products trigger">
           <RNText>Products</RNText>
@@ -40,11 +40,11 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
           <RNText>Company links</RNText>
         </NavigationMenuPanel>
       </NavigationMenuItem>
-    </NavigationMenu>
+    </NavigationMenuRoot>
   );
 }
 
-describe("NavigationMenu on React Native", () => {
+describe("NavigationMenuRoot on React Native", () => {
   it("renders the bar with triggers and no panels while closed", async () => {
     await render(<Bar />);
     expect(screen.getByLabelText("Products trigger")).toBeTruthy();
@@ -78,7 +78,7 @@ describe("NavigationMenu on React Native", () => {
     const order: string[] = [];
     const seen: Array<string | null> = [];
     await render(
-      <NavigationMenu
+      <NavigationMenuRoot
         testID="nav2"
         defaultOpenValue="products"
         onDismiss={() => order.push("dismiss")}
@@ -92,7 +92,7 @@ describe("NavigationMenu on React Native", () => {
             <RNText>Product links</RNText>
           </NavigationMenuPanel>
         </NavigationMenuItem>
-      </NavigationMenu>,
+      </NavigationMenuRoot>,
     );
     expect(screen.getByTestId("products-panel")).toBeTruthy();
     await pressLabel("Dismiss menu");
@@ -103,7 +103,7 @@ describe("NavigationMenu on React Native", () => {
 
   it("keeps disabled triggers closed", async () => {
     await render(
-      <NavigationMenu>
+      <NavigationMenuRoot>
         <NavigationMenuItem value="products">
           <NavigationMenuTrigger accessibilityLabel="Products" disabled>
             <RNText>Products</RNText>
@@ -112,7 +112,7 @@ describe("NavigationMenu on React Native", () => {
             <RNText>Product links</RNText>
           </NavigationMenuPanel>
         </NavigationMenuItem>
-      </NavigationMenu>,
+      </NavigationMenuRoot>,
     );
     await pressLabel("Products");
     expect(screen.queryByTestId("products-panel")).toBeNull();
@@ -146,7 +146,7 @@ describe("NavigationMenu on React Native", () => {
 
   it("follows controlled open value", async () => {
     await render(
-      <NavigationMenu testID="nav" openValue="company">
+      <NavigationMenuRoot testID="nav" openValue="company">
         <NavigationMenuItem value="products">
           <NavigationMenuTrigger accessibilityLabel="Products trigger">
             <RNText>Products</RNText>
@@ -163,7 +163,7 @@ describe("NavigationMenu on React Native", () => {
             <RNText>Company links</RNText>
           </NavigationMenuPanel>
         </NavigationMenuItem>
-      </NavigationMenu>,
+      </NavigationMenuRoot>,
     );
     expect(screen.queryByTestId("products-panel")).toBeNull();
     expect(screen.getByTestId("company-panel")).toBeTruthy();
@@ -172,7 +172,7 @@ describe("NavigationMenu on React Native", () => {
   it("forwards a ref to the bar container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <NavigationMenu ref={ref}>
+      <NavigationMenuRoot ref={ref}>
         <NavigationMenuItem value="products">
           <NavigationMenuTrigger accessibilityLabel="Products trigger">
             <RNText>Products</RNText>
@@ -181,7 +181,7 @@ describe("NavigationMenu on React Native", () => {
             <RNText>Product links</RNText>
           </NavigationMenuPanel>
         </NavigationMenuItem>
-      </NavigationMenu>,
+      </NavigationMenuRoot>,
     );
     expect(ref.current).toBeTruthy();
   });

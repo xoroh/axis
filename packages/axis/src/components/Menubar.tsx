@@ -12,7 +12,7 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { DropdownMenu, type DropdownMenuState } from "./DropdownMenu";
+import { DropdownMenuRoot, type DropdownMenuRootState } from "./DropdownMenu";
 
 /**
  * Menubar — an unstyled menu-command bar.
@@ -20,9 +20,9 @@ import { DropdownMenu, type DropdownMenuState } from "./DropdownMenu";
  * A row of `MenubarMenu` commands, each opening a dropdown panel;
  * exactly one panel is open at a time. This is composition, not a
  * second menu implementation: each `MenubarMenu` IS a
- * `DropdownMenu` (same trigger/item/sub parts, same dismissal
+ * `DropdownMenuRoot` (same trigger/item/sub parts, same dismissal
  * stack, same scrim), controlled by the root's open value. It
- * differs from `NavigationMenu` in what opens: menu-command panels
+ * differs from `NavigationMenuRoot` in what opens: menu-command panels
  * (`menuitem` content, cascade-capable) rather than navigation
  * panels. The desktop-bar pattern adapts to touch by press (no
  * hover): pressing another menu's trigger while one is open
@@ -30,7 +30,7 @@ import { DropdownMenu, type DropdownMenuState } from "./DropdownMenu";
  * container — never the whole bar. The open menu follows the
  * `useControllableState` pattern (`openValue`/`defaultOpenValue`/
  * `onOpenValueChange`, `null` closed): the open panel is
- * application state, like `NavigationMenu`.
+ * application state, like `NavigationMenuRoot`.
  *
  * Deferred, each for a named reason (not oversight): no animation
  * (the `Menu` rationale), no hover or keyboard traversal (no touch
@@ -79,7 +79,7 @@ export type MenubarMenuProps = {
    * Element or function substitution, forwarded to the menu's
    * content box (see `DropdownMenuProps.render`).
    */
-  render?: RenderProp<DropdownMenuState, SlotProps>;
+  render?: RenderProp<DropdownMenuRootState, SlotProps>;
 };
 
 type MenubarDisclosure = {
@@ -132,7 +132,7 @@ export function MenubarMenu({
   if (!disclosure) return null;
 
   return (
-    <DropdownMenu
+    <DropdownMenuRoot
       open={disclosure.openValue === value}
       onOpenChange={(open) => disclosure.report(value, open)}
       testID={testID}
@@ -140,7 +140,7 @@ export function MenubarMenu({
       render={render}
     >
       {children}
-    </DropdownMenu>
+    </DropdownMenuRoot>
   );
 }
 

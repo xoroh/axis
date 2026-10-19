@@ -2,8 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text as RNText, type View } from "react-native";
 import {
-  DropdownMenu,
   DropdownMenuItem,
+  DropdownMenuRoot,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -12,7 +12,7 @@ import {
 } from "./index";
 
 /**
- * DropdownMenu behavior through the public entry. Root open/close,
+ * DropdownMenuRoot behavior through the public entry. Root open/close,
  * leaf selection closing the whole cascade, submenu opening with
  * sibling replacement, scrim dismissal clearing the path, disabled
  * terminality, inert parts outside a menu, and ref forwarding —
@@ -27,7 +27,7 @@ async function pressLabel(label: string) {
 
 function Tree({ onSelect }: { onSelect?: (value: string) => void }) {
   return (
-    <DropdownMenu testID="dd" defaultOpen={false}>
+    <DropdownMenuRoot testID="dd" defaultOpen={false}>
       <DropdownMenuTrigger accessibilityLabel="Open menu">
         <RNText>Open</RNText>
       </DropdownMenuTrigger>
@@ -54,11 +54,11 @@ function Tree({ onSelect }: { onSelect?: (value: string) => void }) {
           </DropdownMenuSub>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-    </DropdownMenu>
+    </DropdownMenuRoot>
   );
 }
 
-describe("DropdownMenu on React Native", () => {
+describe("DropdownMenuRoot on React Native", () => {
   it("renders the trigger only while closed", async () => {
     await render(
       <PortalHost>
@@ -134,7 +134,7 @@ describe("DropdownMenu on React Native", () => {
     const order: string[] = [];
     await render(
       <PortalHost>
-        <DropdownMenu
+        <DropdownMenuRoot
           testID="dd2"
           defaultOpen
           onDismiss={() => order.push("dismiss")}
@@ -146,7 +146,7 @@ describe("DropdownMenu on React Native", () => {
           <DropdownMenuItem value="x">
             <RNText>X</RNText>
           </DropdownMenuItem>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     await pressLabel("Dismiss menu");
@@ -157,7 +157,7 @@ describe("DropdownMenu on React Native", () => {
   it("keeps disabled sub triggers closed", async () => {
     await render(
       <PortalHost>
-        <DropdownMenu defaultOpen>
+        <DropdownMenuRoot defaultOpen>
           <DropdownMenuTrigger accessibilityLabel="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
@@ -171,7 +171,7 @@ describe("DropdownMenu on React Native", () => {
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     await pressLabel("Share");
@@ -194,14 +194,14 @@ describe("DropdownMenu on React Native", () => {
   it("follows controlled open state", async () => {
     await render(
       <PortalHost>
-        <DropdownMenu testID="dd" open={false}>
+        <DropdownMenuRoot testID="dd" open={false}>
           <DropdownMenuTrigger accessibilityLabel="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
           <DropdownMenuItem value="x">
             <RNText>X</RNText>
           </DropdownMenuItem>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     expect(screen.queryByRole("menuitem")).toBeNull();
@@ -211,11 +211,11 @@ describe("DropdownMenu on React Native", () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
       <PortalHost>
-        <DropdownMenu ref={ref}>
+        <DropdownMenuRoot ref={ref}>
           <DropdownMenuTrigger accessibilityLabel="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
-        </DropdownMenu>
+        </DropdownMenuRoot>
       </PortalHost>,
     );
     expect(ref.current).toBeTruthy();

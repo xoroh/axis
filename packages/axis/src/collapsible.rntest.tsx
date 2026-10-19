@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { Text, View } from "react-native";
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "./index";
+import { CollapsiblePanel, CollapsibleRoot, CollapsibleTrigger } from "./index";
 
 /**
- * Collapsible behavior through the public entry. Every assertion renders
+ * CollapsibleRoot behavior through the public entry. Every assertion renders
  * the real component in the RN runtime and interacts through RN events —
  * mount-only panel presence, toggle both directions, role/state
  * announcements, disabled terminality, and ref forwarding are observed,
@@ -21,17 +21,17 @@ async function press(testID: string) {
   });
 }
 
-describe("Collapsible on React Native", () => {
+describe("CollapsibleRoot on React Native", () => {
   it("renders closed: no panel, expanded false", async () => {
     await render(
-      <Collapsible testID="cl">
+      <CollapsibleRoot testID="cl">
         <CollapsibleTrigger testID="trigger" accessibilityLabel="More options">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     expect(
       screen.getByTestId("trigger").props.accessibilityState,
@@ -46,14 +46,14 @@ describe("Collapsible on React Native", () => {
   it("press opens the panel and reports true", async () => {
     const seen: Array<boolean> = [];
     await render(
-      <Collapsible testID="cl" onOpenChange={(v) => seen.push(v)}>
+      <CollapsibleRoot testID="cl" onOpenChange={(v) => seen.push(v)}>
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     await press("trigger");
     expect(seen).toEqual([true]);
@@ -69,14 +69,18 @@ describe("Collapsible on React Native", () => {
   it("press closes the open panel and reports false", async () => {
     const seen: Array<boolean> = [];
     await render(
-      <Collapsible testID="cl" defaultOpen onOpenChange={(v) => seen.push(v)}>
+      <CollapsibleRoot
+        testID="cl"
+        defaultOpen
+        onOpenChange={(v) => seen.push(v)}
+      >
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     expect(screen.getByTestId("panel")).toBeTruthy();
     await press("trigger");
@@ -93,14 +97,14 @@ describe("Collapsible on React Native", () => {
     function Host() {
       const [open, setOpen] = useState(false);
       return (
-        <Collapsible testID="cl" open={open} onOpenChange={setOpen}>
+        <CollapsibleRoot testID="cl" open={open} onOpenChange={setOpen}>
           <CollapsibleTrigger testID="trigger">
             <Text>More options</Text>
           </CollapsibleTrigger>
           <CollapsiblePanel testID="panel">
             <Text>Hidden details</Text>
           </CollapsiblePanel>
-        </Collapsible>
+        </CollapsibleRoot>
       );
     }
     await render(<Host />);
@@ -124,14 +128,14 @@ describe("Collapsible on React Native", () => {
   it("disabled collapsible blocks the trigger: no toggle, no callback", async () => {
     let calls = 0;
     await render(
-      <Collapsible testID="cl" disabled onOpenChange={() => (calls += 1)}>
+      <CollapsibleRoot testID="cl" disabled onOpenChange={() => (calls += 1)}>
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     await press("trigger");
     expect(calls).toBe(0);
@@ -147,28 +151,28 @@ describe("Collapsible on React Native", () => {
   it("forwards a ref to the collapsible root", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Collapsible testID="cl" ref={ref}>
+      <CollapsibleRoot testID="cl" ref={ref}>
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     expect(ref.current).not.toBeNull();
   });
 
   it("keepMounted keeps the closed panel mounted but hidden and unannounced", async () => {
     await render(
-      <Collapsible testID="cl">
+      <CollapsibleRoot testID="cl">
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel" keepMounted>
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     // Mounted but invisible and hidden from assistive tech on all three
     // platforms, with closed state. (RNTL hides hidden-from-AT elements
@@ -206,14 +210,14 @@ describe("Collapsible on React Native", () => {
 
   it("keepMounted panel becomes visible when opened", async () => {
     await render(
-      <Collapsible testID="cl" defaultOpen>
+      <CollapsibleRoot testID="cl" defaultOpen>
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel" keepMounted>
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     const panel = screen.getByTestId("panel");
     expect(panel.props.style).not.toEqual(
@@ -225,14 +229,14 @@ describe("Collapsible on React Native", () => {
 
   it("keepMounted render substitution stays hidden and unannounced while closed", async () => {
     await render(
-      <Collapsible testID="cl">
+      <CollapsibleRoot testID="cl">
         <CollapsibleTrigger testID="trigger">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel keepMounted render={<View testID="sub-panel" />}>
           <Text>Hidden details</Text>
         </CollapsiblePanel>
-      </Collapsible>,
+      </CollapsibleRoot>,
     );
     // The substituted element carries the hidden contract: invisible
     // and unannounced (queried inclusively), never announced by default.
