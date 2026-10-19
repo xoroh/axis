@@ -66,6 +66,12 @@ export type OtpFieldProps = {
   /** Per-cell text style, caller-provided. */
   textStyle?: StyleProp<TextStyle>;
   /**
+   * Capture-input style, caller-provided and merged over the hidden
+   * base (`absolute`, invisible, 1×1 — behavior-hidden but
+   * focusable). The caller wins on conflict.
+   */
+  inputStyle?: StyleProp<TextStyle>;
+  /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`. Replaces the whole field (cells plus
@@ -83,6 +89,18 @@ export type OtpFieldProps = {
  * tested composition until its transfer gate passes. When it does,
  * this body is its first consumer.
  */
+/**
+ * The capture input is behavior-hidden but focusable: absolutely
+ * positioned, invisible, and 1×1 so it never disturbs layout, while
+ * staying in the focus order for entry. Caller `inputStyle` merges
+ * over it (the caller wins).
+ */
+const HIDDEN_INPUT_STYLE: TextStyle = {
+  position: "absolute",
+  opacity: 0,
+  width: 1,
+  height: 1,
+};
 function assignRef(
   ref: OtpFieldProps["ref"],
   value: ElementRef<typeof View> | null,
@@ -115,6 +133,7 @@ export function OtpField({
   style,
   cellStyle,
   textStyle,
+  inputStyle,
   render,
   ref,
 }: OtpFieldProps): React.ReactNode {
@@ -170,6 +189,7 @@ export function OtpField({
       style: resolveStyle(style, state),
       cellStyle,
       textStyle,
+      inputStyle: [HIDDEN_INPUT_STYLE, inputStyle],
       value: current,
       onValueChange: disabled ? undefined : handleChangeText,
       ref: setHostRef,
@@ -208,6 +228,7 @@ export function OtpField({
         keyboardType="number-pad"
         secureTextEntry={secureTextEntry}
         editable={!disabled}
+        style={[HIDDEN_INPUT_STYLE, inputStyle]}
       />
     </View>
   );

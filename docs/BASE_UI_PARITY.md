@@ -243,8 +243,8 @@ use the Base UI name `onValueChange` (contract §6 reserves it for
 value controls). Hard cut (ADR 011, nothing published): the public
 prop is `onValueChange`. The host `TextInput` still receives RN
 `onChangeText` — the rename is the public prop only. Internal
-consumers (`Combobox`, `OtpField`, `Autocomplete`,
-`TimePicker`, `NumberField`) and suites updated in the same slice.
+consumers (`Combobox`, `OtpField`, `Autocomplete`, `NumberField`)
+and suites updated in the same slice.
 Migrate `<Textarea … />` to `<Input multiline … />`.
 
 ### Remaining compound-anatomy gaps (composition aligned, anatomy pending)

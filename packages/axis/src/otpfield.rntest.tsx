@@ -98,6 +98,32 @@ describe("OtpField on React Native", () => {
     expect(screen.getByTestId("otp-input").props.secureTextEntry).toBe(true);
   });
 
+  it("hides the capture input from layout but keeps it focusable", async () => {
+    await render(<OtpField testID="otp" />);
+    const style = screen.getByTestId("otp-input").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({
+      position: "absolute",
+      opacity: 0,
+      width: 1,
+      height: 1,
+    });
+    // Behavior-hidden is not entry-hidden: the input stays editable
+    // so hardware keyboards and password managers can still drive it.
+    expect(screen.getByTestId("otp-input").props.editable).toBe(true);
+  });
+
+  it("caller inputStyle overrides the hidden base", async () => {
+    await render(<OtpField testID="otp" inputStyle={{ opacity: 1 }} />);
+    const style = screen.getByTestId("otp-input").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ opacity: 1, position: "absolute" });
+  });
+
   it("forwards a ref to the container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(<OtpField testID="otp" ref={ref} />);

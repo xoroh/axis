@@ -4,7 +4,7 @@ Top-level navigation bar with flyout panels: a bar row of
 triggers, each opening one panel below the bar; exactly one
 panel is open at a time. The bar lays its triggers in a row by
 default (direction is structure here the way bottom anchoring
-is structure for `Sheet`). The open panel is application state
+is structure for a bottom `Drawer`). The open panel is application state
 (it drives navigation), unlike a dropdown cascade path: `openValue`
 (plus `onOpenValueChange`) for controlled use,
 `defaultOpenValue` for uncontrolled (`null` closed). Panels

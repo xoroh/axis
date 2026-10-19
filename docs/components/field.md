@@ -47,7 +47,7 @@ consumer demonstrates the need (`docs/BASE_UI_PARITY.md`).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `label` | `ReactNode` | no | — | Label content, rendered above the control. |
-| `children` | `ReactNode` | no | — | The control element (an Axis `Input`/`Textarea`/… or your own). |
+| `children` | `ReactNode` | no | — | The control element (an Axis `Input` (multiline included) or your own). |
 | `error` | `ReactNode` | no | — | Error content; rendered only when provided, announced politely. |
 | `style` | `StateStyle<FieldState, StyleProp<ViewStyle>>` | no | — | Container style: a value or a function of field state. |
 | `labelStyle` | `StyleProp<TextStyle>` | no | — | Label text style, caller-provided. |

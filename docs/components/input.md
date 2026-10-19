@@ -159,8 +159,6 @@ merged under its own, or a `(props, state)` function) and
 value-or-function `style` over its state object (`{ value,
 editable }`); `data-*` attributes are deliberately absent on
 native — state flows through those functions instead
-(contract §11, parity D1). Composed whole by `Search`
-(entry + clear affordance — see `docs/components/search.md`).
-Verified by the input RNTL suites (5 tests —
-`docs/COVERAGE.md`). Renders in
+(contract §11, parity D1). Verified by the input RNTL suites
+(10 tests — `docs/COVERAGE.md`). Renders in
 `apps/example/src/demos/entry.tsx`.

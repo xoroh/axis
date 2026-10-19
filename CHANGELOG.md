@@ -16,3 +16,4 @@ Each line is the migration for the removed/renamed export:
 - `Sheet` removed — use `Drawer` with `side="bottom"` and `snapPoints`; `<Sheet detents={d} snapIndex={i} onSnapIndexChange={f} title={t} … />` migrates to `<Drawer side="bottom" snapPoints={d} snapPoint={d[i]} onSnapPointChange={…} … />` with the title in `children`. `Drawer` also gains `modal` and `top` side.
 - `Calendar` removed — use the `./models` `calendar` model (`buildCalendarGrid`, `resolveCalendarFocus`, `resolveCalendarSelection`, `isCalendarDateDisabled`, `parseCalendarDate`, locale/`firstDayOfWeek`/`dir` support); state stays with the consumer via `useControllableState`.
 - `TimePicker` removed — the `time` model stays, and `TimePickerValue`/`TimePickerFormat` stay exported from it.
+- `OtpField` capture input is now behavior-hidden but focusable (invisible 1×1); override with the new `inputStyle` prop.
