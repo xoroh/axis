@@ -22,9 +22,11 @@ const CONTENT_SIZE = { width: 100, height: 40 };
 function Harness({
   node,
   active = true,
+  layoutTarget,
 }: {
   node: MeasurableRef["current"];
   active?: boolean;
+  layoutTarget?: unknown;
 }) {
   const anchorRef = useRef<MeasurableRef["current"]>(node);
   const floating = useFloatingPlacement({ anchorRef, active });
@@ -35,7 +37,7 @@ function Harness({
         accessibilityLabel="report content size"
         onPress={() =>
           floating.onContentLayout({
-            nativeEvent: { layout: { ...CONTENT_SIZE } },
+            nativeEvent: { layout: { ...CONTENT_SIZE }, target: layoutTarget },
           })
         }
       />
@@ -58,7 +60,7 @@ describe("useFloatingPlacement anchor shapes", () => {
   it("resolves placement for a web element anchor without measure", async () => {
     // The React Native Web shape: the host ref is the element itself,
     // carrying its viewport rect but no working `measure`. Placement
-    // must resolve from the rect — viewport-positioned, real size.
+    // must resolve from the rect — real size, anchored to the trigger.
     await render(
       <Harness
         node={{
@@ -73,11 +75,37 @@ describe("useFloatingPlacement anchor shapes", () => {
     );
     await reportContentSize();
     expect(boxStyle()).toMatchObject({
-      position: "fixed",
+      position: "absolute",
       left: 10,
       top: 60,
     });
     expect(boxStyle().opacity).toBeUndefined();
+  });
+
+  it("translates the anchor into the popup's containing block", async () => {
+    // Viewport coordinates alone double-offset an `absolute` popup
+    // inside nested relative boxes: the layout event's node locates
+    // the offset parent, whose origin is subtracted after
+    // viewport-space flip/clamp.
+    await render(
+      <Harness
+        node={{
+          getBoundingClientRect: () => ({
+            left: 10,
+            top: 20,
+            width: 100,
+            height: 40,
+          }),
+        }}
+        layoutTarget={{
+          offsetParent: {
+            getBoundingClientRect: () => ({ left: 4, top: 8 }),
+          },
+        }}
+      />,
+    );
+    await reportContentSize();
+    expect(boxStyle()).toMatchObject({ left: 6, top: 52 });
   });
 
   it("keeps the native measure path absolutely positioned", async () => {
