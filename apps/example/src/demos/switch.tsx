@@ -1,6 +1,7 @@
 import { Switch } from "@xoroh/axis";
 import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
 /**
@@ -14,22 +15,81 @@ export const SwitchDemo: Demo = {
   components: ["Switch"],
   render: function SwitchScreen() {
     const [checked, setChecked] = useState(false);
+    const { theme } = useTheme();
+
     return (
-      <View style={{ gap: 16 }}>
-        <Text>Uncontrolled (starts off):</Text>
-        <Switch
-          accessibilityLabel="Demo uncontrolled switch"
-          trackStyle={{ width: 52, height: 30, borderRadius: 15 }}
-          thumbStyle={{ width: 26, height: 26, borderRadius: 13 }}
-        />
-        <Text>Controlled (starts {checked ? "on" : "off"}):</Text>
-        <Switch
-          accessibilityLabel="Demo controlled switch"
-          checked={checked}
-          onCheckedChange={setChecked}
-          trackStyle={{ width: 52, height: 30, borderRadius: 15 }}
-          thumbStyle={{ width: 26, height: 26, borderRadius: 13 }}
-        />
+      <View style={{ gap: 24 }}>
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 20,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Uncontrolled switch:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            Starts off, toggles on click/tap with native accessibility state.
+          </Text>
+          <Switch
+            accessibilityLabel="Demo uncontrolled switch"
+            trackStyle={{
+              width: 52,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: theme.border,
+              padding: 2,
+            }}
+            thumbStyle={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: theme.surface,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 20,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Controlled switch:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            State: {checked ? "Active / Checked" : "Inactive / Unchecked"}
+          </Text>
+          <Switch
+            accessibilityLabel="Demo controlled switch"
+            checked={checked}
+            onCheckedChange={setChecked}
+            trackStyle={{
+              width: 52,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: checked ? theme.primary : theme.border,
+              padding: 2,
+            }}
+            thumbStyle={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: checked ? theme.primaryFg : theme.surface,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          />
+        </View>
       </View>
     );
   },
