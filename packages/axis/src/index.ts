@@ -466,9 +466,27 @@ export {
 } from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
 export {
-  Slider,
-  type SliderProps,
-  type SliderState,
+  SliderControl,
+  type SliderControlProps,
+  type SliderControlState,
+  SliderIndicator,
+  type SliderIndicatorProps,
+  type SliderIndicatorState,
+  SliderLabel,
+  type SliderLabelProps,
+  type SliderLabelState,
+  SliderRoot,
+  type SliderRootProps,
+  type SliderRootState,
+  SliderThumb,
+  type SliderThumbProps,
+  type SliderThumbState,
+  SliderTrack,
+  type SliderTrackProps,
+  type SliderTrackState,
+  SliderValue,
+  type SliderValueProps,
+  type SliderValueState,
 } from "./components/Slider";
 export {
   Switch,
@@ -644,6 +662,18 @@ export {
   toggleSelection,
   useSelection,
 } from "./selection";
+export {
+  clampSliderValue,
+  nearestSliderThumbIndex,
+  normalizeSliderValues,
+  resolveSliderCommit,
+  type SliderCommitOptions,
+  type SliderOrientation,
+  sliderRatioFromLocation,
+  sliderValueFromRatio,
+  sliderValuePercent,
+  snapSliderValue,
+} from "./slider";
 export {
   composeEventHandlers,
   mergeSlotProps,

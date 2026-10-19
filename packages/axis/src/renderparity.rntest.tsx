@@ -22,7 +22,12 @@ import {
   OtpField,
   Progress,
   Separator,
-  Slider,
+  SliderControl,
+  SliderIndicator,
+  SliderRoot,
+  SliderThumb,
+  SliderTrack,
+  SliderValue,
   Switch,
   Toggle,
   Toolbar,
@@ -347,13 +352,29 @@ describe("render composition: entries", () => {
 
   it("Slider function render observes value state", async () => {
     await render(
-      <Slider
+      <SliderRoot
         defaultValue={25}
         render={(_props, state) => (
-          <Text testID="st">{`v${String(state.value)}`}</Text>
+          <Text testID="st">{`v${String(state.values[0])}`}</Text>
         )}
-      />,
+      >
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
     );
     expect(screen.getByText("v25")).toBeTruthy();
+  });
+
+  it("SliderValue function children format the values", async () => {
+    await render(
+      <SliderRoot defaultValue={[25, 75]}>
+        <SliderValue>{(values) => `w${values[0]}-${values[1]}`}</SliderValue>
+      </SliderRoot>,
+    );
+    expect(screen.getByText("w25-75")).toBeTruthy();
   });
 });

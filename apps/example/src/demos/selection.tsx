@@ -361,12 +361,79 @@ export const SelectionDemo: Demo = {
             readOnly
             style={{ flexDirection: "row", gap: 12 }}
           >
-            <RadioGroupItem value="x" testID="demo-frozen-x">
-              <Text style={{ fontSize: 13, color: theme.text }}>Std</Text>
-            </RadioGroupItem>
-            <RadioGroupItem value="y" testID="demo-frozen-y">
-              <Text style={{ fontSize: 13, color: theme.text }}>Pro</Text>
-            </RadioGroupItem>
+            {(
+              [
+                ["x", "Std"],
+                ["y", "Pro"],
+              ] as Array<[string, string]>
+            ).map(([itemValue, label]) => (
+              <RadioGroupItem
+                key={itemValue}
+                value={itemValue}
+                render={(props, state) => {
+                  const onPress =
+                    typeof props.onPress === "function"
+                      ? (props.onPress as () => void)
+                      : undefined;
+                  return (
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{
+                        checked: state.checked,
+                        disabled: state.disabled,
+                      }}
+                      accessibilityLabel={label}
+                      testID={`demo-frozen-${itemValue}`}
+                      disabled={state.disabled}
+                      onPress={onPress}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: state.checked
+                          ? theme.primary
+                          : theme.borderSubtle,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          borderWidth: 1.5,
+                          borderColor: state.checked
+                            ? theme.primary
+                            : theme.border,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {state.checked ? (
+                          <View
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: theme.primary,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                      <Text
+                        style={{ fontSize: 13, color: theme.text }}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                }}
+              />
+            ))}
           </RadioGroup>
         </View>
 

@@ -182,6 +182,22 @@ Base UI `Meter`: Root/Track/Indicator/Label(`Meter.Label`)/Value with `value*`, 
 
 The old `Meter` monolith (`value?`/`fillStyle`) is removed (Base UI has no monolith — ADR 001, ADR 011; migration in CHANGELOG).
 
+### Slider — aligned
+
+Base UI `Slider`: Root/Label/Value/Control/Track/Indicator/Thumb with `value`/`defaultValue` (number | number[]), `onValueChange`, `onValueCommitted`, `step` (default `1`), `largeStep` (default `10`), `minStepsBetweenValues` (default `0`), `min` (default `0`), `max` (default `100`), `orientation` (default `'horizontal'`), `thumbAlignment` (default `'center'`), `disabled` (default `false`).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `SliderRoot` | `Slider.Root` | `value`/`defaultValue`/`onValueChange`/`onValueCommitted` over `number \| number[]` (single values behave as one-entry ranges; reported in the same shape), `min`/`max` (degenerate collapses to `min`), `step`, `largeStep` (default `10`), `minStepsBetweenValues` (default `0`), `orientation` (default `'horizontal'`), `thumbAlignment` (default `'center'`), `disabled`, `ref`; state carries `{ values, disabled, dragging, activeThumbIndex, orientation, min, max, step, largeStep, minStepsBetweenValues }` | `step` defaults `0` (continuous) vs Base UI `1` — Axis preserves continuous-by-default; `largeStep` accepted but consumer-less (no page-key equivalent); `name`/`form`/`inputRef`/`id`/`tabIndex` omitted (no Form owner, no DOM inputs); `locale`/`format` omitted (no `Intl`); `data-*` → D1 |
+| `SliderLabel` | `Slider.Label` | accessible-name text host | — |
+| `SliderValue` | `Slider.Value` | node or function of values | No pre-formatted string (no `Intl`) |
+| `SliderControl` | `Slider.Control` | drag gestures, track-press jump to nearest thumb, measurement; `ref` | Track-press uses `locationX/Y` (same caveat as Base UI's offset math); no commit without a measured track |
+| `SliderTrack` | `Slider.Track` | range container | static `style` (chrome carries no state) |
+| `SliderIndicator` | `Slider.Indicator` | data-driven fill from the lowest to the highest value (merged under caller style) | static `style` (chrome carries no state) |
+| `SliderThumb` | `Slider.Thumb` | `index` (default `0`), `adjustable` role with `{ min, max, now }`, `increment`/`decrement` actions, positioned on the value point (centered, or edge-pinned with `thumbAlignment="edge"`) | No `nativeButton`/`inputRef`/`onKeyDown`/`tabIndex` (RN `Pressable`-free host; keyboard is a web-only path); no `getAriaLabel`/`getAriaValueText` (caller `accessibilityLabel`; no `Intl`); static position geometry + caller `style` |
+
+The old `Slider` monolith is removed (Base UI has no monolith — ADR 001, ADR 011; migration in CHANGELOG). RN math lives in `./models` (`slider.ts`) with unit tests.
+
 ### Popover — aligned
 
 Base UI parts: Root, Trigger, Portal, Backdrop, Positioner,
@@ -322,7 +338,7 @@ named reason (not oversight):
 | Meter / Progress | Meter compound Root/Track/Indicator/Label/Value landed (parity-1); no `Intl` formatting props (`aria-valuetext`/`getAriaValueText`/`locale`/`format` — caller formats through `MeterValue` function children) | Fill is data-driven width under caller style. Progress indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
 | Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
 | OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
-| Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
+| Slider | compound Root/Label/Value/Control/Track/Indicator/Thumb landed (parity-1 lane); RN math in `./models` (`slider.ts`) | `step` defaults `0` (continuous) vs Base UI `1`; `largeStep` accepted but consumer-less; no push cascade (clamp at gap); no `hiddenUntilFound` (N/A); no `loopFocus` (no roving layer); no `name`/`form`/`inputRef` (no Form owner); no keepMounted (D3) |
 | Tabs | no `Indicator` | Indicator geometry is caller style |
 | Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
 | Date/time entry | no Axis component (removed by ADR 012) | `calendar` model (grid, roving keys, min/max + `isDateDisabled`, single + range selection, locale, `firstDayOfWeek`, dir) and `time` model (`TimePickerValue`/`TimePickerFormat` stay exported) carry the behavior; composition added this pass for the remaining families. |

@@ -4,8 +4,13 @@ import {
   parseCalendarMonth,
   resolveCalendarFocus,
   resolveCalendarSelection,
-  Slider,
   shiftCalendarMonth,
+  SliderControl,
+  SliderIndicator,
+  SliderRoot,
+  SliderThumb,
+  SliderTrack,
+  SliderValue,
   toCalendarDate,
   toCalendarMonth,
 } from "@xoroh/axis";
@@ -23,7 +28,7 @@ import type { Demo } from "./registry";
 export const RangesDemo: Demo = {
   slug: "ranges",
   title: "Ranges",
-  components: ["Slider"],
+  components: ["SliderRoot", "SliderControl", "SliderTrack", "SliderIndicator", "SliderThumb", "SliderValue"],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
     const now = new Date();
@@ -113,32 +118,40 @@ export const RangesDemo: Demo = {
             </Text>
           </View>
           <View style={{ paddingVertical: 10 }}>
-            <Slider
-              accessibilityLabel="Demo volume slider"
-              value={volume}
-              onValueChange={setVolume}
-              trackStyle={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-              fillStyle={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.primary,
-              }}
-              thumbStyle={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                backgroundColor: theme.surface,
-                borderWidth: 2,
-                borderColor: theme.primary,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.25)",
-              }}
-            />
+            <SliderRoot value={volume} onValueChange={(v) => typeof v === "number" && setVolume(v)}>
+              <SliderControl>
+                <SliderTrack
+                  testID="demo-volume-track"
+                  style={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <SliderIndicator
+                    style={{
+                      backgroundColor: theme.primary,
+                      borderRadius: 4,
+                    }}
+                  />
+                  <SliderThumb
+                    accessibilityLabel="Demo volume slider"
+                    testID="demo-volume-thumb"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.primary,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.25)",
+                    }}
+                  />
+                </SliderTrack>
+              </SliderControl>
+            </SliderRoot>
           </View>
         </View>
 
