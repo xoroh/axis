@@ -448,11 +448,17 @@ describe("Slider on React Native", () => {
     const props = screen.getByTestId("sl-thumb").props;
     // `adjustable` is the RN role; RN-web renders it as role=slider.
     expect(props.accessibilityRole).toBe("adjustable");
+    // Native mapping (object form).
     expect(props.accessibilityValue).toMatchObject({
       min: 0,
       max: 100,
       now: 30,
     });
+    // Split twins for the RN-web DOM mapper (which ignores the object
+    // form — verified against react-native-web createDOMProps).
+    expect(props["aria-valuemin"]).toBe(0);
+    expect(props["aria-valuemax"]).toBe(100);
+    expect(props["aria-valuenow"]).toBe(30);
     // Orientation travels as an untyped aria prop (verified absent
     // from the installed RN ViewAccessibility union).
     expect(props["aria-orientation"]).toBe("horizontal");

@@ -935,11 +935,15 @@ export function SliderThumb({
       max: hi,
       now: thumbValue,
     },
-    // RN has no typed `aria-orientation` key: the host passes unknown
-    // `aria-*` props through on web (verified against the installed
-    // RN `ViewAccessibility` union, which stops at `aria-valuetext`),
-    // and native ignores the unknown prop. Thumb orientation is
-    // horizontal/vertical, matching the track.
+    // Split `aria-value*` twins for the web mapper: RNW's DOM layer
+    // reads `aria-valuenow/min/max` (it ignores the
+    // `accessibilityValue` object); native uses the object above and
+    // ignores the unknown props. `aria-orientation` is untyped extra
+    // (verified absent from the installed RN `ViewAccessibility`
+    // union, which stops at `aria-valuetext`).
+    "aria-valuemin": disclosure.min,
+    "aria-valuemax": hi,
+    "aria-valuenow": thumbValue,
     ...{ "aria-orientation": disclosure.orientation },
     accessibilityState: { disabled: disclosure.disabled },
     accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
@@ -969,6 +973,9 @@ export function SliderThumb({
         max: hi,
         now: thumbValue,
       }}
+      aria-valuemin={disclosure.min}
+      aria-valuemax={hi}
+      aria-valuenow={thumbValue}
       {...{ "aria-orientation": disclosure.orientation }}
       accessibilityState={{ disabled: disclosure.disabled }}
       accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}

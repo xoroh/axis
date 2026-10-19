@@ -266,10 +266,12 @@ function PriceRange() {
 
 - Each thumb is an accessibility element carrying the
   `adjustable` role with `accessibilityValue`
-  (`{ min, max, now }`) and the `increment`/`decrement`
-  actions — a screen reader announces the value and offers
-  stepping, which commits through the same snapped path as
-  dragging.
+  (`{ min, max, now }`, degenerate collapses `max` to `min`) and
+  the `increment`/`decrement` actions — a screen reader announces
+  the value and offers stepping, which commits through the same
+  snapped path as dragging. The split `aria-valuemin`/`aria-valuemax`/
+  `aria-valuenow` twins travel alongside (RN-web's DOM mapper
+  ignores the object form), plus `aria-orientation`.
 - Keyboard (web only — RN passes `onKeyDown` through to the DOM
   host; native ignores the unknown prop): ArrowRight/ArrowUp
   move by `step`, ArrowLeft/ArrowDown move back (flipped for
