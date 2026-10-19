@@ -101,9 +101,10 @@ Tooltip monolith `placement` default (web-placement lane);
 
 ## Merge + cleanup record (self-merge rule)
 
-- `validate` on PR #75: PASS (run recorded here at merge time).
-- mergeStateStatus at merge: CLEAN.
+- `validate` on PR #75: PASS (run 39191114153, 1m1s).
+- mergeStateStatus at merge: CLEAN (mergeable MERGEABLE).
+- Diff verified docs-only before merge (8 docs + report; no
+  src/example changes).
 - `gh pr merge 75 --squash --delete-branch` (no --admin).
 - `git worktree remove …/axis-docs6 && git worktree prune`;
   branch deleted locally + remotely; `main` synced.
-- (Final worktree list + status pasted here at merge time.)
