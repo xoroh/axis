@@ -899,7 +899,9 @@ export function SliderThumb({
   const centerX = "-50%" as const;
   const centerY = "-50%" as const;
   const edgeX = `-${percent}%` as const;
-  const edgeY = `-${percent}%` as const;
+  // Vertical fills bottom-up: the thumb's distance from the top is
+  // the complement, so edge alignment mirrors it too.
+  const edgeY = `-${100 - percent}%` as const;
   const position: StyleProp<ViewStyle> =
     disclosure.orientation === "horizontal"
       ? {
@@ -914,7 +916,9 @@ export function SliderThumb({
           ],
         }
       : {
-          top: `${percent}%`,
+          // Vertical fills bottom-up, so the thumb's distance from the top
+          // is the complement of its percentage.
+          top: `${100 - percent}%`,
           left: "50%",
           transform: [
             {
