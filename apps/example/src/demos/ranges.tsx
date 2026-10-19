@@ -338,7 +338,18 @@ export const RangesDemo: Demo = {
                     <SliderIndicator
                       style={{ backgroundColor: theme.textSubtle }}
                     />
-                    <SliderThumb accessibilityLabel="Demo disabled slider" />
+                    <SliderThumb
+                      accessibilityLabel="Demo disabled slider"
+                      testID="demo-disabled-thumb"
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: theme.surface,
+                        borderWidth: 2,
+                        borderColor: theme.textSubtle,
+                      }}
+                    />
                   </SliderTrack>
                 </SliderControl>
               </SliderRoot>

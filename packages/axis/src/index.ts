@@ -213,6 +213,12 @@ export {
   type DialogTriggerState,
 } from "./components/Dialog";
 export {
+  type Direction,
+  DirectionProvider,
+  type DirectionProviderProps,
+  useDirection,
+} from "./components/DirectionProvider";
+export {
   Drawer,
   type DrawerProps,
   type DrawerSide,

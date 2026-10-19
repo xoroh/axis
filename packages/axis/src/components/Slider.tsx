@@ -31,6 +31,7 @@ import {
 } from "../slider";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { useDirection } from "./DirectionProvider";
 
 /**
  * Slider — a range input with compound parts.
@@ -81,7 +82,7 @@ export type SliderRootState = {
   activeThumbIndex: number;
   /** Reading direction of the track. Default `"horizontal"`. */
   orientation: SliderOrientation;
-  /** Text direction for key and gesture mapping. Default `"ltr"`. */
+  /** Text direction from the nearest `DirectionProvider` (native locale fallback). */
   dir: "ltr" | "rtl";
   /** Range lower bound. */
   min: number;
@@ -177,12 +178,6 @@ export type SliderRootProps = {
    * Vertical drags map track-bottom to `min` and track-top to `max`.
    */
   orientation?: SliderOrientation;
-  /**
-   * Text direction for key and gesture mapping. Default `"ltr"`.
-   * With `dir="rtl"` on a horizontal slider, ArrowLeft/ArrowRight
-   * swap meaning (Base UI parity); vertical is unaffected.
-   */
-  dir?: "ltr" | "rtl";
   /**
    * Thumb alignment against the control edge. Default `"center"`
    * (the thumb centers on the value point). `"edge"` pins the
@@ -374,7 +369,6 @@ export function SliderRoot({
   largeStep = 10,
   minStepsBetweenValues = 0,
   orientation = "horizontal",
-  dir = "ltr",
   thumbAlignment = "center",
   disabled = false,
   testID,
@@ -402,6 +396,10 @@ export function SliderRoot({
 
   const [dragging, setDragging] = useState(false);
   const [activeThumbIndex, setActiveThumbIndex] = useState(0);
+  // Base UI API: direction comes from the nearest
+  // `DirectionProvider`, falling back to the native locale
+  // (`I18nManager.isRTL`) with no provider — never a per-part prop.
+  const dir = useDirection();
 
   const commit = useCallback(
     (index: number, next: number, isCommit: boolean) => {
@@ -934,9 +932,15 @@ export function SliderThumb({
     accessibilityRole: "adjustable" as const,
     accessibilityValue: {
       min: disclosure.min,
-      max: disclosure.max,
+      max: hi,
       now: thumbValue,
     },
+    // RN has no typed `aria-orientation` key: the host passes unknown
+    // `aria-*` props through on web (verified against the installed
+    // RN `ViewAccessibility` union, which stops at `aria-valuetext`),
+    // and native ignores the unknown prop. Thumb orientation is
+    // horizontal/vertical, matching the track.
+    ...{ "aria-orientation": disclosure.orientation },
     accessibilityState: { disabled: disclosure.disabled },
     accessibilityActions: [{ name: "increment" }, { name: "decrement" }],
     onAccessibilityAction,
@@ -965,6 +969,7 @@ export function SliderThumb({
         max: hi,
         now: thumbValue,
       }}
+      {...{ "aria-orientation": disclosure.orientation }}
       accessibilityState={{ disabled: disclosure.disabled }}
       accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
       onAccessibilityAction={onAccessibilityAction}

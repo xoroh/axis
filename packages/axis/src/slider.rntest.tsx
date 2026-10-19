@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { StyleSheet, Text, type View } from "react-native";
 import {
+  DirectionProvider,
   SliderControl,
   SliderIndicator,
   SliderLabel,
@@ -433,6 +434,89 @@ describe("Slider on React Native", () => {
     expect(fillStyle).toMatchObject({ width: "50%" });
   });
 
+  it("announces slider semantics on the thumb: adjustable role, value, orientation", async () => {
+    await render(
+      <SliderRoot testID="sl" defaultValue={30} min={0} max={100}>
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" accessibilityLabel="Volume" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    const props = screen.getByTestId("sl-thumb").props;
+    // `adjustable` is the RN role; RN-web renders it as role=slider.
+    expect(props.accessibilityRole).toBe("adjustable");
+    expect(props.accessibilityValue).toMatchObject({
+      min: 0,
+      max: 100,
+      now: 30,
+    });
+    // Orientation travels as an untyped aria prop (verified absent
+    // from the installed RN ViewAccessibility union).
+    expect(props["aria-orientation"]).toBe("horizontal");
+    expect(screen.getByLabelText("Volume")).toBeTruthy();
+  });
+
+  it("reports the slider min and max on every thumb in both render paths", async () => {
+    const seen: Record<string, unknown>[] = [];
+    await render(
+      <SliderRoot testID="sl" defaultValue={[25, 75]}>
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb-0" index={0} />
+            <SliderThumb
+              testID="sl-thumb-1"
+              index={1}
+              render={(props) => {
+                seen.push({ ...(props as object) });
+                return null;
+              }}
+            />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    // Default (View) path.
+    expect(
+      screen.getByTestId("sl-thumb-0").props.accessibilityValue,
+    ).toMatchObject({
+      min: 0,
+      max: 100,
+      now: 25,
+    });
+    // Render-prop path carries the same value object.
+    const reported = seen[0] as { accessibilityValue?: unknown };
+    expect(reported.accessibilityValue).toMatchObject({
+      min: 0,
+      max: 100,
+      now: 75,
+    });
+  });
+
+  it("announces the collapsed range on a degenerate slider in both paths", async () => {
+    await render(
+      <SliderRoot testID="sl" min={80} max={20}>
+        <SliderControl>
+          <SliderTrack>
+            <SliderIndicator />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    // One rule everywhere: the slider's min, and max collapsed to min.
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
+      min: 80,
+      max: 80,
+      now: 80,
+    });
+  });
+
   it("renders label and value text", async () => {
     await render(
       <SliderRoot testID="sl" value={70}>
@@ -644,20 +728,21 @@ describe("Slider on React Native", () => {
   it("flips horizontal arrows in RTL without touching vertical", async () => {
     const seen: (number | readonly number[])[] = [];
     await render(
-      <SliderRoot
-        testID="sl"
-        defaultValue={30}
-        step={10}
-        dir="rtl"
-        onValueChange={(v) => seen.push(v)}
-      >
-        <SliderControl>
-          <SliderTrack>
-            <SliderIndicator />
-            <SliderThumb testID="sl-thumb" />
-          </SliderTrack>
-        </SliderControl>
-      </SliderRoot>,
+      <DirectionProvider direction="rtl">
+        <SliderRoot
+          testID="sl"
+          defaultValue={30}
+          step={10}
+          onValueChange={(v) => seen.push(v)}
+        >
+          <SliderControl>
+            <SliderTrack>
+              <SliderIndicator />
+              <SliderThumb testID="sl-thumb" />
+            </SliderTrack>
+          </SliderControl>
+        </SliderRoot>
+      </DirectionProvider>,
     );
     const press = (key: string) =>
       fireEvent(screen.getByTestId("sl-thumb"), "onKeyDown", {

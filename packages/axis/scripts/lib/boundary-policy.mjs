@@ -34,10 +34,13 @@ import { posix } from "node:path";
 // AccessibilityInfo, BackHandler, findNodeHandle justified 2026-10-17
 // (Overlay root needs native back dismissal via BackHandler,
 // accessibility focus/motion via AccessibilityInfo and findNodeHandle).
+// I18nManager justified 2026-10-19 (DirectionProvider needs the
+// native RTL fallback; read-only `isRTL`, no UI code).
 export const RN_HOST_BINDINGS = [
   "AccessibilityInfo",
   "BackHandler",
   "ActivityIndicator",
+  "I18nManager",
   "Image",
   "ImageSourcePropType",
   "ImageStyle",

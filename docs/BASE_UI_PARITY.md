@@ -188,15 +188,26 @@ Base UI `Slider`: Root/Label/Value/Control/Track/Indicator/Thumb with `value`/`d
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `SliderRoot` | `Slider.Root` | `value`/`defaultValue`/`onValueChange`/`onValueCommitted` over `number \| number[]` (single values behave as one-entry ranges; reported in the same shape), `min`/`max` (degenerate collapses to `min`), `step`, `largeStep` (default `10`, consumed by keyboard handling), `minStepsBetweenValues` (default `0`), `orientation` (default `'horizontal'`), `thumbAlignment` (default `'center'`), `dir` (default `'ltr'` — flips ArrowLeft/ArrowRight on horizontal sliders), `disabled`, `ref`; state carries `{ values, disabled, dragging, activeThumbIndex, orientation, dir, min, max, step, largeStep, minStepsBetweenValues }` | `step` defaults `0` (continuous) vs Base UI `1` — Axis preserves continuous-by-default; keyboard (`onKeyDown`, web-only passthrough) implements Base UI arrows/PageUp/PageDown/Home/End with `onValueCommitted`; `name`/`form`/`inputRef`/`id`/`tabIndex` omitted (no Form owner, no DOM inputs); `locale`/`format` omitted (no `Intl`); `data-*` → D1 |
+| `SliderRoot` | `Slider.Root` | `value`/`defaultValue`/`onValueChange`/`onValueCommitted` over `number \| number[]` (single values behave as one-entry ranges; reported in the same shape), `min`/`max` (degenerate collapses to `min`), `step`, `largeStep` (default `10`, consumed by keyboard handling), `minStepsBetweenValues` (default `0`), `orientation` (default `'horizontal'`), `thumbAlignment` (default `'center'`), `disabled`, `ref`; direction comes from the nearest `DirectionProvider` (native-locale fallback) — never a Slider prop (Base UI parity); state carries `{ values, disabled, dragging, activeThumbIndex, orientation, min, max, step, largeStep, minStepsBetweenValues }` | `step` defaults `0` (continuous) vs Base UI `1` — Axis preserves continuous-by-default; keyboard (`onKeyDown`, web-only passthrough) implements Base UI arrows/PageUp/PageDown/Home/End with `onValueCommitted`; `name`/`form`/`inputRef`/`id`/`tabIndex` omitted (no Form owner, no DOM inputs); `locale`/`format` omitted (no `Intl`); `data-*` → D1 |
 | `SliderLabel` | `Slider.Label` | accessible-name text host | — |
 | `SliderValue` | `Slider.Value` | node or function of values | No pre-formatted string (no `Intl`) |
 | `SliderControl` | `Slider.Control` | drag gestures, track-press jump to nearest thumb, measurement; `ref` | Track-press uses `locationX/Y` (same caveat as Base UI's offset math); no commit without a measured track |
 | `SliderTrack` | `Slider.Track` | range container | static `style` (chrome carries no state) |
 | `SliderIndicator` | `Slider.Indicator` | data-driven fill from the lowest to the highest value (merged under caller style) | static `style` (chrome carries no state) |
-| `SliderThumb` | `Slider.Thumb` | `index` (default `0`), `adjustable` role with `{ min, max, now }`, `increment`/`decrement` actions, positioned on the value point (centered, or edge-pinned with `thumbAlignment="edge"`) | No `nativeButton`/`inputRef`/`onKeyDown`/`tabIndex` (RN `Pressable`-free host; keyboard is a web-only path); no `getAriaLabel`/`getAriaValueText` (caller `accessibilityLabel`; no `Intl`); static position geometry + caller `style` |
+| `SliderThumb` | `Slider.Thumb` | `index` (default `0`), `adjustable` role with `{ min, max, now }` (degenerate collapses `max` to `min`, both render paths), `aria-orientation` matching orientation (untyped `aria-*` passthrough — verified absent from the RN union), `increment`/`decrement` actions, positioned on the value point (centered, or edge-pinned with `thumbAlignment="edge"`) | No `nativeButton`/`inputRef`/`tabIndex` (RN host handles presses natively; keyboard is a web-only `onKeyDown` path); no `getAriaLabel`/`getAriaValueText` (caller `accessibilityLabel`; no `Intl`); static position geometry + caller `style` |
 
 The old `Slider` monolith is removed (Base UI has no monolith — ADR 001, ADR 011; migration in CHANGELOG). RN math lives in `./models` (`slider.ts`) with unit tests.
+
+### Direction — aligned
+
+Base UI `DirectionProvider` + `useDirection()`: `direction` (`"ltr"` | `"rtl"`, default `"ltr"`).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `DirectionProvider` | `Direction.Provider` | `direction` (default `"ltr"`); renders no host (pure context, the `TooltipProvider` precedent) | No `dir` DOM attribute (web direction stays caller document state) |
+| `useDirection` | `useDirection` | nearest provider wins; no provider falls back to the native locale (`I18nManager.isRTL`) | Fallback replaces Base UI's document-default assumption (native has no document) |
+
+Consumers (e.g. Slider arrow keys) read the hook instead of taking per-part `dir` props — one owner per tree. `I18nManager` is added to the boundary allowlist with justification (read-only `isRTL`, no UI code).
 
 ### Popover — aligned
 
