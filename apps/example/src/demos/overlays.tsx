@@ -11,7 +11,6 @@ import {
   OverlayTrigger,
   Portal,
   PortalHost,
-  Sheet,
   Toast,
   ToastProvider,
   ToastViewport,
@@ -41,7 +40,6 @@ export const OverlaysDemo: Demo = {
   title: "Overlays",
   components: [
     "AlertDialog",
-    "Sheet",
     "Drawer",
     "Toast",
     "ToastProvider",
@@ -68,6 +66,7 @@ export const OverlaysDemo: Demo = {
   render: function OverlaysScreen() {
     const { theme } = useTheme();
     const [sheetOpen, setSheetOpen] = useState(false);
+    const [sheetPoint, setSheetPoint] = useState<number | string>(1);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
     const [toastVisible, setToastVisible] = useState(true);
@@ -269,7 +268,7 @@ export const OverlaysDemo: Demo = {
           </ToastProvider>
         </View>
 
-        {/* Sheet, Drawer & AlertDialog */}
+        {/* Bottom sheet (Drawer), side Drawer & AlertDialog */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -285,7 +284,7 @@ export const OverlaysDemo: Demo = {
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             <Button
-              accessibilityLabel="Open Sheet"
+              accessibilityLabel="Open bottom sheet"
               onPress={() => setSheetOpen(true)}
               style={{
                 paddingVertical: 8,
@@ -299,7 +298,7 @@ export const OverlaysDemo: Demo = {
               <Text
                 style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
               >
-                Open Sheet
+                Open Bottom Sheet
               </Text>
             </Button>
 
@@ -340,15 +339,16 @@ export const OverlaysDemo: Demo = {
             </Button>
           </View>
 
-          <Sheet
+          <Drawer
             open={sheetOpen}
             onOpenChange={setSheetOpen}
-            title="Filter Settings"
+            side="bottom"
+            snapPoints={[0.5, 1]}
+            snapPoint={sheetPoint}
+            onSnapPointChange={setSheetPoint}
             accessibilityLabel="Demo filter settings"
             overlayStyle={{ backgroundColor: theme.overlay, padding: 16 }}
             surfaceStyle={{
-              height: 260,
-              maxHeight: "70%",
               backgroundColor: theme.surface,
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
@@ -357,8 +357,12 @@ export const OverlaysDemo: Demo = {
               padding: 20,
               gap: 14,
             }}
-            titleStyle={{ fontSize: 18, fontWeight: "700", color: theme.text }}
           >
+            <Text
+              style={{ fontSize: 18, fontWeight: "700", color: theme.text }}
+            >
+              Filter Settings
+            </Text>
             <Text style={{ color: theme.textSubtle, fontSize: 14 }}>
               Choose which updates appear in your activity feed.
             </Text>
@@ -378,7 +382,7 @@ export const OverlaysDemo: Demo = {
             >
               <Text style={{ color: theme.text, fontWeight: "600" }}>Done</Text>
             </Pressable>
-          </Sheet>
+          </Drawer>
           <Drawer
             open={drawerOpen}
             onOpenChange={setDrawerOpen}

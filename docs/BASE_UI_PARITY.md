@@ -269,7 +269,7 @@ named reason (not oversight):
 | Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
 | Tabs | no `Indicator` | Indicator geometry is caller style |
 | Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
-| Calendar / Time Picker / Sheet | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred. Drawer HAS a Base UI counterpart (verified live 2026-10-19: `snapPoints`/`snapPoint`/`onSnapPointChange`, swipe, modal/non-modal) — Axis Drawer folds Sheet in per ADR 012. |
+| Calendar / Time Picker | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred. `Sheet` folded into `Drawer` (ADR 012): `side="bottom"` with Base UI-exact `snapPoints`/`snapPoint`/`onSnapPointChange`, swipe-to-dismiss, modal + non-modal. |
 | Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
 
 ### AI chat — new surface (no Base UI counterpart)

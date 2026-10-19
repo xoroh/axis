@@ -172,6 +172,8 @@ export {
 export {
   Drawer,
   type DrawerProps,
+  type DrawerSide,
+  type DrawerSnapPoint,
   type DrawerState,
 } from "./components/Drawer";
 export {
@@ -397,7 +399,6 @@ export {
   type SelectValueState,
 } from "./components/Select";
 export { Separator, type SeparatorProps } from "./components/Separator";
-export { Sheet, type SheetProps, type SheetState } from "./components/Sheet";
 export {
   Slider,
   type SliderProps,
