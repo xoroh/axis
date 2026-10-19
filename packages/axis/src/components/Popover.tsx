@@ -9,7 +9,6 @@ import {
   useRef,
 } from "react";
 import {
-  Modal,
   Pressable,
   type StyleProp,
   Text,
@@ -26,6 +25,7 @@ import {
 } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -225,7 +225,7 @@ export function Popover({
 /* + measured box, children partitioned into anchor/content props).    */
 /* The parts below mirror Base UI's Popover anatomy — Root (state      */
 /* owner, renders no element), Trigger (tap toggle + anchor            */
-/* registration), Portal (Modal host when modal, in-box otherwise),    */
+/* registration), Portal (overlay host when modal, in-box otherwise),  */
 /* Backdrop (the scrim, modal only), Positioner (measured placement   */
 /* against the trigger anchor), Popup (the content box), Title,        */
 /* Description, Close, Arrow — with `render` element/function          */
@@ -258,7 +258,7 @@ export type PopoverRootProps = {
    */
   disablePointerDismissal?: boolean;
   /**
-   * Whether the open popover presents modally (a `Modal` host with a
+   * Whether the open popover presents modally (an overlay host with a
    * scrim). Default `false` — popovers are non-modal overlays; the
    * portal renders in-box and the trigger stays pressable. Presses
    * outside reach the app rather than dismissing (same documented
@@ -512,11 +512,23 @@ export function PopoverRoot({
     ],
   );
 
-  // The root owns state, never layout: no host element (Base UI parity).
   return (
-    <PopoverDisclosureContext.Provider value={disclosure}>
-      {children}
-    </PopoverDisclosureContext.Provider>
+    <OverlayRoot
+      open={isOpen}
+      onOpenChange={setOpen}
+      onDismiss={onDismiss}
+      modal={modal}
+      dismissable={!disablePointerDismissal}
+      dismiss={{
+        outsidePointer: !disablePointerDismissal,
+        systemBack: !disablePointerDismissal,
+        escape: !disablePointerDismissal,
+      }}
+    >
+      <PopoverDisclosureContext.Provider value={disclosure}>
+        {children}
+      </PopoverDisclosureContext.Provider>
+    </OverlayRoot>
   );
 }
 
@@ -588,23 +600,14 @@ export function PopoverPortal({
   if (!disclosure) return null;
   if (!disclosure.open) return null;
 
-  // Modal roots present above the app; non-modal roots (the default
+  // Modal roots present at the overlay host; non-modal roots (the default
   // for popovers) render in-box with no scrim trap, like the
   // monolith. Presses outside reach the app rather than dismissing
   // (same documented limitation as non-modal menus).
   if (!disclosure.modal) {
     return <View testID={testID}>{children}</View>;
   }
-  return (
-    <Modal
-      transparent
-      visible={disclosure.open}
-      onRequestClose={disclosure.dismiss}
-      testID={testID}
-    >
-      {children}
-    </Modal>
-  );
+  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
 }
 
 export function PopoverBackdrop({
@@ -615,7 +618,7 @@ export function PopoverBackdrop({
   const disclosure = useContext(PopoverDisclosureContext);
   if (!disclosure) return null;
   if (!disclosure.open) return null;
-  // The backdrop exists only for modal roots: without a Modal host
+  // The backdrop exists only for modal roots: without an overlay host
   // a full-fill scrim would trap the app's touches with no way to
   // dismiss except the trigger (the non-modal shape keeps the
   // trigger pressable instead).

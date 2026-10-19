@@ -18,6 +18,9 @@ import {
   MenuRadioItemIndicator,
   MenuRoot,
   MenuSeparator,
+  MenuSubmenuContent,
+  MenuSubmenuRoot,
+  MenuSubmenuTrigger,
   MenuTrigger,
 } from "./index";
 
@@ -77,8 +80,12 @@ describe("Menu compound parts on React Native", () => {
     expect(screen.getByRole("menu")).toBeTruthy();
     expect(screen.getByText("New")).toBeTruthy();
     expect(screen.getByTestId("menu-sep")).toBeTruthy();
+    // The trigger sits behind the open modal overlay layer, so it is
+    // hidden from assistive tech while the menu is up; its state is
+    // still readable with the hidden-element opt-in.
     expect(
-      screen.getByLabelText("Open menu").props.accessibilityState,
+      screen.getByLabelText("Open menu", { includeHiddenElements: true }).props
+        .accessibilityState,
     ).toMatchObject({ expanded: true });
   });
 
@@ -612,5 +619,118 @@ describe("Menu checkbox and radio items", () => {
     );
     expect(screen.queryByTestId("orphan-check")).toBeNull();
     expect(screen.queryByTestId("orphan-dot")).toBeNull();
+  });
+
+  it("MenuPopup handles typeahead key events and highlights matching item", async () => {
+    let highlightedState: boolean | undefined;
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuTrigger testID="ta-menu-trigger">
+          <RNText>Menu</RNText>
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="ta-menu-popup">
+              <MenuItem value="edit" filterText="Edit">
+                <RNText>Edit</RNText>
+              </MenuItem>
+              <MenuItem
+                value="save"
+                filterText="Save"
+                testID="item-save"
+                style={(s) => {
+                  highlightedState = s.highlighted;
+                  return undefined;
+                }}
+              >
+                <RNText>Save</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+
+    const popup = screen.getByTestId("ta-menu-popup");
+    await act(async () => {
+      fireEvent(popup, "keyDown", { key: "s" });
+    });
+    expect(highlightedState).toBe(true);
+  });
+
+  it("MenuSubmenu parts open and render nested submenu content with open/close and nested dismiss", async () => {
+    await render(
+      <MenuRoot defaultOpen>
+        <MenuTrigger testID="root-trigger">
+          <RNText>Root</RNText>
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuPositioner>
+            <MenuPopup testID="root-popup">
+              <MenuItem value="item1">
+                <RNText>Item 1</RNText>
+              </MenuItem>
+              <MenuSubmenuRoot value="sub1">
+                <MenuSubmenuTrigger
+                  testID="sub1-trigger"
+                  accessibilityLabel="Submenu 1"
+                >
+                  <RNText>Submenu 1</RNText>
+                </MenuSubmenuTrigger>
+                <MenuSubmenuContent testID="sub1-content">
+                  <MenuItem value="sub-item-1" testID="sub-item-1">
+                    <RNText>Sub Item 1</RNText>
+                  </MenuItem>
+                  <MenuSubmenuRoot value="sub2">
+                    <MenuSubmenuTrigger
+                      testID="sub2-trigger"
+                      accessibilityLabel="Submenu 2"
+                    >
+                      <RNText>Submenu 2</RNText>
+                    </MenuSubmenuTrigger>
+                    <MenuSubmenuContent testID="sub2-content">
+                      <MenuItem value="sub-item-2" testID="sub-item-2">
+                        <RNText>Sub Item 2</RNText>
+                      </MenuItem>
+                    </MenuSubmenuContent>
+                  </MenuSubmenuRoot>
+                </MenuSubmenuContent>
+              </MenuSubmenuRoot>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>,
+    );
+
+    // Submenu 1 closed initially
+    expect(screen.queryByTestId("sub1-content")).toBeNull();
+
+    // Open Submenu 1
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("sub1-trigger"));
+    });
+    expect(screen.getByTestId("sub1-content")).toBeTruthy();
+    expect(screen.getByText("Sub Item 1")).toBeTruthy();
+
+    // Open Submenu 2 (nested)
+    expect(screen.queryByTestId("sub2-content")).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("sub2-trigger"));
+    });
+    expect(screen.getByTestId("sub2-content")).toBeTruthy();
+    expect(screen.getByText("Sub Item 2")).toBeTruthy();
+
+    // Toggle/close Submenu 2
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("sub2-trigger"));
+    });
+    expect(screen.queryByTestId("sub2-content")).toBeNull();
+    expect(screen.getByTestId("sub1-content")).toBeTruthy();
+
+    // Select leaf item closes all / nested dismiss
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("sub-item-1"));
+    });
+    expect(screen.queryByTestId("sub1-content")).toBeNull();
   });
 });

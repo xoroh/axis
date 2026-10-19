@@ -52,6 +52,14 @@ export {
   isChatStreaming,
 } from "./chatStatus";
 export {
+  type CollectionItem,
+  type CollectionMatch,
+  defaultCollectionMatch,
+  filterCollectionKeys,
+  findCollectionText,
+  useCollectionRegistry,
+} from "./collection";
+export {
   createDismissPolicy,
   type DismissPolicy,
   type DismissPolicyOptions,
@@ -74,7 +82,9 @@ export {
 } from "./focusTrap";
 export {
   createOverlayModality,
+  getSharedOverlayModality,
   type OverlayId,
+  type OverlayModalityRegistry,
   type OverlayModalityState,
   useOverlayModality,
   useOverlayRegistration,
@@ -91,6 +101,7 @@ export {
   type PositioningOptions,
   type Rect,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "./positioning";
 export {
   createPresenceModel,
@@ -167,4 +178,10 @@ export {
   type ToolCallState,
   useToolCall,
 } from "./toolCall";
+export {
+  appendTypeaheadQuery,
+  isTypeaheadExpired,
+  matchTypeaheadKey,
+  type TypeaheadBuffer,
+} from "./typeahead";
 export { type StateAction, useControllableState } from "./useControllableState";
