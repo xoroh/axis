@@ -30,6 +30,13 @@ export type RadioGroupState = {
   value: string | null;
   /** Whether the whole group is disabled. */
   disabled: boolean;
+  /**
+   * Whether the whole group is read-only. Default `false`.
+   * Focusable and announced like an enabled group, but selections
+   * do not change (distinct from `disabled` — React Native maps no
+   * readonly key, so the announcement is the normal group state).
+   */
+  readOnly: boolean;
 };
 
 export type RadioGroupItemState = {
@@ -37,6 +44,8 @@ export type RadioGroupItemState = {
   checked: boolean;
   /** Whether this item is currently disabled. */
   disabled: boolean;
+  /** Whether the group is read-only (selections do not change). */
+  readOnly: boolean;
 };
 
 export type RadioGroupProps = {
@@ -48,6 +57,14 @@ export type RadioGroupProps = {
   onValueChange?: (value: string) => void;
   /** Terminal: disables every item — no selections, no callbacks. */
   disabled?: boolean;
+  /**
+   * Read-only: focusable and announced like an enabled group, but
+   * selections do not change and no callbacks fire. Default `false`.
+   * Distinct from `disabled` (which blocks interaction and announces
+   * disabled) — React Native maps no readonly key, so the
+   * announcement is the normal group state.
+   */
+  readOnly?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
@@ -87,6 +104,7 @@ export type RadioGroupItemProps = {
 type RadioGroupSelection = {
   selectedValue: string | null | undefined;
   groupDisabled: boolean;
+  groupReadOnly: boolean;
   select: (value: string) => void;
 };
 
@@ -129,6 +147,7 @@ function RadioGroupRoot({
   defaultValue = null,
   onValueChange,
   disabled = false,
+  readOnly = false,
   accessibilityLabel,
   testID,
   style,
@@ -155,10 +174,10 @@ function RadioGroupRoot({
 
   const select = useCallback(
     (next: string) => {
-      if (disabled) return;
+      if (disabled || readOnly) return;
       setSelectedValue(next);
     },
-    [disabled, setSelectedValue],
+    [disabled, readOnly, setSelectedValue],
   );
 
   // Stable identity so the host element is not detached and re-attached
@@ -172,13 +191,19 @@ function RadioGroupRoot({
   );
 
   const selection = useMemo<RadioGroupSelection>(
-    () => ({ selectedValue, groupDisabled: disabled, select }),
-    [selectedValue, disabled, select],
+    () => ({
+      selectedValue,
+      groupDisabled: disabled,
+      groupReadOnly: readOnly,
+      select,
+    }),
+    [selectedValue, disabled, readOnly, select],
   );
 
   const state: RadioGroupState = {
     value: selectedValue ?? null,
     disabled,
+    readOnly,
   };
   const substituted = resolveRender(
     render,
@@ -225,6 +250,7 @@ export function RadioGroupItem({
 }: RadioGroupItemProps): React.ReactNode {
   const group = useContext(RadioGroupSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
+  const readOnly = group?.groupReadOnly ?? false;
   const checked = group?.selectedValue === value;
 
   const selectItem = useCallback(() => {
@@ -235,6 +261,7 @@ export function RadioGroupItem({
   const state: RadioGroupItemState = {
     checked,
     disabled: effectiveDisabled,
+    readOnly,
   };
   const substituted = resolveRender(
     render,

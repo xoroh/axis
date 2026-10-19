@@ -25,6 +25,13 @@ export type SwitchState = {
   checked: boolean;
   /** Whether the switch is currently disabled. */
   disabled: boolean;
+  /**
+   * Whether the switch is read-only. Default `false`. Focusable
+   * and announced like an enabled switch, but presses do not change
+   * state (distinct from `disabled` — React Native maps no readonly
+   * key, so the announcement is the normal switch state).
+   */
+  readOnly: boolean;
 };
 
 export type SwitchProps = {
@@ -36,6 +43,14 @@ export type SwitchProps = {
   onCheckedChange?: (checked: boolean) => void;
   /** Terminal: no transitions, no callbacks, announced as disabled. */
   disabled?: boolean;
+  /**
+   * Read-only: focusable and announced like an enabled switch, but
+   * presses do not change state and no callbacks fire. Default
+   * `false`. Distinct from `disabled` (which blocks interaction and
+   * announces disabled) — React Native maps no readonly key, so the
+   * announcement is the normal switch state.
+   */
+  readOnly?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   /** Native labelled-by association where the platform supports it. */
@@ -87,6 +102,7 @@ export function Switch({
   defaultChecked = false,
   onCheckedChange,
   disabled = false,
+  readOnly = false,
   accessibilityLabel,
   accessibilityLabelledBy,
   testID,
@@ -103,9 +119,9 @@ export function Switch({
   );
 
   const toggle = useCallback(() => {
-    if (disabled) return;
+    if (disabled || readOnly) return;
     setOn((previous) => !(previous ?? false));
-  }, [disabled, setOn]);
+  }, [disabled, readOnly, setOn]);
 
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
@@ -117,7 +133,7 @@ export function Switch({
     [ref],
   );
 
-  const state: SwitchState = { checked: on ?? false, disabled };
+  const state: SwitchState = { checked: on ?? false, disabled, readOnly };
   const substituted = resolveRender(
     render,
     {

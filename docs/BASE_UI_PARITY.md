@@ -107,7 +107,7 @@ Base UI `Switch`: root + thumb parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, label association, `ref`; switch role with `checked` state; `render` + function `style` over `{ checked, disabled }` | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); `data-checked`/`data-disabled` → D1 |
+| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, `readOnly` (focusable, announced as enabled, presses change nothing — RN maps no readonly key, so the announcement is the normal switch state), label association, `ref`; switch role with `checked` state; `render` + function `style` over `{ checked, disabled, readOnly }` | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); no `required`/`name`/`value`/`form` (no `Form` owner); `data-checked`/`data-disabled` → D1 |
 
 ### Checkbox — aligned
 
@@ -116,8 +116,8 @@ Base UI `Checkbox`: root + indicator parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `CheckboxRoot` | `Checkbox.Root` | `checked`, `defaultChecked`, `onCheckedChange`, `indeterminate`, `disabled`, `ref`; checkbox role with `checked` (`mixed` while indeterminate — RN types `checked` as `boolean \| 'mixed'`); `render` + function `style` over `{ checked, disabled, indeterminate }` | No `readOnly`/`required`/`name`/`value`/`form`/`inputRef`/`id`/`uncheckedValue` (no `Form` owner — native forms are caller-owned, the `Input` precedent); no `parent` (needs the group's `allValues`, which Axis `CheckboxGroup` does not expose — indeterminate stays caller-owned); no `nativeButton` prop (RN `Pressable` is native by construction — the `MenuItem` precedent); `data-*` → D1; no transition attributes (D9) |
-| `CheckboxIndicator` | `Checkbox.Indicator` | mounts while checked or indeterminate; caller styles checked vs mixed through indicator state; `render` over `{ checked, disabled, indeterminate }` | No `keepMounted` (D3 — untestable keep-alive); static `style` (chrome carries no state) |
+| `CheckboxRoot` | `Checkbox.Root` | `checked`, `defaultChecked`, `onCheckedChange`, `indeterminate`, `disabled`, `readOnly` (focusable, announced as enabled, presses change nothing — RN maps no readonly key), `ref`; checkbox role with `checked` (`mixed` while indeterminate — RN types `checked` as `boolean \| 'mixed'`); `render` + function `style` over `{ checked, disabled, indeterminate, readOnly }` | No `required`/`name`/`value`/`form`/`inputRef`/`id`/`uncheckedValue` (no `Form` owner — native forms are caller-owned, the `Input` precedent); no `parent` (needs the group's `allValues`, which Axis `CheckboxGroup` does not expose — indeterminate stays caller-owned); no `nativeButton` prop (RN `Pressable` is native by construction — the `MenuItem` precedent); `data-*` → D1; no transition attributes (D9) |
+| `CheckboxIndicator` | `Checkbox.Indicator` | mounts while checked or indeterminate, or always with `keepMounted` (mounted-but-hidden with `{ checked: false, indeterminate: false }` when unchecked); caller styles checked vs mixed through indicator state; `render` over `{ checked, disabled, indeterminate, readOnly }` | `keepMounted` defaults `false` (keep-alive opt-in, tested); static `style` (chrome carries no state) |
 
 ### Toggle — aligned
 
@@ -150,7 +150,7 @@ Base UI `Accordion`: Root/Item/Header/Trigger/Panel with
 | `AccordionItem` | `Accordion.Item` | `value` (string domain), `disabled`, per-item `onOpenChange` (fires even when another item's activation changes it) | No `index` in state (no `data-index` on native — D1) |
 | `AccordionHeader` | `Accordion.Header` | heading host (`header` role) wrapping the trigger | — |
 | `AccordionTrigger` | `Accordion.Trigger` | button role, `expanded` state, tap toggles; inert outside an item | No `nativeButton` prop (not a Base UI Accordion prop; RN `Pressable` is native by construction in any case) |
-| `AccordionPanel` | `Accordion.Panel` | mounts only while the item is open | No `hiddenUntilFound` (N/A — no find-in-page on native); no `keepMounted` (D3); no transition attributes (D9) |
+| `AccordionPanel` | `Accordion.Panel` | mounts only while the item is open, or always with `keepMounted` (mounted-but-hidden with `{ open: false }` when closed) | No `hiddenUntilFound` (N/A — no find-in-page on native); `keepMounted` defaults `false` (keep-alive opt-in, tested); no transition attributes (D9) |
 
 The old `Accordion`/`AccordionItem` monoliths are removed (Base UI-exact parts replace them — ADR 001, ADR 011; migration in CHANGELOG).
 

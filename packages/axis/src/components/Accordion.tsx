@@ -194,13 +194,20 @@ export type AccordionTriggerProps = {
 
 export type AccordionPanelProps = {
   testID?: string;
-  /** Panel view style (the panel mounts only while open). */
+  /** Panel view style (the panel mounts only while open, unless `keepMounted`). */
   style?: StyleProp<ViewStyle>;
-  /** Panel content, rendered inside a `View` only while the item is open. */
+  /** Panel content, rendered inside a `View` only while the item is open (or always with `keepMounted`). */
   children?: ReactNode;
   /**
-   * Element or function substitution (Base UI parity). The panel
-   * still mounts only while the item is open.
+   * When `true`, the panel stays mounted while the item is closed:
+   * mounted but hidden from assistive tech, with `{ open: false }`
+   * state. Default `false` (mounts only while open — D3: keep-alive
+   * stays opt-in).
+   */
+  keepMounted?: boolean;
+  /**
+   * Element or function substitution (Base UI parity). Without
+   * `keepMounted` the panel still mounts only while the item is open.
    */
   render?: RenderProp<AccordionPanelState, SlotProps>;
 };
@@ -519,12 +526,14 @@ export function AccordionPanel({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: AccordionPanelProps): React.ReactNode {
   const item = useContext(AccordionItemDisclosureContext);
-  if (!(item?.open ?? false)) return null;
+  const open = item?.open ?? false;
+  if (!open && !keepMounted) return null;
   const state: AccordionPanelState = {
-    open: true,
+    open,
     disabled: item?.disabled ?? false,
   };
   const substituted = resolveRender(
@@ -539,7 +548,7 @@ export function AccordionPanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View testID={testID} style={style} accessible={open ? undefined : false}>
       {children}
     </View>
   );

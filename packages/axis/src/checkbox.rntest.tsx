@@ -91,6 +91,45 @@ describe("Checkbox on React Native", () => {
     expect(screen.queryByTestId("orphan")).toBeNull();
   });
 
+  it("readOnly is focusable and announced as enabled, but presses change nothing", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <CheckboxRoot
+        testID="cb"
+        accessibilityLabel="Accept terms"
+        readOnly
+        onCheckedChange={(v) => seen.push(v)}
+      >
+        <CheckboxIndicator testID="cb-mark" />
+      </CheckboxRoot>,
+    );
+    // Announced as an enabled checkbox (no disabled flag), so it stays
+    // focusable — React Native maps no readonly key, so the normal
+    // checkbox state is the announcement.
+    expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    expect(screen.getByTestId("cb").props.disabled).toBeFalsy();
+    await press("cb");
+    expect(seen).toEqual([]);
+    expect(screen.queryByTestId("cb-mark")).toBeNull();
+  });
+
+  it("keepMounted keeps the indicator mounted but hidden while unchecked", async () => {
+    await render(
+      <CheckboxRoot testID="cb">
+        <CheckboxIndicator testID="cb-mark" keepMounted />
+      </CheckboxRoot>,
+    );
+    // Mounted (layout present) but hidden from assistive tech, with
+    // unchecked state.
+    expect(screen.getByTestId("cb-mark")).toBeTruthy();
+    expect(screen.getByTestId("cb-mark").props.accessible).toBe(false);
+    await press("cb");
+    expect(screen.getByTestId("cb-mark").props.accessible).toBeUndefined();
+  });
+
   it("disabled root blocks toggles: no transitions, no callbacks", async () => {
     let calls = 0;
     await render(

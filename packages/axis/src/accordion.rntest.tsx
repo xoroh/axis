@@ -170,6 +170,31 @@ describe("Accordion on React Native", () => {
     expect(screen.getByRole("button")).toBeTruthy();
   });
 
+  it("keepMounted keeps the panel mounted but hidden while closed", async () => {
+    await render(
+      <AccordionRoot>
+        <AccordionItem value="a">
+          <AccordionHeader>
+            <AccordionTrigger testID="a" accessibilityLabel="General">
+              <Text>General</Text>
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel testID="a-panel" keepMounted>
+            <Text>General panel</Text>
+          </AccordionPanel>
+        </AccordionItem>
+      </AccordionRoot>,
+    );
+    // Mounted (layout + content present) but the closed container is
+    // hidden from assistive tech.
+    expect(screen.getByTestId("a-panel")).toBeTruthy();
+    expect(screen.getByTestId("a-panel").props.accessible).toBe(false);
+    expect(screen.getByText("General panel")).toBeTruthy();
+    await press("a");
+    expect(screen.getByTestId("a-panel").props.accessible).toBeUndefined();
+    expect(screen.getByText("General panel")).toBeTruthy();
+  });
+
   it("disabled root blocks every item: no toggles, no callbacks", async () => {
     let calls = 0;
     await render(

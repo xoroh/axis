@@ -56,6 +56,7 @@ render inside a `RadioGroup` to participate in selection.
 | `defaultValue` | `string \| null` | no | `null` | Uncontrolled initial selection (nothing selected). |
 | `onValueChange` | `(value: string) => void` | no | — | Fires with the selected item value on every committed selection. Takes a plain `string` — `select` never offers `null` (clearing is not a selection). |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no selections, no callbacks. |
+| `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled group, but selections do not change and no callbacks fire. Items stay enabled (not disabled). Distinct from `disabled` — React Native maps no readonly key, so the announcement is the normal group state. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<RadioGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
@@ -63,7 +64,7 @@ render inside a `RadioGroup` to participate in selection.
 | `render` | `RenderProp<RadioGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root host element. |
 
-`RadioGroupState`: `{ value: string | null; disabled: boolean }` — currently selected item value (`null` for none), and whether the whole group is disabled.
+`RadioGroupState`: `{ value: string | null; disabled: boolean; readOnly: boolean }` — currently selected item value (`null` for none), whether the whole group is disabled, and whether it is read-only.
 
 #### `RadioGroupItem`
 
@@ -77,7 +78,7 @@ render inside a `RadioGroup` to participate in selection.
 | `children` | `ReactNode` | no | — | Item content (label + caller-styled selected mark). |
 | `render` | `RenderProp<RadioGroupItemState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
-`RadioGroupItemState`: `{ checked: boolean; disabled: boolean }` — whether this item is currently checked, and whether it is currently disabled.
+`RadioGroupItemState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` — whether this item is currently checked or disabled, and whether the group is read-only (selections do not change).
 
 ### Examples
 

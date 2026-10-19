@@ -237,48 +237,86 @@ export const SelectionDemo: Demo = {
           </Text>
           <RadioGroup
             accessibilityLabel="Demo radio group"
+            defaultValue="x"
             style={{ flexDirection: "row", gap: 12 }}
           >
-            <RadioGroupItem
-              value="x"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "500", color: theme.text }}
-              >
-                ● Plan Standard
-              </Text>
-            </RadioGroupItem>
-            <RadioGroupItem
-              value="y"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 8,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.borderSubtle,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "500", color: theme.text }}
-              >
-                ○ Plan Pro
-              </Text>
-            </RadioGroupItem>
+            {(
+              [
+                ["x", "Plan Standard"],
+                ["y", "Plan Pro"],
+              ] as Array<[string, string]>
+            ).map(([itemValue, label]) => (
+              <RadioGroupItem
+                key={itemValue}
+                value={itemValue}
+                render={(props, state) => {
+                  const onPress =
+                    typeof props.onPress === "function"
+                      ? (props.onPress as () => void)
+                      : undefined;
+                  return (
+                    <Pressable
+                      accessibilityRole="radio"
+                      accessibilityState={{
+                        checked: state.checked,
+                        disabled: state.disabled,
+                      }}
+                      accessibilityLabel={label}
+                      testID={`demo-plan-${itemValue}`}
+                      disabled={state.disabled}
+                      onPress={onPress}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: state.checked
+                          ? theme.primary
+                          : theme.borderSubtle,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 8,
+                          borderWidth: 1.5,
+                          borderColor: state.checked
+                            ? theme.primary
+                            : theme.border,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {state.checked ? (
+                          <View
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: theme.primary,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "500",
+                          color: theme.text,
+                        }}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                }}
+              />
+            ))}
           </RadioGroup>
         </View>
 
@@ -426,6 +464,7 @@ export const SelectionDemo: Demo = {
                 borderWidth: 1,
                 borderColor: theme.borderSubtle,
                 alignSelf: "flex-start",
+                gap: 2,
               }}
             >
               {(
@@ -435,8 +474,25 @@ export const SelectionDemo: Demo = {
                   ["right", "Right"],
                 ] as Array<[string, string]>
               ).map(([itemValue, label]) => (
-                <ToggleGroupItem key={itemValue} value={itemValue}>
-                  <Text style={{ fontSize: 13, color: theme.text }}>
+                <ToggleGroupItem
+                  key={itemValue}
+                  value={itemValue}
+                  style={(state) => ({
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderRadius: 6,
+                    backgroundColor: state.pressed
+                      ? theme.surface
+                      : "transparent",
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: theme.text,
+                    }}
+                  >
                     {label}
                   </Text>
                 </ToggleGroupItem>
