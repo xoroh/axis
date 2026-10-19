@@ -277,7 +277,11 @@ export const ListSelectDemo: Demo = {
           The selected item opens aligned over the trigger; arrows jump the
           scroller to either end.
         </Text>
-        <SelectRoot multiple defaultValue={["mango"]} items={[...LONG_OPTIONS]}>
+        <SelectRoot
+          multiple
+          defaultValue={["apricot"]}
+          items={[...LONG_OPTIONS]}
+        >
           <SelectTrigger
             accessibilityLabel="Demo compound multiple select"
             style={triggerStyle}
