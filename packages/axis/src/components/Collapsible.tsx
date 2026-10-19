@@ -103,14 +103,27 @@ export type CollapsibleTriggerProps = {
 
 export type CollapsiblePanelProps = {
   testID?: string;
-  /** Panel view style (the panel mounts only while open). */
+  /** Panel view style (the panel mounts only while open, unless `keepMounted`). */
   style?: StyleProp<ViewStyle>;
-  /** Panel content, rendered inside a `View` only while open. */
+  /** Panel content, rendered inside a `View` only while open (or always with `keepMounted`). */
   children?: ReactNode;
+  /**
+   * When `true`, the panel stays mounted while closed: mounted but
+   * invisible (`display: "none"` merged after the caller style — the
+   * Base UI `hidden` attribute equivalent) and hidden from assistive
+   * tech (`accessibilityElementsHidden` on iOS,
+   * `importantForAccessibility="no-hide-descendants"` on Android,
+   * `aria-hidden` on web — `accessible={false}` alone does not hide
+   * children), with `{ open: false }` state.
+   * Default `false` (mounts only while open — D3: keep-alive
+   * stays opt-in).
+   */
+  keepMounted?: boolean;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
-   * receives `(props, state)`. The panel still mounts only while open.
+   * receives `(props, state)`. Without `keepMounted` the panel still
+   * mounts only while open.
    */
   render?: RenderProp<CollapsibleState, SlotProps>;
 };
@@ -276,12 +289,14 @@ export function CollapsiblePanel({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: CollapsiblePanelProps): React.ReactNode {
   const disclosure = useContext(CollapsibleDisclosureContext);
-  if (!(disclosure?.open ?? false)) return null;
+  const open = disclosure?.open ?? false;
+  if (!open && !keepMounted) return null;
   const state: CollapsibleState = {
-    open: true,
+    open,
     disabled: disclosure?.rootDisabled ?? false,
   };
   const substituted = resolveRender(
@@ -296,7 +311,19 @@ export function CollapsiblePanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      // A closed keepMounted panel must not be visible: Base UI sets
+      // the `hidden` attribute, so the native equivalent is
+      // `display: "none"` merged AFTER the caller style (state-driven
+      // visibility, not a default style). `accessible={false}` alone
+      // does NOT hide children from VoiceOver/TalkBack, so the panel
+      // is hidden on all three platforms explicitly.
+      style={[style, open ? null : { display: "none" as const }]}
+      accessibilityElementsHidden={!open}
+      importantForAccessibility={open ? "auto" : "no-hide-descendants"}
+      aria-hidden={!open}
+    >
       {children}
     </View>
   );

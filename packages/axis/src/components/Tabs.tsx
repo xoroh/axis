@@ -105,14 +105,24 @@ export type TabsPanelProps = {
   /** Panel value: this panel renders only while the group selection equals it. */
   value: string;
   testID?: string;
-  /** Panel view style. */
+  /** Panel view style (the panel mounts only while selected, unless `keepMounted`). */
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
   /**
+   * When `true`, the panel stays mounted while unselected: mounted but
+   * invisible (`display: "none"` merged after the caller style — the
+   * Base UI hidden-attribute equivalent) and hidden from assistive
+   * tech (`accessibilityElementsHidden` on iOS,
+   * `importantForAccessibility="no-hide-descendants"` on Android,
+   * `aria-hidden` on web — `accessible={false}` alone does not hide
+   * children). Default `false` (mounts only while selected).
+   */
+  keepMounted?: boolean;
+  /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
-   * receives `(props, state)`. The panel still mounts only while
-   * selected.
+   * receives `(props, state)`. Without `keepMounted` the panel still
+   * mounts only while selected.
    */
   render?: RenderProp<TabsState, SlotProps>;
 };
@@ -307,13 +317,15 @@ export function TabsPanel({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: TabsPanelProps): React.ReactNode {
   const group = useContext(TabsSelectionContext);
   // Conditional presence (structural): only the selected panel is in
-  // the tree. Unselected panels — including every panel outside a
-  // `Tabs` group — render nothing.
-  if (group?.selectedValue !== value) {
+  // the tree, unless `keepMounted` holds unselected panels mounted but
+  // hidden. Unselected panels outside a `Tabs` group render nothing.
+  const selected = group?.selectedValue === value;
+  if (!selected && !keepMounted) {
     return null;
   }
   const state: TabsState = { value: group.selectedValue };
@@ -329,7 +341,19 @@ export function TabsPanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      // A deselected keepMounted panel must not be visible: Base UI sets
+      // the `hidden` attribute, so the native equivalent is
+      // `display: "none"` merged AFTER the caller style (state-driven
+      // visibility, not a default style). `accessible={false}` alone
+      // does NOT hide children from VoiceOver/TalkBack, so the panel
+      // is hidden on all three platforms explicitly.
+      style={[style, selected ? null : { display: "none" as const }]}
+      accessibilityElementsHidden={!selected}
+      importantForAccessibility={selected ? "auto" : "no-hide-descendants"}
+      aria-hidden={!selected}
+    >
       {children}
     </View>
   );
