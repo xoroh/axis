@@ -25,7 +25,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Fieldset | complete | legend group (in fieldset suite), RNTL 3 |
 | Label | complete | nativeID association, RNTL 2 |
 | Input | complete | controlled/uncontrolled entry + multiline/autoGrow/rows, RNTL 10 |
-| Number Field | complete | Input+Button composition, RNTL 8 |
+| Number Field | complete | compound parts + scrub + hold + locale, RNTL 38 |
 | OTP Field | complete | segmented entry + auto-submit, RNTL 10 |
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |
 | Combobox | complete | filterable single-select via the shared `collection` match, RNTL 9 |
@@ -60,7 +60,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 `useControllableState`, `selection`, `press`, `roving`, `focusTrap`,
 `dismissPolicy`, `dismissWiring`, `overlayModality`, `portal`,
 `positioning` (rect math public; clamp/origin internal),
-`presence`, `time`, `calendar` (grid, keys, selection, locale —
+`presence`, `time`, `number` (locale parse/format + step math),
+`calendar` (grid, keys, selection, locale —
 moved from the removed component, ADR-012), `slot`, `toastQueue`,
 `a11y` — all present with unit tests.
 Chat models (ADR 010; contract: `docs/AI_CHAT_MODELS.md`; parity:

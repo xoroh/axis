@@ -107,6 +107,13 @@ export {
   type TrapMove,
 } from "./focusTrap";
 export {
+  clampNumberValue,
+  formatNumberValue,
+  type NumberFormatSpec,
+  parseNumberValue,
+  stepNumberValue,
+} from "./number";
+export {
   createOverlayModality,
   getSharedOverlayModality,
   type OverlayId,

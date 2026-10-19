@@ -40,6 +40,8 @@ export type InputProps = {
   editable?: boolean;
   /** Fires on the return key. Multiline callers typically omit it (return inserts a newline). */
   onSubmitEditing?: () => void;
+  /** Fires when the host input loses focus (blur commit lives here). */
+  onBlur?: () => void;
   /**
    * Multiline entry (the folded `Textarea`). Default `false`.
    * `numberOfLines` defaults to 3 in multiline mode.
@@ -146,6 +148,7 @@ export function Input({
   defaultValue = "",
   onValueChange,
   onSubmitEditing,
+  onBlur,
   placeholder,
   secureTextEntry = false,
   editable = true,
@@ -208,6 +211,7 @@ export function Input({
       value: text ?? "",
       onChangeText: editable ? setText : undefined,
       onSubmitEditing: editable ? onSubmitEditing : undefined,
+      onBlur: editable ? onBlur : undefined,
       placeholder,
       secureTextEntry,
       editable,
@@ -230,6 +234,7 @@ export function Input({
       value={text ?? ""}
       onChangeText={editable ? setText : undefined}
       onSubmitEditing={editable ? onSubmitEditing : undefined}
+      onBlur={editable ? onBlur : undefined}
       placeholder={placeholder}
       secureTextEntry={secureTextEntry}
       editable={editable}

@@ -329,8 +329,19 @@ export {
   type NavigationMenuTriggerState,
 } from "./components/NavigationMenu";
 export {
-  NumberField,
-  type NumberFieldProps,
+  NumberFieldDecrement,
+  type NumberFieldDecrementProps,
+  NumberFieldGroup,
+  type NumberFieldGroupProps,
+  NumberFieldIncrement,
+  type NumberFieldIncrementProps,
+  NumberFieldInput,
+  type NumberFieldInputProps,
+  NumberFieldRoot,
+  type NumberFieldRootProps,
+  NumberFieldScrubArea,
+  type NumberFieldScrubAreaProps,
+  type NumberFieldScrubDirection,
   type NumberFieldState,
 } from "./components/NumberField";
 export {
@@ -557,6 +568,13 @@ export {
   resolveAutofocus,
   type TrapMove,
 } from "./focusTrap";
+export {
+  clampNumberValue,
+  formatNumberValue,
+  type NumberFormatSpec,
+  parseNumberValue,
+  stepNumberValue,
+} from "./number";
 export {
   createOverlayModality,
   getSharedOverlayModality,

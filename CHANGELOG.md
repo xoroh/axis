@@ -22,3 +22,4 @@ Each line is the migration for the removed/renamed export:
 - `Avatar` (monolith) removed — use compound `AvatarRoot` + `AvatarImage` + `AvatarFallback`; loading status `idle | loading | loaded | error`, fallback `delay`.
 - `Meter` (monolith) removed — use compound `MeterRoot` + `MeterTrack` + `MeterIndicator` + `MeterLabel` + `MeterValue`; `value` is now required.
 - `ToggleGroup` gains `multiple` (default `false` — single-press now replaces instead of accumulating; pass `multiple` for the old behavior) and `orientation` (default `"horizontal"`); `ToggleGroupState` gains both fields.
+- `NumberField` monolith removed — use the compound `NumberFieldRoot` + `NumberFieldGroup` + `NumberFieldInput` + `NumberFieldDecrement`/`NumberFieldIncrement` (+ optional `NumberFieldScrubArea`); see `docs/components/number-field.md`.

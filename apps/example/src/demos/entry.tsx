@@ -1,4 +1,15 @@
-import { Field, Fieldset, Input, NumberField, OtpField } from "@xoroh/axis";
+import {
+  Field,
+  Fieldset,
+  Input,
+  NumberFieldDecrement,
+  NumberFieldGroup,
+  NumberFieldIncrement,
+  NumberFieldInput,
+  NumberFieldRoot,
+  NumberFieldScrubArea,
+  OtpField,
+} from "@xoroh/axis";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../theme";
@@ -13,7 +24,12 @@ export const EntryDemo: Demo = {
   title: "Entry",
   components: [
     "Input",
-    "NumberField",
+    "NumberFieldRoot",
+    "NumberFieldGroup",
+    "NumberFieldInput",
+    "NumberFieldDecrement",
+    "NumberFieldIncrement",
+    "NumberFieldScrubArea",
     "OtpField",
     "Field",
     "Fieldset",
@@ -98,25 +114,61 @@ export const EntryDemo: Demo = {
                 >
                   Quantity Stepper:
                 </Text>
-                <NumberField
-                  accessibilityLabel="Count input"
-                  value={count}
-                  onValueChange={setCount}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                  inputStyle={[inputStyle, { flex: 1, textAlign: "center" }]}
-                  buttonStyle={{
-                    paddingVertical: 8,
-                    paddingHorizontal: 14,
-                    borderRadius: 8,
-                    backgroundColor: theme.surfaceSubtle,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                  }}
-                />
+                <NumberFieldRoot value={count} onValueChange={setCount}>
+                  <NumberFieldGroup
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <NumberFieldDecrement
+                      accessibilityLabel="Decrease count"
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>-</Text>
+                    </NumberFieldDecrement>
+                    <NumberFieldInput
+                      accessibilityLabel="Count input"
+                      style={[inputStyle, { flex: 1, textAlign: "center" }]}
+                    />
+                    <NumberFieldIncrement
+                      accessibilityLabel="Increase count"
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>+</Text>
+                    </NumberFieldIncrement>
+                  </NumberFieldGroup>
+                  <NumberFieldScrubArea
+                    style={{
+                      marginTop: 8,
+                      paddingVertical: 8,
+                      paddingHorizontal: 14,
+                      borderRadius: 8,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                      Scrub horizontally to change the count
+                    </Text>
+                  </NumberFieldScrubArea>
+                </NumberFieldRoot>
               </View>
 
               <View style={{ gap: 6 }}>
