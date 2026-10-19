@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text, type View } from "react-native";
-import { Popover } from "./index";
+import { Popover, PortalHost } from "./index";
 
 /**
  * Popover behavior through the public entry: closed renders the
@@ -34,9 +34,11 @@ async function pressScrim(testID: string) {
 describe("Popover on React Native", () => {
   it("closed shows the anchor only", async () => {
     await render(
-      <Popover testID="pop" content={<Text>Details here</Text>}>
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover testID="pop" content={<Text>Details here</Text>}>
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     expect(screen.getByText("Open")).toBeTruthy();
     expect(screen.queryByText("Details here")).toBeNull();
@@ -46,13 +48,15 @@ describe("Popover on React Native", () => {
 
   it("tap opens the content region", async () => {
     await render(
-      <Popover
-        testID="pop"
-        content={<Text>Details here</Text>}
-        accessibilityLabel="More info"
-      >
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover
+          testID="pop"
+          content={<Text>Details here</Text>}
+          accessibilityLabel="More info"
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     await pressAnchor("Open");
     expect(screen.getByText("Details here")).toBeTruthy();
@@ -64,13 +68,15 @@ describe("Popover on React Native", () => {
   it("tap again closes and reports onOpenChange(false)", async () => {
     const seen: boolean[] = [];
     await render(
-      <Popover
-        testID="pop"
-        content={<Text>Details here</Text>}
-        onOpenChange={(v) => seen.push(v)}
-      >
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover
+          testID="pop"
+          content={<Text>Details here</Text>}
+          onOpenChange={(v) => seen.push(v)}
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     await pressAnchor("Open");
     expect(seen).toEqual([true]);
@@ -85,17 +91,19 @@ describe("Popover on React Native", () => {
     const changed: boolean[] = [];
     let dismissCalls = 0;
     await render(
-      <Popover
-        testID="pop"
-        defaultOpen
-        content={<Text>Details here</Text>}
-        onOpenChange={(v) => changed.push(v)}
-        onDismiss={() => {
-          dismissCalls += 1;
-        }}
-      >
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover
+          testID="pop"
+          defaultOpen
+          content={<Text>Details here</Text>}
+          onOpenChange={(v) => changed.push(v)}
+          onDismiss={() => {
+            dismissCalls += 1;
+          }}
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     expect(screen.getByTestId("pop")).toBeTruthy();
     await pressScrim("pop");
@@ -107,26 +115,30 @@ describe("Popover on React Native", () => {
   it("follows the controlled open prop", async () => {
     const changed: boolean[] = [];
     const view = await render(
-      <Popover
-        testID="pop"
-        open={false}
-        content={<Text>Details here</Text>}
-        onOpenChange={(v) => changed.push(v)}
-      >
-        <Text>Open</Text>
-      </Popover>,
-    );
-    expect(screen.queryByTestId("pop")).toBeNull();
-    await act(async () => {
-      view.rerender(
+      <PortalHost>
         <Popover
           testID="pop"
-          open
+          open={false}
           content={<Text>Details here</Text>}
           onOpenChange={(v) => changed.push(v)}
         >
           <Text>Open</Text>
-        </Popover>,
+        </Popover>
+      </PortalHost>,
+    );
+    expect(screen.queryByTestId("pop")).toBeNull();
+    await act(async () => {
+      view.rerender(
+        <PortalHost>
+          <Popover
+            testID="pop"
+            open
+            content={<Text>Details here</Text>}
+            onOpenChange={(v) => changed.push(v)}
+          >
+            <Text>Open</Text>
+          </Popover>
+        </PortalHost>,
       );
     });
     expect(screen.getByTestId("pop")).toBeTruthy();
@@ -137,24 +149,28 @@ describe("Popover on React Native", () => {
   it("forwards a ref to the anchor wrapper", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Popover testID="pop" content={<Text>Details here</Text>} ref={ref}>
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover testID="pop" content={<Text>Details here</Text>} ref={ref}>
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     expect(ref.current).not.toBeNull();
   });
 
   it("passes caller styles to the popover box", async () => {
     await render(
-      <Popover
-        testID="pop"
-        defaultOpen
-        content={<Text>Details here</Text>}
-        style={{ padding: 2 }}
-        popoverStyle={{ padding: 16 }}
-      >
-        <Text>Open</Text>
-      </Popover>,
+      <PortalHost>
+        <Popover
+          testID="pop"
+          defaultOpen
+          content={<Text>Details here</Text>}
+          style={{ padding: 2 }}
+          popoverStyle={{ padding: 16 }}
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
     );
     const box = screen.getByTestId("pop");
     // The box style is [floating, caller] (the Tooltip composition):

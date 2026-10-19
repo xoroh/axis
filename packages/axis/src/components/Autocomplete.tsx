@@ -100,7 +100,7 @@ export type AutocompleteProps = {
   style?: StateStyle<AutocompleteState, StyleProp<ViewStyle>>;
   /** Suggestion list style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
-  /** Entry input style, caller-provided. */
+  /** Entry input style, caller-provided. Also styles the toggle label, which has no text of its own to read. */
   inputStyle?: StyleProp<TextStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -271,7 +271,9 @@ export function Autocomplete({
         disabled={disabled}
         onPress={toggle}
       >
-        <Text>{expanded ? "Hide suggestions" : "Show suggestions"}</Text>
+        <Text style={inputStyle}>
+          {expanded ? "Hide suggestions" : "Show suggestions"}
+        </Text>
       </Pressable>
       {expanded ? (
         <Pressable

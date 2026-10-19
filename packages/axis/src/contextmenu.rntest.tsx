@@ -6,7 +6,7 @@ import {
 } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text, type View } from "react-native";
-import { ContextMenu } from "./index";
+import { ContextMenu, PortalHost } from "./index";
 
 /**
  * ContextMenu behavior through the public entry: long-press opens a
@@ -23,9 +23,11 @@ async function longPressAnchor() {
 describe("ContextMenu on React Native", () => {
   it("hides the menu until long-press", async () => {
     await render(
-      <ContextMenu testID="cm" content={<Text>Rename</Text>}>
-        <Text>File</Text>
-      </ContextMenu>,
+      <PortalHost>
+        <ContextMenu testID="cm" content={<Text>Rename</Text>}>
+          <Text>File</Text>
+        </ContextMenu>
+      </PortalHost>,
     );
     expect(screen.queryByRole("menu")).toBeNull();
   });
@@ -34,15 +36,17 @@ describe("ContextMenu on React Native", () => {
     const seen: boolean[] = [];
     const dismissed: number[] = [];
     await render(
-      <ContextMenu
-        testID="cm"
-        content={<Text>Rename</Text>}
-        accessibilityLabel="File actions"
-        onOpenChange={(v) => seen.push(v)}
-        onDismiss={() => dismissed.push(1)}
-      >
-        <Text>File</Text>
-      </ContextMenu>,
+      <PortalHost>
+        <ContextMenu
+          testID="cm"
+          content={<Text>Rename</Text>}
+          accessibilityLabel="File actions"
+          onOpenChange={(v) => seen.push(v)}
+          onDismiss={() => dismissed.push(1)}
+        >
+          <Text>File</Text>
+        </ContextMenu>
+      </PortalHost>,
     );
     await longPressAnchor();
     expect(seen).toEqual([true]);
@@ -58,9 +62,11 @@ describe("ContextMenu on React Native", () => {
 
   it("second long-press closes", async () => {
     await render(
-      <ContextMenu testID="cm" content={<Text>Rename</Text>}>
-        <Text>File</Text>
-      </ContextMenu>,
+      <PortalHost>
+        <ContextMenu testID="cm" content={<Text>Rename</Text>}>
+          <Text>File</Text>
+        </ContextMenu>
+      </PortalHost>,
     );
     await longPressAnchor();
     expect(screen.getByRole("menu")).toBeTruthy();
@@ -70,9 +76,11 @@ describe("ContextMenu on React Native", () => {
 
   it("controlled open shows the menu", async () => {
     await render(
-      <ContextMenu testID="cm" open content={<Text>Rename</Text>}>
-        <Text>File</Text>
-      </ContextMenu>,
+      <PortalHost>
+        <ContextMenu testID="cm" open content={<Text>Rename</Text>}>
+          <Text>File</Text>
+        </ContextMenu>
+      </PortalHost>,
     );
     expect(screen.getByRole("menu")).toBeTruthy();
   });
@@ -80,9 +88,11 @@ describe("ContextMenu on React Native", () => {
   it("forwards a ref to the anchor wrapper", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <ContextMenu testID="cm" ref={ref} content={<Text>Rename</Text>}>
-        <Text>File</Text>
-      </ContextMenu>,
+      <PortalHost>
+        <ContextMenu testID="cm" ref={ref} content={<Text>Rename</Text>}>
+          <Text>File</Text>
+        </ContextMenu>
+      </PortalHost>,
     );
     expect(ref.current).not.toBeNull();
   });

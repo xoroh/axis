@@ -29,6 +29,7 @@ import {
   NavigationMenuItem,
   NavigationMenuPanel,
   NavigationMenuTrigger,
+  PortalHost,
   RadioGroup,
   RadioGroupItem,
   Select,
@@ -189,20 +190,22 @@ describe("render composition: lists", () => {
   it("SelectItem element render preserves choose-and-close", async () => {
     const seen: string[] = [];
     await render(
-      <Select
-        testID="sel"
-        defaultOpen
-        placeholder={<Text>Pick</Text>}
-        onValueChange={(v) => seen.push(v)}
-      >
-        <SelectItem
-          value="a"
-          accessibilityLabel="A"
-          render={<Pressable testID="sub" />}
+      <PortalHost>
+        <Select
+          testID="sel"
+          defaultOpen
+          placeholder={<Text>Pick</Text>}
+          onValueChange={(v) => seen.push(v)}
         >
-          <Text>Alpha</Text>
-        </SelectItem>
-      </Select>,
+          <SelectItem
+            value="a"
+            accessibilityLabel="A"
+            render={<Pressable testID="sub" />}
+          >
+            <Text>Alpha</Text>
+          </SelectItem>
+        </Select>
+      </PortalHost>,
     );
     await press("sub");
     expect(seen).toEqual(["a"]);
@@ -253,15 +256,17 @@ describe("render composition: lists", () => {
 describe("render composition: overlays", () => {
   it("AlertDialog surface render substitutes the popup", async () => {
     await render(
-      <AlertDialog
-        testID="ad"
-        defaultOpen
-        title="Sure?"
-        actions={<Text>OK</Text>}
-        render={<View testID="sub">{null}</View>}
-      >
-        <Text>Body</Text>
-      </AlertDialog>,
+      <PortalHost>
+        <AlertDialog
+          testID="ad"
+          defaultOpen
+          title="Sure?"
+          actions={<Text>OK</Text>}
+          render={<View testID="sub">{null}</View>}
+        >
+          <Text>Body</Text>
+        </AlertDialog>
+      </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
     expect(screen.queryByText("Body")).toBeNull();
@@ -284,9 +289,15 @@ describe("render composition: overlays", () => {
 
   it("Drawer surface render substitutes the surface", async () => {
     await render(
-      <Drawer testID="dr" defaultOpen render={<View testID="sub">{null}</View>}>
-        <Text>Nav</Text>
-      </Drawer>,
+      <PortalHost>
+        <Drawer
+          testID="dr"
+          defaultOpen
+          render={<View testID="sub">{null}</View>}
+        >
+          <Text>Nav</Text>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
     expect(screen.queryByText("Nav")).toBeNull();
@@ -294,14 +305,16 @@ describe("render composition: overlays", () => {
 
   it("Drawer bottom-sheet surface render substitutes the surface", async () => {
     await render(
-      <Drawer
-        testID="sh"
-        defaultOpen
-        side="bottom"
-        render={<View testID="sub">{null}</View>}
-      >
-        <Text>Content</Text>
-      </Drawer>,
+      <PortalHost>
+        <Drawer
+          testID="sh"
+          defaultOpen
+          side="bottom"
+          render={<View testID="sub">{null}</View>}
+        >
+          <Text>Content</Text>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
   });
@@ -338,17 +351,19 @@ describe("render composition: overlays", () => {
   it("DropdownMenuTrigger element render preserves toggle", async () => {
     const seen: boolean[] = [];
     await render(
-      <DropdownMenu onOpenChange={(v) => seen.push(v)}>
-        <DropdownMenuTrigger
-          accessibilityLabel="Open"
-          render={<Pressable testID="sub" />}
-        >
-          <Text>Open</Text>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="a" accessibilityLabel="A">
-          <Text>Alpha</Text>
-        </DropdownMenuItem>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu onOpenChange={(v) => seen.push(v)}>
+          <DropdownMenuTrigger
+            accessibilityLabel="Open"
+            render={<Pressable testID="sub" />}
+          >
+            <Text>Open</Text>
+          </DropdownMenuTrigger>
+          <DropdownMenuItem value="a" accessibilityLabel="A">
+            <Text>Alpha</Text>
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </PortalHost>,
     );
     await press("sub");
     expect(seen).toEqual([true]);
@@ -357,31 +372,33 @@ describe("render composition: overlays", () => {
 
   it("DropdownMenuSub panels still open after composition", async () => {
     await render(
-      <DropdownMenu defaultOpen>
-        <DropdownMenuTrigger accessibilityLabel="Open">
-          <Text>Open</Text>
-        </DropdownMenuTrigger>
-        <DropdownMenuSub value="more">
-          <DropdownMenuSubTrigger
-            accessibilityLabel="More"
-            render={(props, state) => (
-              <Pressable
-                testID="subtrig"
-                onPress={(props as { onPress?: () => void }).onPress}
-              >
-                <Text>{state.open ? "open" : "shut"}</Text>
-              </Pressable>
-            )}
-          >
-            <Text>More</Text>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent testID="subpanel">
-            <DropdownMenuItem value="a" accessibilityLabel="A">
-              <Text>Alpha</Text>
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenu>,
+      <PortalHost>
+        <DropdownMenu defaultOpen>
+          <DropdownMenuTrigger accessibilityLabel="Open">
+            <Text>Open</Text>
+          </DropdownMenuTrigger>
+          <DropdownMenuSub value="more">
+            <DropdownMenuSubTrigger
+              accessibilityLabel="More"
+              render={(props, state) => (
+                <Pressable
+                  testID="subtrig"
+                  onPress={(props as { onPress?: () => void }).onPress}
+                >
+                  <Text>{state.open ? "open" : "shut"}</Text>
+                </Pressable>
+              )}
+            >
+              <Text>More</Text>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent testID="subpanel">
+              <DropdownMenuItem value="a" accessibilityLabel="A">
+                <Text>Alpha</Text>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        </DropdownMenu>
+      </PortalHost>,
     );
     expect(screen.getByText("shut")).toBeTruthy();
     await press("subtrig");

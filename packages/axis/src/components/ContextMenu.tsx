@@ -11,13 +11,15 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
  * ContextMenu — a long-press popup menu.
  *
  * Structure mirrors `Tooltip` (anchor wrapper + measured floating
- * box + scrim), not `Menu`: menu items here are caller content, not
+ * box + scrim, the box and scrim presenting through `Portal` at the
+ * app's `PortalHost`), not `Menu`: menu items here are caller content, not
  * `MenuItem` parts (those require `Menu` context). Long-press opens;
  * scrim press or a second long-press dismisses through `onDismiss` +
  * `onOpenChange(false)` (the `Dialog` dismissal precedent). The box
@@ -149,7 +151,7 @@ export function ContextMenu({
     <View ref={setAnchorRef} style={resolveStyle(style, state)} testID={testID}>
       <Pressable onLongPress={toggle}>{children}</Pressable>
       {isOpen ? (
-        <>
+        <Portal>
           <Pressable
             accessibilityLabel="Dismiss menu"
             onPress={dismiss}
@@ -171,7 +173,7 @@ export function ContextMenu({
           >
             {content}
           </View>
-        </>
+        </Portal>
       ) : null}
     </View>
   );

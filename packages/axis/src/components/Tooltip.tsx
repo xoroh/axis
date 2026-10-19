@@ -19,6 +19,7 @@ import {
 } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -27,10 +28,12 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * Long-press the anchor to toggle. The tip is measured and placed
  * with `useFloatingPlacement` (anchor `measure()` + viewport +
  * `resolveFloatingRect`); until measured it stays transparent at
- * origin rather than flashing somewhere wrong. No hover model (no
- * pointer on touch devices), no scrim — dismissal is a second
- * long-press or the controlled prop. `placement` prefers a side;
- * the rect math clamps into the viewport.
+ * origin rather than flashing somewhere wrong. The tip presents
+ * through `Portal` at the app's `PortalHost` — above sibling content,
+ * never trapped in the anchor's box. No hover model (no pointer on
+ * touch devices), no scrim — dismissal is a second long-press or the
+ * controlled prop. `placement` prefers a side; the rect math clamps
+ * into the viewport.
  *
  * Compound form (Base UI parity) lives below in this module:
  * `TooltipRoot` (visibility state) with `TooltipTrigger`
@@ -132,7 +135,10 @@ export function Tooltip({
 
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
-    placement,
+    // Documented default `"top"` lives here, not in the hook: the
+    // hook's own fallback (`"bottom"`) serves families whose docs
+    // promise it.
+    placement: placement ?? "top",
     active: visible ?? false,
   });
 
@@ -164,17 +170,19 @@ export function Tooltip({
         {children}
       </Pressable>
       {visible ? (
-        <View
-          // Explicit like the anchor rule for progressbar/image: a tip
-          // whose role never reaches assistive tech is broken.
-          accessible
-          accessibilityRole="tooltip"
-          accessibilityLabel={accessibilityLabel}
-          onLayout={floating.onContentLayout}
-          style={[floating.style, tipStyle]}
-        >
-          {content}
-        </View>
+        <Portal>
+          <View
+            // Explicit like the anchor rule for progressbar/image: a tip
+            // whose role never reaches assistive tech is broken.
+            accessible
+            accessibilityRole="tooltip"
+            accessibilityLabel={accessibilityLabel}
+            onLayout={floating.onContentLayout}
+            style={[floating.style, tipStyle]}
+          >
+            {content}
+          </View>
+        </Portal>
       ) : null}
     </View>
   );
@@ -194,9 +202,10 @@ export function Tooltip({
 /* timing (delays run from the long-press commit — hover has no touch  */
 /* equivalent). Omitted Base UI pieces are documented deviations, not  */
 /* oversights: no `Modal` portal host (a non-modal hint must never     */
-/* trap touches; the tip paints in-box like the monolith — when the    */
-/* overlay root lands, tips can host there instead; positioning stays  */
-/* separable from the host either way), no hover or keyboard           */
+/* trap touches; the tip paints in-box like the monolith — the shared  */
+/* overlay root has landed for modal surfaces, and Tooltip deliberately */
+/* stays off it; positioning stays separable from the host either way), */
+/* no hover or keyboard                                                */
 /* traversal (D8), no animation states (D9), and no `data-*`           */
 /* attributes (D1). Dismissal is a second long-press or the            */
 /* so there is no Backdrop part.                                        */
@@ -540,11 +549,22 @@ export function TooltipPortal({
   if (!root) return null;
   if (!root.open) return null;
 
-  // In-box host, never a `Modal`: a non-modal hint must not trap
+  // Plain portal host, never a `Modal`: a non-modal hint must not trap
   // touches (documented above). The part exists so callers compose
-  // the Base UI shape and gain the escape hatch if a modal tip is
-  // ever proven necessary.
-  return <View testID={testID}>{children}</View>;
+  // the Base UI shape — and so the tip paints above sibling content
+  // at the app host instead of under it.
+  //
+  // The root disclosure is re-provided inside the portal: portaled
+  // content renders at the host, outside this root's subtree, so
+  // without an explicit provider the parts below would read a null
+  // root.
+  return (
+    <Portal>
+      <TooltipRootContext.Provider value={root}>
+        <View testID={testID}>{children}</View>
+      </TooltipRootContext.Provider>
+    </Portal>
+  );
 }
 
 export function TooltipPositioner({

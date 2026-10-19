@@ -16,6 +16,7 @@ import {
   MenuRadioItem,
   MenuRoot,
   MenuTrigger,
+  PortalHost,
 } from "./index";
 
 /**
@@ -103,7 +104,11 @@ function FilterMenu(props: {
 
 describe("Menu filter parts on React Native", () => {
   it("shows everything unfiltered with no empty state", async () => {
-    await render(<FilterMenu />);
+    await render(
+      <PortalHost>
+        <FilterMenu />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("item-apple")).toBeTruthy();
     expect(screen.getByTestId("item-banana")).toBeTruthy();
     expect(screen.queryByTestId("menu-empty")).toBeNull();
@@ -111,7 +116,11 @@ describe("Menu filter parts on React Native", () => {
 
   it("narrows items by query, case-insensitively", async () => {
     const onFilterChange = jest.fn();
-    await render(<FilterMenu onFilterChange={onFilterChange} />);
+    await render(
+      <PortalHost>
+        <FilterMenu onFilterChange={onFilterChange} />
+      </PortalHost>,
+    );
     await changeFilter("ap");
     expect(onFilterChange).toHaveBeenLastCalledWith("ap");
     expect(screen.getByTestId("item-apple")).toBeTruthy();
@@ -121,7 +130,11 @@ describe("Menu filter parts on React Native", () => {
   });
 
   it("filters checkbox and radio items by their filter text", async () => {
-    await render(<FilterMenu />);
+    await render(
+      <PortalHost>
+        <FilterMenu />
+      </PortalHost>,
+    );
     await changeFilter("red");
     expect(screen.getByTestId("item-red")).toBeTruthy();
     expect(screen.queryByTestId("item-apple")).toBeNull();
@@ -129,13 +142,21 @@ describe("Menu filter parts on React Native", () => {
   });
 
   it("keeps textless items visible under any query", async () => {
-    await render(<FilterMenu />);
+    await render(
+      <PortalHost>
+        <FilterMenu />
+      </PortalHost>,
+    );
     await changeFilter("zzz-no-match");
     expect(screen.getByTestId("item-plain")).toBeTruthy();
   });
 
   it("shows the empty state only when nothing visible matches", async () => {
-    await render(<FilterMenu />);
+    await render(
+      <PortalHost>
+        <FilterMenu />
+      </PortalHost>,
+    );
     await changeFilter("zzz-no-match");
     // The textless item stays visible, so no empty state.
     expect(screen.queryByTestId("menu-empty")).toBeNull();
@@ -144,24 +165,26 @@ describe("Menu filter parts on React Native", () => {
 
   it("shows the empty state when every item has text and none match", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuTrigger accessibilityLabel="Open">
-          <Text>Open</Text>
-        </MenuTrigger>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuInput testID="solo-filter" />
-              <MenuItem value="apple" filterText="Apple" testID="solo-apple">
-                <Text>Apple</Text>
-              </MenuItem>
-              <MenuEmpty testID="solo-empty">
-                <Text>No matches</Text>
-              </MenuEmpty>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuTrigger accessibilityLabel="Open">
+            <Text>Open</Text>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuInput testID="solo-filter" />
+                <MenuItem value="apple" filterText="Apple" testID="solo-apple">
+                  <Text>Apple</Text>
+                </MenuItem>
+                <MenuEmpty testID="solo-empty">
+                  <Text>No matches</Text>
+                </MenuEmpty>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.changeText(screen.getByTestId("solo-filter"), "zzz");
@@ -172,7 +195,11 @@ describe("Menu filter parts on React Native", () => {
   });
 
   it("clears the query through MenuClear, disabled when empty", async () => {
-    await render(<FilterMenu />);
+    await render(
+      <PortalHost>
+        <FilterMenu />
+      </PortalHost>,
+    );
     expect(
       screen.getByTestId("menu-clear").props.accessibilityState.disabled,
     ).toBe(true);
@@ -189,21 +216,23 @@ describe("Menu filter parts on React Native", () => {
   it("selecting a filtered item still reports and closes", async () => {
     const onOpenChange = jest.fn();
     await render(
-      <MenuRoot defaultOpen onOpenChange={onOpenChange}>
-        <MenuTrigger accessibilityLabel="Open">
-          <Text>Open</Text>
-        </MenuTrigger>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuInput testID="pick-filter" />
-              <MenuItem value="apple" filterText="Apple" testID="pick-apple">
-                <Text>Apple</Text>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen onOpenChange={onOpenChange}>
+          <MenuTrigger accessibilityLabel="Open">
+            <Text>Open</Text>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuInput testID="pick-filter" />
+                <MenuItem value="apple" filterText="Apple" testID="pick-apple">
+                  <Text>Apple</Text>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.changeText(screen.getByTestId("pick-filter"), "app");
@@ -216,29 +245,39 @@ describe("Menu filter parts on React Native", () => {
   });
 
   it("follows a controlled filter query", async () => {
-    const view = await render(<FilterMenu filterValue="ap" />);
+    const view = await render(
+      <PortalHost>
+        <FilterMenu filterValue="ap" />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("item-apple")).toBeTruthy();
     expect(screen.queryByTestId("item-banana")).toBeNull();
     await act(async () => {
-      view.rerender(<FilterMenu filterValue="" />);
+      view.rerender(
+        <PortalHost>
+          <FilterMenu filterValue="" />
+        </PortalHost>,
+      );
     });
     expect(screen.getByTestId("item-banana")).toBeTruthy();
   });
 
   it("renders filter parts nowhere outside a compound root", async () => {
     await render(
-      <Menu defaultOpen testID="mono-menu">
-        <MenuTrigger accessibilityLabel="Open">
-          <Text>Open</Text>
-        </MenuTrigger>
-        <MenuInput testID="mono-filter" />
-        <MenuEmpty testID="mono-empty">
-          <Text>No matches</Text>
-        </MenuEmpty>
-        <MenuClear testID="mono-clear">
-          <Text>Clear</Text>
-        </MenuClear>
-      </Menu>,
+      <PortalHost>
+        <Menu defaultOpen testID="mono-menu">
+          <MenuTrigger accessibilityLabel="Open">
+            <Text>Open</Text>
+          </MenuTrigger>
+          <MenuInput testID="mono-filter" />
+          <MenuEmpty testID="mono-empty">
+            <Text>No matches</Text>
+          </MenuEmpty>
+          <MenuClear testID="mono-clear">
+            <Text>Clear</Text>
+          </MenuClear>
+        </Menu>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("mono-filter")).toBeNull();
     expect(screen.queryByTestId("mono-empty")).toBeNull();

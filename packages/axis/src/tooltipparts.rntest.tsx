@@ -7,6 +7,7 @@ import {
 import { act } from "react";
 import { Text } from "react-native";
 import {
+  PortalHost,
   TooltipArrow,
   TooltipPopup,
   TooltipPortal,
@@ -38,36 +39,46 @@ function TipCompound(props: {
   disabled?: boolean;
 }) {
   return (
-    <TooltipRoot
-      open={props.open}
-      defaultOpen={props.defaultOpen}
-      onOpenChange={props.onOpenChange}
-      disabled={props.disabled}
-    >
-      <TooltipTrigger testID="tip-trigger" accessibilityLabel="More info">
-        <Text>Info</Text>
-      </TooltipTrigger>
-      <TooltipPortal>
-        <TooltipPositioner>
-          <TooltipPopup testID="tip-popup" accessibilityLabel="Details">
-            <TooltipArrow testID="tip-arrow" />
-            <Text>Details here</Text>
-          </TooltipPopup>
-        </TooltipPositioner>
-      </TooltipPortal>
-    </TooltipRoot>
+    <PortalHost>
+      <TooltipRoot
+        open={props.open}
+        defaultOpen={props.defaultOpen}
+        onOpenChange={props.onOpenChange}
+        disabled={props.disabled}
+      >
+        <TooltipTrigger testID="tip-trigger" accessibilityLabel="More info">
+          <Text>Info</Text>
+        </TooltipTrigger>
+        <TooltipPortal>
+          <TooltipPositioner>
+            <TooltipPopup testID="tip-popup" accessibilityLabel="Details">
+              <TooltipArrow testID="tip-arrow" />
+              <Text>Details here</Text>
+            </TooltipPopup>
+          </TooltipPositioner>
+        </TooltipPortal>
+      </TooltipRoot>
+    </PortalHost>
   );
 }
 
 describe("Tooltip compound parts on React Native", () => {
   it("hides the tip until long-press", async () => {
-    await render(<TipCompound />);
+    await render(
+      <PortalHost>
+        <TipCompound />
+      </PortalHost>,
+    );
     expect(screen.queryByRole("tooltip")).toBeNull();
   });
 
   it("toggles on long-press and reports", async () => {
     const seen: boolean[] = [];
-    await render(<TipCompound onOpenChange={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <TipCompound onOpenChange={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await longPressTrigger("tip-trigger");
     expect(seen).toEqual([true]);
     expect(screen.getByRole("tooltip")).toBeTruthy();
@@ -79,10 +90,18 @@ describe("Tooltip compound parts on React Native", () => {
   });
 
   it("follows controlled visibility", async () => {
-    const view = await render(<TipCompound open={false} />);
+    const view = await render(
+      <PortalHost>
+        <TipCompound open={false} />
+      </PortalHost>,
+    );
     expect(screen.queryByRole("tooltip")).toBeNull();
     await act(async () => {
-      view.rerender(<TipCompound open />);
+      view.rerender(
+        <PortalHost>
+          <TipCompound open />
+        </PortalHost>,
+      );
     });
     expect(screen.getByRole("tooltip")).toBeTruthy();
   });
@@ -90,7 +109,9 @@ describe("Tooltip compound parts on React Native", () => {
   it("is terminal when disabled: no show, no callbacks", async () => {
     const onOpenChange = jest.fn();
     await render(
-      <TipCompound disabled defaultOpen onOpenChange={onOpenChange} />,
+      <PortalHost>
+        <TipCompound disabled defaultOpen onOpenChange={onOpenChange} />
+      </PortalHost>,
     );
     expect(screen.queryByRole("tooltip")).toBeNull();
     await longPressTrigger("tip-trigger");
@@ -100,21 +121,23 @@ describe("Tooltip compound parts on React Native", () => {
 
   it("substitutes the popup via render", async () => {
     await render(
-      <TooltipRoot defaultOpen>
-        <TooltipTrigger testID="r-trigger">
-          <Text>Info</Text>
-        </TooltipTrigger>
-        <TooltipPortal>
-          <TooltipPositioner>
-            <TooltipPopup
-              testID="r-popup"
-              render={<Text testID="r-popup-custom">Custom tip</Text>}
-            >
-              <Text>Details here</Text>
-            </TooltipPopup>
-          </TooltipPositioner>
-        </TooltipPortal>
-      </TooltipRoot>,
+      <PortalHost>
+        <TooltipRoot defaultOpen>
+          <TooltipTrigger testID="r-trigger">
+            <Text>Info</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner>
+              <TooltipPopup
+                testID="r-popup"
+                render={<Text testID="r-popup-custom">Custom tip</Text>}
+              >
+                <Text>Details here</Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("r-popup-custom")).toBeTruthy();
   });
@@ -122,24 +145,26 @@ describe("Tooltip compound parts on React Native", () => {
   it("reports state to function styles", async () => {
     const seen: Array<{ open: boolean }> = [];
     await render(
-      <TooltipRoot>
-        <TooltipTrigger
-          testID="s-trigger"
-          style={(state) => {
-            seen.push({ open: state.open });
-            return undefined;
-          }}
-        >
-          <Text>Info</Text>
-        </TooltipTrigger>
-        <TooltipPortal>
-          <TooltipPositioner>
-            <TooltipPopup>
-              <Text>Details here</Text>
-            </TooltipPopup>
-          </TooltipPositioner>
-        </TooltipPortal>
-      </TooltipRoot>,
+      <PortalHost>
+        <TooltipRoot>
+          <TooltipTrigger
+            testID="s-trigger"
+            style={(state) => {
+              seen.push({ open: state.open });
+              return undefined;
+            }}
+          >
+            <Text>Info</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner>
+              <TooltipPopup>
+                <Text>Details here</Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
+      </PortalHost>,
     );
     expect(seen[0]).toEqual({ open: false });
     await longPressTrigger("s-trigger");
@@ -148,9 +173,11 @@ describe("Tooltip compound parts on React Native", () => {
 
   it("renders the trigger inert outside a root", async () => {
     await render(
-      <TooltipTrigger testID="o-trigger">
-        <Text>Info</Text>
-      </TooltipTrigger>,
+      <PortalHost>
+        <TooltipTrigger testID="o-trigger">
+          <Text>Info</Text>
+        </TooltipTrigger>
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("o-trigger").props.accessibilityState.disabled,
@@ -162,20 +189,22 @@ describe("Tooltip compound parts on React Native", () => {
   it("groups tips under one provider timing", async () => {
     const seen: boolean[] = [];
     await render(
-      <TooltipProvider delay={20} closeDelay={20}>
-        <TooltipRoot onOpenChange={(v) => seen.push(v)}>
-          <TooltipTrigger testID="g-trigger">
-            <Text>Info</Text>
-          </TooltipTrigger>
-          <TooltipPortal>
-            <TooltipPositioner>
-              <TooltipPopup>
-                <Text>Details here</Text>
-              </TooltipPopup>
-            </TooltipPositioner>
-          </TooltipPortal>
-        </TooltipRoot>
-      </TooltipProvider>,
+      <PortalHost>
+        <TooltipProvider delay={20} closeDelay={20}>
+          <TooltipRoot onOpenChange={(v) => seen.push(v)}>
+            <TooltipTrigger testID="g-trigger">
+              <Text>Info</Text>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipPositioner>
+                <TooltipPopup>
+                  <Text>Details here</Text>
+                </TooltipPopup>
+              </TooltipPositioner>
+            </TooltipPortal>
+          </TooltipRoot>
+        </TooltipProvider>
+      </PortalHost>,
     );
     await userEvent.longPress(screen.getByTestId("g-trigger"));
     // Poll, never sleep-assert: the delay fires during the press on
@@ -190,20 +219,22 @@ describe("Tooltip compound parts on React Native", () => {
   it("never shows a tip dismissed mid-delay", async () => {
     const seen: boolean[] = [];
     await render(
-      <TooltipProvider delay={5000}>
-        <TooltipRoot onOpenChange={(v) => seen.push(v)}>
-          <TooltipTrigger testID="c-trigger">
-            <Text>Info</Text>
-          </TooltipTrigger>
-          <TooltipPortal>
-            <TooltipPositioner>
-              <TooltipPopup>
-                <Text>Details here</Text>
-              </TooltipPopup>
-            </TooltipPositioner>
-          </TooltipPortal>
-        </TooltipRoot>
-      </TooltipProvider>,
+      <PortalHost>
+        <TooltipProvider delay={5000}>
+          <TooltipRoot onOpenChange={(v) => seen.push(v)}>
+            <TooltipTrigger testID="c-trigger">
+              <Text>Info</Text>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipPositioner>
+                <TooltipPopup>
+                  <Text>Details here</Text>
+                </TooltipPopup>
+              </TooltipPositioner>
+            </TooltipPortal>
+          </TooltipRoot>
+        </TooltipProvider>
+      </PortalHost>,
     );
     await userEvent.longPress(screen.getByTestId("c-trigger"));
     // The five-second show timer is still pending: no tip, no
@@ -216,25 +247,27 @@ describe("Tooltip compound parts on React Native", () => {
   it("TooltipPositioner flips near viewport edge", async () => {
     let positionerSide: string | undefined;
     await render(
-      <TooltipRoot defaultOpen>
-        <TooltipTrigger testID="edge-tip-trigger">
-          <Text>Anchor</Text>
-        </TooltipTrigger>
-        <TooltipPortal>
-          <TooltipPositioner
-            testID="edge-tip-pos"
-            side="top"
-            style={(s) => {
-              positionerSide = s.side;
-              return undefined;
-            }}
-          >
-            <TooltipPopup testID="edge-tip-popup">
-              <Text>Tip content</Text>
-            </TooltipPopup>
-          </TooltipPositioner>
-        </TooltipPortal>
-      </TooltipRoot>,
+      <PortalHost>
+        <TooltipRoot defaultOpen>
+          <TooltipTrigger testID="edge-tip-trigger">
+            <Text>Anchor</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner
+              testID="edge-tip-pos"
+              side="top"
+              style={(s) => {
+                positionerSide = s.side;
+                return undefined;
+              }}
+            >
+              <TooltipPopup testID="edge-tip-popup">
+                <Text>Tip content</Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("edge-tip-pos")).toBeTruthy();
     expect(positionerSide).toBeDefined();

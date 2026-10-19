@@ -1,7 +1,13 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react-native";
 import { act } from "react";
 import { Text } from "react-native";
 import {
+  PortalHost,
   SelectArrow,
   SelectBackdrop,
   SelectGroup,
@@ -112,13 +118,21 @@ async function pressText(text: string) {
 
 describe("Select compound parts on React Native", () => {
   it("shows the placeholder with nothing selected", async () => {
-    await render(<FruitCompound />);
+    await render(
+      <PortalHost>
+        <FruitCompound />
+      </PortalHost>,
+    );
     expect(screen.getByText("Pick a fruit")).toBeTruthy();
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
   it("toggles the list with expanded state", async () => {
-    await render(<FruitCompound testID="sel" />);
+    await render(
+      <PortalHost>
+        <FruitCompound testID="sel" />
+      </PortalHost>,
+    );
     await pressTestId("sel");
     expect(
       screen.getByTestId("sel", { includeHiddenElements: true }).props
@@ -131,7 +145,11 @@ describe("Select compound parts on React Native", () => {
 
   it("selects an item, resolves its ItemText label, and closes", async () => {
     const onValueChange = jest.fn();
-    await render(<FruitCompound onValueChange={onValueChange} />);
+    await render(
+      <PortalHost>
+        <FruitCompound onValueChange={onValueChange} />
+      </PortalHost>,
+    );
     await pressTestId("sel");
     await pressTestId("apple");
     expect(onValueChange).toHaveBeenCalledWith("apple");
@@ -140,26 +158,32 @@ describe("Select compound parts on React Native", () => {
   });
 
   it("prefers the explicit label over rendered children", async () => {
-    await render(<FruitCompound defaultValue="mango" />);
+    await render(
+      <PortalHost>
+        <FruitCompound defaultValue="mango" />
+      </PortalHost>,
+    );
     expect(screen.getByText("Mango (Alphonso)")).toBeTruthy();
   });
 
   it("resolves live registrations while open without an items table", async () => {
     await render(
-      <SelectRoot defaultValue="apple" defaultOpen>
-        <SelectTrigger testID="live-sel">
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup>
-              <SelectItem value="apple" testID="live-apple">
-                <SelectItemText>Apple</SelectItemText>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot defaultValue="apple" defaultOpen>
+          <SelectTrigger testID="live-sel">
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectItem value="apple" testID="live-apple">
+                  <SelectItemText>Apple</SelectItemText>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     // Open: the mounted item's registration supplies the label
     // (trigger value and open item read the same text — the trigger
@@ -175,7 +199,11 @@ describe("Select compound parts on React Native", () => {
   });
 
   it("marks the selected item with selected state and indicator", async () => {
-    await render(<FruitCompound defaultValue="apple" defaultOpen />);
+    await render(
+      <PortalHost>
+        <FruitCompound defaultValue="apple" defaultOpen />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("apple").props.accessibilityState.selected).toBe(
       true,
     );
@@ -190,7 +218,9 @@ describe("Select compound parts on React Native", () => {
     const onDismiss = jest.fn();
     const onValueChange = jest.fn();
     await render(
-      <FruitCompound onDismiss={onDismiss} onValueChange={onValueChange} />,
+      <PortalHost>
+        <FruitCompound onDismiss={onDismiss} onValueChange={onValueChange} />
+      </PortalHost>,
     );
     await pressTestId("sel");
     await pressTestId("sel-scrim");
@@ -201,45 +231,57 @@ describe("Select compound parts on React Native", () => {
   });
 
   it("keeps the scrim inert when pointer dismissal is disabled", async () => {
-    await render(<FruitCompound disablePointerDismissal defaultOpen />);
+    await render(
+      <PortalHost>
+        <FruitCompound disablePointerDismissal defaultOpen />
+      </PortalHost>,
+    );
     expect(screen.getByRole("listbox")).toBeTruthy();
     await pressTestId("sel-scrim");
     expect(screen.getByRole("listbox")).toBeTruthy();
   });
 
-  it("renders in-box with no scrim when non-modal", async () => {
+  it("presents at the host with no scrim when non-modal", async () => {
     // Non-modal means the caller omits the Backdrop: the portal
-    // renders in-box and nothing dismisses.
+    // presents at the host and nothing dismisses.
     await render(
-      <SelectRoot modal={false} defaultOpen>
-        <SelectTrigger testID="nm-sel">
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal testID="nm-portal">
-          <SelectPositioner>
-            <SelectPopup testID="nm-list">
-              <SelectItem value="apple" testID="nm-apple">
-                <SelectItemText>Apple</SelectItemText>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost testID="host">
+        <SelectRoot modal={false} defaultOpen>
+          <SelectTrigger testID="nm-sel">
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal testID="nm-portal">
+            <SelectPositioner>
+              <SelectPopup testID="nm-list">
+                <SelectItem value="apple" testID="nm-apple">
+                  <SelectItemText>Apple</SelectItemText>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     expect(screen.getByRole("listbox")).toBeTruthy();
-    expect(screen.getByTestId("nm-portal")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("host")).getByTestId("nm-portal"),
+    ).toBeTruthy();
     expect(screen.queryByTestId("sel-scrim")).toBeNull();
   });
 
   it("follows controlled value and open state", async () => {
     const onOpenChange = jest.fn();
     const view = await render(
-      <FruitCompound value="apple" open={false} onOpenChange={onOpenChange} />,
+      <PortalHost>
+        <FruitCompound value="apple" open={false} onOpenChange={onOpenChange} />
+      </PortalHost>,
     );
     expect(screen.getByText("Apple")).toBeTruthy();
     await act(async () => {
       view.rerender(
-        <FruitCompound value="mango" open onOpenChange={onOpenChange} />,
+        <PortalHost>
+          <FruitCompound value="mango" open onOpenChange={onOpenChange} />
+        </PortalHost>,
       );
     });
     expect(
@@ -254,12 +296,14 @@ describe("Select compound parts on React Native", () => {
     const onValueChange = jest.fn();
     const onOpenChange = jest.fn();
     await render(
-      <FruitCompound
-        disabled
-        defaultOpen
-        onValueChange={onValueChange}
-        onOpenChange={onOpenChange}
-      />,
+      <PortalHost>
+        <FruitCompound
+          disabled
+          defaultOpen
+          onValueChange={onValueChange}
+          onOpenChange={onOpenChange}
+        />
+      </PortalHost>,
     );
     // Disabled root forces closed content even with defaultOpen.
     expect(screen.queryByRole("listbox")).toBeNull();
@@ -270,36 +314,38 @@ describe("Select compound parts on React Native", () => {
 
   it("renders group, label, separator, and arrow where the caller puts them", async () => {
     await render(
-      <SelectRoot
-        defaultOpen
-        items={[
-          { value: "lime", label: "Lime" },
-          { value: "kiwi", label: "Kiwi" },
-        ]}
-      >
-        <SelectTrigger testID="g-sel">
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup>
-              <SelectArrow testID="g-arrow" />
-              <SelectGroup>
-                <SelectGroupLabel testID="g-label">
-                  <Text>Citrus</Text>
-                </SelectGroupLabel>
-                <SelectItem value="lime" testID="lime">
-                  <SelectItemText>Lime</SelectItemText>
+      <PortalHost>
+        <SelectRoot
+          defaultOpen
+          items={[
+            { value: "lime", label: "Lime" },
+            { value: "kiwi", label: "Kiwi" },
+          ]}
+        >
+          <SelectTrigger testID="g-sel">
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectArrow testID="g-arrow" />
+                <SelectGroup>
+                  <SelectGroupLabel testID="g-label">
+                    <Text>Citrus</Text>
+                  </SelectGroupLabel>
+                  <SelectItem value="lime" testID="lime">
+                    <SelectItemText>Lime</SelectItemText>
+                  </SelectItem>
+                </SelectGroup>
+                <SelectSeparator testID="g-sep" />
+                <SelectItem value="kiwi" testID="kiwi">
+                  <SelectItemText>Kiwi</SelectItemText>
                 </SelectItem>
-              </SelectGroup>
-              <SelectSeparator testID="g-sep" />
-              <SelectItem value="kiwi" testID="kiwi">
-                <SelectItemText>Kiwi</SelectItemText>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("g-arrow")).toBeTruthy();
     expect(screen.getByTestId("g-label")).toBeTruthy();
@@ -310,43 +356,47 @@ describe("Select compound parts on React Native", () => {
 
   it("formats the value through function children", async () => {
     await render(
-      <SelectRoot defaultValue="apple">
-        <SelectTrigger testID="f-sel">
-          <SelectValue>{(value) => `Fruit: ${value}`}</SelectValue>
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup>
-              <SelectItem value="apple" label="Apple">
-                <Text>Apple</Text>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot defaultValue="apple">
+          <SelectTrigger testID="f-sel">
+            <SelectValue>{(value) => `Fruit: ${value}`}</SelectValue>
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectItem value="apple" label="Apple">
+                  <Text>Apple</Text>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     expect(screen.getByText("Fruit: apple")).toBeTruthy();
   });
 
   it("substitutes the trigger element via render", async () => {
     await render(
-      <SelectRoot>
-        <SelectTrigger
-          testID="r-sel"
-          render={<Text testID="r-sel-custom">Open</Text>}
-        >
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup>
-              <SelectItem value="apple" label="Apple">
-                <Text>Apple</Text>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot>
+          <SelectTrigger
+            testID="r-sel"
+            render={<Text testID="r-sel-custom">Open</Text>}
+          >
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectItem value="apple" label="Apple">
+                  <Text>Apple</Text>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     await pressText("Open");
     expect(screen.getByRole("listbox")).toBeTruthy();
@@ -355,26 +405,28 @@ describe("Select compound parts on React Native", () => {
   it("reports state to function styles", async () => {
     const seen: Array<{ open: boolean }> = [];
     await render(
-      <SelectRoot>
-        <SelectTrigger
-          testID="s-sel"
-          style={(state) => {
-            seen.push({ open: state.open });
-            return undefined;
-          }}
-        >
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup>
-              <SelectItem value="apple" label="Apple">
-                <Text>Apple</Text>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot>
+          <SelectTrigger
+            testID="s-sel"
+            style={(state) => {
+              seen.push({ open: state.open });
+              return undefined;
+            }}
+          >
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup>
+                <SelectItem value="apple" label="Apple">
+                  <Text>Apple</Text>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     expect(seen[0]).toEqual({ open: false });
     await pressTestId("s-sel");
@@ -383,7 +435,7 @@ describe("Select compound parts on React Native", () => {
 
   it("renders parts inert outside a root", async () => {
     await render(
-      <>
+      <PortalHost>
         <SelectTrigger testID="o-trigger">
           <Text>Open</Text>
         </SelectTrigger>
@@ -391,7 +443,7 @@ describe("Select compound parts on React Native", () => {
         <SelectItem value="apple" testID="o-item">
           <Text>Apple</Text>
         </SelectItem>
-      </>,
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("o-trigger").props.accessibilityState.disabled,
@@ -407,33 +459,35 @@ describe("Select compound parts on React Native", () => {
   it("typeahead matches items on character keys and selects / highlights them", async () => {
     let highlightedState: boolean | undefined;
     await render(
-      <SelectRoot defaultOpen>
-        <SelectTrigger testID="ta-sel">
-          <SelectValue placeholder="Pick" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner>
-            <SelectPopup testID="ta-popup">
-              <SelectItem value="banana" testID="item-banana">
-                <SelectItemText>Banana</SelectItemText>
-              </SelectItem>
-              <SelectItem
-                value="berry"
-                testID="item-berry"
-                style={(s) => {
-                  highlightedState = s.highlighted;
-                  return undefined;
-                }}
-              >
-                <SelectItemText>Berry</SelectItemText>
-              </SelectItem>
-              <SelectItem value="apple" testID="item-apple">
-                <SelectItemText>Apple</SelectItemText>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot defaultOpen>
+          <SelectTrigger testID="ta-sel">
+            <SelectValue placeholder="Pick" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner>
+              <SelectPopup testID="ta-popup">
+                <SelectItem value="banana" testID="item-banana">
+                  <SelectItemText>Banana</SelectItemText>
+                </SelectItem>
+                <SelectItem
+                  value="berry"
+                  testID="item-berry"
+                  style={(s) => {
+                    highlightedState = s.highlighted;
+                    return undefined;
+                  }}
+                >
+                  <SelectItemText>Berry</SelectItemText>
+                </SelectItem>
+                <SelectItem value="apple" testID="item-apple">
+                  <SelectItemText>Apple</SelectItemText>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
 
     const popup = screen.getByTestId("ta-popup");
@@ -458,27 +512,29 @@ describe("Select compound parts on React Native", () => {
   it("SelectPositioner flips near viewport edge", async () => {
     let positionerSide: string | undefined;
     await render(
-      <SelectRoot defaultOpen>
-        <SelectTrigger testID="edge-sel">
-          <SelectValue placeholder="Edge" />
-        </SelectTrigger>
-        <SelectPortal>
-          <SelectPositioner
-            testID="edge-pos"
-            side="bottom"
-            style={(s) => {
-              positionerSide = s.side;
-              return undefined;
-            }}
-          >
-            <SelectPopup testID="edge-popup">
-              <SelectItem value="one" testID="edge-item">
-                <SelectItemText>One</SelectItemText>
-              </SelectItem>
-            </SelectPopup>
-          </SelectPositioner>
-        </SelectPortal>
-      </SelectRoot>,
+      <PortalHost>
+        <SelectRoot defaultOpen>
+          <SelectTrigger testID="edge-sel">
+            <SelectValue placeholder="Edge" />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectPositioner
+              testID="edge-pos"
+              side="bottom"
+              style={(s) => {
+                positionerSide = s.side;
+                return undefined;
+              }}
+            >
+              <SelectPopup testID="edge-popup">
+                <SelectItem value="one" testID="edge-item">
+                  <SelectItemText>One</SelectItemText>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("edge-pos")).toBeTruthy();
     expect(positionerSide).toBeDefined();

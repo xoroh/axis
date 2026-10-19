@@ -57,6 +57,7 @@ import {
   DropdownMenuSubTrigger,
 } from "./DropdownMenu";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -65,8 +66,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * Structure only: a `View` container holding a trigger zone (measured
  * as the floating anchor) and, only while open, a full-area scrim
  * `Pressable` plus a content `View` carrying the `menu` role with the
- * `MenuItem` children inside it. No default visuals — every visual
- * value (`style` on the menu box, `style` on each part) is
+ * `MenuItem` children inside it — both presented through `Portal` at
+ * the app's `PortalHost`. No default visuals — every visual value (`style` on the menu box, `style` on each part) is
  * caller-provided. State follows the `useControllableState` pattern:
  * `open` (+ `onOpenChange`) for controlled use, `defaultOpen` for
  * uncontrolled (default `false`).
@@ -636,6 +637,10 @@ function MenuInlineRoot({
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
     placement,
+    // Box matches the trigger row width (Base UI anchor-width
+    // parity), keeping the viewport padding clear at the edges.
+    matchAnchorWidth: true,
+    viewportPadding: 8,
     active: isOpen ?? false,
   });
 
@@ -708,23 +713,25 @@ function MenuInlineRoot({
       <MenuDisclosureContext.Provider value={disclosure}>
         <View ref={setAnchorRef}>{wiredTriggers}</View>
         {isOpen ? (
-          <>
-            <Pressable
-              accessibilityLabel="Dismiss menu"
-              testID={testID ? `${testID}-scrim` : undefined}
-              onPress={dismiss}
-              style={SCRIM_FILL}
-            />
-            <View
-              accessible
-              role="menu"
-              testID={testID}
-              onLayout={floating.onContentLayout}
-              style={[floating.style, style]}
-            >
-              {itemNodes}
-            </View>
-          </>
+          <Portal>
+            <MenuDisclosureContext.Provider value={disclosure}>
+              <Pressable
+                accessibilityLabel="Dismiss menu"
+                testID={testID ? `${testID}-scrim` : undefined}
+                onPress={dismiss}
+                style={SCRIM_FILL}
+              />
+              <View
+                accessible
+                role="menu"
+                testID={testID}
+                onLayout={floating.onContentLayout}
+                style={[floating.style, style]}
+              >
+                {itemNodes}
+              </View>
+            </MenuDisclosureContext.Provider>
+          </Portal>
         ) : null}
       </MenuDisclosureContext.Provider>
     </View>
@@ -736,8 +743,8 @@ export { MenuInlineRoot as Menu };
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* `<Menu>` above is the concise inline API (trigger zone + in-box     */
-/* scrim + content, children partitioned by type). The parts below     */
+/* `<Menu>` above is the concise inline API (trigger zone + scrim     */
+/* + content box at the app host, children partitioned by type). The  */
 /* mirror Base UI's Menu anatomy — Root (state owner, renders no       */
 /* element), Trigger (shared with the monolith, extended with          */
 /* `render` and anchor registration), Portal (the overlay host: the    */
@@ -758,9 +765,9 @@ export { MenuInlineRoot as Menu };
 /* `style`/`render` props instead). Filter parts work in the compound  */
 /* form only (the monolith partitions children by type with no filter  */
 /* composition point). Non-modal menus (`modal={false}` on the Root)   */
-/* render the portal in-box with no Backdrop; outside-press without  */
-/* a scrim is a documented limitation (press-capture would hijack    */
-/* app touches).                                                     */
+/* render the portal through the plain `Portal` at the app host with   */
+/* no Backdrop; outside-press without a scrim is a documented          */
+/* limitation (press-capture would hijack app touches).                */
 /* ------------------------------------------------------------------ */
 
 export type MenuRootState = {
@@ -783,12 +790,13 @@ export type MenuRootProps = {
   disablePointerDismissal?: boolean;
   /**
    * Whether the open menu presents modally (an overlay host with a
-   * scrim). Default `true`. When `false` the portal renders
-   * in-box like the monolith: no scrim, and the trigger stays
-   * pressable so it toggles closed — but presses outside the menu
-   * reach the underlying app instead of dismissing (documented
-   * limitation: outside-press detection without a scrim needs
-   * press-capture that would hijack app touches).
+   * scrim). Default `true`. When `false` the portal presents through
+   * the plain `Portal` at the app host like the monolith: no scrim,
+   * and the trigger stays pressable so it toggles closed — but
+   * presses outside the menu reach the underlying app instead of
+   * dismissing (documented limitation: outside-press detection
+   * without a scrim needs press-capture that would hijack app
+   * touches).
    */
   modal?: boolean;
   /**
@@ -1098,6 +1106,7 @@ export function MenuPortal({
   testID,
 }: MenuPortalProps): React.JSX.Element | null {
   const disclosure = useContext(MenuDisclosureContext);
+  const menuSub = useContext(MenuSubContext);
   // Outside a root there is no open state to present: render nothing.
   if (!disclosure) return null;
   if (!disclosure.open) return null;
@@ -1108,14 +1117,36 @@ export function MenuPortal({
   // (one root presents every layer; see the `Overlay` module note).
   // `container` has no native meaning and is omitted by design.
   // Positioning (`MenuPositioner` + the `positioning` model) stays
-  // separable from the host either way. Non-modal roots render
-  // in-box with no scrim instead (the monolith shape): presses
-  // outside reach the app rather than dismissing
+  // separable from the host either way. Non-modal roots present
+  // through the plain `Portal` with no scrim instead (the monolith
+  // shape): presses outside reach the app rather than dismissing
   // (documented on `modal`).
+  //
+  // The disclosure is re-provided inside the portal: portaled content
+  // renders at the host, outside this root's subtree, so without an
+  // explicit provider the parts below would read a null disclosure.
+  // The submenu registry travels the same way (the value passes
+  // through untouched when a custom tree provides no sub state).
   if (!disclosure.modal) {
-    return <View testID={testID}>{children}</View>;
+    return (
+      <Portal>
+        <MenuDisclosureContext.Provider value={disclosure}>
+          <MenuSubContext.Provider value={menuSub}>
+            <View testID={testID}>{children}</View>
+          </MenuSubContext.Provider>
+        </MenuDisclosureContext.Provider>
+      </Portal>
+    );
   }
-  return <OverlayPortal testID={testID}>{children}</OverlayPortal>;
+  return (
+    <OverlayPortal testID={testID}>
+      <MenuDisclosureContext.Provider value={disclosure}>
+        <MenuSubContext.Provider value={menuSub}>
+          {children}
+        </MenuSubContext.Provider>
+      </MenuDisclosureContext.Provider>
+    </OverlayPortal>
+  );
 }
 
 export function MenuBackdrop({

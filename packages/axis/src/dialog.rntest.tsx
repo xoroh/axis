@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text, type View } from "react-native";
-import { Dialog } from "./index";
+import { Dialog, PortalHost } from "./index";
 
 /**
  * Dialog behavior through the public entry. Every assertion renders
@@ -24,9 +24,11 @@ async function press(testID: string) {
 describe("Dialog on React Native", () => {
   it("renders nothing while closed", async () => {
     await render(
-      <Dialog testID="dlg" title="Delete?">
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog testID="dlg" title="Delete?">
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("dlg")).toBeNull();
     expect(screen.queryByTestId("dlg-scrim")).toBeNull();
@@ -35,14 +37,16 @@ describe("Dialog on React Native", () => {
 
   it("open shows the surface, title, and dialog role", async () => {
     await render(
-      <Dialog
-        testID="dlg"
-        defaultOpen
-        title="Delete?"
-        accessibilityLabel="Delete confirmation"
-      >
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog
+          testID="dlg"
+          defaultOpen
+          title="Delete?"
+          accessibilityLabel="Delete confirmation"
+        >
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.getByTestId("dlg")).toBeTruthy();
     expect(screen.getByText("Delete?")).toBeTruthy();
@@ -55,16 +59,18 @@ describe("Dialog on React Native", () => {
     const changed: boolean[] = [];
     let dismissCalls = 0;
     await render(
-      <Dialog
-        testID="dlg"
-        defaultOpen
-        onOpenChange={(v) => changed.push(v)}
-        onDismiss={() => {
-          dismissCalls += 1;
-        }}
-      >
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog
+          testID="dlg"
+          defaultOpen
+          onOpenChange={(v) => changed.push(v)}
+          onDismiss={() => {
+            dismissCalls += 1;
+          }}
+        >
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     await press("dlg-scrim");
     expect(dismissCalls).toBe(1);
@@ -76,17 +82,19 @@ describe("Dialog on React Native", () => {
     const changed: boolean[] = [];
     let dismissCalls = 0;
     await render(
-      <Dialog
-        testID="dlg"
-        defaultOpen
-        dismissable={false}
-        onOpenChange={(v) => changed.push(v)}
-        onDismiss={() => {
-          dismissCalls += 1;
-        }}
-      >
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog
+          testID="dlg"
+          defaultOpen
+          dismissable={false}
+          onOpenChange={(v) => changed.push(v)}
+          onDismiss={() => {
+            dismissCalls += 1;
+          }}
+        >
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     await press("dlg-scrim");
@@ -98,16 +106,20 @@ describe("Dialog on React Native", () => {
   it("follows the controlled open prop", async () => {
     const changed: boolean[] = [];
     const view = await render(
-      <Dialog testID="dlg" open={false} onOpenChange={(v) => changed.push(v)}>
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog testID="dlg" open={false} onOpenChange={(v) => changed.push(v)}>
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("dlg")).toBeNull();
     await act(async () => {
       view.rerender(
-        <Dialog testID="dlg" open onOpenChange={(v) => changed.push(v)}>
-          <Text>Body text</Text>
-        </Dialog>,
+        <PortalHost>
+          <Dialog testID="dlg" open onOpenChange={(v) => changed.push(v)}>
+            <Text>Body text</Text>
+          </Dialog>
+        </PortalHost>,
       );
     });
     expect(screen.getByTestId("dlg")).toBeTruthy();
@@ -117,25 +129,29 @@ describe("Dialog on React Native", () => {
   it("forwards a ref to the surface View", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <Dialog testID="dlg" defaultOpen ref={ref}>
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog testID="dlg" defaultOpen ref={ref}>
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(ref.current).not.toBeNull();
   });
 
   it("passes caller styles to scrim, surface, and title", async () => {
     await render(
-      <Dialog
-        testID="dlg"
-        defaultOpen
-        title="Delete?"
-        overlayStyle={{ opacity: 0.5 }}
-        surfaceStyle={{ padding: 16 }}
-        titleStyle={{ fontSize: 20 }}
-      >
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog
+          testID="dlg"
+          defaultOpen
+          title="Delete?"
+          overlayStyle={{ opacity: 0.5 }}
+          surfaceStyle={{ padding: 16 }}
+          titleStyle={{ fontSize: 20 }}
+        >
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.getByTestId("dlg-scrim").props.style).toMatchObject({
       opacity: 0.5,
@@ -150,9 +166,11 @@ describe("Dialog on React Native", () => {
 
   it("renders the actions row content", async () => {
     await render(
-      <Dialog testID="dlg" defaultOpen actions={<Text>Confirm</Text>}>
-        <Text>Body text</Text>
-      </Dialog>,
+      <PortalHost>
+        <Dialog testID="dlg" defaultOpen actions={<Text>Confirm</Text>}>
+          <Text>Body text</Text>
+        </Dialog>
+      </PortalHost>,
     );
     expect(screen.getByText("Body text")).toBeTruthy();
     expect(screen.getByText("Confirm")).toBeTruthy();

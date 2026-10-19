@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import type { View } from "react-native";
-import { Combobox } from "./index";
+import { Combobox, PortalHost } from "./index";
 
 /**
  * Combobox behavior through the public entry. Every assertion renders
@@ -42,7 +42,9 @@ async function typeQuery(text: string) {
 describe("Combobox on React Native", () => {
   it("renders the entry with the placeholder and stays closed", async () => {
     await render(
-      <Combobox options={FRUITS} testID="cbx" placeholder="Pick a fruit" />,
+      <PortalHost>
+        <Combobox options={FRUITS} testID="cbx" placeholder="Pick a fruit" />
+      </PortalHost>,
     );
     expect(screen.getByPlaceholderText("Pick a fruit")).toBeTruthy();
     expect(screen.getByLabelText("Show options")).toBeTruthy();
@@ -56,11 +58,13 @@ describe("Combobox on React Native", () => {
   it("toggle opens the listbox with every option", async () => {
     const changed: boolean[] = [];
     await render(
-      <Combobox
-        options={FRUITS}
-        testID="cbx"
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <Combobox
+          options={FRUITS}
+          testID="cbx"
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     await press("cbx-toggle");
     expect(changed).toEqual([true]);
@@ -81,11 +85,13 @@ describe("Combobox on React Native", () => {
   it("typing filters to matching labels and opens the list", async () => {
     const changed: boolean[] = [];
     await render(
-      <Combobox
-        options={FRUITS}
-        testID="cbx"
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <Combobox
+          options={FRUITS}
+          testID="cbx"
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     expect(screen.queryByRole("listbox")).toBeNull();
     await typeQuery("ap");
@@ -103,12 +109,14 @@ describe("Combobox on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <Combobox
-        options={FRUITS}
-        testID="cbx"
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <Combobox
+          options={FRUITS}
+          testID="cbx"
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     await press("cbx-toggle");
     await press("cbx-option-banana");
@@ -127,12 +135,14 @@ describe("Combobox on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <Combobox
-        options={FRUITS}
-        testID="cbx"
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <Combobox
+          options={FRUITS}
+          testID="cbx"
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     await press("cbx-toggle");
     await press("cbx-option-mango");
@@ -146,13 +156,15 @@ describe("Combobox on React Native", () => {
     const seen: string[] = [];
     const changed: boolean[] = [];
     await render(
-      <Combobox
-        options={FRUITS}
-        testID="cbx"
-        defaultValue="apple"
-        onValueChange={(v) => seen.push(v)}
-        onOpenChange={(v) => changed.push(v)}
-      />,
+      <PortalHost>
+        <Combobox
+          options={FRUITS}
+          testID="cbx"
+          defaultValue="apple"
+          onValueChange={(v) => seen.push(v)}
+          onOpenChange={(v) => changed.push(v)}
+        />
+      </PortalHost>,
     );
     expect(screen.getByDisplayValue("Apple")).toBeTruthy();
     await press("cbx-toggle");
@@ -182,7 +194,11 @@ describe("Combobox on React Native", () => {
         />
       );
     }
-    await render(<Host />);
+    await render(
+      <PortalHost>
+        <Host />
+      </PortalHost>,
+    );
     expect(screen.getByDisplayValue("Apple")).toBeTruthy();
     await press("cbx-toggle");
     expect(
@@ -200,7 +216,11 @@ describe("Combobox on React Native", () => {
   });
 
   it("clearing the query shows every option again", async () => {
-    await render(<Combobox options={FRUITS} testID="cbx" />);
+    await render(
+      <PortalHost>
+        <Combobox options={FRUITS} testID="cbx" />
+      </PortalHost>,
+    );
     await press("cbx-toggle");
     expect(screen.getAllByRole("option")).toHaveLength(3);
     await typeQuery("ap");
@@ -215,7 +235,11 @@ describe("Combobox on React Native", () => {
 
   it("forwards a ref to the root", async () => {
     const ref = createRef<ElementRef<typeof View>>();
-    await render(<Combobox options={FRUITS} ref={ref} />);
+    await render(
+      <PortalHost>
+        <Combobox options={FRUITS} ref={ref} />
+      </PortalHost>,
+    );
     expect(ref.current).not.toBeNull();
   });
 });

@@ -17,6 +17,7 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { Portal } from "./Portal";
 
 /**
  * DropdownMenu — an unstyled popup menu with submenu cascade.
@@ -36,10 +37,10 @@ import { useControllableState } from "../useControllableState";
  * depth down (siblings close, ancestors stay); selecting any leaf
  * closes everything; scrim press closes everything through
  * `onDismiss` + `onOpenChange(false)` (the `Dialog` dismissal
- * precedent, minus the `Modal` — this menu paints inside its
- * parent's box, the `Menu` precedent). While open the scrim covers
- * the trigger zone, so pressing the trigger dismisses through the
- * scrim path rather than toggling.
+ * precedent, minus the `Modal` — the menu presents through `Portal`
+ * at the app's `PortalHost`). While open the scrim covers the app at
+ * the host, so pressing the trigger dismisses through the scrim path
+ * rather than toggling.
  *
  * Sub panels render in flow directly after their trigger; fly-out
  * geometry (side, offset, overlap) is caller `style` — shared code
@@ -50,8 +51,9 @@ import { useControllableState } from "../useControllableState";
  *
  * Deferred, each for a named reason (not oversight): no animation
  * (the `Menu` rationale), no hover or keyboard traversal (no touch
- * equivalent; `roving`/`collection` unadopted for menus), no
- * portal/`Modal` host (paints inside the parent's box).
+ * equivalent; `roving`/`collection` unadopted for menus), no `Modal`
+ * host (the plain `Portal` carries no scrim trap, focus trap, or
+ * scroll lock).
  *
  * Test ids: the content box carries `testID`; the scrim carries
  * `<testID>-scrim` (the `Menu` precedent). Sub panels carry their
@@ -633,15 +635,17 @@ function DropdownMenuRoot({
       <DropdownDisclosureContext.Provider value={disclosure}>
         <View>{wiredTriggers}</View>
         {isOpen ? (
-          <>
-            <Pressable
-              accessibilityLabel="Dismiss menu"
-              testID={testID ? `${testID}-scrim` : undefined}
-              onPress={dismiss}
-              style={SCRIM_FILL}
-            />
-            {contentBox}
-          </>
+          <Portal>
+            <DropdownDisclosureContext.Provider value={disclosure}>
+              <Pressable
+                accessibilityLabel="Dismiss menu"
+                testID={testID ? `${testID}-scrim` : undefined}
+                onPress={dismiss}
+                style={SCRIM_FILL}
+              />
+              {contentBox}
+            </DropdownDisclosureContext.Provider>
+          </Portal>
         ) : null}
       </DropdownDisclosureContext.Provider>
     </View>

@@ -168,16 +168,28 @@ describe("OverlayRoot on React Native", () => {
     expect(screen.queryByTestId("ov-popup")).toBeNull();
   });
 
-  it("falls back to inline rendering when PortalHost is omitted", async () => {
-    await render(
-      <View testID="container">
-        <OverlayExample open={true} />
-      </View>,
-    );
+  it("renders nothing when PortalHost is omitted and warns in dev", async () => {
+    // No in-box fallback (pre-release contract): an overlay without
+    // a host has nowhere to present, so it renders nothing.
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      warnings.push(args.map((part) => String(part)).join(" "));
+    };
+    try {
+      await render(
+        <View testID="container">
+          <OverlayExample open={true} />
+        </View>,
+      );
+    } finally {
+      console.warn = originalWarn;
+    }
 
     expect(screen.getByTestId("container")).toBeTruthy();
-    expect(screen.getByTestId("ov-portal")).toBeTruthy();
-    expect(screen.getByText("Content of ov")).toBeTruthy();
+    expect(screen.queryByTestId("ov-portal")).toBeNull();
+    expect(screen.queryByText("Content of ov")).toBeNull();
+    expect(warnings.some((w) => w.includes("PortalHost"))).toBe(true);
   });
 
   it("dismisses on backdrop outside press when dismissable", async () => {
@@ -268,7 +280,11 @@ describe("OverlayRoot on React Native", () => {
   });
 
   it("manages stacking with monotonic zIndex and top-layer isolation", async () => {
-    await render(<StackedOverlays />);
+    await render(
+      <PortalHost>
+        <StackedOverlays />
+      </PortalHost>,
+    );
 
     const portal1 = screen.getByTestId("layer1-portal", {
       includeHiddenElements: true,
@@ -290,7 +306,11 @@ describe("OverlayRoot on React Native", () => {
   });
 
   it("promotes lower layer to top when top layer closes", async () => {
-    const { rerender } = await render(<StackedOverlays />);
+    const { rerender } = await render(
+      <PortalHost>
+        <StackedOverlays />
+      </PortalHost>,
+    );
 
     expect(
       screen.getByTestId("layer1-portal", { includeHiddenElements: true }).props
@@ -367,18 +387,28 @@ describe("OverlayRoot on React Native", () => {
       );
     }
 
-    const { rerender } = await render(<FocusExample open={true} />);
+    const { rerender } = await render(
+      <PortalHost>
+        <FocusExample open={true} />
+      </PortalHost>,
+    );
     expect(screen.getByTestId("f-popup")).toBeTruthy();
 
-    await rerender(<FocusExample open={false} />);
+    await rerender(
+      <PortalHost>
+        <FocusExample open={false} />
+      </PortalHost>,
+    );
     expect(focusSpy).toHaveBeenCalled();
   });
 
   it("exposes context value via useOverlay() inside OverlayRoot", async () => {
     await render(
-      <OverlayRoot open={true} modal={true}>
-        <ContextProbe testID="ctx" />
-      </OverlayRoot>,
+      <PortalHost>
+        <OverlayRoot open={true} modal={true}>
+          <ContextProbe testID="ctx" />
+        </OverlayRoot>
+      </PortalHost>,
     );
 
     const data = JSON.parse(screen.getByTestId("ctx").props.children);

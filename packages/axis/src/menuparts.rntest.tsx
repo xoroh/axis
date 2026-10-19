@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Pressable, Text as RNText, type View } from "react-native";
 import {
@@ -22,6 +27,7 @@ import {
   MenuSubmenuRoot,
   MenuSubmenuTrigger,
   MenuTrigger,
+  PortalHost,
 } from "./index";
 
 /**
@@ -66,7 +72,11 @@ async function pressLabel(label: string) {
 
 describe("Menu compound parts on React Native", () => {
   it("renders the trigger only while closed (root owns state, renders no element)", async () => {
-    await render(<Compound />);
+    await render(
+      <PortalHost>
+        <Compound />
+      </PortalHost>,
+    );
     expect(screen.getByLabelText("Open menu")).toBeTruthy();
     expect(screen.queryByRole("menu")).toBeNull();
     expect(screen.queryByTestId("menu-popup")).toBeNull();
@@ -74,7 +84,11 @@ describe("Menu compound parts on React Native", () => {
 
   it("opens the popup with items and separator", async () => {
     const seen: boolean[] = [];
-    await render(<Compound onOpen={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <Compound onOpen={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await pressLabel("Open menu");
     expect(seen).toEqual([true]);
     expect(screen.getByRole("menu")).toBeTruthy();
@@ -92,22 +106,24 @@ describe("Menu compound parts on React Native", () => {
   it("selects by value, then clicks, then closes", async () => {
     const order: string[] = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuItem
-                value="new"
-                testID="item-new"
-                onSelect={(v) => order.push(`select:${v}`)}
-                onClick={() => order.push("click")}
-              >
-                <RNText>New</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuItem
+                  value="new"
+                  testID="item-new"
+                  onSelect={(v) => order.push(`select:${v}`)}
+                  onClick={() => order.push("click")}
+                >
+                  <RNText>New</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.press(screen.getByText("New"));
@@ -119,21 +135,23 @@ describe("Menu compound parts on React Native", () => {
   it("stays open when closeOnClick is false", async () => {
     const seen: string[] = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuItem
-                value="pin"
-                closeOnClick={false}
-                onSelect={(v) => seen.push(v)}
-              >
-                <RNText>Pin</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuItem
+                  value="pin"
+                  closeOnClick={false}
+                  onSelect={(v) => seen.push(v)}
+                >
+                  <RNText>Pin</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.press(screen.getByText("Pin"));
@@ -145,18 +163,20 @@ describe("Menu compound parts on React Native", () => {
   it("dismisses through the backdrop with onDismiss first", async () => {
     const order: string[] = [];
     await render(
-      <MenuRoot
-        defaultOpen
-        onDismiss={() => order.push("dismiss")}
-        onOpenChange={() => order.push("change")}
-      >
-        <MenuPortal>
-          <MenuBackdrop testID="menu-backdrop" />
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot
+          defaultOpen
+          onDismiss={() => order.push("dismiss")}
+          onOpenChange={() => order.push("change")}
+        >
+          <MenuPortal>
+            <MenuBackdrop testID="menu-backdrop" />
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await pressLabel("Dismiss menu");
     expect(order).toEqual(["dismiss", "change"]);
@@ -165,14 +185,16 @@ describe("Menu compound parts on React Native", () => {
 
   it("renders an inert backdrop when pointer dismissal is disabled", async () => {
     await render(
-      <MenuRoot defaultOpen disablePointerDismissal>
-        <MenuPortal>
-          <MenuBackdrop testID="menu-backdrop" />
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen disablePointerDismissal>
+          <MenuPortal>
+            <MenuBackdrop testID="menu-backdrop" />
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss menu")).toBeNull();
     expect(screen.getByRole("menu")).toBeTruthy();
@@ -181,21 +203,23 @@ describe("Menu compound parts on React Native", () => {
   it("substitutes the trigger element via render element", async () => {
     const seen: boolean[] = [];
     await render(
-      <MenuRoot onOpenChange={(v) => seen.push(v)}>
-        <MenuTrigger
-          render={
-            <Pressable
-              testID="custom-trigger"
-              accessibilityLabel="Custom open"
-            />
-          }
-        />
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot onOpenChange={(v) => seen.push(v)}>
+          <MenuTrigger
+            render={
+              <Pressable
+                testID="custom-trigger"
+                accessibilityLabel="Custom open"
+              />
+            }
+          />
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await pressLabel("Custom open");
     expect(seen).toEqual([true]);
@@ -205,19 +229,21 @@ describe("Menu compound parts on React Native", () => {
   it("calls function render with (props, state)", async () => {
     const states: Array<{ open: boolean; disabled: boolean }> = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuTrigger
-          render={(_props, state) => {
-            states.push(state);
-            return null;
-          }}
-        />
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuTrigger
+            render={(_props, state) => {
+              states.push(state);
+              return null;
+            }}
+          />
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(states).toEqual([{ open: true, disabled: false }]);
   });
@@ -225,24 +251,26 @@ describe("Menu compound parts on React Native", () => {
   it("reports highlighted press state to function styles", async () => {
     const seen: Array<{ disabled: boolean; highlighted: boolean }> = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuItem
-                value="x"
-                testID="item-x"
-                style={(state) => {
-                  seen.push(state);
-                  return undefined;
-                }}
-              >
-                <RNText>X</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuItem
+                  value="x"
+                  testID="item-x"
+                  style={(state) => {
+                    seen.push(state);
+                    return undefined;
+                  }}
+                >
+                  <RNText>X</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     const item = screen.getByTestId("item-x");
     await act(async () => {
@@ -257,20 +285,22 @@ describe("Menu compound parts on React Native", () => {
 
   it("follows controlled open state", async () => {
     await render(
-      <MenuRoot open={false}>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot open={false}>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(screen.queryByTestId("menu-popup")).toBeNull();
   });
 
   it("renders parts inert outside a root", async () => {
     await render(
-      <>
+      <PortalHost>
         <MenuTrigger
           accessibilityLabel="Orphan trigger"
           testID="orphan-trigger"
@@ -280,7 +310,7 @@ describe("Menu compound parts on React Native", () => {
         <MenuItem value="orphan" testID="orphan-item">
           <RNText>Orphan item</RNText>
         </MenuItem>
-      </>,
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("orphan-trigger").props.accessibilityState,
@@ -293,13 +323,15 @@ describe("Menu compound parts on React Native", () => {
   it("forwards a ref to the popup", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup" ref={ref} />
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup" ref={ref} />
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
   });
@@ -308,20 +340,22 @@ describe("Menu compound parts on React Native", () => {
 describe("Menu group, link, arrow, and non-modal parts", () => {
   it("renders group label with items", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup">
-              <MenuGroup testID="group">
-                <MenuGroupLabel testID="group-label">Sort</MenuGroupLabel>
-                <MenuItem value="date">
-                  <RNText>Date</RNText>
-                </MenuItem>
-              </MenuGroup>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup">
+                <MenuGroup testID="group">
+                  <MenuGroupLabel testID="group-label">Sort</MenuGroupLabel>
+                  <MenuItem value="date">
+                    <RNText>Date</RNText>
+                  </MenuItem>
+                </MenuGroup>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("group")).toBeTruthy();
     expect(screen.getByText("Sort")).toBeTruthy();
@@ -331,22 +365,24 @@ describe("Menu group, link, arrow, and non-modal parts", () => {
   it("activates link items with the link role and closes", async () => {
     const order: string[] = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuLinkItem
-                value="docs"
-                testID="link-docs"
-                onSelect={(v) => order.push(`select:${v}`)}
-                onClick={() => order.push("click")}
-              >
-                <RNText>Docs</RNText>
-              </MenuLinkItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuLinkItem
+                  value="docs"
+                  testID="link-docs"
+                  onSelect={(v) => order.push(`select:${v}`)}
+                  onClick={() => order.push("click")}
+                >
+                  <RNText>Docs</RNText>
+                </MenuLinkItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(screen.getByRole("link", { name: "Docs" })).toBeTruthy();
     await act(async () => {
@@ -358,44 +394,51 @@ describe("Menu group, link, arrow, and non-modal parts", () => {
 
   it("renders the arrow marker where the caller puts it", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup">
-              <MenuArrow testID="menu-arrow" />
-              <MenuItem value="x">
-                <RNText>X</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup">
+                <MenuArrow testID="menu-arrow" />
+                <MenuItem value="x">
+                  <RNText>X</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(screen.getByTestId("menu-arrow")).toBeTruthy();
   });
 
-  it("non-modal menus render in-box with no scrim and toggle closed", async () => {
+  it("non-modal menus present at the host with no scrim and toggle closed", async () => {
     const seen: boolean[] = [];
     await render(
-      <MenuRoot modal={false} onOpenChange={(v) => seen.push(v)}>
-        <MenuTrigger accessibilityLabel="Open menu">
-          <RNText>Open</RNText>
-        </MenuTrigger>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup">
-              <MenuItem value="x">
-                <RNText>X</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost testID="host">
+        <MenuRoot modal={false} onOpenChange={(v) => seen.push(v)}>
+          <MenuTrigger accessibilityLabel="Open menu">
+            <RNText>Open</RNText>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup">
+                <MenuItem value="x">
+                  <RNText>X</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await pressLabel("Open menu");
     expect(seen).toEqual([true]);
     expect(screen.queryByLabelText("Dismiss menu")).toBeNull();
-    expect(screen.getByTestId("menu-popup")).toBeTruthy();
+    // At the host, not inside the trigger's box.
+    expect(
+      within(screen.getByTestId("host")).getByTestId("menu-popup"),
+    ).toBeTruthy();
     await pressLabel("Open menu");
     expect(seen).toEqual([true, false]);
     expect(screen.queryByTestId("menu-popup")).toBeNull();
@@ -403,17 +446,19 @@ describe("Menu group, link, arrow, and non-modal parts", () => {
 
   it("non-modal menus still close on item select", async () => {
     await render(
-      <MenuRoot modal={false} defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup">
-              <MenuItem value="x">
-                <RNText>X</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot modal={false} defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup">
+                <MenuItem value="x">
+                  <RNText>X</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.press(screen.getByText("X"));
@@ -448,7 +493,11 @@ describe("Menu checkbox and radio items", () => {
 
   it("toggles unchecked state, reports, shows the indicator, and stays open", async () => {
     const seen: boolean[] = [];
-    await render(<SettingsMenu onCheck={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <SettingsMenu onCheck={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     expect(screen.queryByTestId("minimap-check")).toBeNull();
     await act(async () => {
       fireEvent.press(screen.getByText("Minimap"));
@@ -469,17 +518,19 @@ describe("Menu checkbox and radio items", () => {
 
   it("closes when closeOnClick is set", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="menu-popup">
-              <MenuCheckboxItem closeOnClick testID="item-once">
-                <RNText>Once</RNText>
-              </MenuCheckboxItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="menu-popup">
+                <MenuCheckboxItem closeOnClick testID="item-once">
+                  <RNText>Once</RNText>
+                </MenuCheckboxItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.press(screen.getByText("Once"));
@@ -489,17 +540,19 @@ describe("Menu checkbox and radio items", () => {
 
   it("follows controlled checked state", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuCheckboxItem checked testID="item-on">
-                <RNText>On</RNText>
-              </MenuCheckboxItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuCheckboxItem checked testID="item-on">
+                  <RNText>On</RNText>
+                </MenuCheckboxItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("item-on").props.accessibilityState,
@@ -509,21 +562,23 @@ describe("Menu checkbox and radio items", () => {
   it("keeps disabled checkbox items unchecked and silent", async () => {
     const seen: boolean[] = [];
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuCheckboxItem
-                testID="item-off"
-                disabled
-                onCheckedChange={(v) => seen.push(v)}
-              >
-                <RNText>Off</RNText>
-              </MenuCheckboxItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuCheckboxItem
+                  testID="item-off"
+                  disabled
+                  onCheckedChange={(v) => seen.push(v)}
+                >
+                  <RNText>Off</RNText>
+                </MenuCheckboxItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     await act(async () => {
       fireEvent.press(screen.getByText("Off"));
@@ -560,7 +615,11 @@ describe("Menu checkbox and radio items", () => {
 
   it("selects a radio option, reports, and closes", async () => {
     const seen: string[] = [];
-    await render(<SortMenu onPick={(v) => seen.push(v)} />);
+    await render(
+      <PortalHost>
+        <SortMenu onPick={(v) => seen.push(v)} />
+      </PortalHost>,
+    );
     await act(async () => {
       fireEvent.press(screen.getByText("Date"));
     });
@@ -573,28 +632,30 @@ describe("Menu checkbox and radio items", () => {
 
   it("follows a controlled group value with indicator", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup>
-              <MenuRadioGroup value="name">
-                <MenuRadioItem value="date" testID="item-date">
-                  <MenuRadioItemIndicator testID="date-dot">
-                    <RNText>•</RNText>
-                  </MenuRadioItemIndicator>
-                  <RNText>Date</RNText>
-                </MenuRadioItem>
-                <MenuRadioItem value="name" testID="item-name">
-                  <MenuRadioItemIndicator testID="name-dot">
-                    <RNText>•</RNText>
-                  </MenuRadioItemIndicator>
-                  <RNText>Name</RNText>
-                </MenuRadioItem>
-              </MenuRadioGroup>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup>
+                <MenuRadioGroup value="name">
+                  <MenuRadioItem value="date" testID="item-date">
+                    <MenuRadioItemIndicator testID="date-dot">
+                      <RNText>•</RNText>
+                    </MenuRadioItemIndicator>
+                    <RNText>Date</RNText>
+                  </MenuRadioItem>
+                  <MenuRadioItem value="name" testID="item-name">
+                    <MenuRadioItemIndicator testID="name-dot">
+                      <RNText>•</RNText>
+                    </MenuRadioItemIndicator>
+                    <RNText>Name</RNText>
+                  </MenuRadioItem>
+                </MenuRadioGroup>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
     expect(
       screen.getByTestId("item-name").props.accessibilityState,
@@ -608,14 +669,14 @@ describe("Menu checkbox and radio items", () => {
 
   it("renders indicators nothing outside their items", async () => {
     await render(
-      <>
+      <PortalHost>
         <MenuCheckboxItemIndicator testID="orphan-check">
           <RNText>✓</RNText>
         </MenuCheckboxItemIndicator>
         <MenuRadioItemIndicator testID="orphan-dot">
           <RNText>•</RNText>
         </MenuRadioItemIndicator>
-      </>,
+      </PortalHost>,
     );
     expect(screen.queryByTestId("orphan-check")).toBeNull();
     expect(screen.queryByTestId("orphan-dot")).toBeNull();
@@ -624,31 +685,33 @@ describe("Menu checkbox and radio items", () => {
   it("MenuPopup handles typeahead key events and highlights matching item", async () => {
     let highlightedState: boolean | undefined;
     await render(
-      <MenuRoot defaultOpen>
-        <MenuTrigger testID="ta-menu-trigger">
-          <RNText>Menu</RNText>
-        </MenuTrigger>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="ta-menu-popup">
-              <MenuItem value="edit" filterText="Edit">
-                <RNText>Edit</RNText>
-              </MenuItem>
-              <MenuItem
-                value="save"
-                filterText="Save"
-                testID="item-save"
-                style={(s) => {
-                  highlightedState = s.highlighted;
-                  return undefined;
-                }}
-              >
-                <RNText>Save</RNText>
-              </MenuItem>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuTrigger testID="ta-menu-trigger">
+            <RNText>Menu</RNText>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="ta-menu-popup">
+                <MenuItem value="edit" filterText="Edit">
+                  <RNText>Edit</RNText>
+                </MenuItem>
+                <MenuItem
+                  value="save"
+                  filterText="Save"
+                  testID="item-save"
+                  style={(s) => {
+                    highlightedState = s.highlighted;
+                    return undefined;
+                  }}
+                >
+                  <RNText>Save</RNText>
+                </MenuItem>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
 
     const popup = screen.getByTestId("ta-menu-popup");
@@ -660,46 +723,48 @@ describe("Menu checkbox and radio items", () => {
 
   it("MenuSubmenu parts open and render nested submenu content with open/close and nested dismiss", async () => {
     await render(
-      <MenuRoot defaultOpen>
-        <MenuTrigger testID="root-trigger">
-          <RNText>Root</RNText>
-        </MenuTrigger>
-        <MenuPortal>
-          <MenuPositioner>
-            <MenuPopup testID="root-popup">
-              <MenuItem value="item1">
-                <RNText>Item 1</RNText>
-              </MenuItem>
-              <MenuSubmenuRoot value="sub1">
-                <MenuSubmenuTrigger
-                  testID="sub1-trigger"
-                  accessibilityLabel="Submenu 1"
-                >
-                  <RNText>Submenu 1</RNText>
-                </MenuSubmenuTrigger>
-                <MenuSubmenuContent testID="sub1-content">
-                  <MenuItem value="sub-item-1" testID="sub-item-1">
-                    <RNText>Sub Item 1</RNText>
-                  </MenuItem>
-                  <MenuSubmenuRoot value="sub2">
-                    <MenuSubmenuTrigger
-                      testID="sub2-trigger"
-                      accessibilityLabel="Submenu 2"
-                    >
-                      <RNText>Submenu 2</RNText>
-                    </MenuSubmenuTrigger>
-                    <MenuSubmenuContent testID="sub2-content">
-                      <MenuItem value="sub-item-2" testID="sub-item-2">
-                        <RNText>Sub Item 2</RNText>
-                      </MenuItem>
-                    </MenuSubmenuContent>
-                  </MenuSubmenuRoot>
-                </MenuSubmenuContent>
-              </MenuSubmenuRoot>
-            </MenuPopup>
-          </MenuPositioner>
-        </MenuPortal>
-      </MenuRoot>,
+      <PortalHost>
+        <MenuRoot defaultOpen>
+          <MenuTrigger testID="root-trigger">
+            <RNText>Root</RNText>
+          </MenuTrigger>
+          <MenuPortal>
+            <MenuPositioner>
+              <MenuPopup testID="root-popup">
+                <MenuItem value="item1">
+                  <RNText>Item 1</RNText>
+                </MenuItem>
+                <MenuSubmenuRoot value="sub1">
+                  <MenuSubmenuTrigger
+                    testID="sub1-trigger"
+                    accessibilityLabel="Submenu 1"
+                  >
+                    <RNText>Submenu 1</RNText>
+                  </MenuSubmenuTrigger>
+                  <MenuSubmenuContent testID="sub1-content">
+                    <MenuItem value="sub-item-1" testID="sub-item-1">
+                      <RNText>Sub Item 1</RNText>
+                    </MenuItem>
+                    <MenuSubmenuRoot value="sub2">
+                      <MenuSubmenuTrigger
+                        testID="sub2-trigger"
+                        accessibilityLabel="Submenu 2"
+                      >
+                        <RNText>Submenu 2</RNText>
+                      </MenuSubmenuTrigger>
+                      <MenuSubmenuContent testID="sub2-content">
+                        <MenuItem value="sub-item-2" testID="sub-item-2">
+                          <RNText>Sub Item 2</RNText>
+                        </MenuItem>
+                      </MenuSubmenuContent>
+                    </MenuSubmenuRoot>
+                  </MenuSubmenuContent>
+                </MenuSubmenuRoot>
+              </MenuPopup>
+            </MenuPositioner>
+          </MenuPortal>
+        </MenuRoot>
+      </PortalHost>,
     );
 
     // Submenu 1 closed initially

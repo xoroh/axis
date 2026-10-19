@@ -20,6 +20,7 @@ import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Input } from "./Input";
+import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -67,7 +68,9 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * `measure()` + viewport + `resolveFloatingRect`); until measured it
  * stays transparent at origin rather than flashing somewhere wrong
  * (the Tooltip precedent). Unlike Dialog there is no `Modal`: the
- * scrim is an anchor-relative absolute fill layer behind the list.
+ * scrim and the list present through `Portal` at the app's
+ * `PortalHost` — above sibling content, never trapped in the anchor's
+ * box.
  *
  * Accessibility: the entry `Input` carries `accessibilityLabel` when
  * given; the toggle carries `accessibilityRole="button"` with
@@ -136,7 +139,7 @@ export type ComboboxProps = {
   style?: StateStyle<ComboboxState, StyleProp<ViewStyle>>;
   /** Popup (listbox) box style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
-  /** Text-entry style, caller-provided. */
+  /** Text-entry style, caller-provided. Also styles the toggle label, which has no text of its own to read. */
   inputStyle?: StyleProp<TextStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -311,6 +314,10 @@ export function Combobox({
 
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
+    // List matches the trigger row width (Base UI anchor-width
+    // parity), keeping the viewport padding clear at the edges.
+    matchAnchorWidth: true,
+    viewportPadding: 8,
     active: isOpen ?? false,
   });
 
@@ -363,47 +370,53 @@ export function Combobox({
           disabled={disabled}
           onPress={toggle}
         >
-          <Text>{toggleLabel}</Text>
+          <Text style={inputStyle}>{toggleLabel}</Text>
         </Pressable>
       </View>
       {isOpen ? (
-        <Pressable
-          accessibilityLabel="Dismiss"
-          testID={testID ? `${testID}-scrim` : undefined}
-          onPress={closeWithoutSelection}
-          style={scrimFillStyle}
-        />
+        <Portal>
+          <Pressable
+            accessibilityLabel="Dismiss"
+            testID={testID ? `${testID}-scrim` : undefined}
+            onPress={closeWithoutSelection}
+            style={scrimFillStyle}
+          />
+        </Portal>
       ) : null}
       {isOpen ? (
-        <View
-          // The list must be an accessibility element for its role to
-          // reach assistive technology (and the `*ByRole` proofs): a
-          // plain `View` is not one by default, unlike `Pressable`.
-          accessible
-          accessibilityRole="listbox"
-          onLayout={floating.onContentLayout}
-          style={[floating.style, listStyle]}
-        >
-          {filtered.map((option) => {
-            const optionDisabled = disabled || option.disabled === true;
-            return (
-              <Pressable
-                key={option.value}
-                role="option"
-                accessibilityState={{
-                  selected: selectedValue === option.value,
-                  disabled: optionDisabled,
-                }}
-                accessibilityLabel={option.label}
-                testID={testID ? `${testID}-option-${option.value}` : undefined}
-                disabled={optionDisabled}
-                onPress={() => choose(option.value)}
-              >
-                <Text>{option.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <Portal>
+          <View
+            // The list must be an accessibility element for its role to
+            // reach assistive technology (and the `*ByRole` proofs): a
+            // plain `View` is not one by default, unlike `Pressable`.
+            accessible
+            accessibilityRole="listbox"
+            onLayout={floating.onContentLayout}
+            style={[floating.style, listStyle]}
+          >
+            {filtered.map((option) => {
+              const optionDisabled = disabled || option.disabled === true;
+              return (
+                <Pressable
+                  key={option.value}
+                  role="option"
+                  accessibilityState={{
+                    selected: selectedValue === option.value,
+                    disabled: optionDisabled,
+                  }}
+                  accessibilityLabel={option.label}
+                  testID={
+                    testID ? `${testID}-option-${option.value}` : undefined
+                  }
+                  disabled={optionDisabled}
+                  onPress={() => choose(option.value)}
+                >
+                  <Text>{option.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Portal>
       ) : null}
     </View>
   );

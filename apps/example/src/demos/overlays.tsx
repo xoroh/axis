@@ -74,12 +74,29 @@ export const OverlaysDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        <Tooltip content={<Text>Hint text</Text>}>
-          <Text>Long-press me</Text>
+        <Tooltip
+          content={
+            <Text style={{ fontSize: 12, color: theme.text }}>Hint text</Text>
+          }
+          style={{ alignSelf: "flex-start" }}
+          tipStyle={{
+            backgroundColor: theme.surface,
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: theme.border,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Text style={{ color: theme.text }}>Long-press me</Text>
         </Tooltip>
         <TooltipProvider delay={100}>
           <TooltipRoot>
-            <TooltipTrigger accessibilityLabel="Demo compound tip anchor">
+            <TooltipTrigger
+              accessibilityLabel="Demo compound tip anchor"
+              style={{ alignSelf: "flex-start" }}
+            >
               <Text style={{ fontSize: 13, color: theme.text }}>
                 Long-press me (compound)
               </Text>
@@ -182,10 +199,6 @@ export const OverlaysDemo: Demo = {
               }
               accessibilityLabel="Demo context menu"
               menuStyle={{
-                position: "absolute",
-                top: 40,
-                left: 0,
-                zIndex: 20,
                 minWidth: 180,
                 backgroundColor: theme.surface,
                 borderRadius: 8,
@@ -303,6 +316,28 @@ export const OverlaysDemo: Demo = {
             </Button>
 
             <Button
+              accessibilityLabel="Open bottom sheet at half snap"
+              onPress={() => {
+                setSheetPoint(0.5);
+                setSheetOpen(true);
+              }}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 6,
+                backgroundColor: theme.surfaceSubtle,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+              >
+                Open Half Sheet
+              </Text>
+            </Button>
+
+            <Button
               accessibilityLabel="Open Drawer"
               onPress={() => setDrawerOpen(true)}
               style={{
@@ -349,6 +384,7 @@ export const OverlaysDemo: Demo = {
             accessibilityLabel="Demo filter settings"
             overlayStyle={{ backgroundColor: theme.overlay, padding: 16 }}
             surfaceStyle={{
+              top: 0,
               backgroundColor: theme.surface,
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
