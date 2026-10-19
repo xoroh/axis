@@ -4,6 +4,16 @@ Phase 1, read-only. No code changes. Branch `chore/axis-scope-audit`, worktree `
 Amendment applied (Axis Lead steer, Faroeq 04:48 CEST): two references (Base UI **and**
 rn-primitives); verdicts KEEP-PARITY / KEEP-RN / STRIP / MOVE-KERN; no REMOVE.
 
+> Scope note: this report is a scope and inventory check — which
+> families Axis keeps, and how their anatomy maps onto Base UI and
+> rn-primitives (plus a grep-level unstyled check). It is **not** a
+> behaviour review: it does not verify runtime behaviour, gesture
+> handling, measurement, focus/dismiss wiring, platform
+> accessibility mapping, or keyboard handling. Behaviour review per
+> family now lives in `docs/BASE_UI_PARITY.md` (Faroeq 08:18 CEST go:
+> rn-primitives behaviour review plus real-device testing are
+> release-ready scope).
+
 ## 1. References
 
 ### 1a. Base UI — current list, 37 components
