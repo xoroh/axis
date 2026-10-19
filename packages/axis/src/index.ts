@@ -367,7 +367,6 @@ export {
   type OtpFieldState,
 } from "./components/OtpField";
 export {
-  Overlay,
   OverlayBackdrop,
   type OverlayBackdropProps,
   type OverlayBackdropState,

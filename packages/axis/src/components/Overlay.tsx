@@ -834,12 +834,3 @@ export function OverlayClose({
   );
 }
 
-/** Compound namespace for Overlay parts. */
-export const Overlay = {
-  Root: OverlayRoot,
-  Portal: OverlayPortal,
-  Backdrop: OverlayBackdrop,
-  Popup: OverlayPopup,
-  Trigger: OverlayTrigger,
-  Close: OverlayClose,
-};

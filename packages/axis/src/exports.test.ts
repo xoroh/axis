@@ -257,27 +257,11 @@ test("no bare monolith next to an XRoot", () => {
     if (!parts.includes(`${family}Root`)) continue;
     // Exact-name ban: siblings (XList, XTrigger, …) legitimately
     // start with X; only the bare X itself is the monolith.
-    if (family === "Overlay") continue; // namespace carve-out, proven below
     expect(
       barrel.has(family),
       `bare ${family} must not sit beside ${family}Root`,
     ).toBe(false);
   }
-});
-
-test("Overlay namespace is a parts object, not a monolith", () => {
-  // The one bare-X carve-out: `Overlay` is a namespace over the
-  // compound parts (Base UI has no Overlay component; rule c), not a
-  // wrapper component. Pin its shape so a future monolith cannot hide
-  // behind this exception.
-  const overlaySource = readFileSync(
-    join(here, "components", "Overlay.tsx"),
-    "utf8",
-  );
-  expect(overlaySource).toContain("export const Overlay = {");
-  expect(overlaySource).toContain("Root: OverlayRoot,");
-  expect(barrel.has("Overlay")).toBe(true);
-  expect(barrel.has("OverlayRoot")).toBe(true);
 });
 
 test("rule (b) families stay bare with no Root", () => {

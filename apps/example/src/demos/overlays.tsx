@@ -30,9 +30,9 @@ import type { Demo } from "./registry";
 
 /**
  * Overlays demo: blocking dialog, sheet, drawer, toast (single-shot
- * and queued), tooltip (monolith and compound), long-press menu,
- * shared overlay root primitives and standalone portal host —
- * all with clean caller styles.
+ * and queued), tooltip, long-press menu, shared overlay root
+ * primitives and standalone portal host — all with clean caller
+ * styles.
  */
 export const OverlaysDemo: Demo = {
   slug: "overlays",
@@ -45,7 +45,6 @@ export const OverlaysDemo: Demo = {
     "ToastViewport",
     "Portal",
     "PortalHost",
-    "Overlay",
     "OverlayRoot",
     "OverlayPortal",
     "OverlayBackdrop",

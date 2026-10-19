@@ -2,7 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { BackHandler, Text, View } from "react-native";
 import {
-  Overlay,
   OverlayBackdrop,
   OverlayClose,
   OverlayPopup,
@@ -29,7 +28,7 @@ type BackHandlerPayload = Parameters<
  *    top-layer isolation (pointerEvents "auto" vs "box-none", accessibilityElementsHidden).
  * 4. Focus restoration to trigger or finalFocus on close.
  * 5. Modal scroll lock via useScrollLock().
- * 6. Compound Overlay.* namespace parity.
+ * 6. Named Overlay parts compose the same tree.
  */
 
 function OverlayExample({
@@ -418,23 +417,23 @@ describe("OverlayRoot on React Native", () => {
     expect(data.stackIndex).toBe(0);
   });
 
-  it("compound Overlay.* namespace matches named component exports", async () => {
+  it("named Overlay parts compose the same tree", async () => {
     await render(
       <PortalHost testID="host">
-        <Overlay.Root defaultOpen={false}>
-          <Overlay.Trigger testID="cmp-trigger">
+        <OverlayRoot defaultOpen={false}>
+          <OverlayTrigger testID="cmp-trigger">
             <Text>Open</Text>
-          </Overlay.Trigger>
-          <Overlay.Portal testID="cmp-portal">
-            <Overlay.Backdrop testID="cmp-backdrop" />
-            <Overlay.Popup testID="cmp-popup">
+          </OverlayTrigger>
+          <OverlayPortal testID="cmp-portal">
+            <OverlayBackdrop testID="cmp-backdrop" />
+            <OverlayPopup testID="cmp-popup">
               <Text>Compound content</Text>
-              <Overlay.Close testID="cmp-close">
+              <OverlayClose testID="cmp-close">
                 <Text>Close</Text>
-              </Overlay.Close>
-            </Overlay.Popup>
-          </Overlay.Portal>
-        </Overlay.Root>
+              </OverlayClose>
+            </OverlayPopup>
+          </OverlayPortal>
+        </OverlayRoot>
       </PortalHost>,
     );
 
