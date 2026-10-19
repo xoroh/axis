@@ -17,7 +17,8 @@ import {
   MeterRoot,
   MeterTrack,
   MeterValue,
-  NumberField,
+  NumberFieldGroup,
+  NumberFieldRoot,
   OtpField,
   Progress,
   Separator,
@@ -321,14 +322,15 @@ describe("render composition: entries", () => {
     expect(screen.getByTestId("ta").props.style).toMatchObject({ opacity: 1 });
   });
 
-  it("NumberField function render observes numeric state", async () => {
+  it("NumberField group function render observes numeric state", async () => {
     await render(
-      <NumberField
-        defaultValue={3}
-        render={(_props, state) => (
-          <Text testID="st">{`v${String(state.value)}`}</Text>
-        )}
-      />,
+      <NumberFieldRoot defaultValue={3}>
+        <NumberFieldGroup
+          render={(_props, state) => (
+            <Text testID="st">{`v${String(state.value)}`}</Text>
+          )}
+        />
+      </NumberFieldRoot>,
     );
     expect(screen.getByText("v3")).toBeTruthy();
   });

@@ -55,6 +55,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `secureTextEntry` | `boolean` | no | `false` | Obscured entry. |
 | `editable` | `boolean` | no | `true` | Editable flag. `false` renders read-only (change and submit handlers detach). |
 | `onSubmitEditing` | `() => void` | no | — | Fires on the return key. Multiline callers typically omit it (return inserts a newline). |
+| `onBlur` | `() => void` | no | — | Fires when the host input loses focus (blur commit lives here). |
 | `multiline` | `boolean` | no | `false` | Multiline entry (the folded `Textarea`). |
 | `numberOfLines` | `number` | no | `3` in multiline mode, unset otherwise | Visible line hint. |
 | `autoGrow` | `boolean` | no | `false` | Grow the host height with content (multiline only). Measured height merges under caller `style`; no animation. |
