@@ -120,8 +120,8 @@ export const DisclosureDemo: Demo = {
                 Overview Panel
               </Text>
               <Text style={{ fontSize: 13, color: theme.textSubtle }}>
-                Axis tab panels support full keyboard and screen reader
-                navigation.
+                Tab panels are announced to screen readers; only the selected
+                panel is shown.
               </Text>
             </TabsPanel>
 
