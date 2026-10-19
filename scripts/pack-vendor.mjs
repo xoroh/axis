@@ -51,6 +51,29 @@ function sh(cmd, argv, opts = {}) {
   return (out ?? "").toString().trim();
 }
 
+// Pre-flight: fail fast with an actionable hint instead of dying
+// mid-run with a cryptic ENOENT/127 (seen in a clean worktree
+// without installed deps, where the build step lost `tsup`).
+function need(cmd, hint) {
+  try {
+    sh(cmd, ["--version"], { stdio: "ignore" });
+  } catch {
+    console.error(`pack-vendor: required tool \`${cmd}\` not found. ${hint}`);
+    process.exit(1);
+  }
+}
+
+need("git", "Install git and re-run.");
+need("bun", "Install the bun toolchain (>=1.3.8) and re-run.");
+if (!existsSync(join(PKG, "node_modules", ".bin", "tsup"))) {
+  console.error(
+    "pack-vendor: dependencies are not installed (tsup not found).\n" +
+      "Run `bun install --frozen-lockfile` first, then re-run.",
+  );
+  process.exit(1);
+}
+need("npm", "Install npm (it provides `npm pack`) and re-run.");
+
 // Refuse to name a dirty TRACKED tree's output after a commit SHA
 // (that name would claim reproducibility the bytes cannot honor).
 // Untracked files are ignored: `npm pack` ships the `files`
