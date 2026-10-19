@@ -14,3 +14,5 @@ Each line is the migration for the removed/renamed export:
 - `Progress` `indeterminate` boolean removed — pass `value={null}` (Base UI exact semantics).
 - `Textarea` removed — use `Input` with `multiline` (plus `autoGrow`, `minRows`/`maxRows`, `onHeightChange`); `<Textarea … />` migrates to `<Input multiline … />`.
 - `Sheet` removed — use `Drawer` with `side="bottom"` and `snapPoints`; `<Sheet detents={d} snapIndex={i} onSnapIndexChange={f} title={t} … />` migrates to `<Drawer side="bottom" snapPoints={d} snapPoint={d[i]} onSnapPointChange={…} … />` with the title in `children`. `Drawer` also gains `modal` and `top` side.
+- `Calendar` removed — use the `./models` `calendar` model (`buildCalendarGrid`, `resolveCalendarFocus`, `resolveCalendarSelection`, `isCalendarDateDisabled`, `parseCalendarDate`, locale/`firstDayOfWeek`/`dir` support); state stays with the consumer via `useControllableState`.
+- `TimePicker` removed — the `time` model stays, and `TimePickerValue`/`TimePickerFormat` stay exported from it.
