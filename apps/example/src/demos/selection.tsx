@@ -121,6 +121,34 @@ export const SelectionDemo: Demo = {
               Select all (mixed)
             </Text>
           </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              marginTop: 12,
+            }}
+          >
+            <CheckboxRoot accessibilityLabel="Demo locked checkbox" readOnly>
+              <CheckboxIndicator
+                keepMounted
+                testID="demo-locked-mark"
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  borderWidth: 1.5,
+                  borderColor: theme.border,
+                  backgroundColor: "transparent",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
+            </CheckboxRoot>
+            <Text style={{ fontSize: 14, color: theme.text }}>
+              Locked (read-only, kept)
+            </Text>
+          </View>
         </View>
 
         {/* Checkbox Group */}
@@ -317,6 +345,28 @@ export const SelectionDemo: Demo = {
                 }}
               />
             ))}
+          </RadioGroup>
+          <Text
+            style={{
+              fontSize: 13,
+              color: theme.textSubtle,
+              marginTop: 12,
+            }}
+          >
+            Frozen (read-only — presses change nothing):
+          </Text>
+          <RadioGroup
+            accessibilityLabel="Demo frozen radio group"
+            defaultValue="x"
+            readOnly
+            style={{ flexDirection: "row", gap: 12 }}
+          >
+            <RadioGroupItem value="x" testID="demo-frozen-x">
+              <Text style={{ fontSize: 13, color: theme.text }}>Std</Text>
+            </RadioGroupItem>
+            <RadioGroupItem value="y" testID="demo-frozen-y">
+              <Text style={{ fontSize: 13, color: theme.text }}>Pro</Text>
+            </RadioGroupItem>
           </RadioGroup>
         </View>
 

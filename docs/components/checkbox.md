@@ -90,7 +90,7 @@ aligned).
 |---|---|---|---|---|
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Indicator style, caller-provided. |
-| `children` | `ReactNode` | no | — | Indicator content. Mounts while the box is checked or indeterminate; with `keepMounted` it stays mounted while unchecked (hidden from assistive tech, `{ checked: false, indeterminate: false }` state). |
+| `children` | `ReactNode` | no | — | Indicator content. Mounts while the box is checked or indeterminate; with `keepMounted` it stays mounted while unchecked (hidden from assistive tech via `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"` / `aria-hidden`, `{ checked: false, indeterminate: false }` state). Unlike `AccordionPanel` there is no `display: "none"` — the indicator stays visible by design (Base UI parity: the caller styles it from state). |
 | `keepMounted` | `boolean` | no | `false` | When `true`, the indicator stays mounted while the box is unchecked: mounted but hidden from assistive tech. Default `false` (mounts only while checked or indeterminate — D3: keep-alive stays opt-in). |
 | `render` | `RenderProp<CheckboxIndicatorState, SlotProps>` | no | — | Element or function substitution; the function form receives `(props, state)` with `{ checked, disabled, indeterminate, readOnly }` so the caller can style checked and mixed differently. |
 

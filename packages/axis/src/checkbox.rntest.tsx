@@ -122,12 +122,29 @@ describe("Checkbox on React Native", () => {
         <CheckboxIndicator testID="cb-mark" keepMounted />
       </CheckboxRoot>,
     );
-    // Mounted (layout present) but hidden from assistive tech, with
-    // unchecked state.
-    expect(screen.getByTestId("cb-mark")).toBeTruthy();
-    expect(screen.getByTestId("cb-mark").props.accessible).toBe(false);
+    // Mounted (layout present) but hidden from assistive tech on all
+    // three platforms, with unchecked state. (RNTL hides hidden-from-AT
+    // elements from queries by default — which is itself the proof —
+    // so the hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("cb-mark", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("cb-mark")).toBeNull();
+    const hidden = screen.getByTestId("cb-mark", {
+      includeHiddenElements: true,
+    }).props;
+    expect(hidden.accessibilityElementsHidden).toBe(true);
+    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    expect(hidden["aria-hidden"]).toBe(true);
     await press("cb");
-    expect(screen.getByTestId("cb-mark").props.accessible).toBeUndefined();
+    // Checked: visible and exposed again.
+    expect(
+      screen.getByTestId("cb-mark").props.accessibilityElementsHidden,
+    ).toBe(false);
+    expect(screen.getByTestId("cb-mark").props.importantForAccessibility).toBe(
+      "auto",
+    );
+    expect(screen.getByTestId("cb-mark").props["aria-hidden"]).toBe(false);
   });
 
   it("disabled root blocks toggles: no transitions, no callbacks", async () => {

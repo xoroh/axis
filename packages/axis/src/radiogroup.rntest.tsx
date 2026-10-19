@@ -171,6 +171,24 @@ describe("RadioGroup on React Native", () => {
     expect(screen.getByTestId("s").props.disabled).toBeFalsy();
   });
 
+  it("per-item readOnly freezes that item only", async () => {
+    const seen: string[] = [];
+    await render(
+      <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
+        <RadioGroupItem value="s" testID="s" readOnly />
+        <RadioGroupItem value="m" testID="m" />
+      </RadioGroup>,
+    );
+    await press("s");
+    expect(seen).toEqual([]);
+    expect(screen.getByTestId("s").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    await press("m");
+    expect(seen).toEqual(["m"]);
+  });
+
   it("disabled item never selects while siblings work", async () => {
     const seen: string[] = [];
     await render(

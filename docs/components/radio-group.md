@@ -72,13 +72,14 @@ render inside a `RadioGroup` to participate in selection.
 |---|---|---|---|---|
 | `value` | `string` | yes | — | Selection value contributed to the group when this item is activated. |
 | `disabled` | `boolean` | no | `false` | Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. Combines with root `disabled` (either disables). |
+| `readOnly` | `boolean` | no | `false` | Read-only for this item only: focusable and announced like an enabled option, but it never selects. OR'ed with the group's `readOnly` (either freezes it). |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<RadioGroupItemState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
 | `children` | `ReactNode` | no | — | Item content (label + caller-styled selected mark). |
 | `render` | `RenderProp<RadioGroupItemState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
-`RadioGroupItemState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` — whether this item is currently checked or disabled, and whether the group is read-only (selections do not change).
+`RadioGroupItemState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` — whether this item is currently checked or disabled, and whether it is read-only (own flag OR group `readOnly`; selections do not change either way). A read-only item stays focusable and announces the normal option state.
 
 ### Examples
 

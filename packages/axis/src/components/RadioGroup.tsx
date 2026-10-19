@@ -87,6 +87,14 @@ export type RadioGroupItemProps = {
   value: string;
   /** Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. */
   disabled?: boolean;
+  /**
+   * Read-only for this item only: focusable and announced like an
+   * enabled option, but it never selects. OR'ed with the group's
+   * `readOnly` (either freezes it). Default `false`. Distinct from
+   * `disabled` — React Native maps no readonly key, so the
+   * announcement is the normal option state.
+   */
+  readOnly?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   testID?: string;
@@ -242,6 +250,7 @@ function RadioGroupRoot({
 export function RadioGroupItem({
   value,
   disabled = false,
+  readOnly = false,
   accessibilityLabel,
   testID,
   style,
@@ -250,18 +259,18 @@ export function RadioGroupItem({
 }: RadioGroupItemProps): React.ReactNode {
   const group = useContext(RadioGroupSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
-  const readOnly = group?.groupReadOnly ?? false;
+  const effectiveReadOnly = readOnly || (group?.groupReadOnly ?? false);
   const checked = group?.selectedValue === value;
 
   const selectItem = useCallback(() => {
-    if (effectiveDisabled) return;
+    if (effectiveDisabled || effectiveReadOnly) return;
     group?.select(value);
-  }, [effectiveDisabled, group, value]);
+  }, [effectiveDisabled, effectiveReadOnly, group, value]);
 
   const state: RadioGroupItemState = {
     checked,
     disabled: effectiveDisabled,
-    readOnly,
+    readOnly: effectiveReadOnly,
   };
   const substituted = resolveRender(
     render,

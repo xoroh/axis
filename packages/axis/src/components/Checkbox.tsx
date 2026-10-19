@@ -114,10 +114,14 @@ export type CheckboxIndicatorProps = {
   children?: ReactNode;
   /**
    * When `true`, the indicator stays mounted while the box is
-   * unchecked: mounted but hidden from assistive tech, with
-   * `{ checked: false, indeterminate: false }` state. Default
-   * `false` (mounts only while checked or indeterminate — D3:
-   * keep-alive stays opt-in).
+   * unchecked: mounted but hidden from assistive tech
+   * (`accessibilityElementsHidden` on iOS,
+   * `importantForAccessibility="no-hide-descendants"` on Android,
+   * `aria-hidden` on web), with `{ checked: false,
+   * indeterminate: false }` state. The indicator stays visible by
+   * design (Base UI parity — the caller styles it from state).
+   * Default `false` (mounts only while checked or indeterminate —
+   * D3: keep-alive stays opt-in).
    */
   keepMounted?: boolean;
   /**
@@ -294,7 +298,18 @@ export function CheckboxIndicator({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style} accessible={shown ? undefined : false}>
+    <View
+      testID={testID}
+      style={style}
+      // `accessible={false}` alone does NOT hide children from
+      // VoiceOver/TalkBack — hide the mounted-but-unchecked
+      // indicator on all three platforms explicitly. Unlike
+      // `AccordionPanel`, the indicator stays visible by design
+      // (Base UI parity: the caller styles it from state).
+      accessibilityElementsHidden={!shown}
+      importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
+      aria-hidden={!shown}
+    >
       {children}
     </View>
   );
