@@ -64,6 +64,7 @@ function resolve(options: {
   reportSize?: boolean;
   matchAnchorWidth?: boolean;
   viewportPadding?: number;
+  contentOffset?: { x?: number; y?: number };
 }): Resolved {
   const {
     node,
@@ -72,6 +73,7 @@ function resolve(options: {
     reportSize = true,
     matchAnchorWidth,
     viewportPadding,
+    contentOffset,
   } = options;
   const anchorRef: MeasurableRef = { current: node };
   let latest: Resolved | undefined;
@@ -81,6 +83,7 @@ function resolve(options: {
       active,
       matchAnchorWidth,
       viewportPadding,
+      contentOffset,
     });
     return null;
   }
@@ -110,6 +113,15 @@ function webNode(): MeasurableRef["current"] {
       height: 40,
     }),
   };
+}
+
+function webNodeAt(rect: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}): MeasurableRef["current"] {
+  return { getBoundingClientRect: () => ({ ...rect }) };
 }
 
 describe("useFloatingPlacement anchor shapes", () => {
@@ -226,6 +238,29 @@ describe("useFloatingPlacement anchor shapes", () => {
     const floating = resolve({ node: webNode() });
     expect(floating.style).toMatchObject({ left: 10, top: 60 });
     expect("width" in (floating.style as Record<string, unknown>)).toBe(false);
+  });
+
+  it("shifts the popup by the content offset", () => {
+    // alignItemWithTrigger: the item's list-local origin lands on the
+    // trigger's origin (anchor y 200 minus a 30px item offset opens
+    // the list at y 170).
+    const floating = resolve({
+      node: webNodeAt({ left: 10, top: 200, width: 100, height: 40 }),
+      contentOffset: { x: 0, y: 30 },
+    });
+    expect(floating.style).toMatchObject({ left: 10, top: 170 });
+  });
+
+  it("clamps the shifted popup into the viewport", () => {
+    // A large upward shift near the top edge clamps into the padded
+    // viewport instead of leaving the screen: anchor y 20 shifted by
+    // 100 would sit at y -80, so it pins to the 8px top padding.
+    const floating = resolve({
+      node: webNodeAt({ left: 10, top: 20, width: 100, height: 40 }),
+      contentOffset: { x: 0, y: 100 },
+      viewportPadding: 8,
+    });
+    expect(floating.style).toMatchObject({ left: 10, top: 8 });
   });
 
   it("finds a transformed containing block the offset parent misses", () => {

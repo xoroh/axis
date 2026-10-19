@@ -565,7 +565,12 @@ describe("OverlayRoot on React Native", () => {
         <OverlayExample open={true} testPrefix="probe" />
       </PortalHost>,
     );
-    expect(screen.getByTestId("modal-probe").props.children).toBe("modal");
+    // The open modal hides background probes from accessibility queries;
+    // the registry value is read through the hidden node.
+    expect(
+      screen.getByTestId("modal-probe", { includeHiddenElements: true }).props
+        .children,
+    ).toBe("modal");
   });
 
   it("exposes context value via useOverlay() inside OverlayRoot", async () => {

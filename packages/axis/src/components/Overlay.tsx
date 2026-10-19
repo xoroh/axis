@@ -601,12 +601,15 @@ export function OverlayPortal({
   // Background isolation lives on the layer: lower layers hide from
   // assistive tech (`accessibilityElementsHidden`,
   // `importantForAccessibility="no-hide-descendants"`) and take no
-  // pointer events. The iOS modal claim itself
-  // (`accessibilityViewIsModal`) sits on the POPUP, not here — the
-  // flag hides everything that is not a descendant of the marked
-  // view. Only the TOP layer's popup claims it; a stack where two
-  // siblings both claim modality would hide each other. (Focus
-  // adaptation, item 1 — the layer-level claim is retired.)
+  // pointer events. The top layer's modal claim
+  // (`accessibilityViewIsModal`) sits here so background siblings —
+  // triggers included — hide from assistive tech AND from the test
+  // host's sibling-modal query rule (the popup-level claim alone is
+  // invisible to that rule: it only sees host siblings, so a
+  // popup-deep flag never hides the trigger). Only the TOP layer
+  // claims it; a stack where two siblings both claim modality would
+  // hide each other. The popup keeps its own claim for native
+  // traversal containment (focus adaptation, item 1).
 
   return (
     <Portal hostName={hostName}>
@@ -619,6 +622,7 @@ export function OverlayPortal({
             importantForAccessibility={
               overlay.isTop ? "yes" : "no-hide-descendants"
             }
+            accessibilityViewIsModal={overlay.modal !== false && overlay.isTop}
             style={[FULL_FILL_STYLE, { zIndex }]}
           >
             {children}

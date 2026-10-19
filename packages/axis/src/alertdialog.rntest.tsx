@@ -157,7 +157,10 @@ describe("AlertDialog compound parts on React Native", () => {
     await press("ad-trigger");
     expect(changed).toEqual([{ open: true, reason: "trigger-press" }]);
     expect(screen.getByTestId("ad")).toBeTruthy();
-    await press("ad-trigger");
+    // The open modal hides the background trigger from accessibility
+    // queries (layer modal claim); the toggle wiring is still exercised
+    // through the hidden node.
+    await press("ad-trigger", true);
     expect(changed).toEqual([
       { open: true, reason: "trigger-press" },
       { open: false, reason: "trigger-press" },

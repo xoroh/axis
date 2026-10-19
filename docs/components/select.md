@@ -1,10 +1,11 @@
 ## Select
 
-Single-select dropdown: the trigger shows the current label (or a
-placeholder when nothing is chosen); opening presents the option
-list, measured and placed against the trigger anchor; choosing an
-option commits the value and closes. Structure, behavior, and
-accessibility only — every visual value is caller-provided. State
+Single- or multi-select dropdown: the trigger shows the current
+label (or a placeholder when nothing is chosen); opening presents
+the option list, measured and placed against the trigger anchor;
+choosing an option commits the value (and closes, unless
+`multiple` keeps the list open for toggling). Structure, behavior,
+and accessibility only — every visual value is caller-provided. State
 follows the controlled + uncontrolled pattern throughout: `value`
 (plus `onValueChange`) for controlled selection, `defaultValue` for
 uncontrolled; `open` (plus `onOpenChange`) for controlled open
@@ -20,8 +21,10 @@ Source of truth: `SelectItemProps`,
 `SelectPositionerState`, `SelectPopupProps`, `SelectPopupState`,
 `SelectArrowProps`, `SelectGroupProps`, `SelectGroupLabelProps`,
 `SelectSeparatorProps`, `SelectItemTextProps`,
-`SelectItemIndicatorProps` in `@xoroh/axis`
-(`packages/axis/src/components/Select.tsx:107-189, 619-855`).
+`SelectItemIndicatorProps`, `SelectScrollUpArrowProps`,
+`SelectScrollDownArrowProps`, `SelectScrollArrowState` in
+`@xoroh/axis`
+(`packages/axis/src/components/Select.tsx:110-200, 395-620, 772-960, 1776-1835`).
 
 ### Install
 
@@ -53,9 +56,11 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `SelectValue` | `Select.Value` | Label display (registered label, `items` table, raw value, then placeholder); function children format without a lookup table. |
 | `SelectPortal` | `Select.Portal` | `OverlayPortal` host when modal — the list escapes clipped parents; plain in-box `View` when non-modal. |
 | `SelectBackdrop` | `Select.Backdrop` | Scrim dismissal, modal roots only. |
-| `SelectPositioner` | `Select.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets, viewport flip). |
-| `SelectPopup` | `Select.Popup` | Listbox-role content box; option press selects + closes. |
+| `SelectPositioner` | `Select.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets, viewport flip, `alignItemWithTrigger`). |
+| `SelectPopup` | `Select.Popup` | Listbox-role content box; option press selects (+ closes unless `multiple`). |
 | `SelectArrow` | `Select.Arrow` | Caller-positioned marker; geometry is caller style. |
+| `SelectScrollUpArrow` | `Select.ScrollUpArrow` | Jumps the caller's scroller (via `scrollRef`) to the top; no-op without the method. |
+| `SelectScrollDownArrow` | `Select.ScrollDownArrow` | Jumps the caller's scroller (via `scrollRef`) to the end; no-op without the method. |
 | `SelectItem` | `Select.Item` | Option (`value` required, `label` lookup, per-item `disabled`). |
 | `SelectItemText` | `Select.ItemText` | Item label content; registers as the item's text when the item has no `label`. |
 | `SelectItemIndicator` | `Select.ItemIndicator` | Check mark; renders only while the enclosing item is selected. |
@@ -66,14 +71,23 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 Omitted Base UI pieces are documented deviations, not
 oversights: no `Label` (trigger `accessibilityLabel`), no `Icon`
 (compose into `Trigger`), no `List` (the popup IS the list
-container), no scroll arrows (Base hides them on touch), no
-`alignItemWithTrigger` (Base disables it for touch input), no
-`multiple`/form props, no `container` (no native meaning) — all
-recorded in `docs/BASE_UI_PARITY.md` (§ Select — aligned). No
-filtering: search text entry is Combobox, which filters through the
-shared `collection` model — `Select` has no `filterValue`, and
-hardware-keyboard typeahead is consumed internally (prefix match
-moves selection) without a part of its own.
+container), no `multiple`/form props on Combobox/Autocomplete (those
+families stay single-value), no `container` (no native meaning) —
+all recorded in `docs/BASE_UI_PARITY.md` (§ Select — aligned). No
+filtering in Select: search text entry is Combobox, which filters
+through the shared `collection` model — `Select` has no
+`filterValue`, and hardware-keyboard typeahead is consumed
+internally (prefix match moves selection; under `multiple` it
+highlights without committing) without a part of its own.
+
+`alignItemWithTrigger` (default `true`) opens the popup with the
+selected item over the trigger — the positioning hook shifts the
+resolved box by the selected item's list-local origin (reported on
+item layout) and clamps back into the viewport; with no selection
+(or before the layout lands) it falls back to plain trigger
+anchoring. On native the same layout math runs (no DOM involved),
+so there is no native N/A — the prop simply applies on both
+renderers.
 
 ### Overlay hosting
 
@@ -98,9 +112,10 @@ direct `Overlay` compositions (see `docs/components/overlay.md`).
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `value` | `string \| null` | no | — | Controlled selection (`null` for none). Wins over `defaultValue` when defined. |
-| `defaultValue` | `string \| null` | no | `null` | Uncontrolled initial selection. |
-| `onValueChange` | `(value: string) => void` | no | — | Fires with the chosen item value on every committed selection. |
+| `value` | `string \| string[] \| null` | no | — | Controlled selection (`null` for none; an array with `multiple`). Wins over `defaultValue` when defined. |
+| `defaultValue` | `string \| string[] \| null` | no | `null` | Uncontrolled initial selection. |
+| `onValueChange` | `(value: string \| string[]) => void` | no | — | Fires with the chosen item value on every committed selection. With `multiple`, the full array after every toggle. |
+| `multiple` | `boolean` | no | `false` | Multi-select: choosing toggles membership and never closes; `SelectValue` shows the joined labels. |
 | `items` | `ReadonlyArray<{ value: string; label: string }>` | no | — | Static value-label lookup table (Base UI `items` parity): items unmount with a closed list, so pass `items` for the label (not the raw value) to show while closed. Live registrations win while mounted. |
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
@@ -112,7 +127,7 @@ direct `Overlay` compositions (see `docs/components/overlay.md`).
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded nowhere (the root renders no element); accepted so ref-spreading callers typecheck. |
 
-`SelectRootState`: `{ open: boolean; value: string | null }`.
+`SelectRootState`: `{ open: boolean; value: string | string[] | null }`.
 
 #### `SelectTrigger`
 
@@ -132,12 +147,12 @@ direct `Overlay` compositions (see `docs/components/overlay.md`).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `placeholder` | `ReactNode` | no | — | Shown when nothing is selected. |
-| `children` | `ReactNode \| ((value: string \| null) => ReactNode)` | no | — | A node, or a function of the selected value (Base UI parity — formatting without a lookup table). Defaults to the selected item's registered label, else the raw value, else the placeholder. |
+| `children` | `ReactNode \| ((value: string \| string[] \| null) => ReactNode)` | no | — | A node, or a function of the selected value (Base UI parity — formatting without a lookup table). Defaults to the selected item's registered label (joined with `", "` under `multiple`), else the raw value, else the placeholder. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<SelectValueState, StyleProp<TextStyle>>` | no | — | Value style: a value or a function of value state. |
 | `render` | `RenderProp<SelectValueState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
-`SelectValueState`: `{ value: string | null; placeholder: boolean }` — whether the placeholder is showing.
+`SelectValueState`: `{ value: string | string[] | null; placeholder: boolean }` — whether the placeholder is showing.
 
 #### `SelectPortal`
 
@@ -172,6 +187,7 @@ plain host with no label and no handler — no fake affordance.
 | `align` | `Align` | no | `"center"` | Cross-axis alignment. |
 | `sideOffset` | `number` | no | `0` | Gap between anchor and list edges. |
 | `alignOffset` | `number` | no | `0` | Shift along the cross axis after alignment. |
+| `alignItemWithTrigger` | `boolean` | no | `true` | Align the selected item over the trigger (falls back to trigger anchoring with no selection). |
 | `testID` | `string` | no | — | Test identifier, forwarded to the positioner host. |
 | `style` | `StateStyle<SelectPositionerState, StyleProp<ViewStyle>>` | no | — | Positioner style: a value or a function of positioner state. |
 | `children` | `ReactNode` | no | — | Popup (and optional Arrow content) composed by the caller. |
@@ -203,6 +219,31 @@ outside a root and while closed. Typeahead keys are handled here
 | `style` | `StyleProp<ViewStyle>` | no | — | Marker style, caller-provided (static — positioning is caller geometry). |
 | `children` | `ReactNode` | no | — | Marker content (usually none — the shape is caller style). |
 | `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution; the function form receives an empty state object. |
+
+#### `SelectScrollUpArrow` / `SelectScrollDownArrow`
+
+Long-list chrome (Base UI parity): press jumps the caller's
+scroller to the top / end. The caller composes a scrolling host
+(usually a `ScrollView`) around the items inside `SelectPopup`
+and hands its ref over — anything without the host scroll method
+is a no-op, so a caller typo never crashes the list. Both parts
+share the same shape; only the direction and default label
+(`"Scroll up"` / `"Scroll down"`) differ.
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | `StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>` | no | — | Arrow style: a value or a function of arrow state. |
+| `children` | `ReactNode` | no | — | Arrow marker content (usually a chevron glyph). |
+| `disabled` | `boolean` | no | `false` | Terminal: it never scrolls and is announced as disabled. |
+| `accessibilityLabel` | `string` | no | `"Scroll up"` / `"Scroll down"` | Accessible name source. |
+| `scrollRef` | `RefObject<unknown>` | no | — | Ref to the scrolling host the default press jumps (top / end). |
+| `onPress` | `() => void` | no | — | Runs after the default scroll-to-edge. Composes like the trigger `onPress` (internal first, then the caller's handler). |
+| `render` | `RenderProp<SelectScrollArrowState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+`SelectScrollArrowState`: `{ open: boolean; disabled: boolean }` —
+whether the list is currently open and whether the arrow is
+disabled.
 
 #### `SelectItem`
 
