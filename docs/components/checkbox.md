@@ -73,6 +73,7 @@ aligned).
 | `onCheckedChange` | `(checked: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
 | `indeterminate` | `boolean` | no | `false` | Mixed state: neither ticked nor unticked. Announced as the `mixed` checked mapping; the indicator mounts while set. Caller-owned: toggling does not clear it. |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks, announced as disabled. |
+| `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled checkbox, but presses do not change state and no callbacks fire. Distinct from `disabled` (which blocks interaction and announces disabled) — React Native maps no readonly key, so the announcement is the normal checkbox state. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
@@ -81,7 +82,7 @@ aligned).
 | `render` | `RenderProp<CheckboxState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root pressable host element. |
 
-`CheckboxState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean }`.
+`CheckboxState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean; readOnly: boolean }`.
 
 #### `CheckboxIndicator`
 
@@ -89,13 +90,16 @@ aligned).
 |---|---|---|---|---|
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Indicator style, caller-provided. |
-| `children` | `ReactNode` | no | — | Indicator content. Mounts while the box is checked or indeterminate; nothing mounts otherwise. |
-| `render` | `RenderProp<CheckboxIndicatorState, SlotProps>` | no | — | Element or function substitution; the function form receives `(props, state)` with `{ checked, disabled, indeterminate }` so the caller can style checked and mixed differently. |
+| `children` | `ReactNode` | no | — | Indicator content. Mounts while the box is checked or indeterminate; with `keepMounted` it stays mounted while unchecked (hidden from assistive tech via `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"` / `aria-hidden`, `{ checked: false, indeterminate: false }` state). Unlike `AccordionPanel` there is no `display: "none"` — the indicator stays visible by design (Base UI parity: the caller styles it from state). |
+| `keepMounted` | `boolean` | no | `false` | When `true`, the indicator stays mounted while the box is unchecked: mounted but hidden from assistive tech. Default `false` (mounts only while checked or indeterminate — D3: keep-alive stays opt-in). |
+| `render` | `RenderProp<CheckboxIndicatorState, SlotProps>` | no | — | Element or function substitution; the function form receives `(props, state)` with `{ checked, disabled, indeterminate, readOnly }` so the caller can style checked and mixed differently. |
 
-`CheckboxIndicatorState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean }`.
+`CheckboxIndicatorState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean; readOnly: boolean }`.
 
 Outside a root the indicator never mounts — it must render
-inside a `CheckboxRoot` to participate.
+inside a `CheckboxRoot` to participate. Read-only boxes (like
+disabled ones) never toggle; unlike disabled ones they stay
+focusable and announce the normal checkbox state.
 
 ### Examples
 
@@ -164,6 +168,26 @@ function SelectAll() {
       <CheckboxIndicator>
         <Text>{indeterminate ? "–" : "✓"}</Text>
       </CheckboxIndicator>
+    </CheckboxRoot>
+  );
+}
+```
+
+Read-only with a mounted-but-hidden indicator (the box never
+toggles, but stays focusable; the indicator is in the tree for
+layout, hidden from assistive tech until checked):
+
+```tsx
+import { Text } from "react-native";
+import { CheckboxIndicator, CheckboxRoot } from "@xoroh/axis";
+
+function Locked() {
+  return (
+    <CheckboxRoot
+      accessibilityLabel="Terms version"
+      readOnly
+    >
+      <CheckboxIndicator keepMounted testID="terms-mark" />
     </CheckboxRoot>
   );
 }

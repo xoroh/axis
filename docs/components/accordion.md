@@ -135,7 +135,8 @@ recorded in `docs/BASE_UI_PARITY.md` (§ Accordion — aligned).
 |---|---|---|---|---|
 | `testID` | `string` | no | — | Test identifier, forwarded to the panel host. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Panel view style, caller-provided (static — the panel mounts only while open; its state is constant). |
-| `children` | `ReactNode` | no | — | Panel content, rendered inside a `View` only while the item is open. |
+| `children` | `ReactNode` | no | — | Panel content, rendered inside a `View` only while the item is open (or always with `keepMounted`). |
+| `keepMounted` | `boolean` | no | `false` | When `true`, the panel stays mounted while the item is closed: mounted but invisible (`display: "none"` merged after the caller style — the Base UI `hidden` attribute equivalent, state-driven visibility not a default style) and hidden from assistive tech (`accessibilityElementsHidden` on iOS, `importantForAccessibility="no-hide-descendants"` on Android, `aria-hidden` on web — `accessible={false}` alone does not hide children). Default `false` (mounts only while open — D3: keep-alive stays opt-in). |
 | `render` | `RenderProp<AccordionPanelState, SlotProps>` | no | — | Element or function substitution; the panel still mounts only while the item is open. |
 
 `AccordionPanelState`: `{ open: boolean; disabled: boolean }`.

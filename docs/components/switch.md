@@ -50,6 +50,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `defaultChecked` | `boolean` | no | `false` | Uncontrolled initial state. |
 | `onCheckedChange` | `(checked: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks, announced as disabled. |
+| `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled switch, but presses do not change state and no callbacks fire. Distinct from `disabled` (which blocks interaction and announces disabled) — React Native maps no readonly key, so the announcement is the normal switch state. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
@@ -59,9 +60,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `render` | `RenderProp<SwitchState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root pressable host element. |
 
-`SwitchState`: `{ checked: boolean; disabled: boolean }` —
-whether the switch is currently on, and whether it is currently
-disabled.
+`SwitchState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` —
+whether the switch is currently on, disabled, or read-only. Read-only
+switches (like disabled ones) never toggle; unlike disabled ones they
+stay focusable and announce the normal switch state.
 
 The switch takes no `children`: the track/thumb pair is the
 visual, and both are caller `style`.

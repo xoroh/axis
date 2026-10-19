@@ -90,6 +90,43 @@ export const SwitchDemo: Demo = {
             }}
           />
         </View>
+
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 20,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Read-only switch:
+          </Text>
+          <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+            Focusable and announced as enabled, but presses change nothing.
+          </Text>
+          <Switch
+            accessibilityLabel="Demo read-only switch"
+            defaultChecked
+            readOnly
+            trackStyle={{
+              width: 52,
+              height: 30,
+              borderRadius: 15,
+              backgroundColor: theme.primary,
+              padding: 2,
+            }}
+            thumbStyle={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: theme.primaryFg,
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+            }}
+          />
+        </View>
       </View>
     );
   },

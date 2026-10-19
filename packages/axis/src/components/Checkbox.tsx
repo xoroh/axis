@@ -43,6 +43,14 @@ export type CheckboxState = {
   disabled: boolean;
   /** Whether the checkbox is in the mixed state. Default `false`. */
   indeterminate: boolean;
+  /**
+   * Whether the checkbox is read-only. Default `false`. Focusable
+   * and announced like an enabled checkbox, but presses do not
+   * change state (distinct from `disabled`, which blocks interaction
+   * and announces disabled — React Native maps no readonly key, so
+   * the announcement is the normal checkbox state).
+   */
+  readOnly: boolean;
 };
 
 export type CheckboxIndicatorState = {
@@ -52,6 +60,8 @@ export type CheckboxIndicatorState = {
   disabled: boolean;
   /** Whether the checkbox is in the mixed state. */
   indeterminate: boolean;
+  /** Whether the checkbox is read-only. */
+  readOnly: boolean;
 };
 
 export type CheckboxRootProps = {
@@ -69,6 +79,14 @@ export type CheckboxRootProps = {
   indeterminate?: boolean;
   /** Terminal: no transitions, no callbacks, announced as disabled. */
   disabled?: boolean;
+  /**
+   * Read-only: focusable and announced like an enabled checkbox,
+   * but presses do not change state and no callbacks fire. Default
+   * `false`. Distinct from `disabled` (which blocks interaction and
+   * announces disabled) — React Native maps no readonly key, so the
+   * announcement is the normal checkbox state.
+   */
+  readOnly?: boolean;
   /** Accessible name source. */
   accessibilityLabel?: string;
   /** Native labelled-by association where the platform supports it. */
@@ -92,14 +110,26 @@ export type CheckboxIndicatorProps = {
   testID?: string;
   /** Indicator style, caller-provided. */
   style?: StyleProp<ViewStyle>;
-  /** Indicator content. Mounts while the box is checked or indeterminate. */
+  /** Indicator content. Mounts while the box is checked or indeterminate (or always with `keepMounted`). */
   children?: ReactNode;
+  /**
+   * When `true`, the indicator stays mounted while the box is
+   * unchecked: mounted but hidden from assistive tech
+   * (`accessibilityElementsHidden` on iOS,
+   * `importantForAccessibility="no-hide-descendants"` on Android,
+   * `aria-hidden` on web), with `{ checked: false,
+   * indeterminate: false }` state. The indicator stays visible by
+   * design (Base UI parity — the caller styles it from state).
+   * Default `false` (mounts only while checked or indeterminate —
+   * D3: keep-alive stays opt-in).
+   */
+  keepMounted?: boolean;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)` with `{ checked, disabled,
-   * indeterminate }` so the caller can style checked and mixed
-   * differently.
+   * indeterminate, readOnly }` so the caller can style checked and
+   * mixed differently.
    */
   render?: RenderProp<CheckboxIndicatorState, SlotProps>;
 };
@@ -108,6 +138,7 @@ type CheckboxDisclosure = {
   checked: boolean;
   disabled: boolean;
   indeterminate: boolean;
+  readOnly: boolean;
 };
 
 /**
@@ -150,6 +181,7 @@ export function CheckboxRoot({
   onCheckedChange,
   indeterminate = false,
   disabled = false,
+  readOnly = false,
   accessibilityLabel,
   accessibilityLabelledBy,
   testID,
@@ -165,9 +197,9 @@ export function CheckboxRoot({
   );
 
   const toggle = useCallback(() => {
-    if (disabled) return;
+    if (disabled || readOnly) return;
     setChecked((previous) => !(previous ?? false));
-  }, [disabled, setChecked]);
+  }, [disabled, readOnly, setChecked]);
 
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
@@ -183,6 +215,7 @@ export function CheckboxRoot({
     checked: isChecked ?? false,
     disabled,
     indeterminate,
+    readOnly,
   };
   const substituted = resolveRender(
     render,
@@ -221,7 +254,12 @@ export function CheckboxRoot({
       style={resolveStyle(style, state)}
     >
       <CheckboxDisclosureContext.Provider
-        value={{ checked: isChecked ?? false, disabled, indeterminate }}
+        value={{
+          checked: isChecked ?? false,
+          disabled,
+          indeterminate,
+          readOnly,
+        }}
       >
         {children}
       </CheckboxDisclosureContext.Provider>
@@ -233,17 +271,20 @@ export function CheckboxIndicator({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: CheckboxIndicatorProps): React.ReactNode {
   const disclosure = useContext(CheckboxDisclosureContext);
   if (!disclosure) return null;
-  const { checked, disabled, indeterminate } = disclosure;
-  if (!checked && !indeterminate) return null;
+  const { checked, disabled, indeterminate, readOnly } = disclosure;
+  const shown = checked || indeterminate;
+  if (!shown && !keepMounted) return null;
 
   const state: CheckboxIndicatorState = {
     checked,
     disabled,
     indeterminate,
+    readOnly,
   };
   const substituted = resolveRender(
     render,
@@ -257,7 +298,18 @@ export function CheckboxIndicator({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      style={style}
+      // `accessible={false}` alone does NOT hide children from
+      // VoiceOver/TalkBack — hide the mounted-but-unchecked
+      // indicator on all three platforms explicitly. Unlike
+      // `AccordionPanel`, the indicator stays visible by design
+      // (Base UI parity: the caller styles it from state).
+      accessibilityElementsHidden={!shown}
+      importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
+      aria-hidden={!shown}
+    >
       {children}
     </View>
   );

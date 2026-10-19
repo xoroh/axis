@@ -143,6 +143,52 @@ describe("RadioGroup on React Native", () => {
     });
   });
 
+  it("readOnly group stays focusable and announced as enabled, but selections never change", async () => {
+    let calls = 0;
+    await render(
+      <RadioGroup
+        testID="rg"
+        accessibilityLabel="Size"
+        readOnly
+        onValueChange={() => (calls += 1)}
+      >
+        <RadioGroupItem value="s" testID="s" />
+        <RadioGroupItem value="m" testID="m" />
+      </RadioGroup>,
+    );
+    await press("s");
+    await press("m");
+    expect(calls).toBe(0);
+    // Items stay enabled and focusable — only the selection is frozen.
+    expect(screen.getByTestId("s").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    expect(screen.getByTestId("m").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    expect(screen.getByTestId("s").props.disabled).toBeFalsy();
+  });
+
+  it("per-item readOnly freezes that item only", async () => {
+    const seen: string[] = [];
+    await render(
+      <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
+        <RadioGroupItem value="s" testID="s" readOnly />
+        <RadioGroupItem value="m" testID="m" />
+      </RadioGroup>,
+    );
+    await press("s");
+    expect(seen).toEqual([]);
+    expect(screen.getByTestId("s").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    await press("m");
+    expect(seen).toEqual(["m"]);
+  });
+
   it("disabled item never selects while siblings work", async () => {
     const seen: string[] = [];
     await render(
