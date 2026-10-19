@@ -83,6 +83,19 @@ export function isWebEnvironment(): boolean {
   );
 }
 
+/**
+ * Web-only `tabIndex={-1}` spread for popup and title hosts: makes the
+ * node programmatically focusable (a fallback initial target, and the
+ * Tab-trap container) without adding a tab stop. React Native Web maps
+ * it to the attribute; native ignores it. Typed for `View` (whose
+ * props declare `tabIndex`); `Text` hosts spread the same shape with a
+ * local suppression — RN types omit `tabIndex` there even though RNW
+ * honors it.
+ */
+export function webTabIndexProps(web: boolean): { tabIndex?: -1 } {
+  return web ? { tabIndex: -1 } : {};
+}
+
 /** Move screen-reader focus to `target`. Returns a cancel for the deferred SR-tree focus. */
 export function focusAccessibilityNode(target: unknown): () => void {
   if (!target) return () => {};
@@ -387,6 +400,19 @@ export function useScopeStop(
   return setNode;
 }
 
+/**
+ * Open-transition bookkeeping shared across a root's lifetime. Lives
+ * in the stable per-root refs (not in hook-local `useRef`s) so a
+ * portal remount — e.g. a sibling trigger unmounting in the same
+ * commit as close, which remounts the keyless portal subtree — never
+ * loses the open transition or the D11 ancestor stash.
+ */
+export type FocusTransitionState = {
+  wasOpen: boolean;
+  moved: boolean;
+  ancestor: unknown;
+};
+
 /* ------------------------------------------------------------------ */
 /* Unified popup focus (move in, restore out)                          */
 /* ------------------------------------------------------------------ */
@@ -419,6 +445,16 @@ export function useModalFocus(options: {
   skipStops?: boolean;
   /** How the surface opened (trigger press vs programmatic). Default `programmatic`. */
   interactionRef?: { current: FocusInteraction };
+  /**
+   * Transition bookkeeping shared across a root's lifetime. When
+   * provided, the open transition, move flag, and D11 ancestor stash
+   * live here instead of hook-local refs — so a portal remount (e.g.
+   * a sibling trigger unmounting in the same commit as close, which
+   * remounts the keyless portal subtree) never loses the transition
+   * the restore path needs. Omit for monoliths (their component
+   * persists across open and close).
+   */
+  sharedState?: FocusTransitionState;
   /** Node receiving focus on open when nothing else resolves. */
   popupRef: { readonly current: unknown };
   /** Node receiving focus back on close (the trigger). */
@@ -433,27 +469,28 @@ export function useModalFocus(options: {
     scope = null,
     skipStops = false,
     interactionRef,
+    sharedState,
     popupRef,
     restoreRef,
   } = options;
-  const wasOpenRef = useRef(false);
-  const movedRef = useRef(false);
-  // Nearest focusable ancestor of the live trigger, stashed while the
-  // surface is open: the D11 web fallback when the trigger unmounted
-  // while open (browsers no-op `.focus()` on disconnected nodes, so
-  // the stash must name an element still in the document).
-  const ancestorRef = useRef<unknown>(null);
-
+  // Hook-local fallback for surfaces without a root (monoliths): their
+  // component persists, so locals survive open and close.
+  const localState = useRef<FocusTransitionState>({
+    wasOpen: false,
+    moved: false,
+    ancestor: null,
+  });
+  const st = sharedState ?? localState.current;
   useEffect(() => {
     const web = isWebEnvironment();
     if (web && open && restoreRef.current != null) {
-      ancestorRef.current = closestFocusableAncestor(restoreRef.current);
+      st.ancestor = closestFocusableAncestor(restoreRef.current);
     }
-    const wasOpen = wasOpenRef.current;
-    wasOpenRef.current = open;
+    const wasOpen = st.wasOpen;
+    st.wasOpen = open;
 
     if (open && !wasOpen) {
-      movedRef.current = false;
+      st.moved = false;
       if (!enabled || initialFocus === false) return undefined;
       const interaction = interactionRef?.current ?? "programmatic";
       if (interactionRef) interactionRef.current = "programmatic";
@@ -461,7 +498,7 @@ export function useModalFocus(options: {
       const target =
         explicit ?? resolveDefaultTarget(web, scope, skipStops, popupRef);
       if (target == null) return undefined;
-      movedRef.current = true;
+      st.moved = true;
       if (web) {
         focusDomNode(target);
         return undefined;
@@ -470,8 +507,8 @@ export function useModalFocus(options: {
     }
 
     if (!open && wasOpen) {
-      if (!movedRef.current) return undefined;
-      movedRef.current = false;
+      if (!st.moved) return undefined;
+      st.moved = false;
       if (!enabled || !restoreEnabled || finalFocus === false) return undefined;
       const interaction = interactionRef?.current ?? "programmatic";
       const explicit = resolveFocusNode(finalFocus, interaction);
@@ -488,8 +525,8 @@ export function useModalFocus(options: {
       // focusable ancestor when it is still connected (D11); on native
       // do nothing and never throw — RN has no focusable-ancestor
       // query, so a stale target is a silent no-op.
-      if (web && isConnectedNode(ancestorRef.current)) {
-        focusDomNode(ancestorRef.current);
+      if (web && isConnectedNode(st.ancestor)) {
+        focusDomNode(st.ancestor);
       }
       return undefined;
     }
@@ -504,6 +541,7 @@ export function useModalFocus(options: {
     scope,
     skipStops,
     interactionRef,
+    sharedState,
     popupRef,
     restoreRef,
   ]);
@@ -524,7 +562,10 @@ function resolveDefaultTarget(
   const marked = scope?.markedInitial() ?? null;
   if (marked != null) return marked;
   const node = popupRef.current;
-  if (web && node != null) {
+  // Web first-tabbable — unless the family skips stops (drawers
+  // default to the container or Title, never a destructive action,
+  // so no DOM query either).
+  if (web && !skipStops && node != null) {
     const tabbables = getFocusableElements(node);
     if (tabbables.length > 0) return tabbables[0];
   }

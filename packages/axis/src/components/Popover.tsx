@@ -51,6 +51,7 @@ import {
   useModalFocus,
   useScopeStop,
   useScopeTitle,
+  webTabIndexProps,
 } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
@@ -279,6 +280,7 @@ export function Popover({
             // precedent); scrim press is the Android/talk path.
             onAccessibilityEscape={() => dismiss("escape-key")}
             ref={setBoxRef}
+            {...webTabIndexProps(isWebEnvironment())}
             onLayout={floating.onContentLayout}
             style={[floating.style, popoverStyle]}
           >
@@ -709,8 +711,10 @@ export function PopoverPortal({
 }: PopoverPortalProps): React.JSX.Element | null {
   const disclosure = useContext(PopoverDisclosureContext);
   // Outside a root there is no open state to present: render nothing.
+  // NOTE: no `open` gate — the portal stays mounted through the exit
+  // commit so the popup's focus hook observes the close transition;
+  // the parts below still paint nothing while closed.
   if (!disclosure) return null;
-  if (!disclosure.open) return null;
 
   // Non-modal roots (the default for popovers) present through the
   // plain `Portal` at the app's `PortalHost` — above sibling content,
@@ -873,6 +877,7 @@ export function PopoverPopup({
     finalFocus: finalFocus ?? overlay?.finalFocus,
     scope: focusScope,
     interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
     popupRef: popupNodeRef,
     restoreRef: disclosure?.anchorHostRef ?? { current: null },
   });
@@ -910,6 +915,7 @@ export function PopoverPopup({
       accessibilityViewIsModal: modalActive,
       ...(web && modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -932,6 +938,7 @@ export function PopoverPopup({
         accessibilityViewIsModal={modalActive}
         {...(web && modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
+        {...webTabIndexProps(web)}
         style={resolveStyle(style, state)}
       >
         {children}
@@ -948,10 +955,17 @@ export function PopoverTitle({
 }: PopoverTitleProps): React.ReactNode {
   const scope = useFocusScopeMaybe();
   const setTitleNode = useScopeTitle(scope);
+  const web = isWebEnvironment();
 
   const substituted = resolveRender(
     render,
-    { testID, style, children, ref: setTitleNode } satisfies SlotProps,
+    {
+      testID,
+      style,
+      children,
+      ref: setTitleNode,
+      ...webTabIndexProps(web),
+    } satisfies SlotProps,
     {},
   );
   if (substituted !== null) return substituted;
@@ -961,6 +975,7 @@ export function PopoverTitle({
       accessibilityRole="header"
       testID={testID}
       style={style}
+      {...webTabIndexProps(web)}
     >
       {children}
     </Text>

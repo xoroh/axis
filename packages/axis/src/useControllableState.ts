@@ -40,7 +40,13 @@ export function useControllableState<T>(
           : action;
       currentRef.current = next;
       if (!controlled) setInternal(next);
-      if (!Object.is(previous, next)) onChange?.(next, details);
+      if (!Object.is(previous, next)) {
+        // Preserve the exact historical call shape when no reason is
+        // attached: `onChange(next)` — some suites assert argument
+        // count, and lanes outside this one own those suites.
+        if (details === undefined) onChange?.(next);
+        else onChange?.(next, details);
+      }
     },
     [controlled, onChange],
   );

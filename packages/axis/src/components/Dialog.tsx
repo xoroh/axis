@@ -38,6 +38,7 @@ import {
   useModalFocus,
   useScopeStop,
   useScopeTitle,
+  webTabIndexProps,
 } from "./useAccessibilityFocus";
 import type {
   OverlayOpenChangeDetails,
@@ -236,6 +237,7 @@ export function Dialog({
       accessibilityViewIsModal
       {...(web ? { "aria-modal": true } : null)}
       onKeyDown={handleSurfaceKeyDown}
+      {...webTabIndexProps(web)}
       style={surfaceStyle}
     >
       {title != null ? <Text style={titleStyle}>{title}</Text> : null}
@@ -642,8 +644,11 @@ export function DialogPortal({
 }: DialogPortalProps): React.JSX.Element | null {
   const disclosure = useContext(DialogCompoundContext);
   // Outside a root there is no open state to present: render nothing.
+  // NOTE: no `open` gate here — the portal stays mounted through the
+  // exit commit so the popup's focus hook observes the close
+  // transition and restores focus; `OverlayPortal` (presence-gated)
+  // and the parts below still paint nothing while closed.
   if (!disclosure) return null;
-  if (!disclosure.open) return null;
 
   // The portal host: the overlay root paints at the app's `PortalHost`
   // (the native equivalent of appending to `body`). `container` and
@@ -757,6 +762,7 @@ export function DialogPopup({
     finalFocus: finalFocus ?? overlay?.finalFocus,
     scope: focusScope,
     interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
     popupRef: popupNodeRef,
     restoreRef: overlayRefs?.triggerRef ?? { current: null },
   });
@@ -797,6 +803,7 @@ export function DialogPopup({
       accessibilityViewIsModal: modalActive,
       ...(web && modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -821,6 +828,7 @@ export function DialogPopup({
         accessibilityViewIsModal={modalActive}
         {...(web && modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
+        {...webTabIndexProps(web)}
         style={resolveStyle(style, state)}
       >
         {children}
@@ -837,10 +845,17 @@ export function DialogTitle({
 }: DialogTitleProps): React.ReactNode {
   const scope = useFocusScopeMaybe();
   const setTitleNode = useScopeTitle(scope);
+  const web = isWebEnvironment();
 
   const substituted = resolveRender(
     render,
-    { testID, style, children, ref: setTitleNode } satisfies SlotProps,
+    {
+      testID,
+      style,
+      children,
+      ref: setTitleNode,
+      ...webTabIndexProps(web),
+    } satisfies SlotProps,
     {},
   );
   if (substituted !== null) return substituted;
@@ -850,6 +865,7 @@ export function DialogTitle({
       accessibilityRole="header"
       testID={testID}
       style={style}
+      {...webTabIndexProps(web)}
     >
       {children}
     </Text>

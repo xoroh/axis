@@ -20,7 +20,12 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
-import { useModalFocus } from "./useAccessibilityFocus";
+import {
+  isWebEnvironment,
+  useModalFocus,
+  webTabIndexProps,
+  type FocusTransitionState,
+} from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -165,6 +170,7 @@ export function Tooltip({
   }, [setVisible]);
 
   const state: TooltipState = { open: visible ?? false };
+  const web = isWebEnvironment();
   const substituted = resolveRender(
     render,
     {
@@ -199,6 +205,7 @@ export function Tooltip({
             // `Content` precedent — no scrim involved).
             onAccessibilityEscape={toggle}
             ref={setTipRef}
+            {...webTabIndexProps(web)}
             onLayout={floating.onContentLayout}
             style={[floating.style, tipStyle]}
           >
@@ -369,6 +376,12 @@ type TooltipRootDisclosure = {
   groupDisabled: boolean;
   anchorHostRef: { current: ElementRef<typeof View> | null };
   setAnchorRef: (node: ElementRef<typeof View> | null) => void;
+  /**
+   * Open-transition bookkeeping for the focus hook. Stable for the
+   * root's lifetime so a portal remount never loses the transition
+   * the restore path needs (see `FocusTransitionState`).
+   */
+  focusState: FocusTransitionState;
 };
 
 type TooltipDelay = {
@@ -479,6 +492,14 @@ export function TooltipRoot({
     anchorHostRef.current = node;
   }, []);
 
+  // Stable transition bookkeeping for the focus hook (see
+  // `FocusTransitionState`): survives portal remounts.
+  const focusStateRef = useRef<FocusTransitionState>({
+    wasOpen: false,
+    moved: false,
+    ancestor: null,
+  });
+
   // Terminal: a disabled root reads hidden under any open state.
   const effectiveOpen = disabled ? false : (visible ?? false);
 
@@ -489,6 +510,7 @@ export function TooltipRoot({
       groupDisabled: disabled,
       anchorHostRef,
       setAnchorRef,
+      focusState: focusStateRef.current,
     }),
     [effectiveOpen, toggle, disabled, setAnchorRef],
   );
@@ -568,8 +590,10 @@ export function TooltipPortal({
 }: TooltipPortalProps): React.JSX.Element | null {
   const root = useContext(TooltipRootContext);
   // Outside a root there is no visibility to present: render nothing.
+  // NOTE: no `open` gate — the portal stays mounted through the exit
+  // commit so the popup's focus hook observes the close transition;
+  // the parts below still paint nothing while hidden.
   if (!root) return null;
-  if (!root.open) return null;
 
   // Plain portal host, never a `Modal`: a non-modal hint must not trap
   // touches (documented above). The part exists so callers compose
@@ -687,17 +711,21 @@ export function TooltipPopup({
   const open = root?.open ?? false;
   // Labelled tips move SR focus into the tip on open and restore it
   // to the trigger anchor on close (the upstream `Content`/`Trigger`
-  // pair); unlabelled tips stay silent. No containment.
+  // pair); unlabelled tips stay silent. No containment (tooltips are
+  // never modal). iOS VoiceOver scrub dismisses the open tip.
+  const web = isWebEnvironment();
   useModalFocus({
     open,
     enabled: accessibilityLabel !== undefined && root !== null,
     popupRef: tipNodeRef,
     restoreRef: root?.anchorHostRef ?? { current: null },
+    sharedState: root?.focusState,
   });
 
   if (!root) return null;
   if (!root.open) return null;
   const state: TooltipPopupState = { open: root.open };
+  const handleAccessibilityEscape = () => root.toggle();
 
   const substituted = resolveRender(
     render,
@@ -706,6 +734,8 @@ export function TooltipPopup({
       accessibilityRole: "tooltip",
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setTipRef,
@@ -721,6 +751,8 @@ export function TooltipPopup({
       accessibilityRole="tooltip"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
+      {...webTabIndexProps(web)}
       style={resolveStyle(style, state)}
     >
       {children}

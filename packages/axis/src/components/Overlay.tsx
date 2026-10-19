@@ -47,10 +47,12 @@ import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
 import {
   type FocusInteraction,
+  type FocusTransitionState,
   isWebEnvironment,
   type OverlayFocusValue,
   trapTabKey,
   useModalFocus,
+  webTabIndexProps,
 } from "./useAccessibilityFocus";
 
 /**
@@ -170,6 +172,12 @@ export type OverlayRefs = {
   popupRef: { current: ElementRef<typeof View> | null };
   /** How the surface last opened (trigger press vs programmatic). Written by triggers, read by the focus hook. */
   interaction: { current: FocusInteraction };
+  /**
+   * Open-transition bookkeeping for the focus hook. Stable for the
+   * root's lifetime, so a portal remount never loses the transition
+   * the restore path needs (see `FocusTransitionState`).
+   */
+  focus: FocusTransitionState;
 };
 
 const OverlayRefsContext = createContext<OverlayRefs | null>(null);
@@ -486,8 +494,19 @@ export function OverlayRoot({
   // `interaction` tracks how the surface last opened (trigger press vs
   // programmatic) for function-form focus targets.
   const interactionRef = useRef<FocusInteraction>("programmatic");
+  const focusStateRef = useRef<FocusTransitionState>({
+    wasOpen: false,
+    moved: false,
+    ancestor: null,
+  });
   const refsValue = useMemo<OverlayRefs>(
-    () => ({ id, triggerRef, popupRef, interaction: interactionRef }),
+    () => ({
+      id,
+      triggerRef,
+      popupRef,
+      interaction: interactionRef,
+      focus: focusStateRef.current,
+    }),
     [id, triggerRef, popupRef],
   );
 
@@ -749,6 +768,7 @@ export function OverlayPopup({
     initialFocus: initialFocus ?? overlay?.initialFocus,
     finalFocus: finalFocus ?? overlay?.finalFocus,
     interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
     popupRef: overlay?.popupRef ?? { current: null },
     restoreRef: overlay?.triggerRef ?? { current: null },
   });
@@ -797,6 +817,7 @@ export function OverlayPopup({
       accessibilityViewIsModal: modalActive,
       ...(web && modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -817,6 +838,7 @@ export function OverlayPopup({
       accessibilityViewIsModal={modalActive}
       {...(web && modalActive ? { "aria-modal": true } : null)}
       onKeyDown={handleKeyDown}
+      {...webTabIndexProps(web)}
       style={resolveStyle(style, state)}
     >
       {children}

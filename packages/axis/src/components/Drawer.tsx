@@ -45,6 +45,7 @@ import {
   useModalFocus,
   useScopeStop,
   useScopeTitle,
+  webTabIndexProps,
 } from "./useAccessibilityFocus";
 
 /**
@@ -587,8 +588,11 @@ export function DrawerPortal({
 }: DrawerPortalProps): React.JSX.Element | null {
   const disclosure = useContext(DrawerDisclosureContext);
   // Outside a root there is no open state to present: render nothing.
+  // NOTE: no `open` gate — the portal stays mounted through the exit
+  // commit so the popup's focus hook observes the close transition;
+  // `OverlayPortal` (presence-gated) and the parts below still paint
+  // nothing while closed.
   if (!disclosure) return null;
-  if (!disclosure.open) return null;
 
   // The measured container lives here (not in the popup): the snap
   // math needs the full-bleed extent, and the container is the shared
@@ -762,6 +766,7 @@ export function DrawerPopup({
     scope: focusScope,
     skipStops: true,
     interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
     popupRef: popupNodeRef,
     restoreRef: overlayRefs?.triggerRef ?? { current: null },
   });
@@ -823,6 +828,7 @@ export function DrawerPopup({
       accessibilityViewIsModal: modalActive,
       ...(web && modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: [
         { position: "absolute", ...anchor, transform },
         resolveStyle(style, state),
@@ -851,6 +857,7 @@ export function DrawerPopup({
         accessibilityViewIsModal={modalActive}
         {...(web && modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
+        {...webTabIndexProps(web)}
         style={[
           { position: "absolute", ...anchor, transform },
           resolveStyle(style, state),
@@ -881,9 +888,17 @@ export function DrawerTitle({
 }: DrawerTitleProps): React.ReactNode {
   const scope = useFocusScopeMaybe();
   const setTitleNode = useScopeTitle(scope);
+  const web = isWebEnvironment();
+
   const substituted = resolveRender(
     render,
-    { testID, style, children, ref: setTitleNode } satisfies SlotProps,
+    {
+      testID,
+      style,
+      children,
+      ref: setTitleNode,
+      ...webTabIndexProps(web),
+    } satisfies SlotProps,
     {},
   );
   if (substituted !== null) return substituted;
@@ -893,6 +908,7 @@ export function DrawerTitle({
       accessibilityRole="header"
       testID={testID}
       style={style}
+      {...webTabIndexProps(web)}
     >
       {children}
     </Text>
