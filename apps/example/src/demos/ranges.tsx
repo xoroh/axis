@@ -6,6 +6,7 @@ import {
   resolveCalendarSelection,
   SliderControl,
   SliderIndicator,
+  SliderLabel,
   SliderRoot,
   SliderThumb,
   SliderTrack,
@@ -35,6 +36,7 @@ export const RangesDemo: Demo = {
     "SliderIndicator",
     "SliderThumb",
     "SliderValue",
+    "SliderLabel",
   ],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
@@ -113,11 +115,12 @@ export const RangesDemo: Demo = {
             <View
               style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              <Text
+              <SliderLabel
+                testID="demo-volume-label"
                 style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
               >
                 Slider Control
-              </Text>
+              </SliderLabel>
               <SliderValue
                 testID="demo-volume-value"
                 style={{
