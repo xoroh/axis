@@ -129,4 +129,15 @@ describe("OtpField on React Native", () => {
     await render(<OtpField testID="otp" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
+
+  it("caller container style reaches the surface", async () => {
+    await render(
+      <OtpField testID="otp" style={{ flexDirection: "column", gap: 4 }} />,
+    );
+    const style = screen.getByTestId("otp").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ flexDirection: "column", gap: 4 });
+  });
 });

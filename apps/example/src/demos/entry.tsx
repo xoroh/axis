@@ -102,7 +102,20 @@ export const EntryDemo: Demo = {
                   accessibilityLabel="Count input"
                   value={count}
                   onValueChange={setCount}
-                  style={inputStyle}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                  inputStyle={[inputStyle, { flex: 1, textAlign: "center" }]}
+                  buttonStyle={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
+                    borderRadius: 8,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
                 />
               </View>
 
@@ -121,12 +134,21 @@ export const EntryDemo: Demo = {
                   value={code}
                   onValueChange={setCode}
                   length={4}
-                  style={{
-                    padding: 8,
-                    borderRadius: 8,
-                    backgroundColor: theme.surfaceSubtle,
+                  style={{ flexDirection: "row", gap: 8 }}
+                  cellStyle={{
+                    width: 52,
+                    height: 60,
+                    borderRadius: 10,
+                    backgroundColor: theme.surface,
                     borderWidth: 1,
                     borderColor: theme.border,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  textStyle={{
+                    fontSize: 22,
+                    fontWeight: "700",
+                    color: theme.text,
                   }}
                 />
               </View>

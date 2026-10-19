@@ -114,4 +114,15 @@ describe("NumberField on React Native", () => {
     await render(<NumberField testID="nf" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
+
+  it("caller container style reaches the surface", async () => {
+    await render(
+      <NumberField testID="nf" style={{ flexDirection: "column", gap: 4 }} />,
+    );
+    const style = screen.getByTestId("nf").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ flexDirection: "column", gap: 4 });
+  });
 });
