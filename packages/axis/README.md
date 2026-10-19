@@ -16,6 +16,19 @@ system, never here.
 bun add @xoroh/axis react react-native
 ```
 
+Nothing is published yet (version `0.0.0`; releases are owner-gated
+— see [`docs/RELEASING.md`](https://github.com/xoroh/axis/blob/main/docs/RELEASING.md)).
+Until the first release, install from source with the same
+pack-vendor flow Kern uses to vendor Axis:
+
+```sh
+git clone https://github.com/xoroh/axis.git && cd axis
+bun install --frozen-lockfile
+node scripts/pack-vendor.mjs --out /tmp/axis-vendor
+# prints /tmp/axis-vendor/axis-<short-sha>.tgz + sha512 — add it
+# in your app: bun add /tmp/axis-vendor/axis-<short-sha>.tgz
+```
+
 Peers: `react >= 18`; rendered components additionally need
 `react-native >=0.86 <0.89` (D-STACK support policy). The behavior
 modules (`useControllableState`, `normalizeTimeValue`, …) are pure
