@@ -31,7 +31,6 @@ import {
   RadioGroupItem,
   Select,
   SelectItem,
-  Sheet,
   Table,
   TableCell,
   TableHeader,
@@ -313,11 +312,16 @@ describe("render composition: overlays", () => {
     expect(screen.queryByText("Nav")).toBeNull();
   });
 
-  it("Sheet surface render substitutes the surface", async () => {
+  it("Drawer bottom-sheet surface render substitutes the surface", async () => {
     await render(
-      <Sheet testID="sh" defaultOpen render={<View testID="sub">{null}</View>}>
+      <Drawer
+        testID="sh"
+        defaultOpen
+        side="bottom"
+        render={<View testID="sub">{null}</View>}
+      >
         <Text>Content</Text>
-      </Sheet>,
+      </Drawer>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
   });

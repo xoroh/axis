@@ -98,7 +98,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Radio Group](https://github.com/xoroh/axis/blob/main/docs/components/radio-group.md) |
 | [Select](https://github.com/xoroh/axis/blob/main/docs/components/select.md) |
 | [Separator](https://github.com/xoroh/axis/blob/main/docs/components/separator.md) |
-| [Sheet](https://github.com/xoroh/axis/blob/main/docs/components/sheet.md) |
 | [Slider](https://github.com/xoroh/axis/blob/main/docs/components/slider.md) |
 | [Switch](https://github.com/xoroh/axis/blob/main/docs/components/switch.md) |
 | [Table](https://github.com/xoroh/axis/blob/main/docs/components/table.md) |
