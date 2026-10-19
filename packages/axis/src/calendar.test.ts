@@ -282,12 +282,19 @@ describe("calendar locale names", () => {
       // No Intl.Locale at all: plain BCP-47 parse drives the table.
       (Intl as unknown as Record<string, unknown>).Locale = undefined;
       expect(resolveLocaleFirstDay("en-US")).toBe(0);
+      expect(resolveLocaleFirstDay("en")).toBe(0);
+      expect(resolveLocaleFirstDay("en-GB")).toBe(1);
       expect(resolveLocaleFirstDay("de-DE")).toBe(1);
       expect(resolveLocaleFirstDay("ar-EG")).toBe(6);
+      expect(resolveLocaleFirstDay("ar")).toBe(6);
+      expect(resolveLocaleFirstDay("fa-IR")).toBe(6);
       expect(resolveLocaleFirstDay("dv-MV")).toBe(5);
       expect(resolveLocaleFirstDay("fr")).toBe(1);
       expect(resolveLocaleFirstDay("zh-Hant-TW")).toBe(0);
       expect(resolveLocaleFirstDay("not-a-locale!!")).toBe(1);
+      // -u-fw- wins over every other lookup, even without Intl.
+      expect(resolveLocaleFirstDay("en-GB-u-fw-sun")).toBe(0);
+      expect(resolveLocaleFirstDay("de-u-fw-sun")).toBe(0);
     } finally {
       (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
     }
