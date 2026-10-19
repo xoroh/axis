@@ -61,14 +61,16 @@ appear here — they are separate monolith docs.
 
 ### Overlay hosting
 
-`DropdownMenu` does not sit on `OverlayRoot`: panels render
-inline, in flow after their trigger, inside one dismissal stack
-owned by the root — there is no `OverlayPortal`, no `PortalHost`
-painting, and no `useModal` opt-in on any part. That is the
+`DropdownMenu` does not sit on `OverlayRoot`: the content box and
+scrim present through the plain `Portal` at the app's `PortalHost`
+— above sibling content, with no `Modal` trap, no focus trap, and
+no scroll lock — inside one dismissal stack owned by the root.
+Sub panels still render in flow relative to the box (fly-out
+geometry stays caller `style` on `SubContent`). That is the
 documented difference from the `Menu` compound form (which
 presents through `OverlayRoot` + `OverlayPortal` at the app's
 `PortalHost`; see `docs/components/menu.md`). If a cascade needs
-to escape clipped parents or present above the app root, compose
+the `OverlayRoot` dismissal stack (system back, modality), compose
 it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 `DropdownMenuSub`) instead — see
 `docs/components/overlay.md` for what `OverlayRoot`,

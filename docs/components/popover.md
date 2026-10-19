@@ -11,7 +11,7 @@ behavior, and accessibility only — every visual value (`style`,
 for controlled use, `defaultOpen` for uncontrolled. Two APIs ship
 side by side: the concise single-part `Popover` (anchor and body
 partitioned into the `children`/`content` props, always
-non-modal inline) and the compound parts below, which mirror
+non-modal) and the compound parts below, which mirror
 Base UI's Popover anatomy with the same names and state
 semantics.
 
@@ -51,10 +51,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Popover` | — | Concise inline API (anchor `children` + body `content`); always non-modal inline, not a Base UI part. |
+| `Popover` | — | Concise inline API (anchor `children` + body `content`); always non-modal, presenting through `Portal` at the app's `PortalHost`, not a Base UI part. |
 | `PopoverRoot` | `Popover.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. `modal` defaults `false` — the inverse of Dialog/Menu. |
 | `PopoverTrigger` | `Popover.Trigger` | Tap toggle, button role, expanded state, anchor-registering. |
-| `PopoverPortal` | `Popover.Portal` | `OverlayPortal` host at `PortalHost` when modal, in-box otherwise. |
+| `PopoverPortal` | `Popover.Portal` | `OverlayPortal` host at `PortalHost` when modal, plain `Portal` at `PortalHost` otherwise. |
 | `PopoverBackdrop` | `Popover.Backdrop` | Scrim dismissal, modal-only. |
 | `PopoverPositioner` | `Popover.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets). |
 | `PopoverPopup` | `Popover.Popup` | Content region (labelled, no role — see Accessibility). |
@@ -80,7 +80,8 @@ root presents every layer: Android back, stacking, focus, and
 scroll lock belong to the `OverlayRoot` above). `modal`
 defaults to `false` — the inverse of Dialog/Menu: modal roots
 paint at `PortalHost` with a scrim; non-modal roots (the
-default) render in-box with no scrim and the trigger stays
+default) present through the plain `Portal` at the app's
+`PortalHost` with no scrim and the trigger stays
 pressable. `disablePointerDismissal` (default `false`) flows
 into `dismissable` and every dismiss branch
 (`outsidePointer`, `systemBack`, `escape`); `onDismiss` fires
@@ -88,9 +89,9 @@ on scrim dismissal before `onOpenChange(false)`. No family part
 takes `useModal` itself — the RN `Modal` host is an
 `OverlayRoot`-level opt-in for direct `Overlay` compositions
 (see `docs/components/overlay.md`). The monolith never touches
-this stack: scrim and box render inline, as siblings of the
-anchor inside the anchor wrapper — always non-modal inline by
-design.
+this stack: scrim and box present through `Portal` at the app's
+`PortalHost` — above sibling content instead of inside the anchor
+wrapper — always non-modal by design.
 
 ### Props
 
@@ -112,8 +113,8 @@ design.
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the anchor wrapper host element. |
 
 Closed renders the anchor only — no scrim, no box. Unlike
-Dialog there is no `Modal` here: scrim and box render inline,
-as siblings of the anchor inside the anchor wrapper.
+Dialog there is no `Modal` here: scrim and box present through
+`Portal` at the app's `PortalHost`, above sibling content.
 
 #### `PopoverRoot` (state owner)
 
@@ -124,7 +125,7 @@ as siblings of the anchor inside the anchor wrapper.
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismissal. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss. |
-| `modal` | `boolean` | no | `false` | Whether the open popover presents modally (an overlay host with a scrim). Default `false` — popovers are non-modal overlays; the portal renders in-box and the trigger stays pressable. |
+| `modal` | `boolean` | no | `false` | Whether the open popover presents modally (an overlay host with a scrim). Default `false` — popovers are non-modal overlays; the portal presents through `Portal` at the app's `PortalHost` and the trigger stays pressable. |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Accepted for ref-spreading callers; the root renders no element. |
 
@@ -152,7 +153,8 @@ as siblings of the anchor inside the anchor wrapper.
 
 Renders `null` outside a root and while closed. Modal roots
 paint at the app's `PortalHost`; non-modal roots (the default)
-render in-box with no scrim trap.
+present through the plain `Portal` at the app's `PortalHost`
+with no scrim trap.
 
 #### `PopoverBackdrop`
 

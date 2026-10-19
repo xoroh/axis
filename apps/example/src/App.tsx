@@ -1,3 +1,4 @@
+import { PortalHost } from "@xoroh/axis";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { DEMOS } from "./demos/registry";
@@ -112,7 +113,11 @@ function AppShell(): React.JSX.Element {
 export function App(): React.JSX.Element {
   return (
     <ThemeProvider>
-      <AppShell />
+      {/* The app-wide portal host: every floating popup paints here,
+        above sibling content, instead of inside its trigger's box. */}
+      <PortalHost style={{ flex: 1 }}>
+        <AppShell />
+      </PortalHost>
     </ThemeProvider>
   );
 }

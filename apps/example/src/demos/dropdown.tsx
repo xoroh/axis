@@ -44,7 +44,20 @@ export const DropdownDemo: Demo = {
             Dropdown Menu with Cascading Submenu:
           </Text>
 
-          <DropdownMenu>
+          <DropdownMenu
+            testID="demo-dropdown"
+            style={{
+              marginTop: 8,
+              backgroundColor: theme.surfaceSubtle,
+              borderRadius: 10,
+              padding: 8,
+              borderWidth: 1,
+              borderColor: theme.border,
+              minWidth: 240,
+              maxWidth: 260,
+              gap: 4,
+            }}
+          >
             <DropdownMenuTrigger
               accessibilityLabel="Open demo dropdown"
               style={{
@@ -65,66 +78,50 @@ export const DropdownDemo: Demo = {
                 Dropdown Options ▾
               </Text>
             </DropdownMenuTrigger>
-
-            <View
-              style={{
-                marginTop: 8,
-                backgroundColor: theme.surfaceSubtle,
-                borderRadius: 10,
-                padding: 8,
-                borderWidth: 1,
-                borderColor: theme.border,
-                maxWidth: 260,
-                gap: 4,
-              }}
+            <DropdownMenuItem
+              value="new"
+              style={{ paddingVertical: 8, paddingHorizontal: 10 }}
             >
-              <DropdownMenuItem
-                value="new"
-                style={{ paddingVertical: 8, paddingHorizontal: 10 }}
+              <Text style={{ fontSize: 13, color: theme.text }}>
+                + New Project
+              </Text>
+            </DropdownMenuItem>
+
+            <DropdownMenuSub value="share">
+              <DropdownMenuSubTrigger
+                accessibilityLabel="Share submenu"
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
               >
                 <Text style={{ fontSize: 13, color: theme.text }}>
-                  + New Project
+                  Share with Team
                 </Text>
-              </DropdownMenuItem>
-
-              <DropdownMenuSub value="share">
-                <DropdownMenuSubTrigger
-                  accessibilityLabel="Share submenu"
-                  style={{
-                    paddingVertical: 8,
-                    paddingHorizontal: 10,
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
+                <Text style={{ fontSize: 12, color: theme.textSubtle }}>▸</Text>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent
+                testID="share-panel"
+                style={{
+                  marginTop: 4,
+                  marginLeft: 12,
+                  paddingLeft: 8,
+                  borderLeftWidth: 2,
+                  borderLeftColor: theme.primary,
+                }}
+              >
+                <DropdownMenuItem
+                  value="email"
+                  style={{ paddingVertical: 6, paddingHorizontal: 8 }}
                 >
-                  <Text style={{ fontSize: 13, color: theme.text }}>
-                    Share with Team
+                  <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                    ✉ Via Email Invite
                   </Text>
-                  <Text style={{ fontSize: 12, color: theme.textSubtle }}>
-                    ▸
-                  </Text>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent
-                  testID="share-panel"
-                  style={{
-                    marginTop: 4,
-                    marginLeft: 12,
-                    paddingLeft: 8,
-                    borderLeftWidth: 2,
-                    borderLeftColor: theme.primary,
-                  }}
-                >
-                  <DropdownMenuItem
-                    value="email"
-                    style={{ paddingVertical: 6, paddingHorizontal: 8 }}
-                  >
-                    <Text style={{ fontSize: 13, color: theme.textSubtle }}>
-                      ✉ Via Email Invite
-                    </Text>
-                  </DropdownMenuItem>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </View>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
           </DropdownMenu>
         </View>
       </View>

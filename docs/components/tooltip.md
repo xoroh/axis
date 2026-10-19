@@ -10,7 +10,8 @@ controlled + uncontrolled pattern throughout: `open` (plus
 `onOpenChange`) for controlled use, `defaultOpen` for
 uncontrolled. Two APIs ship side by side: the concise
 single-part `Tooltip` (anchor and tip partitioned into the
-`children`/`content` props, always in-box) and the compound parts
+`children`/`content` props, presenting through `Portal` at the
+app's `PortalHost`) and the compound parts
 below, which mirror Base UI's Tooltip anatomy with the same names
 and state semantics.
 
@@ -47,11 +48,11 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Tooltip` | — | Concise inline API (anchor `children` + body `content`, always in-box); kept for existing consumers, not a Base UI part. |
+| `Tooltip` | — | Concise inline API (anchor `children` + body `content`); presents through `Portal` at the app's `PortalHost`, never modal; kept for existing consumers, not a Base UI part. |
 | `TooltipProvider` | `Tooltip.Provider` | Groups tips under one show/hide timing (`delay`/`closeDelay`); renders no element. |
 | `TooltipRoot` | `Tooltip.Root` | Visibility state owner (`open`/`defaultOpen`/`onOpenChange`, terminal `disabled`); renders no element. |
 | `TooltipTrigger` | `Tooltip.Trigger` | Long-press toggle, anchor-registering; `delayLongPress` forwarded to the host. |
-| `TooltipPortal` | `Tooltip.Portal` | In-box host — deliberately never a `Modal` host (see below). |
+| `TooltipPortal` | `Tooltip.Portal` | Plain `Portal` host at the app's `PortalHost` — deliberately never a `Modal` host (see below). |
 | `TooltipPositioner` | `Tooltip.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets, viewport flip). |
 | `TooltipPopup` | `Tooltip.Popup` | Tip carrying the `tooltip` role. |
 | `TooltipArrow` | `Tooltip.Arrow` | Caller-positioned marker; geometry is caller style. |
@@ -72,10 +73,9 @@ isolation for surfaces that take over the screen). Mounting a
 hint in that stack would buy nothing and risk everything: a
 full-fill scrim with no dismissal path except the trigger, focus
 moves on every hint show, scroll locks under a fingertip. So both
-the monolith and `TooltipPortal` paint in-box, as siblings of
-the anchor inside the anchor wrapper — positioning stays
-separable from the host either way, so tips could host in the
-overlay root later without depending on it now. The other
+the monolith and `TooltipPortal` present through the plain `Portal`
+at the app's `PortalHost` — above sibling content, never modal — and
+positioning stays separable from the host either way. The other
 overlay families (`Select`, `Menu`, `Dialog`, `Popover`,
 `Drawer`) DO present through `OverlayRoot` + `OverlayPortal` at
 the app's `PortalHost` — see `docs/components/overlay.md` for

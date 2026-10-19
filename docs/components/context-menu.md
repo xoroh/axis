@@ -40,7 +40,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `ContextMenu` | — | The whole API: anchor wrapper (long-press toggles) + measured menu box + scrim, always in-box. Not a Base UI part. |
+| `ContextMenu` | — | The whole API: anchor wrapper (long-press toggles) + measured menu box + scrim, presenting through `Portal` at the app's `PortalHost`. Not a Base UI part. |
 
 There are no compound parts: no `Root`/`Trigger`/`Portal`/
 `Positioner`/`Popup` split, no filter parts, no submenu parts.
@@ -51,13 +51,14 @@ cascade with submenus, use `DropdownMenu` (see
 
 ### Overlay hosting
 
-`ContextMenu` does not sit on `OverlayRoot`: anchor, scrim, and
-menu box render inline, in-box — there is no `OverlayPortal`, no
-`PortalHost` painting, and no `useModal` opt-in. That is the
+`ContextMenu` does not sit on `OverlayRoot`: the anchor stays
+in place while the scrim and menu box present through the plain
+`Portal` at the app's `PortalHost` — above sibling content, with
+no `Modal` trap, no focus trap, and no scroll lock. That is the
 documented difference from the `Menu` compound form (which
 presents through `OverlayRoot` + `OverlayPortal` at the app's
-`PortalHost`). If a long-press menu needs to escape clipped
-parents or present above the app root, compose it from the `Menu`
+`PortalHost`). If a long-press menu needs the `OverlayRoot`
+dismissal stack (system back, modality), compose it from the `Menu`
 compound parts with a long-press trigger instead — see
 `docs/components/overlay.md` for what `OverlayRoot`,
 `OverlayPortal`, `PortalHost`, and the `useModal` opt-in provide.

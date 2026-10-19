@@ -199,10 +199,6 @@ export const OverlaysDemo: Demo = {
               }
               accessibilityLabel="Demo context menu"
               menuStyle={{
-                position: "absolute",
-                top: 40,
-                left: 0,
-                zIndex: 20,
                 minWidth: 180,
                 backgroundColor: theme.surface,
                 borderRadius: 8,
@@ -320,6 +316,28 @@ export const OverlaysDemo: Demo = {
             </Button>
 
             <Button
+              accessibilityLabel="Open bottom sheet at half snap"
+              onPress={() => {
+                setSheetPoint(0.5);
+                setSheetOpen(true);
+              }}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 14,
+                borderRadius: 6,
+                backgroundColor: theme.surfaceSubtle,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+              >
+                Open Half Sheet
+              </Text>
+            </Button>
+
+            <Button
               accessibilityLabel="Open Drawer"
               onPress={() => setDrawerOpen(true)}
               style={{
@@ -366,6 +384,7 @@ export const OverlaysDemo: Demo = {
             accessibilityLabel="Demo filter settings"
             overlayStyle={{ backgroundColor: theme.overlay, padding: 16 }}
             surfaceStyle={{
+              top: 0,
               backgroundColor: theme.surface,
               borderTopLeftRadius: 16,
               borderTopRightRadius: 16,
