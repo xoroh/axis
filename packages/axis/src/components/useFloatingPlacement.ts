@@ -27,12 +27,16 @@ import {
  * rect alone is not enough — viewport coordinates paired with
  * `absolute` double-offset the popup inside nested relative boxes, so
  * every popup lands far from its trigger. The layout event carries
- * the popup's own node, whose offset parent IS the containing block
- * `absolute` positions against: subtracting its origin translates the
- * anchor into exactly the right space, whether the popup sits in the
+ * the popup's own node, whose ancestor chain locates the exact
+ * containing block: the nearest ancestor with a non-static position
+ * or with `transform`/`filter`/`perspective`/`contain` creating one
+ * (`offsetParent` alone misses the latter on non-positioned
+ * ancestors, and reports null for `fixed` nodes, whose block is the
+ * viewport). Subtracting that block's origin translates the anchor
+ * into exactly the right space, whether the popup sits in the
  * anchor wrapper (monoliths) or in a portal layer (compounds). No web
- * imports, no globals, no new host bindings: both shapes are
- * detected by duck-typing, and a node with neither shape keeps the
+ * imports, no globals, no new host bindings: every shape is detected
+ * by duck-typing, and a node with neither shape keeps the
  * pre-existing transparent-at-origin path (previously that shape
  * crashed the effect — the optional chain guarded the ref, not the
  * method).
@@ -79,9 +83,9 @@ export type ContentLayoutEvent = {
 };
 
 /**
- * Whether `value` quacks like a DOM element rect source. Guards both
- * the anchor node and the popup's offset parent — the only DOM reads
- * in this module, and neither names a DOM global.
+ * Whether `value` quacks like a DOM element rect source. Guards the
+ * anchor node and offset-parent reads — the only DOM shapes named in
+ * this module, never a DOM global.
  */
 function isRectNode(
   value: unknown,
@@ -94,15 +98,143 @@ function isRectNode(
   );
 }
 
+type ElementStyle = {
+  position: string;
+  transform: string;
+  perspective: string;
+  filter: string;
+  backdropFilter: string;
+  contain: string;
+  willChange: string;
+};
+
+/**
+ * Read one element's computed style without naming a DOM global: the
+ * view comes from the node's own document, so every access below is
+ * a method or property read on a passed-in value. Returns null when
+ * there is no style API to ask (native, test doubles without one) —
+ * callers fall back to coarser geometry, never throw.
+ */
+function elementStyle(target: unknown, node: unknown): ElementStyle | null {
+  const defaultView = (
+    target as { ownerDocument?: { defaultView?: unknown } } | null
+  )?.ownerDocument?.defaultView;
+  const getStyle = (defaultView as { getComputedStyle?: unknown } | undefined)
+    ?.getComputedStyle;
+  if (
+    typeof getStyle !== "function" ||
+    typeof node !== "object" ||
+    node === null
+  ) {
+    return null;
+  }
+  let computed: unknown;
+  try {
+    computed = (getStyle as (element: unknown) => unknown).call(
+      defaultView,
+      node,
+    );
+  } catch {
+    return null;
+  }
+  if (typeof computed !== "object" || computed === null) return null;
+  const pick = (name: string): string => {
+    const value = (computed as Record<string, unknown>)[name];
+    return typeof value === "string" ? value : "";
+  };
+  return {
+    position: pick("position"),
+    transform: pick("transform"),
+    perspective: pick("perspective"),
+    filter: pick("filter"),
+    backdropFilter: pick("backdropFilter"),
+    contain: pick("contain"),
+    willChange: pick("willChange"),
+  };
+}
+
+/**
+ * Whether an ancestor's style makes it a containing block for an
+ * `absolute` popup: any non-static position, or a transform,
+ * perspective, filter, or containment that pulls the block to
+ * itself (the scrolled Expo host carries an identity transform for
+ * exactly this reason — harmless for `absolute`, load-bearing for
+ * the fallback below).
+ */
+function isContainingBlock(style: ElementStyle): boolean {
+  const pos = style.position;
+  if (
+    pos === "absolute" ||
+    pos === "relative" ||
+    pos === "fixed" ||
+    pos === "sticky"
+  ) {
+    return true;
+  }
+  if (style.transform !== "" && style.transform !== "none") return true;
+  if (style.perspective !== "" && style.perspective !== "none") return true;
+  if (style.filter !== "" && style.filter !== "none") return true;
+  if (style.backdropFilter !== "" && style.backdropFilter !== "none")
+    return true;
+  const contained = style.contain.split(/\s+/);
+  if (
+    contained.includes("layout") ||
+    contained.includes("paint") ||
+    contained.includes("strict") ||
+    contained.includes("content")
+  ) {
+    return true;
+  }
+  const willed = style.willChange.split(/[\s,]+/);
+  return (
+    willed.includes("transform") ||
+    willed.includes("perspective") ||
+    willed.includes("filter") ||
+    willed.includes("backdrop-filter") ||
+    willed.includes("contain")
+  );
+}
+
 /**
  * Viewport origin of the box `absolute` positions the laid-out popup
- * against: its offset parent's box when the layout event carries a
- * node for it (web), else the viewport origin itself (native, where
+ * against. Walks the popup's ancestors for the nearest containing
+ * block (positioned or transformed/filtered/perspective/contained):
+ * `offsetParent` alone misses containing blocks that transforms,
+ * filters, perspective, or `contain` create on non-positioned
+ * ancestors, and it reports null for `fixed`-positioned nodes (whose
+ * containing block is the viewport, i.e. this same origin).
+ *
+ * When no style API or containing block is found, falls back to the
+ * offset parent's box, else the viewport origin itself (native, where
  * `measure` already reports that space).
  */
 function containingBlockOrigin(target: unknown): { x: number; y: number } {
   if (typeof target !== "object" || target === null) return { x: 0, y: 0 };
+  // Ancestor walk first: it sees every containing-block source,
+  // including ones `offsetParent` ignores.
+  let node: unknown = (target as { parentNode?: unknown }).parentNode;
+  for (
+    let depth = 0;
+    depth < 64 && typeof node === "object" && node !== null;
+    depth += 1
+  ) {
+    const style = elementStyle(target, node);
+    if (style === null) break;
+    if (isContainingBlock(style)) {
+      const rect = (node as { getBoundingClientRect?: unknown })
+        .getBoundingClientRect;
+      if (typeof rect !== "function") break;
+      const box = (rect as () => { left: number; top: number }).call(node);
+      return { x: box.left, y: box.top };
+    }
+    node = (node as { parentNode?: unknown }).parentNode;
+  }
+  // Fallback: the offset parent's box. A null offset parent
+  // (notably a `fixed`-positioned node, and any element with no
+  // positioned ancestor) means the viewport itself — keep the
+  // `{0, 0}` origin explicit rather than letting it fall through.
   const parent = (target as { offsetParent?: unknown }).offsetParent;
+  if (parent === null || parent === undefined) return { x: 0, y: 0 };
   if (!isRectNode(parent)) return { x: 0, y: 0 };
   const box = parent.getBoundingClientRect();
   return { x: box.left, y: box.top };

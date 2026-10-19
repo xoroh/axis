@@ -220,6 +220,63 @@ describe("useFloatingPlacement anchor shapes", () => {
     expect(floating.style).toMatchObject({ left: 10, top: 60 });
     expect("width" in (floating.style as Record<string, unknown>)).toBe(false);
   });
+
+  it("finds a transformed containing block the offset parent misses", () => {
+    // A transformed but non-positioned ancestor creates the containing
+    // block; `offsetParent` (null here — nothing positioned) would
+    // miss it and leave viewport coordinates in place.
+    const view = {
+      getComputedStyle: (el: unknown) =>
+        (el as { __style?: unknown }).__style ?? null,
+    };
+    const plain = {
+      position: "static",
+      transform: "none",
+      perspective: "none",
+      filter: "none",
+      backdropFilter: "none",
+      contain: "none",
+      willChange: "auto",
+    };
+    const scrolledHost = {
+      getBoundingClientRect: () => ({ left: 50, top: 60 }),
+      parentNode: null,
+      __style: { ...plain, transform: "matrix(1, 0, 0, 1, 0, 0)" },
+    };
+    const wrapper = { parentNode: scrolledHost, __style: plain };
+    const target = {
+      parentNode: wrapper,
+      offsetParent: null,
+      ownerDocument: { defaultView: view },
+    };
+    const floating = resolve({
+      node: {
+        getBoundingClientRect: () => ({
+          left: 100,
+          top: 200,
+          width: 100,
+          height: 40,
+        }),
+      },
+      target,
+      matchAnchorWidth: true,
+      viewportPadding: 8,
+    });
+    // Anchor (100, 200) minus the host origin (50, 60), bottom side.
+    expect(floating.style).toMatchObject({ left: 50, top: 180, width: 100 });
+  });
+
+  it("treats an explicit null offset parent as the viewport", () => {
+    // `offsetParent` is null for `fixed`-positioned nodes (and with no
+    // positioned ancestor at all): the containing block is the
+    // viewport, so the anchor stands untranslated. Kept explicit.
+    const floating = resolve({
+      node: webNode(),
+      target: { offsetParent: null },
+    });
+    expect(floating.style).toMatchObject({ left: 10, top: 60 });
+    expect(floating.measured).toBe(true);
+  });
 });
 
 describe("Tooltip monolith placement default", () => {
