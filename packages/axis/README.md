@@ -72,7 +72,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Autocomplete](https://github.com/xoroh/axis/blob/main/docs/components/autocomplete.md) |
 | [Avatar](https://github.com/xoroh/axis/blob/main/docs/components/avatar.md) |
 | [Button](https://github.com/xoroh/axis/blob/main/docs/components/button.md) |
-| [Calendar](https://github.com/xoroh/axis/blob/main/docs/components/calendar.md) |
 | [Checkbox](https://github.com/xoroh/axis/blob/main/docs/components/checkbox.md) |
 | [Checkbox Group](https://github.com/xoroh/axis/blob/main/docs/components/checkbox-group.md) |
 | [Collapsible](https://github.com/xoroh/axis/blob/main/docs/components/collapsible.md) |
@@ -102,7 +101,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Switch](https://github.com/xoroh/axis/blob/main/docs/components/switch.md) |
 | [Table](https://github.com/xoroh/axis/blob/main/docs/components/table.md) |
 | [Tabs](https://github.com/xoroh/axis/blob/main/docs/components/tabs.md) |
-| [Time Picker](https://github.com/xoroh/axis/blob/main/docs/components/time-picker.md) |
 | [Toast](https://github.com/xoroh/axis/blob/main/docs/components/toast.md) |
 | [Toggle](https://github.com/xoroh/axis/blob/main/docs/components/toggle.md) |
 | [Toggle Group](https://github.com/xoroh/axis/blob/main/docs/components/toggle-group.md) |
