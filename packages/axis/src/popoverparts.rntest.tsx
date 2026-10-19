@@ -21,8 +21,7 @@ import {
  * in-box portal by default, modal scrim dismissal, measured
  * positioner placement, popup region with title/description/close,
  * render substitution with state, and function styles — observed
- * in the RN runtime. The inline `Popover` keeps its own suite;
- * this suite proves the compound anatomy only.
+ * in the RN runtime. This suite proves the compound anatomy only.
  */
 
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {

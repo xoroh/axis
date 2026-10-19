@@ -10,8 +10,7 @@ caller-provided. State follows the controlled
 + uncontrolled pattern throughout: `open` (plus `onOpenChange`)
 for controlled use, `defaultOpen` for uncontrolled. The compound
 parts below mirror Base UI's Popover anatomy with the same names
-and state semantics (the concise single-part `Popover` is
-removed — naming rule, contract §2; migration in CHANGELOG).
+and state semantics.
 
 Source of truth: `PopoverRootProps`,
 `PopoverRootState`, `PopoverTriggerProps`,
@@ -49,7 +48,6 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Popover` | — | Concise inline API (anchor `children` + body `content`); always non-modal, presenting through `Portal` at the app's `PortalHost`, not a Base UI part. |
 | `PopoverRoot` | `Popover.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. `modal` defaults `false` — the inverse of Dialog/Menu. |
 | `PopoverTrigger` | `Popover.Trigger` | Tap toggle, button role, expanded state, anchor-registering. |
 | `PopoverPortal` | `Popover.Portal` | `OverlayPortal` host at `PortalHost` when modal, plain `Portal` at `PortalHost` otherwise. |
@@ -86,10 +84,7 @@ into `dismissable` and every dismiss branch
 on scrim dismissal before `onOpenChange(false)`. No family part
 takes `useModal` itself — the RN `Modal` host is an
 `OverlayRoot`-level opt-in for direct `Overlay` compositions
-(see `docs/components/overlay.md`). The monolith never touches
-this stack: scrim and box present through `Portal` at the app's
-`PortalHost` — above sibling content instead of inside the anchor
-wrapper — always non-modal by design.
+(see `docs/components/overlay.md`).
 
 ### Props
 
@@ -336,9 +331,7 @@ function CompoundPopover() {
   (the box mounts/unmounts synchronously with state — exit
   transitions would need the `presence` model to keep it mounted,
   unneeded until a consumer needs animated dismissal — the
-  Dialog precedent); no arrow/chrome on the monolith (unstyled by
-  contract — every visual value is caller-provided; the compound
-  form's `PopoverArrow` is a caller-positioned marker); no hover
+  Dialog precedent); no hover
   (no pointer on touch devices — parity D8); no focus trap
   (containing accessibility focus needs the `focusTrap` +
   `overlayModality` RN adaptation — no DOM tab order to borrow —
@@ -362,6 +355,6 @@ overlay host a full-fill scrim would trap the app's touches
 with no dismissal path. The omitted Base UI pieces
 (`container`, `Viewport`, focus containment, animation states)
 are recorded in `docs/BASE_UI_PARITY.md` (§ Popover —
-aligned). Verified by the popover RNTL suites (7 monolith + 11
-compound tests — `docs/COVERAGE.md`). The compound anatomy
+aligned). Verified by the popover RNTL suites (11 tests —
+`docs/COVERAGE.md`). The compound anatomy
 renders in `apps/example/src/demos/popover.tsx`.

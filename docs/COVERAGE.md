@@ -36,7 +36,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Toolbar | complete | oriented group, RNTL 5 |
 | Drawer | complete | edge-anchored panel + bottom-sheet snap points/drag/swipe-dismiss/modal, RNTL 17 |
 | Navigation Menu | complete | top bar + single-open flyout panels, RNTL 9 |
-| Menubar | complete | command bar composing DropdownMenu (single-open coordination), RNTL 9 |
+| Menubar | complete | command bar composing MenuRoot (single-open coordination), RNTL 9 |
 | Dialog | complete | modal + scrim dismissal, RNTL 8 |
 | Alert Dialog | complete | blocking Dialog wrapper, RNTL 5 |
 | Menu | complete | popup menu + items + checkbox/radio + filter parts (`Input`/`Clear`/`Empty`), RNTL 42 |

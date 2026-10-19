@@ -36,8 +36,8 @@ import {
  * host, backdrop dismissal (and its disable), measured positioner
  * placement, popup with items and separator, item onSelect/onClick
  * ordering with closeOnClick, render substitution with state, and
- * function styles — observed in the RN runtime. The inline `Menu`
- * keeps its own suite; this suite proves the compound anatomy only.
+ * function styles — observed in the RN runtime. This suite proves
+ * the compound anatomy only.
  */
 
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {

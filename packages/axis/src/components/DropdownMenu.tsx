@@ -22,7 +22,7 @@ import { Portal } from "./Portal";
 /**
  * DropdownMenuRoot — an unstyled popup menu with submenu cascade.
  *
- * Structure only: like `Menu` (trigger zone + scrim + content box
+ * Structure only: like `MenuRoot` (trigger + portal + content box
  * while open), plus `DropdownMenuSub` levels that open nested panels
  * beside their trigger. No default visuals — every visual value is
  * caller-provided. Root open state follows the `useControllableState`

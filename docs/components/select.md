@@ -10,8 +10,7 @@ follows the controlled + uncontrolled pattern throughout: `value`
 uncontrolled; `open` (plus `onOpenChange`) for controlled open
 state, `defaultOpen` for uncontrolled. The compound parts below
 mirror Base UI's Select anatomy with the same names and state
-semantics (the concise single-part `Select` is removed — naming
-rule, contract §2; migration in CHANGELOG).
+semantics.
 
 Source of truth: `SelectItemProps`,
 `SelectItemState`, `SelectRootProps`, `SelectRootState`,
@@ -205,7 +204,7 @@ outside a root and while closed. Typeahead keys are handled here
 | `children` | `ReactNode` | no | — | Marker content (usually none — the shape is caller style). |
 | `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution; the function form receives an empty state object. |
 
-#### `SelectItem` (shared with the monolith)
+#### `SelectItem`
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -403,15 +402,13 @@ function CompoundSort() {
   `role="dialog"` precedent) while the list uses
   `accessibilityRole="listbox"` — each checked against the
   installed RN types in-file, not smuggled past the typechecker.
-- The dismissable scrim is a `Pressable` labelled "Dismiss"
-  (monolith) / "Dismiss select" (compound); scrim press selects
+- The dismissable scrim is a `Pressable` labelled "Dismiss select"; scrim press selects
   nothing and closes through `onOpenChange(false)`. The
   non-dismissable compound scrim is a plain `View` with no label
   and no handler — no fake affordance.
 - Groups carry the `group` role; arrows and separators render
   `accessible={false}` so they never appear in the tree.
-- Closed renders the anchor only (monolith) or nothing at all
-  (compound portal): no scrim, no listbox, for assistive tech or
+- Closed renders the anchor only: no scrim, no listbox, for assistive tech or
   tests to find.
 - Explicitly deferred, each for a named reason: no animation
   (the list mounts/unmounts synchronously with state — exit

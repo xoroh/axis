@@ -19,8 +19,7 @@ import {
  * the native host, backdrop dismissal (and its disable), popup
  * surface with title/description/close, element and function
  * `render` substitution with state, and function styles — observed
- * in the RN runtime. The single-part `Dialog` keeps its own suite;
- * this suite proves the compound anatomy only.
+ * in the RN runtime. This suite proves the compound anatomy only.
  */
 
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {

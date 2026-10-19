@@ -8,8 +8,7 @@ value (`style`) is caller-provided. State follows the controlled +
 uncontrolled pattern throughout: `open` (plus `onOpenChange`) for
 controlled use, `defaultOpen` for uncontrolled. The compound
 parts below mirror Base UI's Menu anatomy with the same names and
-state semantics (the concise single-part `Menu` is removed —
-naming rule, contract §2; migration in CHANGELOG).
+state semantics.
 
 Source of truth: `MenuTriggerProps`,
 `MenuTriggerState`, `MenuItemProps`, `MenuItemState`,
@@ -95,15 +94,13 @@ lets it escape clipped parents without an RN `Modal` of its own
 and scroll lock belong to the `OverlayRoot` above). `modal`
 (default `true`) flows straight into `OverlayRoot`: modal roots
 paint at `PortalHost` with a scrim; `modal={false}` roots render
-in-box with no scrim (the monolith shape). `disablePointerDismissal`
+in-box with no scrim. `disablePointerDismissal`
 (default `false`) flows into `dismissable` and every dismiss
 branch (`outsidePointer`, `systemBack`, `escape`); `onDismiss`
 fires on scrim dismissal before `onOpenChange(false)`. No family
 part takes `useModal` itself — the RN `Modal` host is an
 `OverlayRoot`-level opt-in for direct `Overlay` compositions
-(see `docs/components/overlay.md`). The monolith never touches
-this stack: scrim and box render inline, as siblings inside the
-menu container, like the `Select` monolith.
+(see `docs/components/overlay.md`).
 
 ### Props
 
@@ -338,9 +335,7 @@ role:
 | `disabled` | `boolean` | no | `false` | Terminal: the query never changes. |
 | `ref` | `Ref<ElementRef<typeof TextInput>>` | no | — | Forwarded to the entry `TextInput`. |
 
-Renders nothing in the monolith (it owns no query — the
-monolith partitions children by type with no filter composition
-point).
+Renders nothing outside a root (filter parts read only the root query).
 
 #### `MenuClear` (compound roots only)
 
@@ -512,9 +507,8 @@ function CompoundActions() {
   scrim press closes through `onDismiss` + `onOpenChange(false)`.
   Taps inside the box never dismiss: the box is the scrim's
   sibling, not its child.
-- Closed renders the trigger zone only (monolith) or nothing at
-  all (compound portal): no scrim, no box, for assistive tech or
-  tests to find.
+- Closed renders nothing at all (no scrim, no box) for assistive
+  tech or tests to find — except the trigger, which stays visible.
 - Explicitly deferred, each for a named reason: no animation
   (the box mounts/unmounts synchronously with state — exit
   transitions would need the `presence` model to keep it mounted,

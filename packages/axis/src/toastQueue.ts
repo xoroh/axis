@@ -3,7 +3,7 @@
  *
  * ## Why this is a primitive, and what it does NOT own
  *
- * A single-shot `Toast` (open/duration/action) covers one notification;
+ * A single-shot `ToastRoot` (open/duration/action) covers one notification;
  * an app needs a QUEUE: several toasts alive at once, added from
  * anywhere, dismissed individually or all at once, painted in mount
  * order. The QUEUE is shared and belongs here: which toast ids are

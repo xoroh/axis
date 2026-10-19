@@ -112,7 +112,7 @@ function ControlledBold() {
 
 - The host carries the `button` role with `selected` +
   `disabled` state: RN has no `pressed` state key, so `selected`
-  is the verified mapping (the `ToggleGroupItem` precedent).
+  is the verified mapping.
 - `disabled` is terminal: no transitions, no callbacks, and the
   pressable is announced as disabled.
 

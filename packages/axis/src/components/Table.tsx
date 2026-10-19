@@ -12,7 +12,7 @@ import type { SlotProps } from "../slot";
  * value (`style` per part) is caller-provided. Column widths, alignment,
  * and zebra striping belong to the caller.
  *
- * No role is declared on `Table`, `TableHeader`, or `TableCell`:
+ * No role is declared on `TableRoot`, `TableHeader`, or `TableCell`:
  * React Native's screen-reader-mapped `accessibilityRole` defines no
  * table, rowgroup, row, cell, or columnheader value (verified against
  * `ViewAccessibility.d.ts` in the pinned `react-native` — the

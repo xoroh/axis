@@ -34,7 +34,7 @@ import {
  * ancestors, and reports null for `fixed` nodes, whose block is the
  * viewport). Subtracting that block's origin translates the anchor
  * into exactly the right space, whether the popup sits in the
- * anchor wrapper (monoliths) or in a portal layer (compounds). No web
+ * anchor wrapper or in a portal layer. No web
  * imports, no globals, no new host bindings: every shape is detected
  * by duck-typing, and a node with neither shape keeps the
  * pre-existing transparent-at-origin path (previously that shape

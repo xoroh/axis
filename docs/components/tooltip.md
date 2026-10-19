@@ -10,8 +10,7 @@ controlled + uncontrolled pattern throughout: `open` (plus
 `onOpenChange`) for controlled use, `defaultOpen` for
 uncontrolled. The compound parts
 below mirror Base UI's Tooltip anatomy with the same names
-and state semantics (the concise single-part `Tooltip` is
-removed — naming rule, contract §2; migration in CHANGELOG).
+and state semantics.
 
 Source of truth: `TooltipProviderProps`, `TooltipRootProps`,
 `TooltipTriggerProps`, `TooltipTriggerState`,
@@ -68,8 +67,8 @@ modal presentation (scrim, back handling, scroll lock, top-layer
 isolation for surfaces that take over the screen). Mounting a
 hint in that stack would buy nothing and risk everything: a
 full-fill scrim with no dismissal path except the trigger, focus
-moves on every hint show, scroll locks under a fingertip. So both
-the monolith and `TooltipPortal` present through the plain `Portal`
+moves on every hint show, scroll locks under a fingertip. So
+`TooltipPortal` presents through the plain `Portal`
 at the app's `PortalHost` — above sibling content, never modal — and
 positioning stays separable from the host either way. The other
 overlay families (`Select`, `Menu`, `Dialog`, `Popover`,
@@ -274,8 +273,7 @@ function CompoundHint() {
   the tree.
 - No scrim exists to dismiss through: dismissal is a second
   long-press or the controlled prop.
-- Hidden renders the anchor only (monolith) or nothing at all
-  (compound portal): no tip for assistive tech or tests to find.
+- Hidden renders the anchor only: no tip for assistive tech or tests to find.
 - Explicitly deferred, each for a named reason: no hover model
   (no pointer on touch devices — parity D8; timing itself needs a
   finger — RNTL dispatches `longPress` directly, and a

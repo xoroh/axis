@@ -64,11 +64,10 @@ dismissal), with the same compound-part shape as the family
 docs. `useOverlay()` reads the nearest overlay context (throws
 outside `OverlayRoot`) for custom parts. Families on this stack:
 `Select` and `Menu` compound (`modal` default `true`, opt out
-with `modal={false}`), `Dialog` compound and monolith (always
-modal), `Popover` compound (`modal` default `false` — popovers
-are non-modal overlays) and monolith (always inline, never on
-this stack), `Drawer`; `DropdownMenu` and `ContextMenu` render
-inline and are not on this stack.
+with `modal={false}`), `Dialog` compound (always modal),
+`Popover` compound (`modal` default `false` — popovers are
+non-modal overlays), `Drawer`; `DropdownMenu` and `ContextMenu`
+render inline and are not on this stack.
 
 Omitted behaviors are documented deviations, not oversights:
 `escape` and focus-out are declared in the dismiss branch set

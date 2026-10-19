@@ -99,7 +99,7 @@ async function pressTestId(testID: string) {
 /**
  * Press a trigger hidden behind its own open modal layer. The overlay
  * layer claims `accessibilityViewIsModal`, so the trigger reads as
- * hidden to accessibility queries while open (the `Dialog` precedent
+ * hidden to accessibility queries while open (the `DialogRoot` precedent
  * in `dialogparts` — same VoiceOver behavior, asserted explicitly).
  */
 async function pressHiddenTestId(testID: string) {

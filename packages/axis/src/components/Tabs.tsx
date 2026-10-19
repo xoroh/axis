@@ -325,7 +325,7 @@ export function TabsPanel({
   const group = useContext(TabsSelectionContext);
   // Conditional presence (structural): only the selected panel is in
   // the tree, unless `keepMounted` holds unselected panels mounted but
-  // hidden (unselected panels outside a `Tabs` group still render
+  // hidden (unselected panels outside a `TabsRoot` group still render
   // nothing unless `keepMounted` is set).
   const selected = group?.selectedValue === value;
   if (!selected && !keepMounted) {

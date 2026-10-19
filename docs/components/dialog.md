@@ -2,8 +2,7 @@
 
 Unstyled modal dialog with scrim dismissal. The compound parts
 below mirror Base UI's Dialog anatomy with the same names and
-state semantics (the concise single-part `Dialog` is removed —
-naming rule, contract §2; migration in CHANGELOG). Structure,
+state semantics. Structure,
 behavior, and accessibility only — every visual value is
 caller-provided. State follows the controlled + uncontrolled
 pattern throughout: `open` (plus `onOpenChange`) for controlled
@@ -46,7 +45,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `DialogRoot` | `Dialog.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. |
 | `DialogTrigger` | `Dialog.Trigger` | Button role, expanded state, tap toggles. |
 | `DialogPortal` | `Dialog.Portal` | `OverlayPortal` host at `PortalHost` — the native portal. |
-| `DialogBackdrop` | `Dialog.Backdrop` | Scrim dismissal (`disablePointerDismissal` lives on Root; the removed monolith spelled it `dismissable`). |
+| `DialogBackdrop` | `Dialog.Backdrop` | Scrim dismissal (`disablePointerDismissal` lives on Root). |
 | `DialogPopup` | `Dialog.Popup` | Surface view carrying the dialog role. |
 | `DialogTitle` | `Dialog.Title` | Heading text (`header` role). |
 | `DialogDescription` | `Dialog.Description` | Descriptive text. |
@@ -69,9 +68,8 @@ presents every layer: Android back, stacking, focus, and scroll
 lock belong to the `OverlayRoot` above). `modal` defaults to
 `true` on the compound root (`"trap-focus"` behaves as modal —
 focus containment still needs the `focusTrap` RN adaptation);
-the monolith is always modal. `disablePointerDismissal`
-(default `false`; the monolith spells it `dismissable`,
-default `true`) flows into `dismissable` and every dismiss
+`disablePointerDismissal` (default `false`)
+flows into `dismissable` and every dismiss
 branch (`outsidePointer`, `systemBack`, `escape`); `onDismiss`
 fires on scrim (or request-close) dismissal before
 `onOpenChange(false)`. No family part takes `useModal` itself —
@@ -88,7 +86,7 @@ the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed open or dismissal. |
 | `onDismiss` | `() => void` | no | — | Fires on backdrop (or request-close) dismissal, before `onOpenChange(false)`. |
-| `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss (Base UI parity name for the monolith's `dismissable={false}`). |
+| `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss. |
 | `modal` | `boolean \| "trap-focus"` | no | `true` | Kept for Base UI parity. The surface always presents modally on native; `"trap-focus"` behaves as modal (focus containment still needs the `focusTrap` RN adaptation). |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 
@@ -341,6 +339,6 @@ native — state flows through those functions instead (contract
 `modal`/`"trap-focus"` behavior are recorded in
 `docs/BASE_UI_PARITY.md` (§ Dialog — aligned). `AlertDialog`
 is rebuilt on these compound parts. Verified by the dialog
-RNTL suites (8 monolith + 11 compound tests —
+RNTL suites (11 tests —
 `docs/COVERAGE.md`). The compound anatomy renders in
 `apps/example/src/demos/dialog.tsx`.

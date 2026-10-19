@@ -24,7 +24,7 @@ import {
  * popup role and label, arrow placement, render substitution,
  * function styles, controlled visibility, and disabled terminality
  * are observed, not assumed. Pixel placement is NOT asserted here
- * (the monolith tooltip precedent: measurement needs the native
+ * (measurement needs the native
  * runtime; math is covered by the `positioning` unit suites).
  */
 

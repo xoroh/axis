@@ -19,8 +19,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  *
  * Structure mirrors `Tooltip` (anchor wrapper + measured floating
  * box + scrim, the box and scrim presenting through `Portal` at the
- * app's `PortalHost`), not `Menu`: menu items here are caller content, not
- * `MenuItem` parts (those require `Menu` context). Long-press opens;
+ * app's `PortalHost`), not `MenuRoot`: menu items here are caller content, not
+ * `MenuItem` parts (those require `MenuRoot` context). Long-press opens;
  * scrim press or a second long-press dismisses through `onDismiss` +
  * `onOpenChange(false)` (the `Dialog` dismissal precedent). The box
  * positions below the anchor — press-point positioning is deferred,

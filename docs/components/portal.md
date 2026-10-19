@@ -50,7 +50,7 @@ in `docs/BASE_UI_PARITY.md` (§ Portal — aligned).
 
 `PortalHost` is the ground `OverlayPortal` paints on: the
 overlay families (`Select` and `Menu` compound with `modal`,
-`Dialog` compound and monolith, `Popover` compound with
+`Dialog` compound, `Popover` compound with
 `modal`, `Drawer`) present through `OverlayRoot` +
 `OverlayPortal` at the app's host — one root presents every
 layer, so Android back, stacking, dismissal, and focus belong to

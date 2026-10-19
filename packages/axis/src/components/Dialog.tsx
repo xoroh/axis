@@ -118,8 +118,7 @@ export type DialogRootProps = {
   /** Fires on backdrop (or request-close) dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
-   * When `true`, backdrop press does not dismiss (Base UI parity name
-   * for the monolith's `dismissable={false}`). Default `false`.
+   * When `true`, backdrop press does not dismiss. Default `false`.
    */
   disablePointerDismissal?: boolean;
   /**
@@ -438,7 +437,7 @@ export function DialogBackdrop({
   }
 
   // Non-dismissable: a plain host with no label and no handler — no
-  // fake affordance (the monolith's `dismissable={false}` precedent).
+  // fake affordance.
   const substituted = resolveRender(
     render,
     { testID, style: resolveStyle(style, state) } satisfies SlotProps,
