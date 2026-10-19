@@ -144,10 +144,8 @@ export type RadioIndicatorProps = {
   children?: ReactNode;
   /**
    * When `true`, the indicator stays mounted while the radio is
-   * unchecked: mounted but hidden from assistive tech
-   * (`accessibilityElementsHidden` on iOS,
-   * `importantForAccessibility="no-hide-descendants"` on Android,
-   * `aria-hidden` on web), with `{ checked: false }` state. The
+   * unchecked: mounted but hidden from assistive tech (`aria-hidden`
+   * — ADR-112 aria-only), with `{ checked: false }` state. The
    * indicator stays visible by design (Base UI parity — the caller
    * styles it from state). Default `false` (mounts only while
    * checked — keep-alive stays opt-in).
@@ -402,13 +400,12 @@ export function RadioIndicator({
     <View
       testID={testID}
       style={style}
-      // `accessible={false}` alone does NOT hide children from
-      // VoiceOver/TalkBack — hide the mounted-but-unchecked
-      // indicator on all three platforms explicitly. Unlike
+      // `aria-hidden` alone hides descendants on iOS and Android
+      // (resolved to accessibilityElementsHidden +
+      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // aria-only — no legacy hiding props. Unlike
       // `AccordionPanel`, the indicator stays visible by design
       // (Base UI parity: the caller styles it from state).
-      accessibilityElementsHidden={!checked}
-      importantForAccessibility={checked ? "auto" : "no-hide-descendants"}
       aria-hidden={!checked}
     >
       {children}

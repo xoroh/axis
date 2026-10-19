@@ -187,7 +187,7 @@ function EmailField() {
 
 ### Accessibility
 
-- The error `Text` carries `accessibilityLiveRegion="polite"`, so
+- The error `Text` carries `aria-live="polite"` (ADR-112 aria-only), so
   the message is announced when it appears — without stealing focus.
 - The label is a plain `Text` above the control: FieldRoot does not yet
   wire a programmatic label ↔ control association. That gap is

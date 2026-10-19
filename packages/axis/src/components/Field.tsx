@@ -152,13 +152,13 @@ function FieldText({
   style,
   children,
   render,
-  liveRegion,
+  live,
 }: {
   testID?: string;
   style?: StyleProp<TextStyle>;
   children?: ReactNode;
   render?: RenderProp<Record<string, never>, SlotProps>;
-  liveRegion?: "polite";
+  live?: "polite";
 }): React.ReactNode {
   const substituted = resolveRender(
     render,
@@ -166,8 +166,9 @@ function FieldText({
     {},
   );
   if (substituted !== null) return substituted;
+  // ADR-112 aria-only: `aria-live`, not `accessibilityLiveRegion`.
   return (
-    <Text accessibilityLiveRegion={liveRegion} testID={testID} style={style}>
+    <Text aria-live={live} testID={testID} style={style}>
       {children}
     </Text>
   );
@@ -277,12 +278,7 @@ export function FieldError({
   // precedent — full validity wiring belongs to the behaviour lane).
   if (!(disclosure?.invalid ?? false)) return null;
   return (
-    <FieldText
-      testID={testID}
-      style={style}
-      render={render}
-      liveRegion="polite"
-    >
+    <FieldText testID={testID} style={style} render={render} live="polite">
       {children}
     </FieldText>
   );

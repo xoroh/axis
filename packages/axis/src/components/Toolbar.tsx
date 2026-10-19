@@ -89,8 +89,8 @@ export type ToolbarButtonProps = {
   onPress?: () => void;
   /** Terminal: it never activates and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112 aria-only). */
+  "aria-label"?: string;
   testID?: string;
   /** Value or function of button state, caller-provided. */
   style?: StateStyle<ToolbarButtonState, StyleProp<ViewStyle>>;
@@ -111,8 +111,8 @@ export type ToolbarLinkProps = {
   onPress?: () => void;
   /** Terminal: it never activates and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112 aria-only). */
+  "aria-label"?: string;
   testID?: string;
   /** Value or function of link state, caller-provided. */
   style?: StateStyle<ToolbarLinkState, StyleProp<TextStyle>>;
@@ -129,8 +129,8 @@ export type ToolbarGroupProps = {
   children: ReactNode;
   /** Terminal for the group: announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source for the group. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the group (ADR-112 aria-only). */
+  "aria-label"?: string;
   testID?: string;
   /** Group view style: value or function of group state. */
   style?: StateStyle<ToolbarGroupState, StyleProp<ViewStyle>>;
@@ -155,8 +155,8 @@ export type ToolbarInputProps = {
   placeholder?: string;
   /** Terminal: no edits, no callbacks, announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112 aria-only). */
+  "aria-label"?: string;
   testID?: string;
   /** Input style: value or function of input state, caller-provided. */
   style?: StateStyle<ToolbarInputState, StyleProp<TextStyle>>;
@@ -330,7 +330,7 @@ export function ToolbarButton({
   children,
   onPress,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   testID,
   style,
   render,
@@ -371,7 +371,7 @@ export function ToolbarButton({
     {
       accessibilityRole: "button",
       accessibilityState: { disabled: effectiveDisabled },
-      accessibilityLabel,
+      "aria-label": ariaLabel,
       testID,
       disabled: effectiveDisabled,
       onPress: pressButton,
@@ -388,7 +388,7 @@ export function ToolbarButton({
       ref={setButtonRef}
       accessibilityRole="button"
       accessibilityState={{ disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={pressButton}
@@ -403,7 +403,7 @@ export function ToolbarLink({
   children,
   onPress,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   testID,
   style,
   render,
@@ -425,7 +425,7 @@ export function ToolbarLink({
     {
       accessibilityRole: "link",
       accessibilityState: { disabled: effectiveDisabled },
-      accessibilityLabel,
+      "aria-label": ariaLabel,
       testID,
       disabled: effectiveDisabled,
       onPress: pressLink,
@@ -440,7 +440,7 @@ export function ToolbarLink({
     <Text
       accessibilityRole="link"
       accessibilityState={{ disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={pressLink}
@@ -454,7 +454,7 @@ export function ToolbarLink({
 export function ToolbarGroup({
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   testID,
   style,
   render,
@@ -490,7 +490,7 @@ export function ToolbarGroup({
     {
       accessibilityRole: "toolbar",
       accessibilityState: { disabled: effectiveDisabled },
-      accessibilityLabel,
+      "aria-label": ariaLabel,
       testID,
       style: resolveStyle(style, state),
       children,
@@ -505,7 +505,7 @@ export function ToolbarGroup({
       ref={setGroupRef}
       accessibilityRole="toolbar"
       accessibilityState={{ disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
       testID={testID}
       style={resolveStyle(style, state)}
     >
@@ -520,7 +520,7 @@ export function ToolbarInput({
   onValueChange,
   placeholder,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   testID,
   style,
   render,
@@ -541,7 +541,7 @@ export function ToolbarInput({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel,
+      "aria-label": ariaLabel,
       testID,
       disabled: effectiveDisabled,
       editable: !effectiveDisabled,
@@ -558,7 +558,7 @@ export function ToolbarInput({
   return (
     <TextInput
       ref={ref}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
       testID={testID}
       editable={!effectiveDisabled}
       value={current ?? ""}

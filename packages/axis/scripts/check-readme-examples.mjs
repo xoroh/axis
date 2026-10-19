@@ -72,11 +72,15 @@ function propsOf(component) {
           const walk = (t) => {
             if (ts.isTypeLiteralNode(t)) {
               for (const member of t.members) {
-                if (
-                  ts.isPropertySignature(member) &&
-                  ts.isIdentifier(member.name)
-                ) {
-                  out.add(member.name.text);
+                if (ts.isPropertySignature(member)) {
+                  // Quoted names (`"aria-label"`) are real props too
+                  // (ADR-112 aria-only parts).
+                  if (
+                    ts.isIdentifier(member.name) ||
+                    ts.isStringLiteral(member.name)
+                  ) {
+                    out.add(member.name.text);
+                  }
                 }
               }
             } else if (ts.isIntersectionTypeNode(t)) {

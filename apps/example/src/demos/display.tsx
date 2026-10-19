@@ -358,7 +358,7 @@ export const DisplayDemo: Demo = {
             }}
           >
             <ToolbarButton
-              accessibilityLabel="Bold"
+              aria-label="Bold"
               style={{
                 paddingVertical: 6,
                 paddingHorizontal: 10,
@@ -373,7 +373,7 @@ export const DisplayDemo: Demo = {
               </Text>
             </ToolbarButton>
             <ToolbarButton
-              accessibilityLabel="Italic"
+              aria-label="Italic"
               style={{
                 paddingVertical: 6,
                 paddingHorizontal: 10,
@@ -391,15 +391,15 @@ export const DisplayDemo: Demo = {
               style={{ width: 1, backgroundColor: theme.border }}
             />
             <ToolbarGroup
-              accessibilityLabel="Code group"
+              aria-label="Code group"
               style={{ flexDirection: "row", gap: 8 }}
             >
-              <ToolbarLink accessibilityLabel="Docs">
+              <ToolbarLink aria-label="Docs">
                 <Text style={{ fontSize: 13, color: theme.primary }}>Docs</Text>
               </ToolbarLink>
             </ToolbarGroup>
             <ToolbarInput
-              accessibilityLabel="Toolbar search"
+              aria-label="Toolbar search"
               placeholder="Search"
               style={{ flex: 1, fontSize: 13, color: theme.text }}
             />

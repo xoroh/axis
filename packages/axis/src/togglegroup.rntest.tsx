@@ -189,16 +189,16 @@ describe("ToggleGroup on React Native", () => {
         <Toggle testID="solo" onPressedChange={() => (calls += 1)} />
       </ToggleGroup>,
     );
-    expect(
-      screen.getByTestId("joined").props.accessibilityState,
-    ).toMatchObject({ disabled: true });
-    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject(
-      { disabled: false },
+    expect(screen.getByTestId("joined").props.accessibilityState).toMatchObject(
+      { disabled: true },
     );
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
+      disabled: false,
+    });
     await press("solo");
     expect(calls).toBe(1);
-    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject(
-      { selected: true },
-    );
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
   });
 });

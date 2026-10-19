@@ -124,6 +124,19 @@ describe("Toolbar parts on React Native", () => {
     ).toMatchObject({ disabled: true });
   });
 
+  it("parts take aria-label (ADR-112 aria-only)", async () => {
+    await render(
+      <ToolbarRoot>
+        <ToolbarButton aria-label="Make bold">
+          <Text>B</Text>
+        </ToolbarButton>
+        <ToolbarLink aria-label="Open docs">Docs</ToolbarLink>
+      </ToolbarRoot>,
+    );
+    expect(screen.getByLabelText("Make bold")).toBeTruthy();
+    expect(screen.getByLabelText("Open docs")).toBeTruthy();
+  });
+
   it("button inherits root orientation and disabled", async () => {
     await render(
       <ToolbarRoot testID="tb" orientation="vertical" disabled>

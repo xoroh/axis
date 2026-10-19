@@ -76,7 +76,7 @@ the observational disabled flag announced on the container, and the reading orde
 | `children` | `ReactNode` | no | — | Button content. |
 | `onPress` | `() => void` | no | — | Fires on activation. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never activates and is announced as disabled. OR'ed with the root flag. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source (ADR-112 aria-only). |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<ToolbarButtonState, StyleProp<ViewStyle>>` | no | — | Value or function of button state. |
 | `render` | `RenderProp<ToolbarButtonState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -91,7 +91,7 @@ the observational disabled flag announced on the container, and the reading orde
 | `children` | `ReactNode` | no | — | Link content. |
 | `onPress` | `() => void` | no | — | Fires on activation. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never activates and is announced as disabled. OR'ed with the root flag. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source (ADR-112 aria-only). |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<ToolbarLinkState, StyleProp<TextStyle>>` | no | — | Value or function of link state. |
 | `render` | `RenderProp<ToolbarLinkState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -104,7 +104,7 @@ the observational disabled flag announced on the container, and the reading orde
 |---|---|---|---|---|
 | `children` | `ReactNode` | yes | — | Grouped toolbar items. |
 | `disabled` | `boolean` | no | `false` | Terminal for the group: announced as disabled. OR'ed with the root flag. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the group. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the group (ADR-112 aria-only). |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<ToolbarGroupState, StyleProp<ViewStyle>>` | no | — | Value or function of group state. |
 | `render` | `RenderProp<ToolbarGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -121,7 +121,7 @@ the observational disabled flag announced on the container, and the reading orde
 | `onValueChange` | `(value: string) => void` | no | — | Fires with the next value on every committed change. |
 | `placeholder` | `string` | no | — | Placeholder text shown while empty. |
 | `disabled` | `boolean` | no | `false` | Terminal: no edits, no callbacks, announced as disabled. OR'ed with the root flag. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source (ADR-112 aria-only). |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<ToolbarInputState, StyleProp<TextStyle>>` | no | — | Value or function of input state. |
 | `render` | `RenderProp<ToolbarInputState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -200,19 +200,19 @@ import {
 function PartsBar() {
   return (
     <ToolbarRoot accessibilityLabel="Editor">
-      <ToolbarButton accessibilityLabel="Bold">
+      <ToolbarButton aria-label="Bold">
         <Text>B</Text>
       </ToolbarButton>
       <ToolbarSeparator />
-      <ToolbarGroup accessibilityLabel="History">
-        <ToolbarButton accessibilityLabel="Undo">
+      <ToolbarGroup aria-label="History">
+        <ToolbarButton aria-label="Undo">
           <Text>Undo</Text>
         </ToolbarButton>
       </ToolbarGroup>
-      <ToolbarLink accessibilityLabel="Docs">
+      <ToolbarLink aria-label="Docs">
         <Text>Docs</Text>
       </ToolbarLink>
-      <ToolbarInput accessibilityLabel="Search" placeholder="Search" />
+      <ToolbarInput aria-label="Search" placeholder="Search" />
     </ToolbarRoot>
   );
 }

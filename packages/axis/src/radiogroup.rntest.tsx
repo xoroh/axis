@@ -263,14 +263,13 @@ describe("RadioGroup on React Native", () => {
     const hidden = screen.getByTestId("s-mark", {
       includeHiddenElements: true,
     }).props;
-    expect(hidden.accessibilityElementsHidden).toBe(true);
-    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    // ADR-112 aria-only: the indicator sets `aria-hidden` alone.
     expect(hidden["aria-hidden"]).toBe(true);
+    expect(hidden.accessibilityElementsHidden).toBeUndefined();
+    expect(hidden.importantForAccessibility).toBeUndefined();
     await press("s");
     // Checked: visible and exposed again.
-    expect(screen.getByTestId("s-mark").props.accessibilityElementsHidden).toBe(
-      false,
-    );
+    expect(screen.getByTestId("s-mark").props["aria-hidden"]).toBe(false);
   });
 
   it("indicator function render observes checked state", async () => {
@@ -300,9 +299,7 @@ describe("RadioGroup on React Native", () => {
           value="s"
           testID="s"
           render={(props) => (
-            <Text testID="s-sub">
-              {props.children as React.ReactNode}
-            </Text>
+            <Text testID="s-sub">{props.children as React.ReactNode}</Text>
           )}
         >
           <RadioIndicator testID="s-mark">
