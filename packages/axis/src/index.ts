@@ -127,8 +127,10 @@ export {
 export {
   AlertDialogBackdrop,
   type AlertDialogBackdropProps,
+  type AlertDialogBackdropState,
   AlertDialogClose,
   type AlertDialogCloseProps,
+  type AlertDialogCloseState,
   AlertDialogDescription,
   type AlertDialogDescriptionProps,
   AlertDialogPopup,
@@ -142,6 +144,7 @@ export {
   type AlertDialogTitleProps,
   AlertDialogTrigger,
   type AlertDialogTriggerProps,
+  type AlertDialogTriggerState,
 } from "./components/AlertDialog";
 export { AspectRatio, type AspectRatioProps } from "./components/AspectRatio";
 export {

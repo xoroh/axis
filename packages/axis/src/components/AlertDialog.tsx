@@ -1,23 +1,17 @@
 import type { ElementRef, ReactNode, Ref } from "react";
-import type { StyleProp, View, ViewStyle } from "react-native";
+import type { StyleProp, TextStyle, View, ViewStyle } from "react-native";
 import type { OverlayOpenChangeDetails } from "../dismissWiring";
 import type { RenderProp, StateStyle } from "../render";
 import type { SlotProps } from "../slot";
 import {
   DialogBackdrop,
-  type DialogBackdropProps,
   DialogClose,
-  type DialogCloseProps,
   DialogDescription,
-  type DialogDescriptionProps,
   DialogPopup,
   DialogPortal,
-  type DialogPortalProps,
   DialogRoot,
   DialogTitle,
-  type DialogTitleProps,
   DialogTrigger,
-  type DialogTriggerProps,
 } from "./Dialog";
 import type { OverlayFocusValue } from "./useAccessibilityFocus";
 
@@ -90,7 +84,30 @@ export function AlertDialogRoot({
   );
 }
 
-export type AlertDialogTriggerProps = DialogTriggerProps;
+export type AlertDialogTriggerProps = {
+  /** Terminal: it never opens and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of trigger state, caller-provided. */
+  style?: StateStyle<AlertDialogTriggerState, StyleProp<ViewStyle>>;
+  /** Trigger content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<AlertDialogTriggerState, SlotProps>;
+};
+
+export type AlertDialogTriggerState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
 
 export function AlertDialogTrigger(
   props: AlertDialogTriggerProps,
@@ -98,7 +115,11 @@ export function AlertDialogTrigger(
   return <DialogTrigger {...props} />;
 }
 
-export type AlertDialogPortalProps = DialogPortalProps;
+export type AlertDialogPortalProps = {
+  /** Portal content (Backdrop + Popup composed by the caller). */
+  children?: ReactNode;
+  testID?: string;
+};
 
 export function AlertDialogPortal(
   props: AlertDialogPortalProps,
@@ -106,7 +127,21 @@ export function AlertDialogPortal(
   return <DialogPortal {...props} />;
 }
 
-export type AlertDialogBackdropProps = DialogBackdropProps;
+export type AlertDialogBackdropProps = {
+  testID?: string;
+  /** Value or function of backdrop state, caller-provided. */
+  style?: StateStyle<AlertDialogBackdropState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * scrim host; dismissal wiring stays on the part.
+   */
+  render?: RenderProp<AlertDialogBackdropState, SlotProps>;
+};
+
+export type AlertDialogBackdropState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
 
 export function AlertDialogBackdrop(
   props: AlertDialogBackdropProps,
@@ -176,7 +211,15 @@ export function AlertDialogPopup({
   );
 }
 
-export type AlertDialogTitleProps = DialogTitleProps;
+export type AlertDialogTitleProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Heading content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
 
 export function AlertDialogTitle(
   props: AlertDialogTitleProps,
@@ -184,7 +227,15 @@ export function AlertDialogTitle(
   return <DialogTitle {...props} />;
 }
 
-export type AlertDialogDescriptionProps = DialogDescriptionProps;
+export type AlertDialogDescriptionProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Description content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
 
 export function AlertDialogDescription(
   props: AlertDialogDescriptionProps,
@@ -192,7 +243,30 @@ export function AlertDialogDescription(
   return <DialogDescription {...props} />;
 }
 
-export type AlertDialogCloseProps = DialogCloseProps;
+export type AlertDialogCloseState = {
+  /** Whether the button is currently disabled. */
+  disabled: boolean;
+};
+
+export type AlertDialogCloseProps = {
+  /** Terminal: it never closes and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of close state, caller-provided. */
+  style?: StateStyle<AlertDialogCloseState, StyleProp<ViewStyle>>;
+  /** Button content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<AlertDialogCloseState, SlotProps>;
+  /**
+   * Mark this Close as the default initial focus target (how
+   * AlertDialog marks Cancel — Axis cannot infer destructiveness).
+   * Default `false`.
+   */
+  initialFocus?: boolean;
+};
 
 export function AlertDialogClose(
   props: AlertDialogCloseProps,

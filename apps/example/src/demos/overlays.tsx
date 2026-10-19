@@ -489,8 +489,8 @@ export const OverlaysDemo: Demo = {
                 >
                   <AlertDialogTitle>Discard changes?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure? Unsaved modifications will be
-                    permanently lost.
+                    Are you sure? Unsaved modifications will be permanently
+                    lost.
                   </AlertDialogDescription>
                   <AlertDialogClose initialFocus testID="demo-alert-cancel">
                     <Text style={{ color: theme.textSubtle, fontSize: 14 }}>

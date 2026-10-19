@@ -322,7 +322,8 @@ describe("Drawer compound parts on React Native", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
-  it("closes with the close-press reason", async () => {    const changed: Array<{ open: boolean; reason?: string }> = [];
+  it("closes with the close-press reason", async () => {
+    const changed: Array<{ open: boolean; reason?: string }> = [];
     await render(
       <PortalHost>
         <Shell

@@ -20,9 +20,7 @@ function AppShell(): React.JSX.Element {
   return (
     <View
       style={{ flex: 1, backgroundColor: theme.bg }}
-      importantForAccessibility={
-        modalActive ? "no-hide-descendants" : "auto"
-      }
+      importantForAccessibility={modalActive ? "no-hide-descendants" : "auto"}
     >
       <View
         style={{

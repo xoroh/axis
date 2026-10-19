@@ -240,7 +240,7 @@ export function trapTabKey(
  * only). The D11 fallback is computed from the LIVE trigger while the
  * surface is open and stashed — a detached node's chain cannot be
  * focused (browsers no-op `.focus()` on disconnected elements), so
- * the stash must name an element that is still in the document.
+ * the stash must name an element that is still attached.
  */
 export function closestFocusableAncestor(node: unknown): unknown | null {
   let current: unknown =
@@ -252,7 +252,7 @@ export function closestFocusableAncestor(node: unknown): unknown | null {
   return null;
 }
 
-/** Whether `node` is still in the document (web only). */
+/** Whether `node` is still attached (web only). */
 export function isConnectedNode(node: unknown): boolean {
   if (typeof node !== "object" || node === null) return false;
   const connected = (node as { isConnected?: unknown }).isConnected;
