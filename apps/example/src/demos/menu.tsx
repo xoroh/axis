@@ -1,5 +1,4 @@
 import {
-  Menu,
   MenuArrow,
   MenuBackdrop,
   MenuCheckboxItem,
@@ -17,7 +16,6 @@ import {
   type MenuPopupProps,
   MenuPortal,
   MenuPositioner,
-  type MenuProps,
   MenuRadioGroup,
   MenuRadioItem,
   MenuRadioItemIndicator,
@@ -41,7 +39,6 @@ export const MenuDemo: Demo = {
   slug: "menu",
   title: "Menu",
   components: [
-    "Menu",
     "MenuArrow",
     "MenuBackdrop",
     "MenuCheckboxItem",
@@ -105,11 +102,10 @@ export const MenuDemo: Demo = {
       paddingHorizontal: 10,
       marginBottom: 4,
     };
-    // Monolith box: same surface; the hook matches the box to the
-    // trigger row width (`matchAnchorWidth`), so no `width` here —
-    // `width: 100%` would mean the viewport once the box portals to
-    // the app host.
-    const inlineBoxStyle: MenuProps["style"] = {
+    // Inline box: same surface; the positioner matches the box to
+    // the trigger row width, so no `width` here — `width: 100%`
+    // would mean the viewport once the box portals to the app host.
+    const inlineBoxStyle: MenuPopupProps["style"] = {
       ...popupStyle,
       minWidth: undefined,
     };
@@ -175,17 +171,21 @@ export const MenuDemo: Demo = {
             </MenuPositioner>
           </MenuPortal>
         </MenuRoot>
-        <Menu testID="inline-menu" style={inlineBoxStyle}>
+        <MenuRoot modal={false}>
           <MenuTrigger
             accessibilityLabel="Open inline"
             style={wideTriggerStyle}
           >
             <Text style={labelStyle}>Inline</Text>
           </MenuTrigger>
-          <MenuItem value="a" style={itemStyle}>
-            <Text style={labelStyle}>A</Text>
-          </MenuItem>
-        </Menu>
+          <MenuPortal>
+            <MenuPopup testID="inline-menu" style={inlineBoxStyle}>
+              <MenuItem value="a" style={itemStyle}>
+                <Text style={labelStyle}>A</Text>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPortal>
+        </MenuRoot>
         <MenuRoot>
           <MenuTrigger
             accessibilityLabel="Open filterable menu"

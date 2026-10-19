@@ -9,7 +9,14 @@ import {
   type MeasurableRef,
   useFloatingPlacement,
 } from "./components/useFloatingPlacement";
-import { PortalHost, Tooltip } from "./index";
+import {
+  PortalHost,
+  TooltipPopup,
+  TooltipPortal,
+  TooltipPositioner,
+  TooltipRoot,
+  TooltipTrigger,
+} from "./index";
 import type { Placement } from "./positioning";
 
 // The mocked `react-native` below does not install the `__DEV__`
@@ -279,7 +286,7 @@ describe("useFloatingPlacement anchor shapes", () => {
   });
 });
 
-describe("Tooltip monolith placement default", () => {
+describe("Tooltip compound placement default", () => {
   // Mid-screen anchor: neither side overflows, so the preferred side
   // stands and the two candidates land 80 apart.
   const anchorNode = {
@@ -296,9 +303,14 @@ describe("Tooltip monolith placement default", () => {
     act(() => {
       root = create(
         <PortalHost>
-          <Tooltip open placement={placement} content="Hint">
-            Anchor
-          </Tooltip>
+          <TooltipRoot open>
+            <TooltipTrigger>Anchor</TooltipTrigger>
+            <TooltipPortal>
+              <TooltipPositioner side={placement} testID="tip-pos">
+                <TooltipPopup>Hint</TooltipPopup>
+              </TooltipPositioner>
+            </TooltipPortal>
+          </TooltipRoot>
         </PortalHost>,
         {
           createNodeMock: () => anchorNode,
@@ -306,15 +318,24 @@ describe("Tooltip monolith placement default", () => {
       );
     });
     // React 19 moved the query API onto the test instance.
+    // The positioner owns measurement: it carries `onLayout` and the
+    // resolved floating style, while the popup inside it is unmeasured
+    // content.
     const tree = root?.root;
+    // `findByProps` matches the composite part first: select the host
+    // node carrying measurement.
+    const host = () =>
+      tree
+        ?.findAllByProps({ testID: "tip-pos" })
+        .find((node) => typeof node.props.onLayout === "function");
     act(() => {
-      const tip = tree?.findByProps({ accessibilityRole: "tooltip" });
-      tip?.props.onLayout({
+      host()?.props.onLayout({
         nativeEvent: { layout: { width: 100, height: 40 } },
       });
     });
-    const style = tree?.findByProps({ accessibilityRole: "tooltip" }).props
-      .style;
+    const tip = tree?.findByProps({ accessibilityRole: "tooltip" });
+    expect(tip).toBeTruthy();
+    const style = host()?.props.style;
     root?.unmount();
     const flat = Array.isArray(style)
       ? Object.assign({}, ...style.filter(Boolean))

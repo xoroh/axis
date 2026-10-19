@@ -189,7 +189,6 @@ export {
   type ContextMenuRootState,
 } from "./components/ContextMenu";
 export {
-  Dialog,
   DialogBackdrop,
   type DialogBackdropProps,
   type DialogBackdropState,
@@ -241,7 +240,6 @@ export { Fieldset, type FieldsetProps } from "./components/Fieldset";
 export { Input, type InputProps, type InputState } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
 export {
-  Menu,
   MenuArrow,
   type MenuArrowProps,
   MenuBackdrop,
@@ -276,7 +274,6 @@ export {
   MenuPositioner,
   type MenuPositionerProps,
   type MenuPositionerState,
-  type MenuProps,
   MenuRadioGroup,
   type MenuRadioGroupProps,
   MenuRadioItem,
@@ -377,7 +374,6 @@ export {
   useScrollLock,
 } from "./components/Overlay";
 export {
-  Popover,
   PopoverArrow,
   type PopoverArrowProps,
   PopoverBackdrop,
@@ -396,7 +392,6 @@ export {
   PopoverPositioner,
   type PopoverPositionerProps,
   type PopoverPositionerState,
-  type PopoverProps,
   PopoverRoot,
   type PopoverRootProps,
   type PopoverRootState,
@@ -426,7 +421,6 @@ export {
   type RadioGroupState,
 } from "./components/RadioGroup";
 export {
-  Select,
   SelectArrow,
   type SelectArrowProps,
   SelectBackdrop,
@@ -451,7 +445,6 @@ export {
   SelectPositioner,
   type SelectPositionerProps,
   type SelectPositionerState,
-  type SelectProps,
   SelectRoot,
   type SelectRootProps,
   type SelectRootState,
@@ -529,7 +522,6 @@ export {
   type ToolbarState,
 } from "./components/Toolbar";
 export {
-  Tooltip,
   TooltipArrow,
   type TooltipArrowProps,
   TooltipPopup,
@@ -540,12 +532,10 @@ export {
   TooltipPositioner,
   type TooltipPositionerProps,
   type TooltipPositionerState,
-  type TooltipProps,
   TooltipProvider,
   type TooltipProviderProps,
   TooltipRoot,
   type TooltipRootProps,
-  type TooltipState,
   TooltipTrigger,
   type TooltipTriggerProps,
   type TooltipTriggerState,

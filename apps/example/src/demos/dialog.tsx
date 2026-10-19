@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogBackdrop,
   DialogClose,
   DialogDescription,
@@ -22,7 +21,6 @@ export const DialogDemo: Demo = {
   slug: "dialog",
   title: "Dialog",
   components: [
-    "Dialog",
     "DialogRoot",
     "DialogTrigger",
     "DialogPortal",
@@ -166,7 +164,7 @@ export const DialogDemo: Demo = {
           </DialogRoot>
         </View>
 
-        {/* Monolith Dialog */}
+        {/* Controlled Compound Dialog */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -178,11 +176,10 @@ export const DialogDemo: Demo = {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
-            Inline Dialog Primitive:
+            Controlled Dialog:
           </Text>
           <Text style={{ fontSize: 13, color: theme.textSubtle }}>
-            Same behavior as the monolith API — caller owns the open state and
-            trigger.
+            Same parts, caller-owned open state and an external trigger.
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -204,52 +201,76 @@ export const DialogDemo: Demo = {
               Open Inline Dialog
             </Text>
           </Pressable>
-          <Dialog
-            open={inlineOpen}
-            onOpenChange={setInlineOpen}
-            accessibilityLabel="Inline demo dialog"
-            overlayStyle={{ backgroundColor: theme.overlay }}
-            surfaceStyle={{
-              alignSelf: "center",
-              marginTop: 120,
-              width: "90%",
-              maxWidth: 380,
-              padding: 20,
-              borderRadius: 12,
-              backgroundColor: theme.surface,
-              borderWidth: 1,
-              borderColor: theme.border,
-              gap: 10,
-            }}
-            title="Inline dialog"
-            titleStyle={{ fontSize: 16, fontWeight: "700", color: theme.text }}
-            actions={
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close inline demo dialog"
-                onPress={() => setInlineOpen(false)}
+          <DialogRoot open={inlineOpen} onOpenChange={setInlineOpen}>
+            <DialogPortal>
+              <DialogBackdrop style={{ backgroundColor: theme.overlay }} />
+              <View
                 style={{
-                  alignSelf: "flex-end",
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 6,
-                  backgroundColor: theme.surfaceSubtle,
-                  borderWidth: 1,
-                  borderColor: theme.border,
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 24,
                 }}
               >
-                <Text
-                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+                <DialogPopup
+                  accessibilityLabel="Inline demo dialog"
+                  style={{
+                    alignSelf: "center",
+                    width: "90%",
+                    maxWidth: 380,
+                    padding: 20,
+                    borderRadius: 12,
+                    backgroundColor: theme.surface,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    gap: 10,
+                  }}
                 >
-                  Close
-                </Text>
-              </Pressable>
-            }
-          >
-            <Text style={{ fontSize: 13, color: theme.textSubtle }}>
-              Rendered inline by the monolith Dialog with caller styles.
-            </Text>
-          </Dialog>
+                  <DialogTitle
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "700",
+                      color: theme.text,
+                    }}
+                  >
+                    Inline dialog
+                  </DialogTitle>
+                  <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                    Rendered with the compound parts and caller styles.
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <DialogClose
+                      accessibilityLabel="Close inline demo dialog"
+                      style={{
+                        alignSelf: "flex-end",
+                        paddingVertical: 8,
+                        paddingHorizontal: 14,
+                        borderRadius: 6,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: theme.text,
+                        }}
+                      >
+                        Close
+                      </Text>
+                    </DialogClose>
+                  </View>
+                </DialogPopup>
+              </View>
+            </DialogPortal>
+          </DialogRoot>
         </View>
       </View>
     );

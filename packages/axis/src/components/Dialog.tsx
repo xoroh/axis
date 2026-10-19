@@ -22,81 +22,39 @@ import { useControllableState } from "../useControllableState";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
 
 /**
- * Dialog — an unstyled modal dialog with scrim dismissal.
+ * Dialog — a compound modal dialog (Base UI parity).
  *
- * Structure only: the `Overlay` root painting at the app's
- * `PortalHost`, holding a scrim layer with the dialog surface inside
- * it. No default visuals — every visual value (`overlayStyle`,
- * `surfaceStyle`, `titleStyle`) is caller-provided. State follows the
- * `useControllableState` pattern: `open` (+ `onOpenChange`) for
- * controlled use, `defaultOpen` for uncontrolled (default `false`).
- * Presence is mount/unmount: closed renders `null`, open paints the
- * surface at the host. When `dismissable` (default `true`) the scrim
- * is a `Pressable` labelled "Dismiss" and scrim press closes via
- * `onDismiss` + `onOpenChange(false)`; when `false` the scrim is a
- * plain `View` with no label and no handler — no fake affordance —
- * which is the non-dismissable shape an `AlertDialog` consumer needs
- * (dismissal then comes only from the caller's own action buttons).
- * Android system back is wired to the same dismiss path and no-ops
- * when not `dismissable` (the `Overlay` root owns it, topmost
- * surface only).
+ * `DialogRoot` owns open state (renders no element); `DialogTrigger`
+ * toggles; `DialogPortal` presents at the app's portal host;
+ * `DialogBackdrop` is the dismiss scrim; `DialogPopup` is the
+ * surface; `DialogTitle`/`DialogDescription` are text;
+ * `DialogClose` closes. No default visuals — every visual value is
+ * caller-provided. Open state follows the `useControllableState`
+ * pattern: `open` (+ `onOpenChange`) for controlled use,
+ * `defaultOpen` for uncontrolled (default `false`). Scrim or
+ * request-close dismissal fires `onDismiss` first, then reports
+ * `false`; `disablePointerDismissal` on the root keeps the scrim
+ * present but inert — no fake affordance — which is the
+ * non-dismissable shape an `AlertDialog` consumer needs.
  *
  * Deferred, each for a named reason (not oversight):
  * - No animation: the surface mounts/unmounts synchronously with
  *   state (parity D9). The overlay root's `presence` machine is wired
  *   for the first consumer that drives an exit animation.
  * - No focus CONTAINMENT: the overlay root moves accessibility focus
- *   into the surface on open and restores it to the trigger /
- *   `finalFocus` on close, and declares `accessibilityViewIsModal`;
- *   traversal trapping still needs the `focusTrap` RN adaptation
- *   (parity D5, no DOM tab order to borrow).
+ *   into the surface on open and restores it to the trigger on
+ *   close, and declares `accessibilityViewIsModal`; traversal
+ *   trapping still needs the `focusTrap` RN adaptation (parity D5,
+ *   no DOM tab order to borrow).
  *
- * Accessibility notes: the surface is an accessibility element
+ * Accessibility notes: the popup is an accessibility element
  * (`accessible`) so the `dialog` role reaches assistive tech — a
- * role on a non-element `View` would be invisible to it. The `modal`
- * flag is deliberately omitted from `accessibilityState`: React
- * Native's `AccessibilityState` host type has no `modal` key
- * (checked against the RN 0.87 `ViewAccessibility` types), so it is
- * left out rather than smuggled past the typechecker.
+ * role on a non-element `View` would be invisible to it.
  *
- * Test ids: the surface carries `testID`; the scrim carries
+ * Test ids: the popup carries `testID`; the backdrop carries
  * `<testID>-scrim` when `testID` is given (the Accordion `-panel`
  * precedent).
  */
-
-export type DialogProps = {
-  /** Controlled open state. Wins over `defaultOpen` when defined. */
-  open?: boolean;
-  /** Uncontrolled initial open state. Default `false`. */
-  defaultOpen?: boolean;
-  /** Fires with the next open state on every committed dismiss. */
-  onOpenChange?: (open: boolean) => void;
-  /** Fires on scrim (or request-close) dismissal, before `onOpenChange(false)`. */
-  onDismiss?: () => void;
-  /**
-   * When `false`, scrim press does nothing: the scrim renders as a
-   * plain `View` with no dismiss label, so the dialog can only close
-   * through the caller's own actions. Default `true`.
-   */
-  dismissable?: boolean;
-  /** Dialog title, rendered in a `Text` when provided. */
-  title?: ReactNode;
-  /** Dialog content. */
-  children?: ReactNode;
-  /** Action row content, rendered in a `View` row when provided. */
-  actions?: ReactNode;
-  /** Accessible name source for the dialog surface. */
-  accessibilityLabel?: string;
-  testID?: string;
-  /** Scrim layer style, caller-provided. */
-  overlayStyle?: StyleProp<ViewStyle>;
-  /** Dialog surface (box) style, caller-provided. */
-  surfaceStyle?: StyleProp<ViewStyle>;
-  /** Title text style, caller-provided. */
-  titleStyle?: StyleProp<TextStyle>;
-  /** Forwarded to the surface `View`. */
-  ref?: Ref<ElementRef<typeof View>>;
-};
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -106,7 +64,7 @@ export type DialogProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: DialogProps["ref"],
+  ref: DialogPopupProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -123,109 +81,12 @@ function assignRef(
   }
 }
 
-export function Dialog({
-  open,
-  defaultOpen = false,
-  onOpenChange,
-  onDismiss,
-  dismissable = true,
-  title,
-  children,
-  actions,
-  accessibilityLabel,
-  testID,
-  overlayStyle,
-  surfaceStyle,
-  titleStyle,
-  ref,
-}: DialogProps): React.JSX.Element | null {
-  const [isOpen, setOpen] = useControllableState<boolean>(
-    open,
-    defaultOpen,
-    onOpenChange,
-  );
-
-  // Always wired to the overlay root's system-back branch, and the scrim's press
-  // handler when dismissable: closes through `onDismiss` first, then
-  // reports `false`. Guards on `dismissable` so the non-dismissable
-  // shape (and the platform back button) cannot close the dialog.
-  const dismiss = useCallback(() => {
-    if (!dismissable) return;
-    onDismiss?.();
-    setOpen(false);
-  }, [dismissable, onDismiss, setOpen]);
-
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
-  const setHostRef = useCallback(
-    (node: ElementRef<typeof View> | null) => {
-      assignRef(ref, node);
-    },
-    [ref],
-  );
-
-  // Closed presence: nothing mounted, so no scrim, no surface, and no
-  // portal host for assistive tech or tests to find.
-  if (!isOpen) return null;
-
-  const surface = (
-    <View
-      ref={setHostRef}
-      accessible
-      role="dialog"
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      style={surfaceStyle}
-    >
-      {title != null ? <Text style={titleStyle}>{title}</Text> : null}
-      {children}
-      {actions != null ? <View>{actions}</View> : null}
-    </View>
-  );
-
-  return (
-    <OverlayRoot
-      open={isOpen}
-      onOpenChange={setOpen}
-      onDismiss={dismiss}
-      modal
-      dismissable={dismissable}
-      dismiss={{
-        outsidePointer: dismissable,
-        systemBack: dismissable,
-        escape: dismissable,
-      }}
-    >
-      <OverlayPortal>
-        {dismissable ? (
-          <Pressable
-            accessibilityLabel="Dismiss"
-            testID={testID ? `${testID}-scrim` : undefined}
-            onPress={dismiss}
-            style={overlayStyle}
-          >
-            {surface}
-          </Pressable>
-        ) : (
-          <View
-            testID={testID ? `${testID}-scrim` : undefined}
-            style={overlayStyle}
-          >
-            {surface}
-          </View>
-        )}
-      </OverlayPortal>
-    </OverlayRoot>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* `<Dialog>` above is the concise single-part API. The parts below    */
-/* mirror Base UI's Dialog anatomy — Root (state owner, renders no     */
-/* element), Trigger, Portal (the overlay root at `PortalHost`),      */
+/* The parts below mirror Base UI's Dialog anatomy — Root (state       */
+/* owner, renders no element), Trigger, Portal (the overlay root at   */
+/* `PortalHost`),                                                     */
 /* Backdrop (the scrim), Popup (the surface), Title, Description,      */
 /* Close — with `render` element/function composition and              */
 /* value-or-function `style` on every part. Omitted Base UI pieces     */

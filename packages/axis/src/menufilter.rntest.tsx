@@ -2,7 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act } from "react";
 import { Text } from "react-native";
 import {
-  Menu,
   MenuBackdrop,
   MenuCheckboxItem,
   MenuClear,
@@ -25,8 +24,8 @@ import {
  * RN events — query narrowing across plain, checkbox, and radio
  * items, textless items staying visible, empty-state agreement
  * with item visibility, clear behavior and disabled state,
- * controlled queries, and compound-only presence (nothing renders
- * in the monolith or outside a root) are observed, not assumed.
+ * controlled queries, and compound-only presence (filter parts
+ * render nothing outside a root) are observed, not assumed.
  */
 
 async function changeFilter(text: string) {
@@ -265,18 +264,13 @@ describe("Menu filter parts on React Native", () => {
   it("renders filter parts nowhere outside a compound root", async () => {
     await render(
       <PortalHost>
-        <Menu defaultOpen testID="mono-menu">
-          <MenuTrigger accessibilityLabel="Open">
-            <Text>Open</Text>
-          </MenuTrigger>
-          <MenuInput testID="mono-filter" />
-          <MenuEmpty testID="mono-empty">
-            <Text>No matches</Text>
-          </MenuEmpty>
-          <MenuClear testID="mono-clear">
-            <Text>Clear</Text>
-          </MenuClear>
-        </Menu>
+        <MenuInput testID="mono-filter" />
+        <MenuEmpty testID="mono-empty">
+          <Text>No matches</Text>
+        </MenuEmpty>
+        <MenuClear testID="mono-clear">
+          <Text>Clear</Text>
+        </MenuClear>
       </PortalHost>,
     );
     expect(screen.queryByTestId("mono-filter")).toBeNull();

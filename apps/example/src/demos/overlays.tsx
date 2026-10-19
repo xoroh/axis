@@ -14,7 +14,6 @@ import {
   ToastProvider,
   ToastRoot,
   ToastViewport,
-  Tooltip,
   TooltipArrow,
   TooltipPopup,
   TooltipPortal,
@@ -53,7 +52,6 @@ export const OverlaysDemo: Demo = {
     "OverlayPopup",
     "OverlayTrigger",
     "OverlayClose",
-    "Tooltip",
     "TooltipArrow",
     "TooltipPopup",
     "TooltipPortal",
@@ -74,23 +72,33 @@ export const OverlaysDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        <Tooltip
-          content={
-            <Text style={{ fontSize: 12, color: theme.text }}>Hint text</Text>
-          }
-          style={{ alignSelf: "flex-start" }}
-          tipStyle={{
-            backgroundColor: theme.surface,
-            borderRadius: 6,
-            borderWidth: 1,
-            borderColor: theme.border,
-            paddingVertical: 6,
-            paddingHorizontal: 10,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          }}
-        >
-          <Text style={{ color: theme.text }}>Long-press me</Text>
-        </Tooltip>
+        <TooltipRoot>
+          <TooltipTrigger
+            accessibilityLabel="Demo tip anchor"
+            style={{ alignSelf: "flex-start" }}
+          >
+            <Text style={{ color: theme.text }}>Long-press me</Text>
+          </TooltipTrigger>
+          <TooltipPortal>
+            <TooltipPositioner side="top">
+              <TooltipPopup
+                style={{
+                  backgroundColor: theme.surface,
+                  borderRadius: 6,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: theme.text }}>
+                  Hint text
+                </Text>
+              </TooltipPopup>
+            </TooltipPositioner>
+          </TooltipPortal>
+        </TooltipRoot>
         <TooltipProvider delay={100}>
           <TooltipRoot>
             <TooltipTrigger

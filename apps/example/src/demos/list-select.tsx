@@ -3,7 +3,6 @@ import {
   type AutocompleteProps,
   Combobox,
   type ComboboxProps,
-  Select,
   SelectArrow,
   SelectBackdrop,
   SelectGroup,
@@ -17,7 +16,6 @@ import {
   type SelectPopupProps,
   SelectPortal,
   SelectPositioner,
-  type SelectProps,
   SelectRoot,
   SelectSeparator,
   SelectTrigger,
@@ -39,7 +37,6 @@ export const ListSelectDemo: Demo = {
   slug: "list-select",
   title: "List select",
   components: [
-    "Select",
     "SelectItem",
     "SelectRoot",
     "SelectTrigger",
@@ -81,7 +78,7 @@ export const ListSelectDemo: Demo = {
       fontWeight: "600",
       color: theme.text,
     };
-    const rowStyle: SelectProps["style"] = {
+    const rowStyle: SelectTriggerProps["style"] = {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
@@ -103,7 +100,7 @@ export const ListSelectDemo: Demo = {
       boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
       gap: 2,
     };
-    const listStyle: SelectProps["listStyle"] = {
+    const listStyle: SelectPopupProps["style"] = {
       ...popupStyle,
       // No width here: the hook matches the box to the trigger row
       // (`matchAnchorWidth`); `width: 100%` would mean the viewport
@@ -134,21 +131,26 @@ export const ListSelectDemo: Demo = {
     return (
       <View style={{ gap: 16 }}>
         <Text style={headingStyle}>Inline Select:</Text>
-        <Select
-          accessibilityLabel="Demo select"
-          value={sort}
-          onValueChange={setSort}
-          placeholder={<Text style={placeholderStyle}>Sort by</Text>}
-          style={rowStyle}
-          listStyle={listStyle}
-        >
-          <SelectItem value="date" style={itemStyle}>
-            <Text style={textStyle}>Date</Text>
-          </SelectItem>
-          <SelectItem value="name" style={itemStyle}>
-            <Text style={textStyle}>Name</Text>
-          </SelectItem>
-        </Select>
+        <SelectRoot value={sort} onValueChange={setSort}>
+          <SelectTrigger accessibilityLabel="Demo select" style={rowStyle}>
+            <SelectValue
+              placeholder={<Text style={placeholderStyle}>Sort by</Text>}
+            />
+          </SelectTrigger>
+          <SelectPortal>
+            <SelectBackdrop />
+            <SelectPositioner align="start">
+              <SelectPopup style={listStyle}>
+                <SelectItem value="date" style={itemStyle}>
+                  <Text style={textStyle}>Date</Text>
+                </SelectItem>
+                <SelectItem value="name" style={itemStyle}>
+                  <Text style={textStyle}>Name</Text>
+                </SelectItem>
+              </SelectPopup>
+            </SelectPositioner>
+          </SelectPortal>
+        </SelectRoot>
         <Text style={headingStyle}>Compound Select on OverlayRoot:</Text>
         <SelectRoot
           items={[

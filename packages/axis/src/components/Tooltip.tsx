@@ -23,176 +23,26 @@ import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
- * Tooltip — an unstyled hint anchored to content.
+ * Tooltip — a compound anchored hint (Base UI parity).
  *
- * Long-press the anchor to toggle. The tip is measured and placed
- * with `useFloatingPlacement` (anchor `measure()` + viewport +
- * `resolveFloatingRect`); until measured it stays transparent at
- * origin rather than flashing somewhere wrong. The tip presents
- * through `Portal` at the app's `PortalHost` — above sibling content,
- * never trapped in the anchor's box. No hover model (no pointer on
- * touch devices), no scrim — dismissal is a second long-press or the
- * controlled prop. `placement` prefers a side; the rect math clamps
- * into the viewport.
+ * `TooltipProvider` groups show/hide timing; `TooltipRoot` owns
+ * visibility state (renders no element); `TooltipTrigger` toggles on
+ * long-press and registers the anchor; `TooltipPortal` is the in-box
+ * host (a non-modal hint never takes a `Modal` host);
+ * `TooltipPositioner` measures and places the tip;
+ * `TooltipPopup` is the tip; `TooltipArrow` is a caller-positioned
+ * marker. No default visuals — every visual value is
+ * caller-provided. State follows `useControllableState`: `open` (+
+ * `onOpenChange`) for controlled use, `defaultOpen` for uncontrolled.
  *
- * Compound form (Base UI parity) lives below in this module:
- * `TooltipRoot` (visibility state) with `TooltipTrigger`
- * (long-press toggle + anchor registration), `TooltipPortal`
- * (in-box host — a non-modal hint never takes a `Modal` host),
- * `TooltipPositioner`, `TooltipPopup`, `TooltipArrow`. Omitted
- * Base UI pieces are recorded there, not here.
+ * No hover model (no pointer on touch devices): long-press toggles,
+ * dismissal is a second long-press or the controlled prop.
  */
-
-export type TooltipState = {
-  /** Whether the tip is currently visible. */
-  open: boolean;
-};
-
-export type TooltipProps = {
-  /** Tooltip body content (required — an empty tip is a bug). */
-  content: ReactNode;
-  /** Anchor content the tip describes (required). */
-  children: ReactNode;
-  /** Controlled visibility. */
-  open?: boolean;
-  /** Uncontrolled initial visibility. Default `false`. */
-  defaultOpen?: boolean;
-  /** Fires on every visibility change. */
-  onOpenChange?: (open: boolean) => void;
-  /** Preferred side. Default `"top"`. Clamped into the viewport. */
-  placement?: Placement;
-  /** Accessible name source for the tip. */
-  accessibilityLabel?: string;
-  /**
-   * Long-press duration in milliseconds before the toggle fires,
-   * forwarded to the anchor `Pressable` (`delayLongPress`). Absent
-   * means the platform default — Axis never invents timing.
-   */
-  delayLongPress?: number;
-  testID?: string;
-  /** Anchor wrapper style: value or function of tooltip state. */
-  style?: StateStyle<TooltipState, StyleProp<ViewStyle>>;
-  /** Tip container style, caller-provided. */
-  tipStyle?: StyleProp<ViewStyle>;
-  /**
-   * Element or function substitution (Base UI parity): an element is
-   * cloned with the part props merged under its own; a function
-   * receives `(props, state)`. Replaces the anchor wrapper (anchor
-   * plus tip); long-press toggle wiring travels in the props.
-   */
-  render?: RenderProp<TooltipState, SlotProps>;
-  /** Forwarded to the anchor wrapper host element. */
-  ref?: Ref<ElementRef<typeof View>>;
-};
-
-function assignRef(
-  ref: TooltipProps["ref"],
-  value: ElementRef<typeof View> | null,
-): void {
-  if (typeof ref === "function") {
-    ref(value);
-    return;
-  }
-  if (ref && typeof ref === "object" && "current" in ref) {
-    try {
-      (ref as { current: unknown }).current = value;
-    } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
-    }
-  }
-}
-
-export function Tooltip({
-  content,
-  children,
-  open,
-  defaultOpen = false,
-  onOpenChange,
-  placement,
-  accessibilityLabel,
-  delayLongPress,
-  testID,
-  style,
-  tipStyle,
-  render,
-  ref,
-}: TooltipProps): React.ReactNode {
-  const [visible, setVisible] = useControllableState<boolean>(
-    open,
-    defaultOpen,
-    onOpenChange,
-  );
-
-  const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
-  const setAnchorRef = useCallback(
-    (node: ElementRef<typeof View> | null) => {
-      anchorHostRef.current = node;
-      assignRef(ref, node);
-    },
-    [ref],
-  );
-
-  const floating = useFloatingPlacement({
-    anchorRef: anchorHostRef,
-    // Documented default `"top"` lives here, not in the hook: the
-    // hook's own fallback (`"bottom"`) serves families whose docs
-    // promise it.
-    placement: placement ?? "top",
-    active: visible ?? false,
-  });
-
-  const toggle = useCallback(() => {
-    setVisible((previous) => !(previous ?? false));
-  }, [setVisible]);
-
-  const state: TooltipState = { open: visible ?? false };
-  const substituted = resolveRender(
-    render,
-    {
-      testID,
-      style: resolveStyle(style, state),
-      onLongPress: toggle,
-      open: visible ?? false,
-      content,
-      tipStyle,
-      accessibilityLabel,
-      children,
-      ref: setAnchorRef,
-    } satisfies SlotProps,
-    state,
-  );
-  if (substituted !== null) return substituted;
-
-  return (
-    <View ref={setAnchorRef} style={resolveStyle(style, state)} testID={testID}>
-      <Pressable onLongPress={toggle} delayLongPress={delayLongPress}>
-        {children}
-      </Pressable>
-      {visible ? (
-        <Portal>
-          <View
-            // Explicit like the anchor rule for progressbar/image: a tip
-            // whose role never reaches assistive tech is broken.
-            accessible
-            accessibilityRole="tooltip"
-            accessibilityLabel={accessibilityLabel}
-            onLayout={floating.onContentLayout}
-            style={[floating.style, tipStyle]}
-          >
-            {content}
-          </View>
-        </Portal>
-      ) : null}
-    </View>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* `<Tooltip>` above is the concise inline API (anchor + long-press     */
-/* toggle + measured tip). The parts below mirror Base UI's Tooltip     */
+/* The compound `Tooltip` parts below mirror Base UI's Tooltip        */
 /* anatomy — Root (state owner, renders no element), Trigger            */
 /* (long-press toggle + anchor registration), Portal (in-box host),     */
 /* Positioner (measured placement against the trigger anchor), Popup    */
@@ -202,8 +52,8 @@ export function Tooltip({
 /* timing (delays run from the long-press commit — hover has no touch  */
 /* equivalent). Omitted Base UI pieces are documented deviations, not  */
 /* oversights: no `Modal` portal host (a non-modal hint must never     */
-/* trap touches; the tip paints in-box like the monolith — the shared  */
-/* overlay root has landed for modal surfaces, and Tooltip deliberately */
+/* trap touches; the tip paints in-box (the non-modal shape) — the     */
+/* shared overlay root has landed for modal surfaces, and Tooltip       */
 /* stays off it; positioning stays separable from the host either way), */
 /* no hover or keyboard                                                */
 /* traversal (D8), no animation states (D9), and no `data-*`           */

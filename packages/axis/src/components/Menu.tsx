@@ -6,12 +6,8 @@ function wrapText(node: ReactNode): ReactNode {
 }
 
 import {
-  Children,
-  cloneElement,
   createContext,
   type ElementRef,
-  isValidElement,
-  type ReactElement,
   type ReactNode,
   type Ref,
   useCallback,
@@ -61,83 +57,41 @@ import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
- * Menu — an unstyled popup menu with scrim dismissal.
+ * Menu — a compound popup menu (Base UI parity).
  *
- * Structure only: a `View` container holding a trigger zone (measured
- * as the floating anchor) and, only while open, a full-area scrim
- * `Pressable` plus a content `View` carrying the `menu` role with the
- * `MenuItem` children inside it — both presented through `Portal` at
- * the app's `PortalHost`. No default visuals — every visual value (`style` on the menu box, `style` on each part) is
- * caller-provided. State follows the `useControllableState` pattern:
- * `open` (+ `onOpenChange`) for controlled use, `defaultOpen` for
- * uncontrolled (default `false`).
+ * `MenuRoot` owns open state (renders no element, wrapped in an
+ * `OverlayRoot` so stacking, dismissal and focus belong to one
+ * owner); `MenuTrigger` toggles and registers the anchor;
+ * `MenuPortal` presents at the app's portal host (overlay host when
+ * modal, plain in-box `Portal` when not); `MenuBackdrop` is the
+ * scrim; `MenuPositioner` measures placement against the trigger
+ * anchor; `MenuPopup` is the content box; `MenuItem` /
+ * `MenuLinkItem` / `MenuCheckboxItem` / `MenuRadioItem` (+ indicators)
+ * are rows; `MenuGroup` + `MenuGroupLabel` group them;
+ * `MenuSeparator` divides; `MenuInput` / `MenuClear` / `MenuEmpty`
+ * filter over the `collection` registry; `MenuSubmenuRoot` /
+ * `MenuSubmenuTrigger` / `MenuSubmenuContent` cascade. No default
+ * visuals — every visual value is caller-provided. State follows the
+ * `useControllableState` pattern: `open` (+ `onOpenChange`) for
+ * controlled use, `defaultOpen` for uncontrolled (default `false`).
  *
- * Compound shape: the caller composes trigger content with `MenuItem`
- * children inside `Menu`. `Menu` partitions direct children by element
- * type — `MenuItem` elements render only while open inside the content
- * box; every other child renders always in the trigger zone. A
- * `MenuTrigger` child is already context-wired and renders as-is; any
- * other trigger-zone element gets its `onPress` composed with the
- * context toggle (internal toggle first, then the caller's handler, the
- * `slot` composition precedent), so a plain caller `Pressable` works
- * as the trigger without importing `MenuTrigger`. A trigger-zone child
- * with `disabled` never toggles — `disabled` is terminal (the
- * `usePress` precedent) — and its own `onPress` does not fire either.
+ * Filter parts work in the compound form only (items publish
+ * `filterText` through the registry; `MenuEmpty` shows on zero
+ * visible matches). Non-modal roots (`modal={false}`) present
+ * through the plain `Portal` with no scrim; outside-press without a
+ * scrim reaches the app (press-capture would hijack touches).
  *
- * Positioning reuses `useFloatingPlacement` (the `Tooltip` precedent):
- * the trigger wrapper is measured through its host ref and the content
- * stays transparent at origin until both measurements exist. The scrim
- * is a sibling rendered before the content (so the content paints
- * above it): scrim press dismisses through `onDismiss` +
- * `onOpenChange(false)` (the `Dialog` scrim precedent, minus the
- * overlay host — this menu paints inside its parent's box). While open the
- * scrim covers the trigger zone, so pressing the trigger dismisses
- * through the scrim path rather than toggling.
- *
- * Closed presence is mount/unmount: closed renders the trigger zone
- * only — no content, no items, no scrim.
- *
- * Deferred, each for a named reason (not oversight):
- * - No animation: content mounts/unmounts synchronously with state.
- *   Exit transitions would need the `presence` model to keep the
- *   content mounted until the animation finishes; until a consumer
- *   needs animated dismissal, that machinery buys zero observed
- *   behavior (the Accordion panel precedent).
- * - No submenus: nested levels need a dismissal-stack owner
- *   (`overlayModality`/`dismissWiring`) so an outer press does not
- *   fight an inner one; a lone menu owning that stack is premature.
- * - No hover or keyboard navigation: pointer hover has no touch
- *   equivalent and arrow-key traversal belongs to the
- *   `roving`/`collection` models, which no section has adopted for
- *   menus yet (the contract's conditional-keyboard rule).
- * - No portal/`Modal` host: the scrim fills the menu container, not the
- *   whole screen. Painting outside the parent's box is the `portal`
- *   model's job, deferred until a consumer needs it.
+ * Deferred, each for a named reason (not oversight): no hover or
+ * keyboard navigation (D8 — no touch equivalent; `roving` /
+ * `collection` unadopted for traversal), no animation states (D9 —
+ * content mounts/unmounts synchronously), and no `data-*`
+ * attributes (D1 — state flows through function `style`/`render`
+ * props instead).
  *
  * Test ids: the content box carries `testID`; the scrim carries
- * `<testID>-scrim` when `testID` is given (the Accordion `-panel` /
- * Dialog `-scrim` precedent). The scrim is labelled "Dismiss menu".
+ * `<testID>-scrim` when `testID` is given. The scrim is labelled
+ * "Dismiss menu".
  */
-
-export type MenuProps = {
-  /** Controlled open state. Wins over `defaultOpen` when defined. */
-  open?: boolean;
-  /** Uncontrolled initial open state. Default `false`. */
-  defaultOpen?: boolean;
-  /** Fires with the next open state on every committed toggle or dismissal. */
-  onOpenChange?: (open: boolean) => void;
-  /** Fires on scrim dismissal, before `onOpenChange(false)`. */
-  onDismiss?: () => void;
-  /** Preferred side for the content box. Default handled by the positioning model. Clamped into the viewport. */
-  placement?: Placement;
-  testID?: string;
-  /** Menu content box style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
-  /** Trigger content plus `MenuItem` elements, composed by the caller. */
-  children: ReactNode;
-  /** Forwarded to the menu container `View`. */
-  ref?: Ref<ElementRef<typeof View>>;
-};
 
 export type MenuTriggerState = {
   /** Whether the menu is currently open. */
@@ -222,11 +176,11 @@ type MenuDisclosure = {
   open: boolean;
   toggle: () => void;
   close: () => void;
-  /** Scrim/outside dismissal (monolith: same as close; compound: `onDismiss` first). */
+  /** Scrim/outside dismissal (`onDismiss` first). */
   dismiss: () => void;
-  /** Backdrop press dismisses (compound Root prop; monolith always dismisses). */
+  /** Backdrop press dismisses. */
   disablePointerDismissal: boolean;
-  /** Portal presents modally with a scrim (compound Root prop; monolith always modal). */
+  /** Portal presents modally with a scrim. */
   modal: boolean;
   /** Anchor host for `MenuPositioner` measurement (compound only). */
   anchorHostRef: { current: ElementRef<typeof View> | null };
@@ -234,9 +188,8 @@ type MenuDisclosure = {
   setAnchorRef: (node: ElementRef<typeof View> | null) => void;
   /**
    * Filter state for `MenuInput`/`MenuClear`/`MenuEmpty` plus item
-   * registration (compound `MenuRoot` only; the monolith carries
-   * `null` — filter parts render nothing there, documented on
-   * `MenuRoot`).
+   * registration (the root owns the query — filter parts render
+   * nothing without one).
    */
   filter: MenuFilter | null;
   highlightedKey: string | null;
@@ -309,7 +262,7 @@ function menuItemFilterText(
 
 /**
  * Shared open state for the menu's parts. Internal to this module
- * (not exported): parts must render inside a `Menu` to participate;
+ * (not exported): parts must render inside a `MenuRoot` to participate;
  * outside one the trigger renders collapsed and inert and an item
  * renders inert, like `AccordionItem` outside its group.
  */
@@ -328,31 +281,6 @@ type MenuSubContextValue = {
 };
 
 const MenuSubContext = createContext<MenuSubContextValue | null>(null);
-
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
-function assignRef(
-  ref: MenuProps["ref"],
-  value: ElementRef<typeof View> | null,
-): void {
-  if (typeof ref === "function") {
-    ref(value);
-    return;
-  }
-  if (ref && typeof ref === "object" && "current" in ref) {
-    try {
-      (ref as { current: unknown }).current = value;
-    } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
-    }
-  }
-}
 
 /**
  * Fills the menu container behind the content box. Structural only —
@@ -385,7 +313,7 @@ export function MenuTrigger({
   }, [disabled, disclosure]);
 
   // Register the host for `MenuPositioner` measurement when inside
-  // any menu root (monolith or compound); outside a root there is
+  // a menu root; outside a root there is
   // nothing to anchor to and registration is a no-op write.
   const setTriggerRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
@@ -578,176 +506,12 @@ export function MenuItem({
   );
 }
 
-function MenuInlineRoot({
-  open,
-  defaultOpen = false,
-  onOpenChange,
-  onDismiss,
-  placement,
-  testID,
-  style,
-  children,
-  ref,
-}: MenuProps): React.JSX.Element {
-  const [isOpen, setOpen] = useControllableState<boolean>(
-    open,
-    defaultOpen,
-    onOpenChange,
-  );
-
-  const toggle = useCallback(() => {
-    setOpen((previous) => !(previous ?? false));
-  }, [setOpen]);
-
-  const close = useCallback(() => {
-    setOpen(false);
-  }, [setOpen]);
-
-  // Scrim (and request-close equivalent) path: `onDismiss` first, then
-  // report `false` — the `Dialog` dismissal precedent.
-  const dismiss = useCallback(() => {
-    onDismiss?.();
-    setOpen(false);
-  }, [onDismiss, setOpen]);
-
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
-  const setContainerRef = useCallback(
-    (node: ElementRef<typeof View> | null) => {
-      assignRef(ref, node);
-    },
-    [ref],
-  );
-
-  // Measured anchor for `useFloatingPlacement` (the `Tooltip`
-  // `anchorHostRef` pattern): the trigger wrapper's `measure()` gives
-  // window coordinates that `onLayout` alone cannot.
-  const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
-  const setAnchorRef = useCallback((node: ElementRef<typeof View> | null) => {
-    anchorHostRef.current = node;
-  }, []);
-
-  // The monolith measures its trigger WRAPPER (above), not the
-  // trigger part: trigger registration is ignored here so the
-  // compound `MenuTrigger`'s anchor write cannot move the monolith's
-  // measured anchor. Zero behavior change by construction.
-  const ignoreAnchorRef = useCallback(() => {}, []);
-
-  const floating = useFloatingPlacement({
-    anchorRef: anchorHostRef,
-    placement,
-    // Box matches the trigger row width (Base UI anchor-width
-    // parity), keeping the viewport padding clear at the edges.
-    matchAnchorWidth: true,
-    viewportPadding: 8,
-    active: isOpen ?? false,
-  });
-
-  const disclosure = useMemo<MenuDisclosure>(
-    () => ({
-      open: isOpen ?? false,
-      toggle,
-      close,
-      dismiss,
-      disablePointerDismissal: false,
-      modal: true,
-      anchorHostRef,
-      setAnchorRef: ignoreAnchorRef,
-      // The monolith partitions children by type with no filter
-      // composition point: filter parts render nothing here
-      // (compound `MenuRoot` owns filtering).
-      filter: null,
-      highlightedKey: null,
-      onTypeaheadKey: () => {},
-    }),
-    [isOpen, toggle, close, dismiss, ignoreAnchorRef],
-  );
-
-  // Partition direct children by element type: `MenuItem` elements
-  // belong to the content box (mounted only while open); everything
-  // else is trigger-zone content, always rendered.
-  const triggerNodes: ReactNode[] = [];
-  const itemNodes: ReactNode[] = [];
-  Children.forEach(children, (child) => {
-    if (isValidElement(child) && child.type === MenuItem) {
-      itemNodes.push(child);
-    } else {
-      triggerNodes.push(child);
-    }
-  });
-
-  // Wire caller-provided trigger elements that are not already a
-  // context-wired `MenuTrigger`: compose their `onPress` with the
-  // context toggle (internal first, the `slot` composition precedent).
-  // `disabled` on the child is terminal — neither toggle nor the
-  // child's own handler fires.
-  const wiredTriggers = triggerNodes.map((node, index) => {
-    if (isValidElement(node) && node.type !== MenuTrigger) {
-      const childProps = node.props as {
-        disabled?: unknown;
-        onPress?: unknown;
-      };
-      const childDisabled = childProps.disabled === true;
-      const childOnPress =
-        typeof childProps.onPress === "function"
-          ? (childProps.onPress as (event: unknown) => void)
-          : undefined;
-      return cloneElement(
-        node as ReactElement<{ onPress?: (event: unknown) => void }>,
-        {
-          key: node.key ?? `menu-trigger-${index}`,
-          onPress: (event: unknown) => {
-            if (childDisabled) return;
-            toggle();
-            childOnPress?.(event);
-          },
-        },
-      );
-    }
-    return node;
-  });
-
-  return (
-    <View ref={setContainerRef}>
-      <MenuDisclosureContext.Provider value={disclosure}>
-        <View ref={setAnchorRef}>{wiredTriggers}</View>
-        {isOpen ? (
-          <Portal>
-            <MenuDisclosureContext.Provider value={disclosure}>
-              <Pressable
-                accessibilityLabel="Dismiss menu"
-                testID={testID ? `${testID}-scrim` : undefined}
-                onPress={dismiss}
-                style={SCRIM_FILL}
-              />
-              <View
-                accessible
-                role="menu"
-                testID={testID}
-                onLayout={floating.onContentLayout}
-                style={[floating.style, style]}
-              >
-                {itemNodes}
-              </View>
-            </MenuDisclosureContext.Provider>
-          </Portal>
-        ) : null}
-      </MenuDisclosureContext.Provider>
-    </View>
-  );
-}
-
-export { MenuInlineRoot as Menu };
-
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* `<Menu>` above is the concise inline API (trigger zone + scrim     */
-/* + content box at the app host, children partitioned by type). The  */
-/* mirror Base UI's Menu anatomy — Root (state owner, renders no       */
-/* element), Trigger (shared with the monolith, extended with          */
-/* `render` and anchor registration), Portal (the overlay host: the    */
+/* The parts below mirror Base UI's Menu anatomy — Root (state owner,  */
+/* renders no element), Trigger (toggle + anchor registration), Portal */
+/* (the overlay host: the native portal host),                         */
 /* native portal host), Backdrop (the scrim), Positioner (measured     */
 /* placement against the trigger anchor), Popup (the content box),      */
 /* Item (shared, extended with `onClick`/`closeOnClick`,               */
@@ -762,12 +526,10 @@ export { MenuInlineRoot as Menu };
 /* query directly — a provider with no other state is chrome), no      */
 /* hover or keyboard traversal (D8), no animation states (D9), and     */
 /* no `data-*` attributes (D1 — state flows through function          */
-/* `style`/`render` props instead). Filter parts work in the compound  */
-/* form only (the monolith partitions children by type with no filter  */
-/* composition point). Non-modal menus (`modal={false}` on the Root)   */
-/* render the portal through the plain `Portal` at the app host with   */
-/* no Backdrop; outside-press without a scrim is a documented          */
-/* limitation (press-capture would hijack app touches).                */
+/* `style`/`render` props instead). Non-modal menus (`modal={false}`   */
+/* on the Root) render the portal through the plain `Portal` at the    */
+/* app host with no Backdrop; outside-press without a scrim is a       */
+/* documented limitation (press-capture would hijack app touches).     */
 /* ------------------------------------------------------------------ */
 
 export type MenuRootState = {
@@ -791,8 +553,7 @@ export type MenuRootProps = {
   /**
    * Whether the open menu presents modally (an overlay host with a
    * scrim). Default `true`. When `false` the portal presents through
-   * the plain `Portal` at the app host like the monolith: no scrim,
-   * and the trigger stays pressable so it toggles closed — but
+   * the plain `Portal` at the app host with no scrim, and the trigger stays pressable so it toggles closed — but
    * presses outside the menu reach the underlying app instead of
    * dismissing (documented limitation: outside-press detection
    * without a scrim needs press-capture that would hijack app
@@ -1118,8 +879,8 @@ export function MenuPortal({
   // `container` has no native meaning and is omitted by design.
   // Positioning (`MenuPositioner` + the `positioning` model) stays
   // separable from the host either way. Non-modal roots present
-  // through the plain `Portal` with no scrim instead (the monolith
-  // shape): presses outside reach the app rather than dismissing
+  // through the plain `Portal` with no scrim instead: presses outside
+  // reach the app rather than dismissing
   // (documented on `modal`).
   //
   // The disclosure is re-provided inside the portal: portaled content
@@ -1182,9 +943,8 @@ export function MenuBackdrop({
   }
 
   // Non-dismissable: a plain host with no label and no handler — no
-  // fake affordance (the monolith's non-dismissable precedent has no
-  // scrim at all; the compound keeps the layer for layout parity
-  // with the dismissable shape).
+  // fake affordance (no scrim at all would also be honest; the layer
+  // stays for layout parity with the dismissable shape).
   const substituted = resolveRender(
     render,
     { testID, style: resolveStyle(style, state) } satisfies SlotProps,
@@ -2144,8 +1904,8 @@ export function MenuInput({
     [ref],
   );
 
-  // Compound roots only: the monolith has no filter composition
-  // point, and an entry bound to nothing would lie about filtering.
+  // The root owns the filter query: an entry bound to nothing would
+  // lie about filtering.
   if (!disclosure || !filter) return null;
   // Presence is mount/unmount: a closed menu shows the trigger only.
   if (!disclosure.open) return null;

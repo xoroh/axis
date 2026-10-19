@@ -32,8 +32,9 @@ import {
   PortalHost,
   RadioGroup,
   RadioGroupItem,
-  Select,
   SelectItem,
+  SelectRoot,
+  SelectTrigger,
   TableCell,
   TableHeader,
   TableRoot,
@@ -45,7 +46,8 @@ import {
   ToastRoot,
   ToggleGroup,
   ToggleGroupItem,
-  Tooltip,
+  TooltipRoot,
+  TooltipTrigger,
 } from "./index";
 
 /**
@@ -191,12 +193,7 @@ describe("render composition: lists", () => {
     const seen: string[] = [];
     await render(
       <PortalHost>
-        <Select
-          testID="sel"
-          defaultOpen
-          placeholder={<Text>Pick</Text>}
-          onValueChange={(v) => seen.push(v)}
-        >
+        <SelectRoot defaultOpen onValueChange={(v) => seen.push(v)}>
           <SelectItem
             value="a"
             accessibilityLabel="A"
@@ -204,28 +201,24 @@ describe("render composition: lists", () => {
           >
             <Text>Alpha</Text>
           </SelectItem>
-        </Select>
+        </SelectRoot>
       </PortalHost>,
     );
     await press("sub");
     expect(seen).toEqual(["a"]);
   });
 
-  it("Select function render observes value and open state", async () => {
+  it("SelectTrigger function render observes open state", async () => {
     await render(
-      <Select
-        defaultValue="a"
-        placeholder={<Text>Pick</Text>}
-        render={(_props, state) => (
-          <Text testID="st">{`${String(state.value)}${state.open ? "+" : "-"}`}</Text>
-        )}
-      >
-        <SelectItem value="a" accessibilityLabel="A">
-          <Text>Alpha</Text>
-        </SelectItem>
-      </Select>,
+      <SelectRoot defaultValue="a">
+        <SelectTrigger
+          render={(_props, state) => (
+            <Text testID="st">{state.open ? "open" : "closed"}</Text>
+          )}
+        />
+      </SelectRoot>,
     );
-    expect(screen.getByText("a-")).toBeTruthy();
+    expect(screen.getByText("closed")).toBeTruthy();
   });
 
   it("Autocomplete function render observes text state", async () => {
@@ -319,17 +312,17 @@ describe("render composition: overlays", () => {
     expect(screen.getByTestId("sub")).toBeTruthy();
   });
 
-  it("Tooltip function render observes visibility", async () => {
+  it("TooltipTrigger function render observes visibility", async () => {
     await render(
-      <Tooltip
-        content={<Text>Hint</Text>}
-        defaultOpen
-        render={(_props, state) => (
-          <Text testID="st">{state.open ? "shown" : "hidden"}</Text>
-        )}
-      >
-        <Text>Anchor</Text>
-      </Tooltip>,
+      <TooltipRoot defaultOpen>
+        <TooltipTrigger
+          render={(_props, state) => (
+            <Text testID="st">{state.open ? "shown" : "hidden"}</Text>
+          )}
+        >
+          <Text>Anchor</Text>
+        </TooltipTrigger>
+      </TooltipRoot>,
     );
     expect(screen.getByText("shown")).toBeTruthy();
   });

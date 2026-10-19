@@ -1,5 +1,4 @@
 import {
-  Popover,
   PopoverArrow,
   PopoverBackdrop,
   PopoverClose,
@@ -22,7 +21,6 @@ export const PopoverDemo: Demo = {
   slug: "popover",
   title: "Popovers",
   components: [
-    "Popover",
     "PopoverArrow",
     "PopoverBackdrop",
     "PopoverClose",
@@ -39,7 +37,7 @@ export const PopoverDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        {/* Monolith Popover */}
+        {/* Modal Compound Popover */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -53,26 +51,9 @@ export const PopoverDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Inline Anchored Popover:
           </Text>
-          <Popover
-            accessibilityLabel="Inline demo popover"
-            content={
-              <View
-                style={{
-                  padding: 12,
-                  backgroundColor: theme.surface,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                }}
-              >
-                <Text style={{ fontSize: 13, color: theme.text }}>
-                  Popover content aligned to anchor
-                </Text>
-              </View>
-            }
-          >
-            <View
+          <PopoverRoot modal>
+            <PopoverTrigger
+              accessibilityLabel="Inline demo popover"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 8,
@@ -88,8 +69,27 @@ export const PopoverDemo: Demo = {
               >
                 Toggle Popover Anchor
               </Text>
-            </View>
-          </Popover>
+            </PopoverTrigger>
+            <PopoverPortal>
+              <PopoverBackdrop />
+              <PopoverPositioner>
+                <PopoverPopup
+                  style={{
+                    padding: 12,
+                    backgroundColor: theme.surface,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    Popover content aligned to anchor
+                  </Text>
+                </PopoverPopup>
+              </PopoverPositioner>
+            </PopoverPortal>
+          </PopoverRoot>
         </View>
 
         {/* Compound Non-Modal Popover */}
