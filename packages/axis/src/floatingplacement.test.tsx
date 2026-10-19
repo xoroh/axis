@@ -1,4 +1,8 @@
 import { act } from "react";
+// @ts-expect-error — react-test-renderer ships no types, and a
+// dev-only @types package for one hook test outweighs the test
+// itself. The import stays untyped (any) rather than faked: the
+// runtime copy is the same one the RNTL preset depends on.
 import { create } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import {
