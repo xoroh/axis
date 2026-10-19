@@ -176,4 +176,43 @@ describe("Tabs on React Native", () => {
     expect(screen.getByTestId("panel-a")).toBeTruthy();
     expect(screen.queryByTestId("panel-b")).toBeNull();
   });
+
+  it("keepMounted keeps the deselected panel mounted but hidden and unannounced", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="a">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" />
+        <TabsPanel value="b" testID="panel-b" keepMounted />
+      </Tabs>,
+    );
+    const panel = screen.getByTestId("panel-b");
+    expect(panel).toBeTruthy();
+    expect(panel.props.style).toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBe(true);
+    expect(panel.props.importantForAccessibility).toBe("no-hide-descendants");
+    expect(panel.props["aria-hidden"]).toBe(true);
+  });
+
+  it("keepMounted panel becomes visible when selected", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="b">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" keepMounted />
+        <TabsPanel value="b" testID="panel-b" />
+      </Tabs>,
+    );
+    const panel = screen.getByTestId("panel-b");
+    expect(panel.props.style).not.toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBe(false);
+  });
 });

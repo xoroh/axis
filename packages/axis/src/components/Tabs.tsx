@@ -323,12 +323,13 @@ export function TabsPanel({
   const group = useContext(TabsSelectionContext);
   // Conditional presence (structural): only the selected panel is in
   // the tree, unless `keepMounted` holds unselected panels mounted but
-  // hidden. Unselected panels outside a `Tabs` group render nothing.
+  // hidden (unselected panels outside a `Tabs` group still render
+  // nothing unless `keepMounted` is set).
   const selected = group?.selectedValue === value;
   if (!selected && !keepMounted) {
     return null;
   }
-  const state: TabsState = { value: group.selectedValue };
+  const state: TabsState = { value: group?.selectedValue };
   const substituted = resolveRender(
     render,
     {

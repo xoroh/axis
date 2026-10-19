@@ -158,4 +158,43 @@ describe("Collapsible on React Native", () => {
     );
     expect(ref.current).not.toBeNull();
   });
+
+  it("keepMounted keeps the closed panel mounted but hidden and unannounced", async () => {
+    await render(
+      <Collapsible testID="cl">
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel testID="panel" keepMounted>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    const panel = screen.getByTestId("panel");
+    expect(panel).toBeTruthy();
+    expect(panel.props.style).toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBe(true);
+    expect(panel.props.importantForAccessibility).toBe("no-hide-descendants");
+    expect(panel.props["aria-hidden"]).toBe(true);
+  });
+
+  it("keepMounted panel becomes visible when opened", async () => {
+    await render(
+      <Collapsible testID="cl" defaultOpen>
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel testID="panel" keepMounted>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    const panel = screen.getByTestId("panel");
+    expect(panel.props.style).not.toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBe(false);
+  });
 });
