@@ -74,12 +74,29 @@ export const OverlaysDemo: Demo = {
 
     return (
       <View style={{ gap: 20 }}>
-        <Tooltip content={<Text>Hint text</Text>}>
-          <Text>Long-press me</Text>
+        <Tooltip
+          content={
+            <Text style={{ fontSize: 12, color: theme.text }}>Hint text</Text>
+          }
+          style={{ alignSelf: "flex-start" }}
+          tipStyle={{
+            backgroundColor: theme.surface,
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: theme.border,
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          }}
+        >
+          <Text style={{ color: theme.text }}>Long-press me</Text>
         </Tooltip>
         <TooltipProvider delay={100}>
           <TooltipRoot>
-            <TooltipTrigger accessibilityLabel="Demo compound tip anchor">
+            <TooltipTrigger
+              accessibilityLabel="Demo compound tip anchor"
+              style={{ alignSelf: "flex-start" }}
+            >
               <Text style={{ fontSize: 13, color: theme.text }}>
                 Long-press me (compound)
               </Text>

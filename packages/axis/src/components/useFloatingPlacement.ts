@@ -206,7 +206,11 @@ export function useFloatingPlacement(options: {
   });
   return {
     onContentLayout,
-    style: { position: "absolute", left: at.x - origin.x, top: at.y - origin.y },
+    style: {
+      position: "absolute",
+      left: at.x - origin.x,
+      top: at.y - origin.y,
+    },
     measured: true,
     side: effectiveSide,
   };
