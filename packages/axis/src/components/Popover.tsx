@@ -871,7 +871,7 @@ export function PopoverPopup({
     enabled: accessibilityLabel !== undefined && disclosure !== null,
     initialFocus: initialFocus ?? overlay?.initialFocus,
     finalFocus: finalFocus ?? overlay?.finalFocus,
-    defaultTarget: focusScope.resolveDefault(true),
+    scope: focusScope,
     interactionRef: overlayRefs?.interaction,
     popupRef: popupNodeRef,
     restoreRef: disclosure?.anchorHostRef ?? { current: null },

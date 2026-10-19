@@ -755,7 +755,7 @@ export function DialogPopup({
     open,
     initialFocus: initialFocus ?? overlay?.initialFocus,
     finalFocus: finalFocus ?? overlay?.finalFocus,
-    defaultTarget: focusScope.resolveDefault(true),
+    scope: focusScope,
     interactionRef: overlayRefs?.interaction,
     popupRef: popupNodeRef,
     restoreRef: overlayRefs?.triggerRef ?? { current: null },

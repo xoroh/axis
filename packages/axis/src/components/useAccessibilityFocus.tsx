@@ -270,6 +270,8 @@ export type FocusScope = {
   register(node: unknown, kind: FocusScopeKind): () => void;
   /** Resolve the default target: marked-initial, then stops/titles. */
   resolveDefault(includeStops: boolean): unknown | null;
+  /** Caller-marked initial target, or `null`. Wins on both platforms. */
+  markedInitial(): unknown | null;
 };
 
 /**
@@ -281,6 +283,8 @@ export type FocusScope = {
  */
 export function createFocusScope(): FocusScope {
   const entries: Array<{ node: unknown; kind: FocusScopeKind }> = [];
+  const markedInitial = (): unknown | null =>
+    entries.find((entry) => entry.kind === "initial")?.node ?? null;
   return {
     register(node: unknown, kind: FocusScopeKind) {
       const entry = { node, kind };
@@ -290,9 +294,10 @@ export function createFocusScope(): FocusScope {
         if (index !== -1) entries.splice(index, 1);
       };
     },
+    markedInitial,
     resolveDefault(includeStops: boolean) {
-      const marked = entries.find((entry) => entry.kind === "initial");
-      if (marked) return marked.node;
+      const marked = markedInitial();
+      if (marked != null) return marked;
       if (includeStops) {
         const stop = entries.find((entry) => entry.kind === "stop");
         if (stop) return stop.node;
@@ -401,8 +406,17 @@ export function useModalFocus(options: {
   initialFocus?: OverlayFocusValue;
   /** Explicit restore target (wins over the trigger). */
   finalFocus?: OverlayFocusValue;
-  /** Scope-resolved default target (marked, stops, title). May be `null`. */
-  defaultTarget?: unknown;
+  /**
+   * Focus scope for the default target (marked initial, stops,
+   * titles). May be `null` (generic surfaces fall back to the popup).
+   */
+  scope?: FocusScope | null;
+  /**
+   * Skip registered stops when resolving the default (drawers default
+   * to the container or Title — never a destructive action).
+   * Default `false`.
+   */
+  skipStops?: boolean;
   /** How the surface opened (trigger press vs programmatic). Default `programmatic`. */
   interactionRef?: { current: FocusInteraction };
   /** Node receiving focus on open when nothing else resolves. */
@@ -416,7 +430,8 @@ export function useModalFocus(options: {
     restoreEnabled = true,
     initialFocus,
     finalFocus,
-    defaultTarget = null,
+    scope = null,
+    skipStops = false,
     interactionRef,
     popupRef,
     restoreRef,
@@ -443,7 +458,8 @@ export function useModalFocus(options: {
       const interaction = interactionRef?.current ?? "programmatic";
       if (interactionRef) interactionRef.current = "programmatic";
       const explicit = resolveFocusNode(initialFocus, interaction);
-      const target = explicit ?? defaultTarget ?? popupRef.current ?? null;
+      const target =
+        explicit ?? resolveDefaultTarget(web, scope, skipStops, popupRef);
       if (target == null) return undefined;
       movedRef.current = true;
       if (web) {
@@ -485,9 +501,36 @@ export function useModalFocus(options: {
     restoreEnabled,
     initialFocus,
     finalFocus,
-    defaultTarget,
+    scope,
+    skipStops,
     interactionRef,
     popupRef,
     restoreRef,
   ]);
+}
+
+/**
+ * Default initial target: the caller-marked node wins on both
+ * platforms (explicit intent); on web the first tabbable in the popup
+ * is next (the DOM query native lacks); then registered stops (unless
+ * skipped) and titles; finally the popup itself.
+ */
+function resolveDefaultTarget(
+  web: boolean,
+  scope: FocusScope | null,
+  skipStops: boolean,
+  popupRef: { readonly current: unknown },
+): unknown | null {
+  const marked = scope?.markedInitial() ?? null;
+  if (marked != null) return marked;
+  const node = popupRef.current;
+  if (web && node != null) {
+    const tabbables = getFocusableElements(node);
+    if (tabbables.length > 0) return tabbables[0];
+  }
+  if (scope != null) {
+    const fallback = scope.resolveDefault(!skipStops);
+    if (fallback != null) return fallback;
+  }
+  return node ?? null;
 }
