@@ -99,6 +99,9 @@ const renames: Array<[string, string | null]> = [
   ["MenubarMenu", "Menubar"],
   ["MenubarMenuProps", "Menubar"],
   ["CheckboxState", "CheckboxRootState"],
+  ["OtpField", "OTPFieldRoot"],
+  ["OtpFieldProps", "OTPFieldRootProps"],
+  ["OtpFieldState", "OTPFieldRootState"],
 ];
 
 // New sibling parts each renamed family must export (rule a/c), plus
@@ -134,6 +137,7 @@ const familyParts: Record<string, string[]> = {
     "FieldControl",
     "FieldDescription",
     "FieldError",
+    "FieldValidity",
   ],
   Fieldset: ["FieldsetRoot", "FieldsetLegend"],
   ContextMenu: ["ContextMenuRoot"],
@@ -207,6 +211,7 @@ const familyParts: Record<string, string[]> = {
   Radio: ["RadioGroup", "RadioRoot", "RadioIndicator"],
   Toggle: ["Toggle", "ToggleGroup"],
   Checkbox: ["CheckboxRoot", "CheckboxIndicator"],
+  OTPField: ["OTPFieldRoot"],
   Overlay: [
     "OverlayRoot",
     "OverlayPortal",
@@ -227,6 +232,7 @@ const bareFamilies = [
   "CheckboxGroup",
   "Separator",
   "Menubar",
+  "Form",
 ];
 
 test("renames hold: old names gone, new names exported", () => {

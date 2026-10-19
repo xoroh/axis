@@ -1,6 +1,6 @@
 ## OTP Field
 
-Source of truth: `OtpFieldProps` in `@xoroh/axis`.
+Source of truth: `OTPFieldRootProps` in `@xoroh/axis` (`OTPFieldRoot`).
 
 Segmented code entry with auto-advance: one hidden host `TextInput`
 (`keyboardType` number-pad; behavior-hidden but focusable —

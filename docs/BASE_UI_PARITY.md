@@ -435,15 +435,16 @@ named reason (not oversight):
 | Collapsible | Root/Trigger/Panel present; composition added this pass | — |
 | Combobox / Autocomplete | no compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`) | `collection` transfer has landed and is consumed (menu filter parts, select lookup, combobox filtering); wiring `Combobox`/`Autocomplete` rows onto it is pending |
 | Context Menu | `ContextMenuRoot` only (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
-| Field / Fieldset | `FieldRoot` + `FieldLabel`/`FieldControl`/`FieldDescription`/`FieldError` and `FieldsetRoot` + `FieldsetLegend` landed (naming rule); no `Validity`/`Item` parts | Validity is caller state (`error`); full validity + control wiring belongs to the Form/Field behaviour lane |
+| Field / Fieldset | `FieldRoot` + `FieldLabel`/`FieldControl`/`FieldDescription`/`FieldError`/`FieldValidity` and `FieldsetRoot` + `FieldsetLegend` landed (naming rule) | Validation modes, per-field and form-level validate, server-error maps, submit gating, label association (native ids), error live regions. |
 | Meter / Progress | Meter compound landed (parity-1); Progress compound `ProgressRoot` + `ProgressTrack`/`ProgressIndicator`/`ProgressLabel`/`ProgressValue` landed (naming rule — value math shared with the root bar); no `Intl` formatting props (`aria-valuetext`/`getAriaValueText`/`locale`/`format` — caller formats through `MeterValue` function children) | Fill is data-driven width under caller style. Progress indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
 | Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
-| OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
+| OTP Field | `OTPFieldRoot` (single part, no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
 | Slider | compound Root/Label/Value/Control/Track/Indicator/Thumb landed (parity-1 lane); RN math in `./models` (`slider.ts`) | `step` defaults `0` (continuous) vs Base UI `1`; `largeStep` consumed by keyboard handling (web `onKeyDown` passthrough); no push cascade (clamp at gap); no `hiddenUntilFound` (N/A); no `loopFocus` (no roving layer); no `name`/`form`/`inputRef` (no Form owner); no keepMounted (D3) |
 | Tabs | `TabsRoot` + `TabsList`/`TabsTrigger`/`TabsPanel` (naming rule); no `Indicator` | Indicator geometry is caller style |
 | Dropdown Menu / Menubar / Navigation Menu | `DropdownMenuRoot`, `NavigationMenuRoot` (naming rule); Axis cascade/bar APIs (not Base part names) | `DropdownMenuRoot` IS the submenu pattern (parity record: mapped, not duplicated) |
 | Date/time entry | no Axis component (removed by ADR 012) | `calendar` model (grid, roving keys, min/max + `isDateDisabled`, single + range selection, locale, `firstDayOfWeek`, dir) and `time` model (`TimePickerValue`/`TimePickerFormat` stay exported) carry the behavior; composition added this pass for the remaining families. |
-| Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
+| Form + compound Field | Base UI parity (actionsRef superset for submit; Validity state adapted, no DOM roles) | Validation modes, per-field and form-level validate, server-error maps, submit gating, label association (native ids), error live regions. |
+| Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card). |
 
 ### AI chat — new surface (no Base UI counterpart)
 

@@ -21,7 +21,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Toggle Group | complete | pressed-state set, RNTL 5 |
 | Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
-| Field | complete | label/control/error row, RNTL 2 (in input suite) |
+| Field | complete | compound Root/Label/Control/Description/Error/Validity, RNTL 22 |
+| Form | complete | submit gating + server errors + validate/clear actions, RNTL 13 |
 | Fieldset | complete | legend group (in fieldset suite), RNTL 3 |
 | Label | complete | nativeID association, RNTL 2 |
 | Input | complete | controlled/uncontrolled entry + multiline/autoGrow/rows, RNTL 10 |
@@ -61,7 +62,7 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 `dismissPolicy`, `dismissWiring`, `overlayModality`, `portal`,
 `positioning` (rect math public; clamp/origin internal),
 `presence`, `time`, `number` (locale parse/format + step math),
-`calendar` (grid, keys, selection, locale —
+`form` (error maps + emptiness), `calendar` (grid, keys, selection, locale —
 moved from the removed component, ADR-012), `slot`, `toastQueue`,
 `a11y` — all present with unit tests.
 Chat models (ADR 010; contract: `docs/AI_CHAT_MODELS.md`; parity:

@@ -13,7 +13,7 @@ import {
   NumberFieldInput,
   NumberFieldRoot,
   NumberFieldScrubArea,
-  OtpField,
+  OTPFieldRoot,
 } from "@xoroh/axis";
 import { useState } from "react";
 import { Text, View } from "react-native";
@@ -35,7 +35,7 @@ export const EntryDemo: Demo = {
     "NumberFieldDecrement",
     "NumberFieldIncrement",
     "NumberFieldScrubArea",
-    "OtpField",
+    "OTPFieldRoot",
     "FieldControl",
     "FieldDescription",
     "FieldError",
@@ -404,7 +404,7 @@ export const EntryDemo: Demo = {
                 >
                   4-Digit OTP Code:
                 </Text>
-                <OtpField
+                <OTPFieldRoot
                   accessibilityLabel="Code input"
                   value={code}
                   onValueChange={setCode}

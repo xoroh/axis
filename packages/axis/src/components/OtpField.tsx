@@ -19,7 +19,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * OtpField — segmented one-time-code entry with auto-advance.
+ * OTPFieldRoot — segmented one-time-code entry with auto-advance.
  *
  * Structure only: a container `View` of `length` cells plus ONE hidden
  * host `TextInput` that captures entry, so auto-advance is implicit —
@@ -32,14 +32,14 @@ import { useControllableState } from "../useControllableState";
  * length never refires, and only a change away and back resubmits).
  */
 
-export type OtpFieldState = {
+export type OTPFieldRootState = {
   /** Current code (sliced to `length`). */
   value: string;
   /** Whether the field is currently disabled. */
   disabled: boolean;
 };
 
-export type OtpFieldProps = {
+export type OTPFieldRootProps = {
   /** Controlled code. Wins over `defaultValue` when defined. */
   value?: string;
   /** Uncontrolled initial code. Default `""`. */
@@ -60,7 +60,7 @@ export type OtpFieldProps = {
   accessibilityLabel?: string;
   testID?: string;
   /** Container style: value or function of field state. */
-  style?: StateStyle<OtpFieldState, StyleProp<ViewStyle>>;
+  style?: StateStyle<OTPFieldRootState, StyleProp<ViewStyle>>;
   /** Per-cell container style, caller-provided. */
   cellStyle?: StyleProp<ViewStyle>;
   /** Per-cell text style, caller-provided. */
@@ -77,7 +77,7 @@ export type OtpFieldProps = {
    * receives `(props, state)`. Replaces the whole field (cells plus
    * hidden entry).
    */
-  render?: RenderProp<OtpFieldState, SlotProps>;
+  render?: RenderProp<OTPFieldRootState, SlotProps>;
   /** Forwarded to the container view. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -102,7 +102,7 @@ const HIDDEN_INPUT_STYLE: TextStyle = {
   height: 1,
 };
 function assignRef(
-  ref: OtpFieldProps["ref"],
+  ref: OTPFieldRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -119,7 +119,7 @@ function assignRef(
   }
 }
 
-export function OtpField({
+export function OTPFieldRoot({
   value,
   defaultValue = "",
   onValueChange,
@@ -136,7 +136,7 @@ export function OtpField({
   inputStyle,
   render,
   ref,
-}: OtpFieldProps): React.ReactNode {
+}: OTPFieldRootProps): React.ReactNode {
   const safeLength = Number.isFinite(length)
     ? Math.max(1, Math.floor(length))
     : 6;
@@ -180,7 +180,7 @@ export function OtpField({
     [ref],
   );
 
-  const state: OtpFieldState = { value: current, disabled };
+  const state: OTPFieldRootState = { value: current, disabled };
   const substituted = resolveRender(
     render,
     {

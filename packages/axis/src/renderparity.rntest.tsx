@@ -19,7 +19,7 @@ import {
   MeterValue,
   NumberFieldGroup,
   NumberFieldRoot,
-  OtpField,
+  OTPFieldRoot,
   ProgressRoot,
   Separator,
   SliderControl,
@@ -339,9 +339,9 @@ describe("render composition: entries", () => {
     expect(screen.getByText("v3")).toBeTruthy();
   });
 
-  it("OtpField function render observes code state", async () => {
+  it("OTPFieldRoot function render observes code state", async () => {
     await render(
-      <OtpField
+      <OTPFieldRoot
         defaultValue="12"
         render={(_props, state) => <Text testID="st">{state.value}</Text>}
       />,

@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import type { View } from "react-native";
-import { OtpField } from "./index";
+import { OTPFieldRoot } from "./index";
 
 /**
- * OtpField behavior through the public entry. Every assertion renders
+ * OTPFieldRoot behavior through the public entry. Every assertion renders
  * the real component in the RN runtime and types through the hidden
  * host input — cell fan-out, controlled/uncontrolled flow, the
  * fire-once completion guard, disabled terminality, and ref forwarding
@@ -17,26 +17,28 @@ async function type(testID: string, text: string) {
   });
 }
 
-describe("OtpField on React Native", () => {
+describe("OTPFieldRoot on React Native", () => {
   it("renders length cells empty", async () => {
-    await render(<OtpField testID="a" />);
+    await render(<OTPFieldRoot testID="a" />);
     for (let i = 0; i < 6; i += 1) {
       expect(screen.getByTestId(`a-cell-${i}`).props.children).toBe("");
     }
     expect(screen.queryByTestId("a-cell-6")).toBeNull();
 
-    await render(<OtpField testID="b" length={4} />);
+    await render(<OTPFieldRoot testID="b" length={4} />);
     expect(screen.getByTestId("b-cell-3").props.children).toBe("");
     expect(screen.queryByTestId("b-cell-4")).toBeNull();
 
-    await render(<OtpField testID="c" length={0} />);
+    await render(<OTPFieldRoot testID="c" length={0} />);
     expect(screen.getByTestId("c-cell-0").props.children).toBe("");
     expect(screen.queryByTestId("c-cell-1")).toBeNull();
   });
 
   it("typing fills cells and fires onValueChange", async () => {
     const seen: string[] = [];
-    await render(<OtpField testID="otp" onValueChange={(v) => seen.push(v)} />);
+    await render(
+      <OTPFieldRoot testID="otp" onValueChange={(v) => seen.push(v)} />,
+    );
     await type("otp", "12");
     expect(seen).toEqual(["12"]);
     expect(screen.getByTestId("otp-cell-0").props.children).toBe("1");
@@ -48,7 +50,7 @@ describe("OtpField on React Native", () => {
   it("controlled value follows the prop", async () => {
     function Host() {
       const [v, setV] = useState("");
-      return <OtpField testID="otp" value={v} onValueChange={setV} />;
+      return <OTPFieldRoot testID="otp" value={v} onValueChange={setV} />;
     }
     await render(<Host />);
     await type("otp", "987");
@@ -62,14 +64,24 @@ describe("OtpField on React Native", () => {
     const seen: string[] = [];
     const onComplete = (v: string) => seen.push(v);
     const ui = await render(
-      <OtpField testID="otp" length={4} autoSubmit onComplete={onComplete} />,
+      <OTPFieldRoot
+        testID="otp"
+        length={4}
+        autoSubmit
+        onComplete={onComplete}
+      />,
     );
     await type("otp", "12");
     expect(seen).toEqual([]);
     await type("otp", "1234");
     expect(seen).toEqual(["1234"]);
     await ui.rerender(
-      <OtpField testID="otp" length={4} autoSubmit onComplete={onComplete} />,
+      <OTPFieldRoot
+        testID="otp"
+        length={4}
+        autoSubmit
+        onComplete={onComplete}
+      />,
     );
     expect(seen).toEqual(["1234"]);
     await type("otp", "12");
@@ -80,7 +92,7 @@ describe("OtpField on React Native", () => {
   it("disabled blocks entry", async () => {
     let calls = 0;
     await render(
-      <OtpField
+      <OTPFieldRoot
         testID="otp"
         disabled
         defaultValue=""
@@ -94,12 +106,12 @@ describe("OtpField on React Native", () => {
   });
 
   it("secureTextEntry passes through to the hidden input", async () => {
-    await render(<OtpField testID="otp" secureTextEntry />);
+    await render(<OTPFieldRoot testID="otp" secureTextEntry />);
     expect(screen.getByTestId("otp-input").props.secureTextEntry).toBe(true);
   });
 
   it("hides the capture input from layout but keeps it focusable", async () => {
-    await render(<OtpField testID="otp" />);
+    await render(<OTPFieldRoot testID="otp" />);
     const style = screen.getByTestId("otp-input").props.style;
     const flat = Array.isArray(style)
       ? Object.assign({}, ...style.filter(Boolean))
@@ -116,7 +128,7 @@ describe("OtpField on React Native", () => {
   });
 
   it("caller inputStyle overrides the hidden base", async () => {
-    await render(<OtpField testID="otp" inputStyle={{ opacity: 1 }} />);
+    await render(<OTPFieldRoot testID="otp" inputStyle={{ opacity: 1 }} />);
     const style = screen.getByTestId("otp-input").props.style;
     const flat = Array.isArray(style)
       ? Object.assign({}, ...style.filter(Boolean))
@@ -126,13 +138,13 @@ describe("OtpField on React Native", () => {
 
   it("forwards a ref to the container", async () => {
     const ref = createRef<ElementRef<typeof View>>();
-    await render(<OtpField testID="otp" ref={ref} />);
+    await render(<OTPFieldRoot testID="otp" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
 
   it("caller container style reaches the surface", async () => {
     await render(
-      <OtpField testID="otp" style={{ flexDirection: "column", gap: 4 }} />,
+      <OTPFieldRoot testID="otp" style={{ flexDirection: "column", gap: 4 }} />,
     );
     const style = screen.getByTestId("otp").props.style;
     const flat = Array.isArray(style)
