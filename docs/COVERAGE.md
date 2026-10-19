@@ -30,8 +30,6 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |
 | Combobox | complete | filterable single-select via the shared `collection` match, RNTL 9 |
 | Select | complete | single-select dropdown + compound parts (value-label registry + `items` table), RNTL 24 |
-| Calendar | complete | UTC date grid, RNTL 7 |
-| Time Picker | complete | Input+Button composition, RNTL 6 |
 | Accordion | complete | single-expand disclosure, RNTL 7 |
 | Collapsible | complete | single disclosure unit, RNTL 6 |
 | Tabs | complete | tablist/triggers/panels, RNTL 7 |
@@ -62,7 +60,9 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 `useControllableState`, `selection`, `press`, `roving`, `focusTrap`,
 `dismissPolicy`, `dismissWiring`, `overlayModality`, `portal`,
 `positioning` (rect math public; clamp/origin internal),
-`presence`, `time`, `slot`, `toastQueue`, `a11y` — all present with unit tests.
+`presence`, `time`, `calendar` (grid, keys, selection, locale —
+moved from the removed component, ADR-012), `slot`, `toastQueue`,
+`a11y` — all present with unit tests.
 Chat models (ADR 010; contract: `docs/AI_CHAT_MODELS.md`; parity:
 new surface, no Base UI counterpart): `chatStatus` (shared
 generation vocabulary), `stickToBottom`, `chatMessage`, `toolCall`,

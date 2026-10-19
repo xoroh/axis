@@ -6,7 +6,6 @@ import {
   AccordionItem,
   AlertDialog,
   Autocomplete,
-  Calendar,
   CheckboxGroup,
   CheckboxGroupItem,
   Collapsible,
@@ -39,7 +38,6 @@ import {
   TabsList,
   TabsPanel,
   TabsTrigger,
-  TimePicker,
   Toast,
   ToggleGroup,
   ToggleGroupItem,
@@ -242,31 +240,6 @@ describe("render composition: lists", () => {
       />,
     );
     expect(screen.getByText("a")).toBeTruthy();
-  });
-
-  it("Calendar function render observes selected date", async () => {
-    await render(
-      <Calendar
-        defaultValue="2026-03-04"
-        month="2026-03"
-        render={(_props, state) => (
-          <Text testID="st">{String(state.value)}</Text>
-        )}
-      />,
-    );
-    expect(screen.getByText("2026-03-04")).toBeTruthy();
-  });
-
-  it("TimePicker function render observes time state", async () => {
-    await render(
-      <TimePicker
-        defaultValue={{ hours: 9, minutes: 30 }}
-        render={(_props, state) => (
-          <Text testID="st">{String(state.value?.hours)}</Text>
-        )}
-      />,
-    );
-    expect(screen.getByText("9")).toBeTruthy();
   });
 });
 
