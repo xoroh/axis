@@ -7,13 +7,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import {
-  Pressable,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -347,13 +341,13 @@ export function TabsPanel({
     render,
     {
       testID,
-      // The hidden contract rides the substitution props too, flattened
-      // to one object (mergeSlotProps spreads styles shallowly, so an
-      // array would not survive): a `render` panel receives the
+      // The hidden contract rides the substitution props too, as the same
+      // array the default host renders (mergeSlotProps flattens RN
+      // arrays, later entries winning): a `render` panel receives the
       // deselected `display: "none"` and `aria-hidden`, staying
       // invisible and unannounced. Consumer props still win per key
       // through mergeSlotProps (consumer-last).
-      style: StyleSheet.flatten([style, closedStyle]),
+      style: [style, closedStyle],
       "aria-hidden": !selected,
       children,
     } satisfies SlotProps,

@@ -52,12 +52,34 @@ export function composeEventHandlers<E>(
 }
 
 /**
+ * Flatten an RN-style `style` prop (object, array, or nullish entry) into
+ * a single object for shallow merging. Array entries apply left to right
+ * (later wins), matching RN array semantics; nested arrays recurse.
+ * Non-object entries (null, false, registered numbers unresolvable
+ * without the host runtime) contribute nothing.
+ */
+function flattenStyleProp(style: unknown): Record<string, unknown> {
+  if (Array.isArray(style)) {
+    const out: Record<string, unknown> = {};
+    for (const entry of style) {
+      Object.assign(out, flattenStyleProp(entry));
+    }
+    return out;
+  }
+  if (typeof style === "object" && style !== null) {
+    return { ...(style as Record<string, unknown>) };
+  }
+  return {};
+}
+
+/**
  * Merge part props with consumer (slot child) props.
  *
  * - `on*` function props chain via {@link composeEventHandlers}
  * - `className` concatenates with a space (consumer last, so equal-specificity
  *   utilities resolve toward the consumer)
- * - `style` merges shallow with the consumer winning per key
+ * - `style` flattens RN arrays (later entries win) then merges shallow
+ *   with the consumer winning per key
  * - every other prop takes the consumer's value unless it is `undefined`,
  *   in which case the part's stands
  *
@@ -91,12 +113,15 @@ export function mergeSlotProps<T extends SlotProps>(
       }
       if (
         key === "style" &&
-        typeof current === "object" &&
+        (typeof current === "object" || Array.isArray(current)) &&
         current !== null &&
-        typeof incoming === "object" &&
+        (typeof incoming === "object" || Array.isArray(incoming)) &&
         incoming !== null
       ) {
-        merged[key] = { ...(current as object), ...(incoming as object) };
+        merged[key] = {
+          ...flattenStyleProp(current),
+          ...flattenStyleProp(incoming),
+        };
         continue;
       }
       merged[key] = incoming;
