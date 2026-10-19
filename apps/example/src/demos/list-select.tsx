@@ -137,6 +137,12 @@ export const ListSelectDemo: Demo = {
       borderWidth: 1,
       borderColor: theme.border,
     };
+    // Multiple trigger row: labels join as sibling nodes, so pack
+    // from the start (space-between would fling first/last apart).
+    const multiRowStyle: SelectProps["style"] = {
+      ...rowStyle,
+      justifyContent: "flex-start",
+    };
     const popupStyle: SelectPopupProps["style"] = {
       backgroundColor: theme.surface,
       borderRadius: 10,
@@ -256,7 +262,7 @@ export const ListSelectDemo: Demo = {
           value={toppings}
           onValueChange={(next) => setToppings(Array.isArray(next) ? next : [])}
           placeholder={<Text style={placeholderStyle}>Pick fruits</Text>}
-          style={rowStyle}
+          style={multiRowStyle}
           listStyle={listStyle}
         >
           {LONG_OPTIONS.map((option) => (
