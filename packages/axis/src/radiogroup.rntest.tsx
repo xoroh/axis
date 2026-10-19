@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import type { Pressable } from "react-native";
-import { RadioGroup, RadioGroupItem } from "./index";
+import { type Pressable, Text } from "react-native";
+import { RadioGroup, RadioIndicator, RadioRoot } from "./index";
 
 /**
  * RadioGroup behavior through the public entry. Every assertion renders
@@ -10,7 +10,8 @@ import { RadioGroup, RadioGroupItem } from "./index";
  * terminality (group-wide and per-item), and ref forwarding are
  * observed, not assumed.
  *
- * Items render via the `RadioGroupItem` named export.
+ * Items render via the `RadioRoot` named export, with a caller-composed
+ * `RadioIndicator` that mounts while checked.
  */
 
 async function press(testID: string) {
@@ -23,8 +24,8 @@ describe("RadioGroup on React Native", () => {
   it("renders a radiogroup with unchecked radio items", async () => {
     await render(
       <RadioGroup testID="rg" accessibilityLabel="Size">
-        <RadioGroupItem value="s" testID="s" accessibilityLabel="Small" />
-        <RadioGroupItem value="m" testID="m" accessibilityLabel="Medium" />
+        <RadioRoot value="s" testID="s" accessibilityLabel="Small" />
+        <RadioRoot value="m" testID="m" accessibilityLabel="Medium" />
       </RadioGroup>,
     );
     expect(screen.getByRole("radiogroup")).toBeTruthy();
@@ -44,8 +45,8 @@ describe("RadioGroup on React Native", () => {
     const seen: string[] = [];
     await render(
       <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
-        <RadioGroupItem value="s" testID="s" />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -62,8 +63,8 @@ describe("RadioGroup on React Native", () => {
     const seen: string[] = [];
     await render(
       <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
-        <RadioGroupItem value="s" testID="s" />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -88,8 +89,8 @@ describe("RadioGroup on React Native", () => {
       const [value, setValue] = useState<string | null>("s");
       return (
         <RadioGroup testID="rg" value={value} onValueChange={setValue}>
-          <RadioGroupItem value="s" testID="s" />
-          <RadioGroupItem value="m" testID="m" />
+          <RadioRoot value="s" testID="s" />
+          <RadioRoot value="m" testID="m" />
         </RadioGroup>
       );
     }
@@ -109,8 +110,8 @@ describe("RadioGroup on React Native", () => {
   it("controlled value without an updating parent holds its selection", async () => {
     await render(
       <RadioGroup testID="rg" value="s">
-        <RadioGroupItem value="s" testID="s" />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("m");
@@ -126,8 +127,8 @@ describe("RadioGroup on React Native", () => {
     let calls = 0;
     await render(
       <RadioGroup testID="rg" disabled onValueChange={() => (calls += 1)}>
-        <RadioGroupItem value="s" testID="s" />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -152,8 +153,8 @@ describe("RadioGroup on React Native", () => {
         readOnly
         onValueChange={() => (calls += 1)}
       >
-        <RadioGroupItem value="s" testID="s" />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -175,8 +176,8 @@ describe("RadioGroup on React Native", () => {
     const seen: string[] = [];
     await render(
       <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
-        <RadioGroupItem value="s" testID="s" readOnly />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" readOnly />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -193,8 +194,8 @@ describe("RadioGroup on React Native", () => {
     const seen: string[] = [];
     await render(
       <RadioGroup testID="rg" onValueChange={(v) => seen.push(v)}>
-        <RadioGroupItem value="s" testID="s" disabled />
-        <RadioGroupItem value="m" testID="m" />
+        <RadioRoot value="s" testID="s" disabled />
+        <RadioRoot value="m" testID="m" />
       </RadioGroup>,
     );
     await press("s");
@@ -218,9 +219,76 @@ describe("RadioGroup on React Native", () => {
     const ref = createRef<ElementRef<typeof Pressable>>();
     await render(
       <RadioGroup testID="rg" ref={ref}>
-        <RadioGroupItem value="s" testID="s" />
+        <RadioRoot value="s" testID="s" />
       </RadioGroup>,
     );
     expect(ref.current).not.toBeNull();
+  });
+
+  it("indicator mounts only while its radio is checked", async () => {
+    await render(
+      <RadioGroup testID="rg" defaultValue="m">
+        <RadioRoot value="s" testID="s">
+          <RadioIndicator testID="s-mark" />
+        </RadioRoot>
+        <RadioRoot value="m" testID="m">
+          <RadioIndicator testID="m-mark" />
+        </RadioRoot>
+      </RadioGroup>,
+    );
+    expect(screen.queryByTestId("s-mark")).toBeNull();
+    expect(screen.getByTestId("m-mark")).toBeTruthy();
+    await press("s");
+    expect(screen.getByTestId("s-mark")).toBeTruthy();
+    expect(screen.queryByTestId("m-mark")).toBeNull();
+  });
+
+  it("keepMounted keeps the indicator mounted but hidden while unchecked", async () => {
+    await render(
+      <RadioGroup testID="rg">
+        <RadioRoot value="s" testID="s">
+          <RadioIndicator testID="s-mark" keepMounted />
+        </RadioRoot>
+      </RadioGroup>,
+    );
+    // Mounted (layout present) but hidden from assistive tech on all
+    // three platforms, with unchecked state. (RNTL hides hidden-from-AT
+    // elements from queries by default — which is itself the proof —
+    // so the hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("s-mark", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("s-mark")).toBeNull();
+    const hidden = screen.getByTestId("s-mark", {
+      includeHiddenElements: true,
+    }).props;
+    expect(hidden.accessibilityElementsHidden).toBe(true);
+    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    expect(hidden["aria-hidden"]).toBe(true);
+    await press("s");
+    // Checked: visible and exposed again.
+    expect(
+      screen.getByTestId("s-mark").props.accessibilityElementsHidden,
+    ).toBe(false);
+  });
+
+  it("indicator function render observes checked state", async () => {
+    await render(
+      <RadioGroup testID="rg" defaultValue="m">
+        <RadioRoot value="m" testID="m">
+          <RadioIndicator
+            render={(_props, state) => (
+              <Text testID="m-state">{state.checked ? "on" : "off"}</Text>
+            )}
+          />
+        </RadioRoot>
+      </RadioGroup>,
+    );
+    expect(screen.getByText("on")).toBeTruthy();
+  });
+
+  it("indicator outside a root never mounts", async () => {
+    await render(<RadioIndicator testID="orphan" />);
+    expect(screen.queryByTestId("orphan")).toBeNull();
   });
 });

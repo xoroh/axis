@@ -31,7 +31,8 @@ import {
   NavigationMenuTrigger,
   PortalHost,
   RadioGroup,
-  RadioGroupItem,
+  RadioIndicator,
+  RadioRoot,
   SelectItem,
   SelectRoot,
   SelectTrigger,
@@ -44,8 +45,8 @@ import {
   TabsRoot,
   TabsTrigger,
   ToastRoot,
+  Toggle,
   ToggleGroup,
-  ToggleGroupItem,
   TooltipRoot,
   TooltipTrigger,
 } from "./index";
@@ -92,10 +93,10 @@ describe("render composition: groups", () => {
     expect(screen.getByTestId("g").props.style).toMatchObject({ opacity: 1 });
   });
 
-  it("RadioGroupItem function render observes checked state", async () => {
+  it("RadioRoot function render observes checked state", async () => {
     await render(
       <RadioGroup defaultValue="a">
-        <RadioGroupItem
+        <RadioRoot
           value="a"
           accessibilityLabel="A"
           render={(_props, state) => (
@@ -107,11 +108,11 @@ describe("render composition: groups", () => {
     expect(screen.getByText("yes")).toBeTruthy();
   });
 
-  it("ToggleGroupItem element render preserves toggle", async () => {
+  it("Toggle element render preserves group toggle", async () => {
     const seen: string[][] = [];
     await render(
       <ToggleGroup onValueChange={(v) => seen.push([...v])}>
-        <ToggleGroupItem
+        <Toggle
           value="a"
           accessibilityLabel="A"
           render={<Pressable testID="sub" />}

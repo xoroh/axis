@@ -414,11 +414,14 @@ export {
 } from "./components/Progress";
 export {
   RadioGroup,
-  RadioGroupItem,
-  type RadioGroupItemProps,
-  type RadioGroupItemState,
   type RadioGroupProps,
   type RadioGroupState,
+  RadioIndicator,
+  type RadioIndicatorProps,
+  type RadioIndicatorState,
+  RadioRoot,
+  type RadioRootProps,
+  type RadioRootState,
 } from "./components/RadioGroup";
 export {
   SelectArrow,
@@ -510,9 +513,6 @@ export {
 } from "./components/Toggle";
 export {
   ToggleGroup,
-  ToggleGroupItem,
-  type ToggleGroupItemProps,
-  type ToggleGroupItemState,
   type ToggleGroupProps,
   type ToggleGroupState,
 } from "./components/ToggleGroup";

@@ -4,7 +4,6 @@ import {
   type ReactNode,
   type Ref,
   useCallback,
-  useContext,
   useMemo,
 } from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
@@ -16,9 +15,9 @@ import { useControllableState } from "../useControllableState";
 /**
  * ToggleGroup — an unstyled pressed-item group.
  *
- * Structure only: a `View` carrying the group role, with
- * `ToggleGroupItem` pressables carrying the button role and pressed
- * state. No default visuals — every visual value (`style`) is
+ * Structure only: a `View` carrying the group role, with `Toggle`
+ * pressables (each with a `value`) carrying the button role and
+ * pressed state. No default visuals — every visual value (`style`) is
  * caller-provided. State follows the `useControllableState` pattern:
  * `value` (+ `onValueChange`) for controlled use, `defaultValue` for
  * uncontrolled. `multiple` (default `false`, the Base UI default)
@@ -52,13 +51,6 @@ export type ToggleGroupState = {
   orientation: "horizontal" | "vertical";
 };
 
-export type ToggleGroupItemState = {
-  /** Whether this item is currently pressed. */
-  pressed: boolean;
-  /** Whether this item is currently disabled. */
-  disabled: boolean;
-};
-
 export type ToggleGroupProps = {
   /** Controlled pressed keys. Wins over `defaultValue` when defined. */
   value?: readonly string[];
@@ -85,7 +77,7 @@ export type ToggleGroupProps = {
   testID?: string;
   /** Root group view style: value or function of group state. */
   style?: StateStyle<ToggleGroupState, StyleProp<ViewStyle>>;
-  /** The group's items (`ToggleGroupItem`). */
+  /** The group's items (`Toggle` with `value`). */
   children: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -97,25 +89,6 @@ export type ToggleGroupProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-export type ToggleGroupItemProps = {
-  /** Pressed key contributed to (or removed from) the group when this item is activated. */
-  value: string;
-  /** Terminal for this item only: it never toggles and is announced as disabled. Siblings are unaffected. */
-  disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  testID?: string;
-  /** Item pressable style: value or function of item state. */
-  style?: StateStyle<ToggleGroupItemState, StyleProp<ViewStyle>>;
-  children?: ReactNode;
-  /**
-   * Element or function substitution (Base UI parity): an element is
-   * cloned with the part props merged under its own; a function
-   * receives `(props, state)`.
-   */
-  render?: RenderProp<ToggleGroupItemState, SlotProps>;
-};
-
 type ToggleGroupPressed = {
   pressedValues: readonly string[] | undefined;
   groupDisabled: boolean;
@@ -123,13 +96,13 @@ type ToggleGroupPressed = {
 };
 
 /**
- * Shared pressed state for the group's items. Internal to this module
- * (not exported): items must render inside a `ToggleGroup` to
- * participate in selection; outside one they render unpressed and inert.
+ * Shared pressed state for the group's items. Exported for `Toggle`
+ * group-joining only — not part of the public barrel: `Toggle`
+ * buttons with `value` must render inside a `ToggleGroup` to join;
+ * outside one they behave standalone.
  */
-const ToggleGroupPressedContext = createContext<ToggleGroupPressed | null>(
-  null,
-);
+export const ToggleGroupPressedContext =
+  createContext<ToggleGroupPressed | null>(null);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -244,59 +217,6 @@ function ToggleGroupRoot({
         {children}
       </ToggleGroupPressedContext.Provider>
     </View>
-  );
-}
-
-export function ToggleGroupItem({
-  value,
-  disabled = false,
-  accessibilityLabel,
-  testID,
-  style,
-  children,
-  render,
-}: ToggleGroupItemProps): React.ReactNode {
-  const group = useContext(ToggleGroupPressedContext);
-  const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
-  const pressed = group?.pressedValues?.includes(value) ?? false;
-
-  const toggleItem = useCallback(() => {
-    if (effectiveDisabled) return;
-    group?.toggle(value);
-  }, [effectiveDisabled, group, value]);
-
-  const state: ToggleGroupItemState = {
-    pressed,
-    disabled: effectiveDisabled,
-  };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "button",
-      accessibilityState: { selected: pressed, disabled: effectiveDisabled },
-      accessibilityLabel,
-      testID,
-      disabled: effectiveDisabled,
-      onPress: toggleItem,
-      style: resolveStyle(style, state),
-      children,
-    } satisfies SlotProps,
-    state,
-  );
-  if (substituted !== null) return substituted;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ selected: pressed, disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      disabled={effectiveDisabled}
-      onPress={toggleItem}
-      style={resolveStyle(style, state)}
-    >
-      {children}
-    </Pressable>
   );
 }
 

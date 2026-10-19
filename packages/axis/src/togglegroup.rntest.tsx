@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import type { View } from "react-native";
-import { ToggleGroup, ToggleGroupItem } from "./index";
+import { Toggle, ToggleGroup } from "./index";
 
 /**
  * ToggleGroup behavior through the public entry. Every assertion renders
@@ -11,7 +11,7 @@ import { ToggleGroup, ToggleGroupItem } from "./index";
  * (`selected`, never `checked` — RN maps no `pressed` key), group-wide
  * disabled terminality, and ref forwarding are observed, not assumed.
  *
- * Items render via the `ToggleGroupItem` named export.
+ * Items render via the `Toggle` named export.
  */
 
 async function press(testID: string) {
@@ -24,8 +24,8 @@ describe("ToggleGroup on React Native", () => {
   it("renders a group with unpressed button items", async () => {
     await render(
       <ToggleGroup testID="tg" accessibilityLabel="Styles">
-        <ToggleGroupItem value="a" testID="a" accessibilityLabel="A" />
-        <ToggleGroupItem value="b" testID="b" accessibilityLabel="B" />
+        <Toggle value="a" testID="a" accessibilityLabel="A" />
+        <Toggle value="b" testID="b" accessibilityLabel="B" />
       </ToggleGroup>,
     );
     expect(screen.getByRole("group")).toBeTruthy();
@@ -45,8 +45,8 @@ describe("ToggleGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <ToggleGroup testID="tg" onValueChange={(v) => seen.push(v)}>
-        <ToggleGroupItem value="a" testID="a" />
-        <ToggleGroupItem value="b" testID="b" />
+        <Toggle value="a" testID="a" />
+        <Toggle value="b" testID="b" />
       </ToggleGroup>,
     );
     await press("a");
@@ -65,7 +65,7 @@ describe("ToggleGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <ToggleGroup testID="tg" onValueChange={(v) => seen.push(v)}>
-        <ToggleGroupItem value="a" testID="a" />
+        <Toggle value="a" testID="a" />
       </ToggleGroup>,
     );
     await press("a");
@@ -80,8 +80,8 @@ describe("ToggleGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <ToggleGroup testID="tg" multiple onValueChange={(v) => seen.push(v)}>
-        <ToggleGroupItem value="a" testID="a" />
-        <ToggleGroupItem value="b" testID="b" />
+        <Toggle value="a" testID="a" />
+        <Toggle value="b" testID="b" />
       </ToggleGroup>,
     );
     await press("a");
@@ -101,7 +101,7 @@ describe("ToggleGroup on React Native", () => {
   it("orientation selects the container direction, caller style wins", async () => {
     await render(
       <ToggleGroup testID="tg" orientation="vertical">
-        <ToggleGroupItem value="a" testID="a" />
+        <Toggle value="a" testID="a" />
       </ToggleGroup>,
     );
     const flattened = screen.getByTestId("tg").props.style;
@@ -115,7 +115,7 @@ describe("ToggleGroup on React Native", () => {
   it("announces pressed through selected, never checked", async () => {
     await render(
       <ToggleGroup testID="tg" multiple defaultValue={["a"]}>
-        <ToggleGroupItem value="a" testID="a" accessibilityLabel="A" />
+        <Toggle value="a" testID="a" accessibilityLabel="A" />
       </ToggleGroup>,
     );
     const state = screen.getByTestId("a").props.accessibilityState;
@@ -129,8 +129,8 @@ describe("ToggleGroup on React Native", () => {
     let calls = 0;
     await render(
       <ToggleGroup testID="tg" disabled onValueChange={() => (calls += 1)}>
-        <ToggleGroupItem value="a" testID="a" />
-        <ToggleGroupItem value="b" testID="b" />
+        <Toggle value="a" testID="a" />
+        <Toggle value="b" testID="b" />
       </ToggleGroup>,
     );
     await press("a");
@@ -150,9 +150,34 @@ describe("ToggleGroup on React Native", () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
       <ToggleGroup testID="tg" ref={ref}>
-        <ToggleGroupItem value="a" testID="a" />
+        <Toggle value="a" testID="a" />
       </ToggleGroup>,
     );
     expect(ref.current).not.toBeNull();
+  });
+
+  it("a toggle without value stays standalone inside a group", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <ToggleGroup testID="tg" defaultValue={["a"]}>
+        <Toggle value="a" testID="a" />
+        <Toggle
+          testID="free"
+          defaultPressed
+          onPressedChange={(v) => seen.push(v)}
+        />
+      </ToggleGroup>,
+    );
+    expect(screen.getByTestId("a").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+    expect(screen.getByTestId("free").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+    await press("free");
+    expect(seen).toEqual([false]);
+    expect(screen.getByTestId("a").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
   });
 });

@@ -17,7 +17,9 @@ import { useControllableState } from "../useControllableState";
  * RadioGroup — an unstyled single-select group.
  *
  * Structure only: a `View` carrying the radiogroup role, with
- * `RadioGroupItem` pressables carrying the radio role and checked state.
+ * `RadioRoot` pressables carrying the radio role and checked state,
+ * each composing a caller-provided `RadioIndicator` that mounts
+ * while checked.
  * No default visuals — every visual value (`style`) is caller-provided.
  * State follows the `useControllableState` pattern: `value` (+
  * `onValueChange`) for controlled use, `defaultValue` for uncontrolled.
@@ -39,7 +41,7 @@ export type RadioGroupState = {
   readOnly: boolean;
 };
 
-export type RadioGroupItemState = {
+export type RadioRootState = {
   /** Whether this item is currently checked. */
   checked: boolean;
   /** Whether this item is currently disabled. */
@@ -70,7 +72,7 @@ export type RadioGroupProps = {
   testID?: string;
   /** Root group view style: value or function of group state. */
   style?: StateStyle<RadioGroupState, StyleProp<ViewStyle>>;
-  /** The group's items (`RadioGroupItem`). */
+  /** The group's items (`RadioRoot` with `RadioIndicator`). */
   children: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -82,7 +84,7 @@ export type RadioGroupProps = {
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
 
-export type RadioGroupItemProps = {
+export type RadioRootProps = {
   /** Selection value contributed to the group when this item is activated. */
   value: string;
   /** Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. */
@@ -99,14 +101,14 @@ export type RadioGroupItemProps = {
   accessibilityLabel?: string;
   testID?: string;
   /** Item pressable style: value or function of item state. */
-  style?: StateStyle<RadioGroupItemState, StyleProp<ViewStyle>>;
+  style?: StateStyle<RadioRootState, StyleProp<ViewStyle>>;
   children?: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<RadioGroupItemState, SlotProps>;
+  render?: RenderProp<RadioRootState, SlotProps>;
 };
 
 type RadioGroupSelection = {
@@ -122,6 +124,55 @@ type RadioGroupSelection = {
  * in selection; outside one they render unchecked and inert.
  */
 const RadioGroupSelectionContext = createContext<RadioGroupSelection | null>(
+  null,
+);
+
+export type RadioIndicatorState = {
+  /** Whether the radio is currently checked. */
+  checked: boolean;
+  /** Whether the radio is currently disabled. */
+  disabled: boolean;
+  /** Whether the group is read-only (selections do not change). */
+  readOnly: boolean;
+};
+
+export type RadioIndicatorProps = {
+  testID?: string;
+  /** Indicator style, caller-provided. */
+  style?: StyleProp<ViewStyle>;
+  /** Indicator content. Mounts while the radio is checked (or always with `keepMounted`). */
+  children?: ReactNode;
+  /**
+   * When `true`, the indicator stays mounted while the radio is
+   * unchecked: mounted but hidden from assistive tech
+   * (`accessibilityElementsHidden` on iOS,
+   * `importantForAccessibility="no-hide-descendants"` on Android,
+   * `aria-hidden` on web), with `{ checked: false }` state. The
+   * indicator stays visible by design (Base UI parity — the caller
+   * styles it from state). Default `false` (mounts only while
+   * checked — keep-alive stays opt-in).
+   */
+  keepMounted?: boolean;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<RadioIndicatorState, SlotProps>;
+};
+
+type RadioItemDisclosure = {
+  checked: boolean;
+  disabled: boolean;
+  readOnly: boolean;
+};
+
+/**
+ * Shared item state for the indicator. Internal to this module (not
+ * exported): the indicator must render inside a `RadioRoot` to
+ * participate; outside one it never mounts.
+ */
+const RadioItemDisclosureContext = createContext<RadioItemDisclosure | null>(
   null,
 );
 
@@ -247,7 +298,7 @@ function RadioGroupRoot({
   );
 }
 
-export function RadioGroupItem({
+export function RadioRoot({
   value,
   disabled = false,
   readOnly = false,
@@ -256,7 +307,7 @@ export function RadioGroupItem({
   style,
   children,
   render,
-}: RadioGroupItemProps): React.ReactNode {
+}: RadioRootProps): React.ReactNode {
   const group = useContext(RadioGroupSelectionContext);
   const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
   const effectiveReadOnly = readOnly || (group?.groupReadOnly ?? false);
@@ -267,7 +318,7 @@ export function RadioGroupItem({
     group?.select(value);
   }, [effectiveDisabled, effectiveReadOnly, group, value]);
 
-  const state: RadioGroupItemState = {
+  const state: RadioRootState = {
     checked,
     disabled: effectiveDisabled,
     readOnly: effectiveReadOnly,
@@ -298,8 +349,58 @@ export function RadioGroupItem({
       onPress={selectItem}
       style={resolveStyle(style, state)}
     >
-      {children}
+      <RadioItemDisclosureContext.Provider
+        value={{
+          checked,
+          disabled: effectiveDisabled,
+          readOnly: effectiveReadOnly,
+        }}
+      >
+        {children}
+      </RadioItemDisclosureContext.Provider>
     </Pressable>
+  );
+}
+
+export function RadioIndicator({
+  testID,
+  style,
+  children,
+  keepMounted = false,
+  render,
+}: RadioIndicatorProps): React.ReactNode {
+  const disclosure = useContext(RadioItemDisclosureContext);
+  if (!disclosure) return null;
+  const { checked, disabled, readOnly } = disclosure;
+  if (!checked && !keepMounted) return null;
+
+  const state: RadioIndicatorState = { checked, disabled, readOnly };
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <View
+      testID={testID}
+      style={style}
+      // `accessible={false}` alone does NOT hide children from
+      // VoiceOver/TalkBack — hide the mounted-but-unchecked
+      // indicator on all three platforms explicitly. Unlike
+      // `AccordionPanel`, the indicator stays visible by design
+      // (Base UI parity: the caller styles it from state).
+      accessibilityElementsHidden={!checked}
+      importantForAccessibility={checked ? "auto" : "no-hide-descendants"}
+      aria-hidden={!checked}
+    >
+      {children}
+    </View>
   );
 }
 

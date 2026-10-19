@@ -4,10 +4,10 @@ import {
   CheckboxIndicator,
   CheckboxRoot,
   RadioGroup,
-  RadioGroupItem,
+  RadioIndicator,
+  RadioRoot,
   Toggle,
   ToggleGroup,
-  ToggleGroupItem,
 } from "@xoroh/axis";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -27,10 +27,10 @@ export const SelectionDemo: Demo = {
     "CheckboxGroup",
     "CheckboxGroupItem",
     "RadioGroup",
-    "RadioGroupItem",
+    "RadioIndicator",
+    "RadioRoot",
     "Toggle",
     "ToggleGroup",
-    "ToggleGroupItem",
   ],
   render: function SelectionScreen() {
     const [checked, setChecked] = useState(true);
@@ -274,7 +274,7 @@ export const SelectionDemo: Demo = {
                 ["y", "Plan Pro"],
               ] as Array<[string, string]>
             ).map(([itemValue, label]) => (
-              <RadioGroupItem
+              <RadioRoot
                 key={itemValue}
                 value={itemValue}
                 render={(props, state) => {
@@ -361,12 +361,28 @@ export const SelectionDemo: Demo = {
             readOnly
             style={{ flexDirection: "row", gap: 12 }}
           >
-            <RadioGroupItem value="x" testID="demo-frozen-x">
+            <RadioRoot value="x" testID="demo-frozen-x">
+              <RadioIndicator
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: theme.primary,
+                }}
+              />
               <Text style={{ fontSize: 13, color: theme.text }}>Std</Text>
-            </RadioGroupItem>
-            <RadioGroupItem value="y" testID="demo-frozen-y">
+            </RadioRoot>
+            <RadioRoot value="y" testID="demo-frozen-y">
+              <RadioIndicator
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 6,
+                  backgroundColor: theme.primary,
+                }}
+              />
               <Text style={{ fontSize: 13, color: theme.text }}>Pro</Text>
-            </RadioGroupItem>
+            </RadioRoot>
           </RadioGroup>
         </View>
 
@@ -421,7 +437,7 @@ export const SelectionDemo: Demo = {
                 borderColor: theme.borderSubtle,
               }}
             >
-              <ToggleGroupItem
+              <Toggle
                 value="m"
                 style={{
                   paddingVertical: 6,
@@ -439,8 +455,8 @@ export const SelectionDemo: Demo = {
                 >
                   Monthly
                 </Text>
-              </ToggleGroupItem>
-              <ToggleGroupItem
+              </Toggle>
+              <Toggle
                 value="t"
                 style={{
                   paddingVertical: 6,
@@ -457,7 +473,7 @@ export const SelectionDemo: Demo = {
                 >
                   Annual
                 </Text>
-              </ToggleGroupItem>
+              </Toggle>
             </ToggleGroup>
             <ToggleGroup
               accessibilityLabel="Demo multiple toggle group"
@@ -479,7 +495,7 @@ export const SelectionDemo: Demo = {
                   ["underline", "U"],
                 ] as Array<[string, string]>
               ).map(([itemValue, label]) => (
-                <ToggleGroupItem
+                <Toggle
                   key={itemValue}
                   value={itemValue}
                   style={(state) => ({
@@ -500,7 +516,7 @@ export const SelectionDemo: Demo = {
                   >
                     {label}
                   </Text>
-                </ToggleGroupItem>
+                </Toggle>
               ))}
             </ToggleGroup>
             <ToggleGroup
@@ -524,7 +540,7 @@ export const SelectionDemo: Demo = {
                   ["right", "Right"],
                 ] as Array<[string, string]>
               ).map(([itemValue, label]) => (
-                <ToggleGroupItem
+                <Toggle
                   key={itemValue}
                   value={itemValue}
                   style={(state) => ({
@@ -545,7 +561,7 @@ export const SelectionDemo: Demo = {
                   >
                     {label}
                   </Text>
-                </ToggleGroupItem>
+                </Toggle>
               ))}
             </ToggleGroup>
           </View>

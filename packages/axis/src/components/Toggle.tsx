@@ -1,9 +1,16 @@
-import { type ElementRef, type ReactNode, type Ref, useCallback } from "react";
+import {
+  type ElementRef,
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useContext,
+} from "react";
 import { Pressable, type StyleProp, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { ToggleGroupPressedContext } from "./ToggleGroup";
 
 /**
  * Toggle — an unstyled pressed-state button.
@@ -13,7 +20,10 @@ import { useControllableState } from "../useControllableState";
  * (`children`). No default visuals — every visual value (`style`)
  * is caller-provided. State follows the `useControllableState`
  * pattern: `pressed` (+ `onPressedChange`) for controlled use,
- * `defaultPressed` for uncontrolled.
+ * `defaultPressed` for uncontrolled. Inside a `ToggleGroup`, a
+ * `Toggle` with `value` joins the group (pressed from membership,
+ * activation toggles membership); without `value` it stays
+ * standalone.
  */
 
 export type ToggleState = {
@@ -24,6 +34,16 @@ export type ToggleState = {
 };
 
 export type ToggleProps = {
+  /**
+   * Group key: when rendered inside a `ToggleGroup`, the toggle joins
+   * the group under this value — pressed derives from group
+   * membership and activation toggles membership (single-press
+   * replaces, multi-press accumulates per the group's `multiple`).
+   * Without `value` (or outside a group) the toggle behaves
+   * standalone. `pressed`/`defaultPressed` are ignored for a joined
+   * toggle: the group owns the state (the Base UI `Toggle` pattern).
+   */
+  value?: string;
   /** Controlled state. Wins over `defaultPressed` when defined. */
   pressed?: boolean;
   /** Uncontrolled initial state. Default `false`. */
@@ -77,6 +97,7 @@ function assignRef(
 }
 
 export function Toggle({
+  value,
   pressed,
   defaultPressed = false,
   onPressedChange,
@@ -95,10 +116,32 @@ export function Toggle({
     onPressedChange,
   );
 
+  // Group joining (the Base UI `Toggle` pattern): a `value` inside a
+  // `ToggleGroup` makes the group own pressed state. Standalone
+  // behavior — no group above, or no `value` — is unchanged.
+  const group = useContext(ToggleGroupPressedContext);
+  const joined = group !== null && value !== undefined;
+  const groupPressed =
+    value !== undefined && (group?.pressedValues?.includes(value) ?? false);
+  const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
+
   const toggle = useCallback(() => {
-    if (disabled) return;
+    if (effectiveDisabled) return;
+    if (joined && group && value !== undefined) {
+      onPressedChange?.(!groupPressed);
+      group.toggle(value);
+      return;
+    }
     setPressed((previous) => !(previous ?? false));
-  }, [disabled, setPressed]);
+  }, [
+    effectiveDisabled,
+    joined,
+    group,
+    value,
+    groupPressed,
+    onPressedChange,
+    setPressed,
+  ]);
 
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
@@ -110,16 +153,22 @@ export function Toggle({
     [ref],
   );
 
-  const state: ToggleState = { pressed: isPressed ?? false, disabled };
+  const state: ToggleState = {
+    pressed: joined ? groupPressed : (isPressed ?? false),
+    disabled: effectiveDisabled,
+  };
   const substituted = resolveRender(
     render,
     {
       accessibilityRole: "button",
-      accessibilityState: { selected: isPressed ?? false, disabled },
+      accessibilityState: {
+        selected: state.pressed,
+        disabled: effectiveDisabled,
+      },
       accessibilityLabel,
       accessibilityLabelledBy,
       testID,
-      disabled,
+      disabled: effectiveDisabled,
       onPress: toggle,
       style: resolveStyle(style, state),
       children,
@@ -133,11 +182,14 @@ export function Toggle({
     <Pressable
       ref={setHostRef}
       accessibilityRole="button"
-      accessibilityState={{ selected: isPressed ?? false, disabled }}
+      accessibilityState={{
+        selected: state.pressed,
+        disabled: effectiveDisabled,
+      }}
       accessibilityLabel={accessibilityLabel}
       accessibilityLabelledBy={accessibilityLabelledBy}
       testID={testID}
-      disabled={disabled}
+      disabled={effectiveDisabled}
       onPress={toggle}
       style={resolveStyle(style, state)}
     >

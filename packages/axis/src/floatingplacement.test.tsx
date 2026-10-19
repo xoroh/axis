@@ -327,7 +327,10 @@ describe("Tooltip compound placement default", () => {
     const host = () =>
       tree
         ?.findAllByProps({ testID: "tip-pos" })
-        .find((node) => typeof node.props.onLayout === "function");
+        .find(
+          (node: { props: { onLayout?: unknown } }) =>
+            typeof node.props.onLayout === "function",
+        );
     act(() => {
       host()?.props.onLayout({
         nativeEvent: { layout: { width: 100, height: 40 } },

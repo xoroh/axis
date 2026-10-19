@@ -3,9 +3,9 @@ import {
   DropdownMenuTrigger,
   Menubar,
   MenubarMenu,
-  NavigationMenu,
   NavigationMenuItem,
   NavigationMenuPanel,
+  NavigationMenuRoot,
   NavigationMenuTrigger,
 } from "@xoroh/axis";
 import { Text, View } from "react-native";
@@ -20,7 +20,6 @@ export const BarsDemo: Demo = {
   slug: "bars",
   title: "Bars",
   components: [
-    "NavigationMenu",
     "NavigationMenuItem",
     "NavigationMenuPanel",
     "NavigationMenuTrigger",
@@ -46,7 +45,7 @@ export const BarsDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Navigation Flyout Menu:
           </Text>
-          <NavigationMenu
+          <NavigationMenuRoot
             style={{
               padding: 6,
               borderRadius: 8,
@@ -83,7 +82,7 @@ export const BarsDemo: Demo = {
                 </Text>
               </NavigationMenuPanel>
             </NavigationMenuItem>
-          </NavigationMenu>
+          </NavigationMenuRoot>
         </View>
 
         {/* Menubar */}
