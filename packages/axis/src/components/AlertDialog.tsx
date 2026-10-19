@@ -59,6 +59,11 @@ export type AlertDialogRootProps = {
   children?: ReactNode;
 };
 
+export type AlertDialogRootState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
+
 export function AlertDialogRoot({
   open,
   defaultOpen = false,

@@ -310,7 +310,7 @@ export const OverlaysDemo: Demo = {
           </ToastProvider>
         </View>
 
-        {/* Bottom sheet (Drawer), side Drawer & AlertDialog */}
+        {/* Bottom sheet (DrawerRoot), side DrawerRoot & AlertDialogRoot */}
         <View
           style={{
             backgroundColor: theme.surface,

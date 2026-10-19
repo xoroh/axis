@@ -140,6 +140,7 @@ export {
   type AlertDialogPortalProps,
   AlertDialogRoot,
   type AlertDialogRootProps,
+  type AlertDialogRootState,
   AlertDialogTitle,
   type AlertDialogTitleProps,
   AlertDialogTrigger,

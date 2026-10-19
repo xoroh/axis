@@ -16,7 +16,8 @@ State follows the controlled + uncontrolled pattern throughout:
 uncontrolled. Structure, behavior, and accessibility only — every
 visual value (`style`) is caller-provided.
 
-Source of truth: `AlertDialogRootProps`, `AlertDialogTriggerProps`,
+Source of truth: `AlertDialogRootProps`, `AlertDialogRootState`,
+`AlertDialogTriggerProps`,
 `AlertDialogPortalProps`, `AlertDialogBackdropProps`,
 `AlertDialogPopupProps`, `AlertDialogTitleProps`,
 `AlertDialogDescriptionProps`, `AlertDialogCloseProps` in
@@ -113,6 +114,8 @@ never fire — the dialog is blocking by construction.
 | `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the popup's). |
 | `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
+
+`AlertDialogRootState`: `{ open }`.
 
 #### `AlertDialogTrigger`
 
