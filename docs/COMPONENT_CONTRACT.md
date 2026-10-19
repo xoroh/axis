@@ -26,9 +26,23 @@ conditional — a time-picker does not inherit a Switch's contract.
 
 ## 2. Naming and public exports
 
-- Component name: `PascalCase`, matching the RN ecosystem term
-  (`Switch`, `Dialog`, `Pressable`-backed `Button` only if the
-  contract's Button section exists — do not invent names).
+- Component name: `PascalCase`. The naming rule mirrors Base UI
+  anatomy (owner direction; verified against Base UI 1.9.0):
+  - (a) Where Base UI has `X.Root` with sibling parts, Axis exports
+    `XRoot` plus `X<Part>` (Base UI `Tabs.List` becomes `TabsList`),
+    and exports no bare `X` beside them: no monolith wrappers
+    (ADR 009; composites belong in Kern).
+  - (b) Where Base UI's component is bare, the Axis export is bare:
+    `Button`, `Input`, `Toggle`, `ToggleGroup` (its items are
+    `Toggle`), `RadioGroup` (its items are `RadioRoot` and
+    `RadioIndicator`, as in Base UI `Radio.*`), `CheckboxGroup`,
+    `Separator`, `Menubar`.
+  - (c) A compound family with no Base UI counterpart
+    (`DropdownMenu`, `ContextMenu` where it applies, `Table`,
+    `Overlay`) follows (a).
+  - Types follow their component: `XRootProps` and `XRootState`
+    (single-part states keep the component name: `ToggleState`,
+    `ButtonState`).
 - Two public entries, not one package split: the package `.`
   barrel (everything) and the `./models` subpath (behavior
   models and hooks only — no `react-native` in its transitive

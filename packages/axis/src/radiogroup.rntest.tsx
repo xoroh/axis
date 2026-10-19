@@ -267,9 +267,9 @@ describe("RadioGroup on React Native", () => {
     expect(hidden["aria-hidden"]).toBe(true);
     await press("s");
     // Checked: visible and exposed again.
-    expect(
-      screen.getByTestId("s-mark").props.accessibilityElementsHidden,
-    ).toBe(false);
+    expect(screen.getByTestId("s-mark").props.accessibilityElementsHidden).toBe(
+      false,
+    );
   });
 
   it("indicator function render observes checked state", async () => {

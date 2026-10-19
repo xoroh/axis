@@ -1,7 +1,7 @@
 ## Radio Group
 
 Single-select group: a `View` carrying the radiogroup role, with
-`RadioGroupItem` pressables carrying the radio role and checked
+`RadioRoot` pressables carrying the radio role and checked
 state. Selection is single-select and replacing: activating the
 selected item keeps it (never deselects to `null`), per the
 selection-model rule — unlike `CheckboxGroup`, where
@@ -12,8 +12,8 @@ follows the controlled + uncontrolled pattern throughout:
 `defaultValue` for uncontrolled.
 
 Source of truth: `RadioGroupProps`, `RadioGroupState`,
-`RadioGroupItemProps`, `RadioGroupItemState` in `@xoroh/axis`
-(`packages/axis/src/components/RadioGroup.tsx:28-85`).
+`RadioRootProps`, `RadioRootState` in `@xoroh/axis`
+(`packages/axis/src/components/RadioGroup.tsx:30-112`).
 
 ### Install
 
@@ -41,7 +41,8 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
 | `RadioGroup` | `Radio.Group` | State owner (`value`/`defaultValue`/`onValueChange`, terminal `disabled`); radiogroup role. |
-| `RadioGroupItem` | `Radio.Item` | Radio option (`value` required, replaces on select); radio role with checked state. No Indicator part (the `Checkbox` precedent — parity gaps table). |
+| `RadioRoot` | `Radio.Root` | Radio option (`value` required, replaces on select); radio role with checked state. Composes a caller-provided `RadioIndicator` that mounts while checked. |
+| `RadioIndicator` | `Radio.Indicator` | Selected mark; mounts while the enclosing item is checked, or always with `keepMounted` (mounted-but-hidden, `{ checked: false }`). |
 
 Outside a group, items render unchecked and inert — they must
 render inside a `RadioGroup` to participate in selection.
@@ -60,13 +61,13 @@ render inside a `RadioGroup` to participate in selection.
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<RadioGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
-| `children` | `ReactNode` | yes | — | The group's items (`RadioGroupItem`). |
+| `children` | `ReactNode` | yes | — | The group's items (`RadioRoot`). |
 | `render` | `RenderProp<RadioGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root host element. |
 
 `RadioGroupState`: `{ value: string | null; disabled: boolean; readOnly: boolean }` — currently selected item value (`null` for none), whether the whole group is disabled, and whether it is read-only.
 
-#### `RadioGroupItem`
+#### `RadioRoot`
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -75,11 +76,23 @@ render inside a `RadioGroup` to participate in selection.
 | `readOnly` | `boolean` | no | `false` | Read-only for this item only: focusable and announced like an enabled option, but it never selects. OR'ed with the group's `readOnly` (either freezes it). |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
-| `style` | `StateStyle<RadioGroupItemState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
+| `style` | `StateStyle<RadioRootState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
 | `children` | `ReactNode` | no | — | Item content (label + caller-styled selected mark). |
-| `render` | `RenderProp<RadioGroupItemState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<RadioRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
-`RadioGroupItemState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` — whether this item is currently checked or disabled, and whether it is read-only (own flag OR group `readOnly`; selections do not change either way). A read-only item stays focusable and announces the normal option state.
+`RadioRootState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` — whether this item is currently checked or disabled, and whether it is read-only (own flag OR group `readOnly`; selections do not change either way). A read-only item stays focusable and announces the normal option state.
+
+#### `RadioIndicator`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Indicator content. Mounts while the radio is checked (or always with `keepMounted`). |
+| `keepMounted` | `boolean` | no | `false` | When `true`, the indicator stays mounted while the radio is unchecked: mounted but hidden from assistive tech, with `{ checked: false }` state. |
+| `style` | `StyleProp<ViewStyle>` | no | — | Indicator style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<RadioIndicatorState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+`RadioIndicatorState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }`. Outside a `RadioRoot` the indicator never mounts (the `CheckboxIndicator` precedent).
 
 ### Examples
 
@@ -88,17 +101,23 @@ it — never deselects to `null`):
 
 ```tsx
 import { Text } from "react-native";
-import { RadioGroup, RadioGroupItem } from "@xoroh/axis";
+import { RadioGroup, RadioIndicator, RadioRoot } from "@xoroh/axis";
 
 function Sizes() {
   return (
     <RadioGroup accessibilityLabel="Size">
-      <RadioGroupItem value="s">
+      <RadioRoot value="s">
+        <RadioIndicator>
+          <Text>●</Text>
+        </RadioIndicator>
         <Text>Small</Text>
-      </RadioGroupItem>
-      <RadioGroupItem value="m">
+      </RadioRoot>
+      <RadioRoot value="m">
+        <RadioIndicator>
+          <Text>●</Text>
+        </RadioIndicator>
         <Text>Medium</Text>
-      </RadioGroupItem>
+      </RadioRoot>
     </RadioGroup>
   );
 }
@@ -109,7 +128,7 @@ Controlled with function style over item state:
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { RadioGroup, RadioGroupItem } from "@xoroh/axis";
+import { RadioGroup, RadioRoot } from "@xoroh/axis";
 
 function ControlledSizes() {
   const [value, setValue] = useState<string | null>(null);
@@ -119,12 +138,12 @@ function ControlledSizes() {
       onValueChange={setValue}
       accessibilityLabel="Size"
     >
-      <RadioGroupItem
+      <RadioRoot
         value="s"
         style={(state) => ({ opacity: state.checked ? 1 : 0.5 })}
       >
         <Text>Small</Text>
-      </RadioGroupItem>
+      </RadioRoot>
     </RadioGroup>
   );
 }

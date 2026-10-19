@@ -1,13 +1,13 @@
 ## Toast
 
-Transient notification with timed auto-dismiss. A single `Toast`
+Transient notification with timed auto-dismiss. A single `ToastRoot`
 renders `null` when closed and a polite live region when open; an
 app-level queue (`ToastProvider` + `useToast` + `ToastViewport`)
 adds toasts from anywhere and paints them oldest-first. No default
 visuals — every visual value (`style`) is caller-provided. No
 animation: presence is binary.
 
-Source of truth: `ToastProps`, `ToastViewportProps`, `ToastOptions`,
+Source of truth: `ToastRootProps`, `ToastViewportProps`, `ToastOptions`,
 `ToastManager` in `@xoroh/axis`.
 
 ### Install
@@ -37,8 +37,8 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | --- | --- | --- |
 | `ToastProvider` | `Toast.Provider` | Owns the queue; renders no element. |
 | `useToast()` | `toast.add()` | Adds, dismisses, and clears queued toasts from anywhere under the provider. |
-| `ToastViewport` | `Toast.Viewport` | Paints one single-shot `Toast` per queued id, oldest-first. |
-| `Toast` | `Toast.Root` | One notification: message, optional action, timed auto-dismiss. |
+| `ToastViewport` | `Toast.Viewport` | Paints one single-shot `ToastRoot` per queued id, oldest-first. |
+| `ToastRoot` | `Toast.Root` | One notification: message, optional action, timed auto-dismiss. |
 
 Base UI's separate `Title`/`Description`/`Action`/`Close` parts are
 mapped, not mirrored: `children` composes the title/description
@@ -49,7 +49,7 @@ the two.
 
 ### Props
 
-#### `Toast` (single notification)
+#### `ToastRoot` (single notification)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -61,12 +61,12 @@ the two.
 | `actionLabel` | `string` | no | — | Action button label. The action button renders only when this is provided — no label, no action button. |
 | `onAction` | `() => void` | no | — | Fires when the action button is pressed; the toast dismisses as part of the same press. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the toast surface. |
-| `style` | `StateStyle<ToastState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of toast state. |
+| `style` | `StateStyle<ToastRootState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of toast state. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the surface. |
-| `render` | `RenderProp<ToastState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<ToastRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the toast surface `View`. |
 
-`ToastState`: `{ open: boolean }`.
+`ToastRootState`: `{ open: boolean }`.
 
 #### `ToastProvider`
 
@@ -90,7 +90,7 @@ manager with no queue would silently drop toasts):
 
 `ToastOptions` (the `add` payload):
 
-| Field | Type | Required | Default | Behavior |
+| FieldRoot | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `message` | `ReactNode` | yes | — | Message content rendered inside the queued toast. |
 | `actionLabel` | `string` | no | — | Action button label. No label, no action button. |
@@ -119,7 +119,7 @@ Single toast, controlled by the parent, with an action:
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Button, Toast } from "@xoroh/axis";
+import { Button, ToastRoot } from "@xoroh/axis";
 
 function SavedNotice() {
   const [open, setOpen] = useState(false);
@@ -128,7 +128,7 @@ function SavedNotice() {
       <Button accessibilityLabel="Save" onPress={() => setOpen(true)}>
         <Text>Save</Text>
       </Button>
-      <Toast
+      <ToastRoot
         open={open}
         onOpenChange={setOpen}
         duration={4000}
@@ -137,7 +137,7 @@ function SavedNotice() {
         style={{ padding: 12, flexDirection: "row", gap: 8 }}
       >
         Saved
-      </Toast>
+      </ToastRoot>
     </>
   );
 }
@@ -147,13 +147,13 @@ Single toast, uncontrolled with the timer disabled (`duration={0}`
 keeps it until the parent hides it or the action fires):
 
 ```tsx
-import { Toast } from "@xoroh/axis";
+import { ToastRoot } from "@xoroh/axis";
 
 function PersistentHint() {
   return (
-    <Toast defaultOpen duration={0} accessibilityLabel="Hint">
+    <ToastRoot defaultOpen duration={0} accessibilityLabel="Hint">
       Press and hold any row for options
-    </Toast>
+    </ToastRoot>
   );
 }
 ```
@@ -203,12 +203,12 @@ function CopyButton() {
 
 ### Composition
 
-`Toast` and `ToastViewport` take `render` (an element, cloned with
+`ToastRoot` and `ToastViewport` take `render` (an element, cloned with
 the part props merged under its own, or a `(props, state)` function)
 and state-driven `style` over `{ open }` / `{ count }`;
 `data-*` attributes are deliberately absent on native — state flows
 through those functions instead (contract §11, parity D1). The
 provider/queue/viewport mapping, the omitted `Title`/`Description`/
 `Close`/`Action` parts, and the no-animation deviation are recorded
-in `docs/BASE_UI_PARITY.md` (§ Toast — aligned). Verified by the
+in `docs/BASE_UI_PARITY.md` (§ ToastRoot — aligned). Verified by the
 toast RNTL suites (single-shot + queue — `docs/COVERAGE.md`).

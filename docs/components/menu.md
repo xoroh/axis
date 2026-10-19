@@ -6,13 +6,12 @@ close), submenus cascade, and an optional filter query narrows the
 list. Structure, behavior, and accessibility only — every visual
 value (`style`) is caller-provided. State follows the controlled +
 uncontrolled pattern throughout: `open` (plus `onOpenChange`) for
-controlled use, `defaultOpen` for uncontrolled. Two APIs ship side
-by side: the concise single-part `Menu` (trigger zone + `MenuItem`
-elements partitioned by type, always inline) and the compound
-parts below, which mirror Base UI's Menu anatomy with the same
-names and state semantics.
+controlled use, `defaultOpen` for uncontrolled. The compound
+parts below mirror Base UI's Menu anatomy with the same names and
+state semantics (the concise single-part `Menu` is removed —
+naming rule, contract §2; migration in CHANGELOG).
 
-Source of truth: `MenuProps`, `MenuTriggerProps`,
+Source of truth: `MenuTriggerProps`,
 `MenuTriggerState`, `MenuItemProps`, `MenuItemState`,
 `MenuRootProps`, `MenuRootState`, `MenuBackdropProps`,
 `MenuBackdropState`, `MenuPositionerProps`,
@@ -53,7 +52,6 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Menu` | — | Concise inline API (trigger zone + `MenuItem` elements partitioned by type, always in-box); kept for existing consumers, not a Base UI part. |
 | `MenuRoot` | `Menu.Root` | State owner (`open`/`onOpenChange`/`onDismiss`, `modal`, filter query); renders no element. Wraps an `OverlayRoot` so back, stacking, dismissal, and focus belong to one owner. |
 | `MenuTrigger` | `Menu.Trigger` | Button role, expanded state, tap toggles, anchor-registering. |
 | `MenuPortal` | `Menu.Portal` | `OverlayPortal` host when modal — the menu escapes clipped parents; plain in-box `View` when non-modal. |
@@ -83,9 +81,8 @@ oversights: no `Portal` `container`/`keepMounted` (D2/D3), no
 `data-*` attributes (D1), no transition attributes (D9), no hover
 or keyboard traversal (D8 — touch has no hover; the press IS the
 highlight) — all recorded in `docs/BASE_UI_PARITY.md` (§ Menu —
-aligned). Filtering composes on compound roots only: the
-monolith partitions children by type with no filter composition
-point, so filter parts render nothing there. Submenus also wrap
+aligned). Filter parts read the root query (nothing renders
+outside a root). Submenus also wrap
 `DropdownMenuSub` inside `DropdownMenu` (see
 `docs/components/dropdown-menu.md`).
 
@@ -109,22 +106,6 @@ this stack: scrim and box render inline, as siblings inside the
 menu container, like the `Select` monolith.
 
 ### Props
-
-#### `Menu` (concise inline API)
-
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
-| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismissal. |
-| `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
-| `placement` | `Placement` | no | — | Preferred side for the content box (the `resolveFloatingRect` fallback). Clamped into the viewport. |
-| `testID` | `string` | no | — | Test identifier; the content box carries it, the scrim carries `<testID>-scrim`. |
-| `style` | `StyleProp<ViewStyle>` | no | — | Menu content box style, caller-provided. |
-| `children` | `ReactNode` | yes | — | Trigger content plus `MenuItem` elements, composed by the caller. `MenuItem` elements mount in the box (only while open); everything else is trigger-zone content, always rendered. Bare-element trigger children get toggle composed onto their `onPress`. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the menu container `View`. |
-
-Closed renders the trigger zone only — no scrim, no box.
 
 #### `MenuRoot` (state owner)
 
@@ -421,21 +402,23 @@ whole stack (nested-dismiss).
 
 ### Examples
 
-Minimal monolith, uncontrolled:
+Minimal compound menu, uncontrolled:
 
 ```tsx
 import { Text } from "react-native";
-import { Menu, MenuItem } from "@xoroh/axis";
+import { MenuItem, MenuRoot, MenuTrigger } from "@xoroh/axis";
 
 function Actions() {
   return (
-    <Menu>
-      <Text>Open</Text>
+    <MenuRoot>
+      <MenuTrigger accessibilityLabel="Open actions menu">
+        <Text>Open</Text>
+      </MenuTrigger>
       <MenuItem value="new" testID="action-new">
         New
       </MenuItem>
       <MenuItem value="open">Open</MenuItem>
-    </Menu>
+    </MenuRoot>
   );
 }
 ```
@@ -445,17 +428,19 @@ Controlled with selection handling:
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Menu, MenuItem } from "@xoroh/axis";
+import { MenuItem, MenuRoot, MenuTrigger } from "@xoroh/axis";
 
 function ControlledActions() {
   const [open, setOpen] = useState(false);
   return (
-    <Menu open={open} onOpenChange={setOpen}>
-      <Text>Open</Text>
+    <MenuRoot open={open} onOpenChange={setOpen}>
+      <MenuTrigger accessibilityLabel="Open actions menu">
+        <Text>Open</Text>
+      </MenuTrigger>
       <MenuItem value="new" onSelect={(value) => console.log(value)}>
         New
       </MenuItem>
-    </Menu>
+    </MenuRoot>
   );
 }
 ```

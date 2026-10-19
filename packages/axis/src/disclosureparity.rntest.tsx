@@ -31,7 +31,6 @@ import {
   NavigationMenuTrigger,
   PortalHost,
   RadioGroup,
-  RadioIndicator,
   RadioRoot,
   SelectItem,
   SelectRoot,

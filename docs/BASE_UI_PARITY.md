@@ -24,14 +24,15 @@ see contract §11):
 | D7 | No `createHandle` detached triggers | Needs an imperative registry owner; payload patterns unneeded pre-1.0. |
 | D8 | No hover or keyboard traversal on menus/popups | No touch equivalent; `roving`/`collection` unadopted for these families (contract's conditional-keyboard rule). |
 | D9 | No animation states (`transitionStatus`, starting/ending styles) | Surfaces mount/unmount synchronously (Accordion-panel precedent); `presence`-driven transitions wait for a consumer. |
-| D10 | No `Modal`/`portal` host on inline monoliths | Monolith menus paint inside the parent's box; painting outside it is the compound `Portal` parts' job (`OverlayPortal` at `PortalHost` when modal) — the Portal model they build on. |
+| D10 | No `Modal`/`portal` host on inline (non-modal) menus | Non-modal menus paint inside the parent's box; painting outside it is the compound `Portal` parts' job (`OverlayPortal` at `PortalHost` when modal) — the Portal model they build on. |
 
 ## Per-component parity
 
 Status key: `aligned` (parts + props + composition recorded below)
-· `pending` (not yet migrated). Single-part APIs stay where they
-ship; alignment adds the compound anatomy, never removes the
-concise form pre-1.0.
+· `pending` (not yet migrated). Where a compound Root plus parts
+exists, the concise single-part API is removed (naming rule,
+contract §2 — migration in CHANGELOG); single-part families with no
+Base UI compound stay as they ship.
 
 ### Universal composition (this pass)
 
@@ -67,12 +68,13 @@ Popup, Title, Description, Close.
 | `DialogRoot` | `Dialog.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `modal` accepted, `"trap-focus"` behaves as modal (D5); no `handle`, `triggerId`, `actionsRef`, `onOpenChangeComplete` (D7 and no-transition consequences of D9) |
 | `DialogTrigger` | `Dialog.Trigger` | button role, `disabled`, `render`, expanded state | `nativeButton`/`payload`/`id`/`handle` omitted (D7); `data-popup-open`/`data-disabled` → D1 (state flows through `render`/`style` fns) |
 | `DialogPortal` | `Dialog.Portal` | `OverlayPortal` at `PortalHost`, `testID` (Axis addition) | D2, D3 |
-| `DialogBackdrop` | `Dialog.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root (ours aggregates it there; monolith spells it `dismissable`); `data-open/closed` → D1; no transition attributes (D9) |
+| `DialogBackdrop` | `Dialog.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root (the removed monolith spelled it `dismissable`); `data-open/closed` → D1; no transition attributes (D9) |
 | `DialogPopup` | `Dialog.Popup` | surface with dialog role, `render`, function styles | D4, D5, D9 |
 | `DialogTitle` | `Dialog.Title` | heading text (`header` role) | — |
 | `DialogDescription` | `Dialog.Description` | descriptive text | — |
 | `DialogClose` | `Dialog.Close` | closes root, `disabled`, `render` with `{disabled}` | `nativeButton` omitted (RN presses are native by construction); `data-disabled` → D1 |
-| `Dialog` (monolith) | — | Concise single-part API retained: `open`/`defaultOpen`/`onOpenChange`/`onDismiss`/`dismissable`/`title`/`actions`/styles | Not a Base UI part; kept for existing consumers, documented alongside the compound form |
+
+The old `Dialog` monolith (`dismissable`, `title`, `actions`) is removed (no Base UI monolith — ADR 001, ADR 011; migration in CHANGELOG).
 
 ### Menu — aligned
 
@@ -84,7 +86,7 @@ FilterProvider filtering).
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `MenuRoot` | `Menu.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `onDismiss` (Axis extension, consistent with the monolith); no `modal` — compound menus always present a Backdrop (non-modal variant deferred: outside-press detection without a scrim needs press-capture that would hijack app touches) |
+| `MenuRoot` | `Menu.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `onDismiss` (Axis extension); `modal={false}` presents through the plain `Portal` with no Backdrop (documented limitation: outside-press detection without a scrim needs press-capture that would hijack app touches) |
 | `MenuTrigger` | `Menu.Trigger` | button role, `disabled`, `render`, expanded state; registers the positioner anchor | `openOnHover` omitted (D8 — no touch equivalent); `data-popup-open`/`data-disabled` → D1 |
 | `MenuPortal` | `Menu.Portal` | `OverlayPortal` at `PortalHost` when modal, in-box `View` otherwise | D2 (no `container`) |
 | `MenuBackdrop` | `Menu.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root; `data-open/closed` → D1; no transition attributes (D9) |
@@ -96,7 +98,7 @@ FilterProvider filtering).
 | `MenuLinkItem` | `Menu.LinkItem` | link-role item, same select/click/close sequence (shared hook, no duplicated logic) | No `href` (no URL handling on native — navigation is caller behavior) |
 | `MenuArrow` | `Menu.Arrow` | caller-positioned marker | Geometry is caller style (no anchor/popup measurement coupling in the part) |
 | `modal={false}` on Root | non-modal menus | in-box portal, no scrim, trigger toggles | Outside-press without a scrim reaches the app (press-capture would hijack touches) |
-| `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
+The old `Menu` monolith (trigger zone + in-box scrim + partitioned children) is removed (no Base UI monolith — ADR 001, ADR 011; migration in CHANGELOG).
 | Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Aligned this slice:** `MenuCheckboxItem` (+`Indicator`), `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`) with controlled-state APIs; checkbox items stay open by default (`closeOnClick` default `false`), radio items close. **Filter parts added:** `MenuRoot` owns the query (`filterValue`/`defaultFilterValue`/`onFilterChange`) with `MenuInput` (entry), `MenuClear` (resets; disabled when empty), `MenuEmpty` (renders on zero visible matches); items publish `filterText` (Axis addition — Base UI's Menu has no filter parts) through the `collection` registry, and `MenuEmpty` counts the same rule items hide by. Compound roots only. | No `FilterProvider` (the Root owns the query directly — a provider with no other state is chrome) |
 | Submenu parts (`MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent`) | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger`, `Menu.SubmenuContent` | Nested disclosure cascade over `MenuSubContext` inside `MenuRoot`, or thin wrapper around `DropdownMenuSub` within `DropdownMenu`. Verified with open/close and nested-dismiss tests. | Hover open/close omitted (D8 — touch-driven trigger). |
 
@@ -107,7 +109,8 @@ Base UI `Switch`: root + thumb parts with
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Switch` | `Switch.Root` + `Switch.Thumb` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, `readOnly` (focusable, announced as enabled, presses change nothing — RN maps no readonly key, so the announcement is the normal switch state), label association, `ref`; switch role with `checked` state; `render` + function `style` over `{ checked, disabled, readOnly }` | Single-part API (no Root/Thumb split — track/thumb are caller styles, not parts); no `required`/`name`/`value`/`form` (no `Form` owner); `data-checked`/`data-disabled` → D1 |
+| `SwitchRoot` | `Switch.Root` | `checked`, `defaultChecked`, `onCheckedChange` identical (critic decision 2026-10-16); `disabled`, `readOnly` (focusable, announced as enabled, presses change nothing — RN maps no readonly key, so the announcement is the normal switch state), label association, `ref`; switch role with `checked` state; `render` + function `style` over `{ checked, disabled, readOnly }`; renders an optional caller `children` slot after the default track row | Default track/thumb chrome retained (naming migration keeps behavior — full chrome split belongs to a later slice); no `required`/`name`/`value`/`form` (no `Form` owner); `data-checked`/`data-disabled` → D1 |
+| `SwitchThumb` | `Switch.Thumb` | mounts under a `SwitchRoot`, reads `{ checked, disabled, readOnly }` for function styles; `render`; outside a root renders a plain `View` with default state | Caller-composed (the root keeps its default track row) |
 
 ### Checkbox — aligned
 
@@ -125,7 +128,7 @@ Base UI `Toggle`: `pressed`/`defaultPressed`/`onPressedChange`.
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`); `render` + function `style` over `{ pressed, disabled }` | `data-pressed`/`data-disabled` → D1 |
+| `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`); `render` + function `style` over `{ pressed, disabled }`; with `value` inside a `ToggleGroup` the group owns pressed state (activation toggles membership) | `data-pressed`/`data-disabled` → D1; without `value` (or outside a group) the toggle is standalone |
 
 ### Toggle Group — aligned
 
@@ -135,8 +138,9 @@ with `multiple` (default `false`) and `orientation` (default
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `ToggleGroup` | `ToggleGroup` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false` — single replaces, multi accumulates), `orientation` (default `'horizontal'`, structural `flexDirection` base), `disabled`, `ref`; group role; state carries `{ value, disabled, multiple, orientation }` | No `loopFocus` (no roving layer — the `Toolbar` precedent); `data-*` → D1 |
-| `ToggleGroupItem` | (composed `Toggle`) | button role, pressed state, per-item `disabled`; pressed announced through `selected`, never `checked` (RN maps no `pressed` key; `checked` stays reserved for checkbox/radio/switch commitments — the `Toggle` precedent) | Axis keeps the Item part (Base UI composes bare `Toggle`s — the Item carries Axis group wiring and terminal-disabled) |
+| `ToggleGroup` | `ToggleGroup` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false` — single replaces, multi accumulates), `orientation` (default `'horizontal'`, structural `flexDirection` base), `disabled`, `ref`; group role; state carries `{ value, disabled, multiple, orientation }`; items are `Toggle` with `value` (pressed from membership, per-item `disabled` OR'ed with group `disabled`; a `Toggle` without `value` stays standalone) | No `loopFocus` (no roving layer — the `Toolbar` precedent); `data-*` → D1 |
+
+The old `ToggleGroupItem` is removed (naming rule — Base UI composes bare `Toggle`s; migration in CHANGELOG).
 
 ### Accordion — aligned
 
@@ -199,7 +203,8 @@ Popup, Arrow, Title, Description, Close.
 | `PopoverDescription` | `Popover.Description` | descriptive text | — |
 | `PopoverClose` | `Popover.Close` | closes root, `disabled`, `render` | `data-disabled` → D1 |
 | `PopoverArrow` | `Popover.Arrow` | caller-positioned marker | Geometry is caller style |
-| `Popover` (monolith) | — | Concise inline API retained (anchor + in-box scrim + measured box) | Not a Base UI part; always non-modal inline by design |
+
+The old `Popover` monolith (anchor + content props) is removed (no Base UI monolith — ADR 001, ADR 011; migration in CHANGELOG).
 
 ### Select — aligned
 
@@ -223,7 +228,8 @@ Separator.
 | `SelectItemIndicator` | `Select.ItemIndicator` | renders only while selected | no `keepMounted` (D3 — untestable keep-alive) |
 | `SelectGroup` + `SelectGroupLabel` | `Select.Group` + `Select.GroupLabel` | group container + label text | — |
 | `SelectSeparator` | `Select.Separator` | silent divider | orientation is caller style (horizontal by construction) |
-| `Select` (monolith) | — | Concise single-part API retained (trigger + in-box scrim + positioned list, labels read from its own children) | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
+
+The old `Select` monolith (trigger + scrim + list, `placeholder`, `listStyle`) is removed (no Base UI monolith — ADR 001, ADR 011; migration in CHANGELOG).
 | Omitted | `Select.Label` | — | trigger `accessibilityLabel` (or the Axis `Label` component) names the control |
 | Omitted | `Select.Icon` | — | caller content inside `SelectTrigger` |
 | Omitted | `Select.ScrollUpArrow`, `Select.ScrollDownArrow` | — | hover-scroll chrome Base UI itself hides on touch input |
@@ -253,7 +259,8 @@ Popup, Arrow.
 | `TooltipPositioner` | `Tooltip.Positioner` | `side` (default `"top"`), `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | No `Arrow` coupling (arrow geometry is caller style) |
 | `TooltipPopup` | `Tooltip.Popup` | tip with tooltip role, `render`, function styles, `ref` | `data-*` → D1; no transition attributes (D9) |
 | `TooltipArrow` | `Tooltip.Arrow` | caller-positioned marker | Geometry is caller style |
-| `Tooltip` (monolith) | — | Concise single-part API retained (anchor + long-press toggle + measured tip); gains `delayLongPress` | Not a Base UI part; in-box tip by design |
+
+The old `Tooltip` monolith (anchor + content props) is removed (no Base UI monolith — ADR 001, ADR 011; migration in CHANGELOG).
 
 ### P1 asks from `.reports/kern-needs-from-axis.md`
 
@@ -278,7 +285,7 @@ Viewport + `toast.add()` object API.
 | `ToastProvider` | `Toast.Provider` | queue owner, renders no element | Payloads are caller `ToastOptions` (`message`, `actionLabel`, `onAction`, `duration`) held beside the shared `toastQueue` model |
 | `useToast` | `toast.add()` | `add(options): id`, `dismiss(id)`, `clear()`; throws outside the provider instead of dropping toasts | Hook form (no ambient singleton on native) |
 | `ToastViewport` | `Toast.Viewport` | paints one single-shot `Toast` per queued id, oldest-first, optional `limit`; `render` + function `style` over `{ count }` | In-box container (no positioning work — chrome); over-limit toasts stay queued but unpainted |
-| `Toast` (monolith) | `Toast.Root` | `open`/`defaultOpen`/`onOpenChange`/`duration`/`actionLabel`/`onAction`; `render` + function `style` over `{ open }` | No separate `Title`/`Description` parts — the message is caller text in a polite live region; timed auto-dismiss is the `Close`. M3 Snackbar stays separate in Kern |
+| `ToastRoot` | `Toast.Root` | `open`/`defaultOpen`/`onOpenChange`/`duration`/`actionLabel`/`onAction`; `render` + function `style` over `{ open }` | No separate `Title`/`Description` parts — the message is caller text in a polite live region; timed auto-dismiss is the `Close`. M3 Snackbar stays separate in Kern |
 
 ### Portal — aligned (standalone host)
 
@@ -314,17 +321,17 @@ named reason (not oversight):
 | Accordion | compound Root/Item/Header/Trigger/Panel landed (parity-1); `hiddenUntilFound` N/A on native, no `loopFocus` (no roving layer) | Done |
 | AlertDialog | rebuilt on the compound `Dialog` parts this pass (was monolith-only) | — |
 | Autocomplete | no `Input`/`Portal`/`List`/`Row`/`Empty`/`Status` parts | `collection` transfer has landed (row registration available); wiring is pending |
-| Checkbox Group / Radio Group / Toggle Group | Root + Item only (no Indicator parts) | Indicator is caller style, not a part (Checkbox precedent). ToggleGroup `multiple`/`orientation` landed (parity-1); pressed announces `selected` (RN maps no `pressed` key) |
+| Checkbox Group / Radio Group / Toggle Group | `CheckboxRoot` + `CheckboxIndicator`, `RadioGroup` + `RadioRoot` + `RadioIndicator`, `ToggleGroup` + joined `Toggle` (naming rule) | Indicator is caller style, not a part (Checkbox precedent). ToggleGroup `multiple`/`orientation` landed (parity-1); pressed announces `selected` (RN maps no `pressed` key) |
 | Collapsible | Root/Trigger/Panel present; composition added this pass | — |
 | Combobox / Autocomplete | no compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`) | `collection` transfer has landed and is consumed (menu filter parts, select lookup, combobox filtering); wiring `Combobox`/`Autocomplete` rows onto it is pending |
-| Context Menu | monolith (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
-| Field / Fieldset | no `Control`/`Description`/`Validity`/`Legend` parts | Validity is caller state (`error`); control wiring deferred until a consumer demonstrates the need |
-| Meter / Progress | Meter compound Root/Track/Indicator/Label/Value landed (parity-1); no `Intl` formatting props (`aria-valuetext`/`getAriaValueText`/`locale`/`format` — caller formats through `MeterValue` function children) | Fill is data-driven width under caller style. Progress indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
+| Context Menu | `ContextMenuRoot` only (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
+| Field / Fieldset | `FieldRoot` + `FieldLabel`/`FieldControl`/`FieldDescription`/`FieldError` and `FieldsetRoot` + `FieldsetLegend` landed (naming rule); no `Validity`/`Item` parts | Validity is caller state (`error`); full validity + control wiring belongs to the Form/Field behaviour lane |
+| Meter / Progress | Meter compound landed (parity-1); Progress compound `ProgressRoot` + `ProgressTrack`/`ProgressIndicator`/`ProgressLabel`/`ProgressValue` landed (naming rule — value math shared with the root bar); no `Intl` formatting props (`aria-valuetext`/`getAriaValueText`/`locale`/`format` — caller formats through `MeterValue` function children) | Fill is data-driven width under caller style. Progress indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
 | Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
 | OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
-| Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
-| Tabs | no `Indicator` | Indicator geometry is caller style |
-| Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
+| Slider | single part (no `Track`/`Thumb` parts — untouched by the naming rule) | Track/thumb are caller styles, not parts (Switch precedent) |
+| Tabs | `TabsRoot` + `TabsList`/`TabsTrigger`/`TabsPanel` (naming rule); no `Indicator` | Indicator geometry is caller style |
+| Dropdown Menu / Menubar / Navigation Menu | `DropdownMenuRoot`, `NavigationMenuRoot` (naming rule); Axis cascade/bar APIs (not Base part names) | `DropdownMenuRoot` IS the submenu pattern (parity record: mapped, not duplicated) |
 | Date/time entry | no Axis component (removed by ADR 012) | `calendar` model (grid, roving keys, min/max + `isDateDisabled`, single + range selection, locale, `firstDayOfWeek`, dir) and `time` model (`TimePickerValue`/`TimePickerFormat` stay exported) carry the behavior; composition added this pass for the remaining families. |
 | Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
 

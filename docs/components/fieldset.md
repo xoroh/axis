@@ -7,8 +7,9 @@ is read as text. Validation and disabled-group semantics belong
 to the caller, never here. Stateless: no open state, no
 `useControllableState`.
 
-Source of truth: `FieldsetProps` in `@xoroh/axis`
-(`packages/axis/src/components/Fieldset.tsx:21-40`).
+Source of truth: `FieldsetRootProps`, `FieldsetLegendProps` in
+`@xoroh/axis`
+(`packages/axis/src/components/Fieldset.tsx:21-54`).
 
 ### Install
 
@@ -35,11 +36,12 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Fieldset` | — | The whole API: legend + grouped fields. No Base UI counterpart (see `Field` for the label/control/error row). |
+| `FieldsetRoot` | `Fieldset.Root` | The group container: legend plus grouped fields. |
+| `FieldsetLegend` | `Fieldset.Legend` | Static legend text; renders anywhere. |
 
 ### Props
 
-#### `Fieldset` (single-part API)
+#### `FieldsetRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -53,20 +55,29 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 All props optional. The group carries no state.
 
+#### `FieldsetLegend`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Legend content. |
+| `style` | `StyleProp<TextStyle>` | no | — | Legend text style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
 ### Examples
 
 Address block with a legend:
 
 ```tsx
 import { Text } from "react-native";
-import { Fieldset, Input } from "@xoroh/axis";
+import { FieldsetRoot, Input } from "@xoroh/axis";
 
 function Address() {
   return (
-    <Fieldset legend="Address">
+    <FieldsetRoot legend="Address">
       <Input placeholder="Street" accessibilityLabel="Street" />
       <Input placeholder="City" accessibilityLabel="City" />
-    </Fieldset>
+    </FieldsetRoot>
   );
 }
 ```
@@ -76,17 +87,16 @@ caller-provided):
 
 ```tsx
 import { Text } from "react-native";
-import { Fieldset } from "@xoroh/axis";
+import { FieldsetLegend, FieldsetRoot } from "@xoroh/axis";
 
 function Preferences() {
   return (
-    <Fieldset
-      legend="Notifications"
-      style={{ gap: 8 }}
-      legendStyle={{ fontWeight: "bold" }}
-    >
+    <FieldsetRoot style={{ gap: 8 }}>
+      <FieldsetLegend style={{ fontWeight: "bold" }}>
+        Notifications
+      </FieldsetLegend>
       <Text>Email me weekly</Text>
-    </Fieldset>
+    </FieldsetRoot>
   );
 }
 ```
@@ -103,7 +113,7 @@ function Preferences() {
 
 ### Composition
 
-`Fieldset` takes `render` (an element, cloned with the part
+`FieldsetRoot` takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function with
 an empty state object); `style` and `legendStyle` stay static
 (the group carries no state — the `DialogTitle` precedent).

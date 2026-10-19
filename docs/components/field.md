@@ -6,7 +6,7 @@ validation logic lives here — validity is caller state, expressed
 by passing `error`. The control is plain composition (`children`),
 so any Axis input or the caller's own element slots in.
 
-Source of truth: `FieldProps`, `FieldState` in `@xoroh/axis`.
+Source of truth: `FieldRootProps`, `FieldRootState` in `@xoroh/axis`.
 
 ### Install
 
@@ -31,16 +31,19 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 ### Anatomy
 
-`Field` is a single part — it has no Base UI compound split:
-
 | Axis part | Base UI counterpart | Role |
 | --- | --- | --- |
-| `Field` | `Field.Root` (approximate) | Container view: label `Text`, the caller's control, error `Text`. |
+| `FieldRoot` | `Field.Root` | Container view: optional label `Text`, the caller's control, optional error `Text`. Owns the `invalid` state (`error !== undefined`). |
+| `FieldLabel` | `Field.Label` | Static label text; renders anywhere. |
+| `FieldControl` | `Field.Control` | Wrapper for the control element; renders anywhere. |
+| `FieldDescription` | `Field.Description` | Static description text; renders anywhere. |
+| `FieldError` | `Field.Error` | Error text; renders only while the root is invalid, and never outside a root. |
 
-Base UI's `Control`/`Description`/`Validity` parts are documented
-deviations, not oversights: validity is caller state (`error`), and
-control-id wiring beyond plain composition is deferred until a
-consumer demonstrates the need (`docs/BASE_UI_PARITY.md`).
+Base UI's `Validity`/`Item` parts are documented deviations, not
+oversights: validity is caller state (`error`), and control-id
+wiring beyond plain composition is deferred until a consumer
+demonstrates the need — full validity + control wiring belongs to
+the Form/Field behaviour lane (`docs/BASE_UI_PARITY.md`).
 
 ### Props
 
@@ -49,15 +52,54 @@ consumer demonstrates the need (`docs/BASE_UI_PARITY.md`).
 | `label` | `ReactNode` | no | — | Label content, rendered above the control. |
 | `children` | `ReactNode` | no | — | The control element (an Axis `Input` (multiline included) or your own). |
 | `error` | `ReactNode` | no | — | Error content; rendered only when provided, announced politely. |
-| `style` | `StateStyle<FieldState, StyleProp<ViewStyle>>` | no | — | Container style: a value or a function of field state. |
+| `style` | `StateStyle<FieldRootState, StyleProp<ViewStyle>>` | no | — | Container style: a value or a function of field state. |
 | `labelStyle` | `StyleProp<TextStyle>` | no | — | Label text style, caller-provided. |
 | `errorStyle` | `StyleProp<TextStyle>` | no | — | Error text style, caller-provided. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the container. |
-| `render` | `RenderProp<FieldState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<FieldRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the container `View` host element. |
 
-`FieldState`: `{ invalid: boolean }` — `true` while `error` is
+`FieldRootState`: `{ invalid: boolean }` — `true` while `error` is
 provided (nothing more runs: the field never validates on its own).
+
+#### `FieldLabel`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Label content. |
+| `style` | `StyleProp<TextStyle>` | no | — | Label text style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+#### `FieldControl`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | The control element. |
+| `style` | `StyleProp<ViewStyle>` | no | — | Control wrapper style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+#### `FieldDescription`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Description content. |
+| `style` | `StyleProp<TextStyle>` | no | — | Description text style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+#### `FieldError`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Error content; rendered only while the root is invalid. |
+| `style` | `StyleProp<TextStyle>` | no | — | Error text style, caller-provided. |
+| `testID` | `string` | no | — | Test identifier. |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+`FieldError` mounts only while its `FieldRoot` is invalid and never
+outside a root (the `CheckboxIndicator` precedent).
 
 ### Examples
 
@@ -65,19 +107,54 @@ Minimal — label plus an Axis `Input`:
 
 ```tsx
 import { useState } from "react";
-import { Field, Input } from "@xoroh/axis";
+import { FieldRoot, Input } from "@xoroh/axis";
 
 function NameField() {
   const [name, setName] = useState("");
   return (
-    <Field label="Name">
+    <FieldRoot label="Name">
       <Input
         accessibilityLabel="Name"
         value={name}
         onValueChange={setName}
         placeholder="Ada"
       />
-    </Field>
+    </FieldRoot>
+  );
+}
+```
+
+Composed parts — label, control, description, and an error part
+that shows only while invalid:
+
+```tsx
+import { useState } from "react";
+import {
+  FieldControl,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldRoot,
+  Input,
+} from "@xoroh/axis";
+
+function ComposedField() {
+  const [email, setEmail] = useState("");
+  const invalid = email.length > 0 && !email.includes("@");
+  return (
+    <FieldRoot error={invalid ? "Enter a valid email address." : undefined}>
+      <FieldLabel>Email</FieldLabel>
+      <FieldControl>
+        <Input
+          accessibilityLabel="Email"
+          value={email}
+          onValueChange={setEmail}
+          placeholder="ada@example.com"
+        />
+      </FieldControl>
+      <FieldDescription>We never share it.</FieldDescription>
+      <FieldError>Enter a valid email address.</FieldError>
+    </FieldRoot>
   );
 }
 ```
@@ -87,13 +164,13 @@ passes the message; the field styles itself from `state.invalid`:
 
 ```tsx
 import { useState } from "react";
-import { Field, Input } from "@xoroh/axis";
+import { FieldRoot, Input } from "@xoroh/axis";
 
 function EmailField() {
   const [email, setEmail] = useState("");
   const invalid = email.length > 0 && !email.includes("@");
   return (
-    <Field
+    <FieldRoot
       label="Email"
       error={invalid ? "Enter a valid email address." : undefined}
       style={(state) => ({ gap: 4, opacity: state.invalid ? 0.9 : 1 })}
@@ -104,7 +181,7 @@ function EmailField() {
         onValueChange={setEmail}
         placeholder="ada@example.com"
       />
-    </Field>
+    </FieldRoot>
   );
 }
 ```
@@ -113,20 +190,20 @@ function EmailField() {
 
 - The error `Text` carries `accessibilityLiveRegion="polite"`, so
   the message is announced when it appears — without stealing focus.
-- The label is a plain `Text` above the control: Field does not yet
+- The label is a plain `Text` above the control: FieldRoot does not yet
   wire a programmatic label ↔ control association. That gap is
   documented, not silent (contract §5): name the control itself
   with `accessibilityLabel` (or `accessibilityLabelledBy` where the
   platform supports it).
-- Field never validates, blocks input, or announces on its own
+- FieldRoot never validates, blocks input, or announces on its own
   schedule — validity and timing are the caller's state.
 - `state.invalid` through function `style`/`render` is the hook for
   invalid-state visuals (WCAG 2.2 AA contrast remains the caller's
-  responsibility — Field is unstyled).
+  responsibility — FieldRoot is unstyled).
 
 ### Composition
 
-`Field` takes `render` (an element, cloned with the field props
+`FieldRoot` takes `render` (an element, cloned with the field props
 merged under its own, or a `(props, state)` function over
 `{ invalid }`) and value-or-function `style`; `labelStyle`/
 `errorStyle` stay static (the text nodes carry no state).

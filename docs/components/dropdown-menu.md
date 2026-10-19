@@ -13,12 +13,12 @@ by type (items/subs into the panel, everything else into the
 trigger zone) and exposes compound parts that mirror the menu
 cascade with the same state semantics.
 
-Source of truth: `DropdownMenuProps`, `DropdownMenuState`,
+Source of truth: `DropdownMenuRootProps`, `DropdownMenuRootState`,
 `DropdownMenuTriggerProps`, `DropdownMenuTriggerState`,
 `DropdownMenuItemProps`, `DropdownMenuItemState`,
 `DropdownMenuSubProps`, `DropdownMenuSubTriggerProps`,
 `DropdownMenuSubContentProps` in `@xoroh/axis`
-(`packages/axis/src/components/DropdownMenu.tsx:62-180`).
+(`packages/axis/src/components/DropdownMenu.tsx:64-182`).
 
 ### Install
 
@@ -45,7 +45,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `DropdownMenu` | `DropdownMenu.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`/`onDismiss`); single dismissal stack. Partitions children by type: items/subs into the panel, the rest into the trigger zone. |
+| `DropdownMenuRoot` | `DropdownMenu.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`/`onDismiss`); single dismissal stack. Partitions children by type: items/subs into the panel, the rest into the trigger zone. |
 | `DropdownMenuTrigger` | `DropdownMenu.Trigger` | Button role, expanded state, tap toggles. |
 | `DropdownMenuItem` | `DropdownMenu.Item` | Leaf action (`value` required, `onSelect` before close). |
 | `DropdownMenuSub` | `DropdownMenu.Sub` | Submenu branch (`value` identifies the cascade path). |
@@ -55,13 +55,13 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 Unlike `Menu`, this family has no separate portal/positioner
 parts: sub panels render in flow after their trigger, and the
 panel geometry is caller style on `SubContent`. Unlike
-`ContextMenu` (single-part long-press API), every cascade level
+`ContextMenuRoot` (single-part long-press API), every cascade level
 is a part. Combobox and Autocomplete are not compound and do not
 appear here — they are separate monolith docs.
 
 ### Overlay hosting
 
-`DropdownMenu` does not sit on `OverlayRoot`: the content box and
+`DropdownMenuRoot` does not sit on `OverlayRoot`: the content box and
 scrim present through the plain `Portal` at the app's `PortalHost`
 — above sibling content, with no `Modal` trap, no focus trap, and
 no scroll lock — inside one dismissal stack owned by the root.
@@ -78,7 +78,7 @@ it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 
 ### Props
 
-#### `DropdownMenu` (state owner)
+#### `DropdownMenuRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -87,12 +87,12 @@ it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismissal. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `testID` | `string` | no | — | Test identifier; the content box carries it, the scrim carries `<testID>-scrim`. |
-| `style` | `StateStyle<DropdownMenuState, StyleProp<ViewStyle>>` | no | — | Content-box style: a value or a function of menu state. |
+| `style` | `StateStyle<DropdownMenuRootState, StyleProp<ViewStyle>>` | no | — | Content-box style: a value or a function of menu state. |
 | `children` | `ReactNode` | yes | — | Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements, composed by the caller. An empty trigger zone is a bug. |
-| `render` | `RenderProp<DropdownMenuState, SlotProps>` | no | — | Element or function substitution; replaces the content box only. |
+| `render` | `RenderProp<DropdownMenuRootState, SlotProps>` | no | — | Element or function substitution; replaces the content box only. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the menu container `View`. |
 
-`DropdownMenuState`: `{ open: boolean }` — the current open state.
+`DropdownMenuRootState`: `{ open: boolean }` — the current open state.
 
 #### `DropdownMenuTrigger`
 
@@ -156,7 +156,7 @@ Minimal menu with one submenu level, uncontrolled:
 ```tsx
 import { Text } from "react-native";
 import {
-  DropdownMenu,
+  DropdownMenuRoot,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -166,7 +166,7 @@ import {
 
 function ShareMenu() {
   return (
-    <DropdownMenu>
+    <DropdownMenuRoot>
       <DropdownMenuTrigger accessibilityLabel="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
@@ -180,7 +180,7 @@ function ShareMenu() {
           <DropdownMenuItem value="sms">Message</DropdownMenuItem>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-    </DropdownMenu>
+    </DropdownMenuRoot>
   );
 }
 ```
@@ -190,19 +190,19 @@ Controlled with selection handling (parent owns the open state):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { DropdownMenu, DropdownMenuItem, DropdownMenuTrigger } from "@xoroh/axis";
+import { DropdownMenuRoot, DropdownMenuItem, DropdownMenuTrigger } from "@xoroh/axis";
 
 function ControlledShare() {
   const [open, setOpen] = useState(false);
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenuRoot open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger accessibilityLabel="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
       <DropdownMenuItem value="copy" onSelect={() => setOpen(false)}>
         Copy link
       </DropdownMenuItem>
-    </DropdownMenu>
+    </DropdownMenuRoot>
   );
 }
 ```
@@ -213,7 +213,7 @@ the first — siblings close, ancestors stay):
 ```tsx
 import { Text } from "react-native";
 import {
-  DropdownMenu,
+  DropdownMenuRoot,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -223,7 +223,7 @@ import {
 
 function NestedShare() {
   return (
-    <DropdownMenu>
+    <DropdownMenuRoot>
       <DropdownMenuTrigger accessibilityLabel="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
@@ -243,7 +243,7 @@ function NestedShare() {
           </DropdownMenuSub>
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-    </DropdownMenu>
+    </DropdownMenuRoot>
   );
 }
 ```

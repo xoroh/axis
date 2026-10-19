@@ -11,9 +11,9 @@ body (caller content, not `MenuItem` parts — there is no
 compound form and no context here). Combobox and Autocomplete are
  likewise not compound — they are separate monolith docs.
 
-Source of truth: `ContextMenuProps`, `ContextMenuState` in
+Source of truth: `ContextMenuRootProps`, `ContextMenuRootState` in
 `@xoroh/axis`
-(`packages/axis/src/components/ContextMenu.tsx:28-64`).
+(`packages/axis/src/components/ContextMenu.tsx:30-66`).
 
 ### Install
 
@@ -40,18 +40,18 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `ContextMenu` | — | The whole API: anchor wrapper (long-press toggles) + measured menu box + scrim, presenting through `Portal` at the app's `PortalHost`. Not a Base UI part. |
+| `ContextMenuRoot` | — | The whole API: anchor wrapper (long-press toggles) + measured menu box + scrim, presenting through `Portal` at the app's `PortalHost`. Not a Base UI part. |
 
 There are no compound parts: no `Root`/`Trigger`/`Portal`/
 `Positioner`/`Popup` split, no filter parts, no submenu parts.
 For an anchored popup menu with compound parts, use the `Menu`
 compound form (see `docs/components/menu.md`); for a tap-toggle
-cascade with submenus, use `DropdownMenu` (see
+cascade with submenus, use `DropdownMenuRoot` (see
 `docs/components/dropdown-menu.md`).
 
 ### Overlay hosting
 
-`ContextMenu` does not sit on `OverlayRoot`: the anchor stays
+`ContextMenuRoot` does not sit on `OverlayRoot`: the anchor stays
 in place while the scrim and menu box present through the plain
 `Portal` at the app's `PortalHost` — above sibling content, with
 no `Modal` trap, no focus trap, and no scroll lock. That is the
@@ -65,7 +65,7 @@ compound parts with a long-press trigger instead — see
 
 ### Props
 
-#### `ContextMenu` (single-part API)
+#### `ContextMenuRoot` (single-part API)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -78,12 +78,12 @@ compound parts with a long-press trigger instead — see
 | `placement` | `Placement` | no | `"bottom"` | Preferred side for the menu box. Clamped into the viewport. Press-point positioning is deferred, not faked — the box anchors below the anchor. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the menu region. |
 | `testID` | `string` | no | — | Test identifier; the scrim carries `<testID>-scrim`. |
-| `style` | `StateStyle<ContextMenuState, StyleProp<ViewStyle>>` | no | — | Anchor wrapper style: a value or a function of menu state. |
+| `style` | `StateStyle<ContextMenuRootState, StyleProp<ViewStyle>>` | no | — | Anchor wrapper style: a value or a function of menu state. |
 | `menuStyle` | `StyleProp<ViewStyle>` | no | — | Menu box style, caller-provided. |
-| `render` | `RenderProp<ContextMenuState, SlotProps>` | no | — | Element or function substitution; replaces the anchor wrapper with long-press toggle and dismissal wiring travelling in the props. |
+| `render` | `RenderProp<ContextMenuRootState, SlotProps>` | no | — | Element or function substitution; replaces the anchor wrapper with long-press toggle and dismissal wiring travelling in the props. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the anchor wrapper host element. |
 
-`ContextMenuState`: `{ open: boolean }` — whether the menu is
+`ContextMenuRootState`: `{ open: boolean }` — whether the menu is
 currently open.
 
 Closed renders the anchor only — no scrim, no menu box.
@@ -94,16 +94,16 @@ Minimal, uncontrolled (long-press the file row to open):
 
 ```tsx
 import { Text } from "react-native";
-import { ContextMenu } from "@xoroh/axis";
+import { ContextMenuRoot } from "@xoroh/axis";
 
 function FileRow() {
   return (
-    <ContextMenu
+    <ContextMenuRoot
       content={<Text>Rename · Duplicate · Delete</Text>}
       accessibilityLabel="File actions"
     >
       <Text>Report.pdf</Text>
-    </ContextMenu>
+    </ContextMenuRoot>
   );
 }
 ```
@@ -113,12 +113,12 @@ Controlled with placement (parent owns the open state):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { ContextMenu } from "@xoroh/axis";
+import { ContextMenuRoot } from "@xoroh/axis";
 
 function ControlledRow() {
   const [open, setOpen] = useState(false);
   return (
-    <ContextMenu
+    <ContextMenuRoot
       open={open}
       onOpenChange={setOpen}
       placement="bottom"
@@ -127,7 +127,7 @@ function ControlledRow() {
       menuStyle={{ padding: 12 }}
     >
       <Text>Report.pdf</Text>
-    </ContextMenu>
+    </ContextMenuRoot>
   );
 }
 ```
@@ -136,18 +136,18 @@ Styled anchor and box (every visual value is caller-provided):
 
 ```tsx
 import { Text } from "react-native";
-import { ContextMenu } from "@xoroh/axis";
+import { ContextMenuRoot } from "@xoroh/axis";
 
 function StyledRow() {
   return (
-    <ContextMenu
+    <ContextMenuRoot
       content={<Text>Cut · Copy · Paste</Text>}
       accessibilityLabel="Row actions"
       style={{ padding: 12 }}
       menuStyle={{ padding: 8 }}
     >
       <Text>Row three</Text>
-    </ContextMenu>
+    </ContextMenuRoot>
   );
 }
 ```
@@ -174,7 +174,7 @@ function StyledRow() {
 
 ### Composition
 
-`ContextMenu` takes `render` (an element, cloned with the part
+`ContextMenuRoot` takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function) and
 value-or-function `style` over its state object (`{ open }`);
 `menuStyle` stays static (the `DialogTitle` precedent — box

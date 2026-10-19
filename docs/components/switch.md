@@ -10,8 +10,8 @@ uncontrolled. One clean current API (owner no-compat rule): no
 aliases, no warn-once shims — nothing was published, so there
 is nobody to migrate.
 
-Source of truth: `SwitchProps`, `SwitchState` in `@xoroh/axis`
-(`packages/axis/src/components/Switch.tsx:23-58`).
+Source of truth: `SwitchRootProps`, `SwitchRootState` in `@xoroh/axis`
+(`packages/axis/src/components/Switch.tsx:33-111`).
 
 ### Install
 
@@ -38,11 +38,12 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Switch` | `Switch.Root` (single-part) | The whole API: on/off row (`checked`/`defaultChecked`/`onCheckedChange`, `disabled`, `ref`; switch role with `checked` state). Track and thumb are caller styles, not parts. |
+| `SwitchRoot` | `Switch.Root` | State owner (`checked`/`defaultChecked`/`onCheckedChange`, `disabled`, `readOnly`, `ref`; switch role with `checked` state). Keeps its default track row; caller children render after it. |
+| `SwitchThumb` | `Switch.Thumb` | Caller-composed thumb (`style` value-or-function over `{ checked, disabled, readOnly }`, `render`, `ref`); reads root state, renders a plain `View` outside a root. |
 
 ### Props
 
-#### `Switch` (single-part API)
+#### `SwitchRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -54,29 +55,40 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
-| `style` | `StateStyle<SwitchState, StyleProp<ViewStyle>>` | no | — | Value or function of switch state, caller-provided. |
+| `style` | `StateStyle<SwitchRootState, StyleProp<ViewStyle>>` | no | — | Value or function of switch state, caller-provided. |
 | `trackStyle` | `StyleProp<ViewStyle>` | no | — | Track container style, caller-provided. |
 | `thumbStyle` | `StyleProp<ViewStyle>` | no | — | Thumb indicator style, caller-provided. |
-| `render` | `RenderProp<SwitchState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<SwitchRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `children` | `ReactNode` | no | — | Caller-composed content (`SwitchThumb`) rendered after the default track row. |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root pressable host element. |
 
-`SwitchState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` —
+`SwitchRootState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` —
 whether the switch is currently on, disabled, or read-only. Read-only
 switches (like disabled ones) never toggle; unlike disabled ones they
 stay focusable and announce the normal switch state.
 
-The switch takes no `children`: the track/thumb pair is the
-visual, and both are caller `style`.
+#### `SwitchThumb`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | `StateStyle<SwitchThumbState, StyleProp<ViewStyle>>` | no | — | Thumb style: a value or a function of thumb state. |
+| `children` | `ReactNode` | no | — | Thumb content. |
+| `render` | `RenderProp<SwitchThumbState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the thumb `View` host element. |
+
+`SwitchThumbState`: `{ checked: boolean; disabled: boolean; readOnly: boolean }` —
+read from the enclosing `SwitchRoot` (default off/enabled outside one).
 
 ### Examples
 
 Notifications opt-in, uncontrolled:
 
 ```tsx
-import { Switch } from "@xoroh/axis";
+import { SwitchRoot } from "@xoroh/axis";
 
 function Notifications() {
-  return <Switch accessibilityLabel="Email notifications" />;
+  return <SwitchRoot accessibilityLabel="Email notifications" />;
 }
 ```
 
@@ -84,12 +96,12 @@ Controlled with function style over switch state:
 
 ```tsx
 import { useState } from "react";
-import { Switch } from "@xoroh/axis";
+import { SwitchRoot } from "@xoroh/axis";
 
 function ControlledNotifications() {
   const [checked, setChecked] = useState(false);
   return (
-    <Switch
+    <SwitchRoot
       checked={checked}
       onCheckedChange={setChecked}
       accessibilityLabel="Email notifications"
@@ -102,15 +114,36 @@ function ControlledNotifications() {
 Caller-styled track and thumb (the pair is the visual):
 
 ```tsx
-import { Switch } from "@xoroh/axis";
+import { SwitchRoot } from "@xoroh/axis";
 
 function StyledSwitch() {
   return (
-    <Switch
+    <SwitchRoot
       accessibilityLabel="Dark mode"
       trackStyle={{ width: 48, height: 28, borderRadius: 14 }}
       thumbStyle={{ width: 24, height: 24, borderRadius: 12 }}
     />
+  );
+}
+```
+
+Composed thumb reading root state:
+
+```tsx
+import { SwitchRoot, SwitchThumb } from "@xoroh/axis";
+
+function ThumbSwitch() {
+  return (
+    <SwitchRoot accessibilityLabel="Dark mode" defaultChecked>
+      <SwitchThumb
+        style={(state) => ({
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          backgroundColor: state.checked ? "#0284c7" : "#94a3b8",
+        })}
+      />
+    </SwitchRoot>
   );
 }
 ```
@@ -124,12 +157,14 @@ function StyledSwitch() {
 
 ### Composition
 
-`Switch` takes `render` (an element, cloned with the part
+`SwitchRoot` takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function) and
 value-or-function `style` over its state object (`{ checked,
-disabled }`); `trackStyle`/`thumbStyle` stay static (chrome
-carries no extra state). `data-*` attributes are deliberately
-absent on native — state flows through those functions instead
-(contract §11, parity D1). Verified by the switch RNTL suites
-(7 tests — `docs/COVERAGE.md`). Renders in
+disabled, readOnly }`); `trackStyle`/`thumbStyle` stay static
+(chrome carries no extra state). The root provides its state to a
+composed `SwitchThumb` (function styles read root state; the thumb
+renders a plain `View` outside a root). `data-*` attributes are
+deliberately absent on native — state flows through those functions
+instead (contract §11, parity D1). Verified by the switch RNTL
+suites (`docs/COVERAGE.md`). Renders in
 `apps/example/src/demos/switch.tsx`.

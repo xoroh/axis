@@ -5,7 +5,11 @@ with the selected state, rendering caller-provided label content
 (`children`). Structure only — every visual value (`style`) is
 caller-provided. State follows the controlled + uncontrolled
 pattern throughout: `pressed` (plus `onPressedChange`) for
-controlled use, `defaultPressed` for uncontrolled. Pressed
+controlled use, `defaultPressed` for uncontrolled. With a `value`
+inside a `ToggleGroup`, the toggle joins the group — pressed
+derives from group membership and activation toggles membership
+(the Base UI `Toggle` pattern; without `value` it stays
+standalone). Pressed
 semantics, not checked: the toggle announces
 `accessibilityState.selected` (React Native has no `pressed`
 state key — verified against the RN `ViewAccessibility`
@@ -13,7 +17,7 @@ types), never `checked` — this is a toggle button, not a
 checkbox.
 
 Source of truth: `ToggleProps`, `ToggleState` in `@xoroh/axis`
-(`packages/axis/src/components/Toggle.tsx:19-52`).
+(`packages/axis/src/components/Toggle.tsx:29-72`).
 
 ### Install
 
@@ -48,6 +52,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
+| `value` | `string` | no | — | Group key: with a `value` inside a `ToggleGroup`, the toggle joins the group (pressed from membership; `pressed`/`defaultPressed` ignored there). Without `value` (or outside a group) it behaves standalone. |
 | `pressed` | `boolean` | no | — | Controlled state. Wins over `defaultPressed` when defined. |
 | `defaultPressed` | `boolean` | no | `false` | Uncontrolled initial state. |
 | `onPressedChange` | `(pressed: boolean) => void` | no | — | Fires with the next state on every committed toggle. |

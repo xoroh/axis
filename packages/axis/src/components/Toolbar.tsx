@@ -236,8 +236,7 @@ type ToolbarDisclosure = {
  * `disabled`) from it; outside a root they use horizontal order and
  * their own `disabled`.
  */
-const ToolbarDisclosureContext =
-  createContext<ToolbarDisclosure | null>(null);
+const ToolbarDisclosureContext = createContext<ToolbarDisclosure | null>(null);
 
 function useToolbarPartState(disabled: boolean): ToolbarDisclosure {
   const disclosure = useContext(ToolbarDisclosureContext);
@@ -579,7 +578,9 @@ export function ToolbarSeparator({
   const disclosure = useContext(ToolbarDisclosureContext);
   const toolbarOrientation = disclosure?.orientation ?? "horizontal";
   // Perpendicular to the toolbar by default (the Base UI rule).
-  const resolved = orientation ?? (toolbarOrientation === "horizontal" ? "vertical" : "horizontal");
+  const resolved =
+    orientation ??
+    (toolbarOrientation === "horizontal" ? "vertical" : "horizontal");
   const state: ToolbarSeparatorState = { orientation: resolved };
   const substituted = resolveRender(
     render,

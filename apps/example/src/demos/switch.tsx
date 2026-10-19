@@ -123,9 +123,7 @@ export const SwitchDemo: Demo = {
                 width: 26,
                 height: 26,
                 borderRadius: 13,
-                backgroundColor: state.checked
-                  ? theme.primary
-                  : theme.surface,
+                backgroundColor: state.checked ? theme.primary : theme.surface,
                 boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
               })}
             />

@@ -5,18 +5,15 @@ tip is measured and placed with the shared floating-placement
 plumbing (anchor `measure()` + viewport + rect math) and stays
 transparent until measured rather than flashing somewhere wrong.
 Structure, behavior, and accessibility only — every visual value
-(`style`, `tipStyle`) is caller-provided. State follows the
+is caller-provided. State follows the
 controlled + uncontrolled pattern throughout: `open` (plus
 `onOpenChange`) for controlled use, `defaultOpen` for
-uncontrolled. Two APIs ship side by side: the concise
-single-part `Tooltip` (anchor and tip partitioned into the
-`children`/`content` props, presenting through `Portal` at the
-app's `PortalHost`) and the compound parts
-below, which mirror Base UI's Tooltip anatomy with the same names
-and state semantics.
+uncontrolled. The compound parts
+below mirror Base UI's Tooltip anatomy with the same names
+and state semantics (the concise single-part `Tooltip` is
+removed — naming rule, contract §2; migration in CHANGELOG).
 
-Source of truth: `TooltipProps`, `TooltipState`,
-`TooltipProviderProps`, `TooltipRootProps`,
+Source of truth: `TooltipProviderProps`, `TooltipRootProps`,
 `TooltipTriggerProps`, `TooltipTriggerState`,
 `TooltipPortalProps`, `TooltipPositionerProps`,
 `TooltipPositionerState`, `TooltipPopupProps`,
@@ -48,7 +45,6 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Tooltip` | — | Concise inline API (anchor `children` + body `content`); presents through `Portal` at the app's `PortalHost`, never modal; kept for existing consumers, not a Base UI part. |
 | `TooltipProvider` | `Tooltip.Provider` | Groups tips under one show/hide timing (`delay`/`closeDelay`); renders no element. |
 | `TooltipRoot` | `Tooltip.Root` | Visibility state owner (`open`/`defaultOpen`/`onOpenChange`, terminal `disabled`); renders no element. |
 | `TooltipTrigger` | `Tooltip.Trigger` | Long-press toggle, anchor-registering; `delayLongPress` forwarded to the host. |
@@ -83,27 +79,6 @@ that stack and the `useModal` opt-in, which tooltips
 deliberately do not use.
 
 ### Props
-
-#### `Tooltip` (concise inline API)
-
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `content` | `ReactNode` | yes | — | Tooltip body content (an empty tip is a bug). |
-| `children` | `ReactNode` | yes | — | Anchor content the tip describes. |
-| `open` | `boolean` | no | — | Controlled visibility. Wins over `defaultOpen` when defined. |
-| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial visibility. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires on every visibility change. |
-| `placement` | `Placement` | no | `"top"` | Preferred side for the tip (the `resolveFloatingRect` fallback). Clamped into the viewport. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the tip. |
-| `delayLongPress` | `number` | no | — | Long-press duration in milliseconds before the toggle fires, forwarded to the anchor `Pressable`. Absent means the platform default — Axis never invents timing. |
-| `testID` | `string` | no | — | Test identifier. |
-| `style` | `StateStyle<TooltipState, StyleProp<ViewStyle>>` | no | — | Anchor wrapper style: a value or a function of tooltip state. |
-| `tipStyle` | `StyleProp<ViewStyle>` | no | — | Tip container style, caller-provided. |
-| `render` | `RenderProp<TooltipState, SlotProps>` | no | — | Element or function substitution; replaces the anchor wrapper (anchor plus tip) with long-press toggle wiring travelling in the props. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the anchor wrapper host element. |
-
-`TooltipState`: `{ open: boolean }` — whether the tip is
-currently visible.
 
 #### `TooltipProvider` (timing owner)
 
@@ -196,22 +171,30 @@ outside a root and while hidden.
 
 ### Examples
 
-Minimal monolith, uncontrolled (long-press the anchor for the
+Minimal compound tip, uncontrolled (long-press the anchor for the
 tip):
 
 ```tsx
 import { Text } from "react-native";
-import { Tooltip } from "@xoroh/axis";
+import {
+  TooltipPopup,
+  TooltipPositioner,
+  TooltipRoot,
+  TooltipTrigger,
+} from "@xoroh/axis";
 
 function Hint() {
   return (
-    <Tooltip
-      content={<Text>Saved yesterday at 14:02.</Text>}
-      accessibilityLabel="Saved details"
-      tipStyle={{ padding: 8 }}
-    >
-      <Text>Info</Text>
-    </Tooltip>
+    <TooltipRoot>
+      <TooltipTrigger accessibilityLabel="Saved details">
+        <Text>Info</Text>
+      </TooltipTrigger>
+      <TooltipPositioner>
+        <TooltipPopup style={{ padding: 8 }}>
+          <Text>Saved yesterday at 14:02.</Text>
+        </TooltipPopup>
+      </TooltipPositioner>
+    </TooltipRoot>
   );
 }
 ```
@@ -221,20 +204,26 @@ Controlled with placement (parent owns the visibility):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Tooltip } from "@xoroh/axis";
+import {
+  TooltipPopup,
+  TooltipPositioner,
+  TooltipRoot,
+  TooltipTrigger,
+} from "@xoroh/axis";
 
 function ControlledHint() {
   const [open, setOpen] = useState(false);
   return (
-    <Tooltip
-      open={open}
-      onOpenChange={setOpen}
-      placement="top"
-      content={<Text>Press any row for options.</Text>}
-      accessibilityLabel="Row help"
-    >
-      <Text>Help</Text>
-    </Tooltip>
+    <TooltipRoot open={open} onOpenChange={setOpen}>
+      <TooltipTrigger accessibilityLabel="Row help">
+        <Text>Help</Text>
+      </TooltipTrigger>
+      <TooltipPositioner side="top">
+        <TooltipPopup>
+          <Text>Press any row for options.</Text>
+        </TooltipPopup>
+      </TooltipPositioner>
+    </TooltipRoot>
   );
 }
 ```

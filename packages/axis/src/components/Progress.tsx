@@ -181,8 +181,9 @@ type ProgressDisclosure = {
  * outside one the stateful parts render nothing and `ProgressLabel`
  * renders its static text.
  */
-const ProgressDisclosureContext =
-  createContext<ProgressDisclosure | null>(null);
+const ProgressDisclosureContext = createContext<ProgressDisclosure | null>(
+  null,
+);
 
 function setPartRef(
   ref: Ref<ElementRef<typeof View> | null> | undefined,
@@ -296,18 +297,17 @@ export function ProgressTrack({
   ref,
 }: ProgressTrackProps): React.ReactNode {
   const disclosure = useContext(ProgressDisclosureContext);
-  if (!disclosure) return null;
-  const state: ProgressTrackState = {
-    value: disclosure.value,
-    indeterminate: disclosure.indeterminate,
-  };
-
   const setTrackRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
       setPartRef(ref, node);
     },
     [ref],
   );
+  if (!disclosure) return null;
+  const state: ProgressTrackState = {
+    value: disclosure.value,
+    indeterminate: disclosure.indeterminate,
+  };
 
   const substituted = resolveRender(
     render,
@@ -322,11 +322,7 @@ export function ProgressTrack({
   if (substituted !== null) return substituted;
 
   return (
-    <View
-      ref={setTrackRef}
-      testID={testID}
-      style={resolveStyle(style, state)}
-    >
+    <View ref={setTrackRef} testID={testID} style={resolveStyle(style, state)}>
       {children}
     </View>
   );
@@ -339,6 +335,12 @@ export function ProgressIndicator({
   ref,
 }: ProgressIndicatorProps): React.ReactNode {
   const disclosure = useContext(ProgressDisclosureContext);
+  const setFillRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      setPartRef(ref, node);
+    },
+    [ref],
+  );
   if (!disclosure) return null;
   const { value, min, max, indeterminate } = disclosure;
   const range = max - min;
@@ -347,13 +349,6 @@ export function ProgressIndicator({
   const percent =
     !indeterminate && range > 0 ? ((clamped - min) / range) * 100 : 0;
   const state: ProgressIndicatorState = { value, indeterminate };
-
-  const setFillRef = useCallback(
-    (node: ElementRef<typeof View> | null) => {
-      setPartRef(ref, node);
-    },
-    [ref],
-  );
 
   const substituted = resolveRender(
     render,
@@ -404,7 +399,8 @@ export function ProgressValue({
 }: ProgressValueProps): React.ReactNode {
   const disclosure = useContext(ProgressDisclosureContext);
   if (!disclosure) return null;
-  const text = children ?? (disclosure.indeterminate ? null : String(disclosure.value));
+  const text =
+    children ?? (disclosure.indeterminate ? null : String(disclosure.value));
   if (text === null) return null;
   const state: ProgressIndicatorState = {
     value: disclosure.value,

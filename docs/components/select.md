@@ -4,17 +4,16 @@ Single-select dropdown: the trigger shows the current label (or a
 placeholder when nothing is chosen); opening presents the option
 list, measured and placed against the trigger anchor; choosing an
 option commits the value and closes. Structure, behavior, and
-accessibility only — every visual value (`style`, `listStyle`) is
-caller-provided. State follows the controlled + uncontrolled pattern
-throughout: `value` (plus `onValueChange`) for controlled selection,
-`defaultValue` for uncontrolled; `open` (plus `onOpenChange`) for
-controlled open state, `defaultOpen` for uncontrolled. Two APIs ship
-side by side: the concise single-part `Select` (anchor and list
-partitioned into `children`, always inline) and the compound parts
-below, which mirror Base UI's Select anatomy with the same names and
-state semantics.
+accessibility only — every visual value is caller-provided. State
+follows the controlled + uncontrolled pattern throughout: `value`
+(plus `onValueChange`) for controlled selection, `defaultValue` for
+uncontrolled; `open` (plus `onOpenChange`) for controlled open
+state, `defaultOpen` for uncontrolled. The compound parts below
+mirror Base UI's Select anatomy with the same names and state
+semantics (the concise single-part `Select` is removed — naming
+rule, contract §2; migration in CHANGELOG).
 
-Source of truth: `SelectProps`, `SelectState`, `SelectItemProps`,
+Source of truth: `SelectItemProps`,
 `SelectItemState`, `SelectRootProps`, `SelectRootState`,
 `SelectTriggerProps`, `SelectTriggerState`, `SelectValueProps`,
 `SelectValueState`, `SelectPortalProps`, `SelectBackdropProps`,
@@ -50,7 +49,6 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Select` | — | Concise inline API (anchor `Pressable` + scrim + listbox, always in-box); kept for existing consumers, not a Base UI part. |
 | `SelectRoot` | `Select.Root` | State owner (`value`/`open` families, `items` label table, `modal`); renders no element. Wraps an `OverlayRoot` so back, stacking, dismissal, and focus belong to one owner. |
 | `SelectTrigger` | `Select.Trigger` | Button role, expanded state, tap toggles, anchor-registering. |
 | `SelectValue` | `Select.Value` | Label display (registered label, `items` table, raw value, then placeholder); function children format without a lookup table. |
@@ -59,7 +57,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `SelectPositioner` | `Select.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets, viewport flip). |
 | `SelectPopup` | `Select.Popup` | Listbox-role content box; option press selects + closes. |
 | `SelectArrow` | `Select.Arrow` | Caller-positioned marker; geometry is caller style. |
-| `SelectItem` | `Select.Item` | Option (`value` required, `label` lookup, per-item `disabled`); shared with the monolith. |
+| `SelectItem` | `Select.Item` | Option (`value` required, `label` lookup, per-item `disabled`). |
 | `SelectItemText` | `Select.ItemText` | Item label content; registers as the item's text when the item has no `label`. |
 | `SelectItemIndicator` | `Select.ItemIndicator` | Check mark; renders only while the enclosing item is selected. |
 | `SelectGroup` | `Select.Group` | Group container (`group` role). |
@@ -94,36 +92,8 @@ and the trigger stays pressable (the `Menu` compound precedent).
 before `onOpenChange(false)`. No family part takes `useModal`
 itself — the RN `Modal` host is an `OverlayRoot`-level opt-in for
 direct `Overlay` compositions (see `docs/components/overlay.md`).
-The monolith never touches this stack: it renders anchor, scrim,
-and listbox inline, in-box, like the `Menu` monolith.
 
 ### Props
-
-#### `Select` (concise inline API)
-
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `value` | `string \| null` | no | — | Controlled selection (`null` for none). Wins over `defaultValue` when defined. |
-| `defaultValue` | `string \| null` | no | `null` | Uncontrolled initial selection (`null` shows the placeholder). |
-| `onValueChange` | `(value: string) => void` | no | — | Fires with the chosen item value on every committed selection (`null` is never offered — clearing is not a selection). |
-| `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
-| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed open/close. |
-| `placeholder` | `ReactNode` | no | — | Shown in the trigger when nothing is selected. |
-| `disabled` | `boolean` | no | `false` | Terminal: the trigger never opens, items never select, no callbacks. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the trigger. |
-| `testID` | `string` | no | — | Test identifier; the scrim carries `<testID>-scrim`. |
-| `style` | `StateStyle<SelectState, StyleProp<ViewStyle>>` | no | — | Trigger box style: a value or a function of select state. |
-| `listStyle` | `StyleProp<ViewStyle>` | no | — | Popup (listbox) box style, caller-provided. |
-| `children` | `ReactNode` | yes | — | The list's items (`SelectItem`, required). |
-| `render` | `RenderProp<SelectState, SlotProps>` | no | — | Element or function substitution; replaces the anchor container (trigger plus list) with open/close and selection wiring travelling in the props. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root anchor view. |
-
-`SelectState`: `{ value: string | null; open: boolean; disabled: boolean }`.
-
-Closed renders the anchor only — no scrim, no listbox. Re-pressing
-the selected item keeps it (the close still commits, no extra
-`onValueChange` fire).
 
 #### `SelectRoot` (state owner)
 
@@ -296,33 +266,41 @@ outside a root and while closed. Typeahead keys are handled here
 
 ### Examples
 
-Minimal monolith, uncontrolled (opens on mount with no selection):
+Minimal compound select, uncontrolled (opens on mount with no selection):
 
 ```tsx
 import { Text } from "react-native";
-import { Select, SelectItem, SelectItemIndicator, SelectItemText } from "@xoroh/axis";
+import {
+  SelectItem,
+  SelectItemIndicator,
+  SelectItemText,
+  SelectPopup,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@xoroh/axis";
 
 function SortPicker() {
   return (
-    <Select
-      defaultOpen
-      placeholder="Sort by"
-      accessibilityLabel="Sort by"
-      listStyle={{ padding: 8 }}
-    >
-      <SelectItem value="date" testID="sort-date">
-        <SelectItemText>Date</SelectItemText>
-        <SelectItemIndicator>
-          <Text>✓</Text>
-        </SelectItemIndicator>
-      </SelectItem>
-      <SelectItem value="name">
-        <SelectItemText>Name</SelectItemText>
-        <SelectItemIndicator>
-          <Text>✓</Text>
-        </SelectItemIndicator>
-      </SelectItem>
-    </Select>
+    <SelectRoot defaultOpen>
+      <SelectTrigger accessibilityLabel="Sort by">
+        <SelectValue placeholder="Sort by" />
+      </SelectTrigger>
+      <SelectPopup>
+        <SelectItem value="date" testID="sort-date">
+          <SelectItemText>Date</SelectItemText>
+          <SelectItemIndicator>
+            <Text>✓</Text>
+          </SelectItemIndicator>
+        </SelectItem>
+        <SelectItem value="name">
+          <SelectItemText>Name</SelectItemText>
+          <SelectItemIndicator>
+            <Text>✓</Text>
+          </SelectItemIndicator>
+        </SelectItem>
+      </SelectPopup>
+    </SelectRoot>
   );
 }
 ```
@@ -332,27 +310,37 @@ Controlled (parent owns selection and open state):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Select, SelectItem, SelectItemText } from "@xoroh/axis";
+import {
+  SelectItem,
+  SelectItemText,
+  SelectPopup,
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+} from "@xoroh/axis";
 
 function ControlledSort() {
   const [value, setValue] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   return (
-    <Select
+    <SelectRoot
       value={value}
       onValueChange={setValue}
       open={open}
       onOpenChange={setOpen}
-      placeholder="Sort by"
-      accessibilityLabel="Sort by"
     >
-      <SelectItem value="date">
-        <SelectItemText>Date</SelectItemText>
-      </SelectItem>
-      <SelectItem value="name">
-        <SelectItemText>Name</SelectItemText>
-      </SelectItem>
-    </Select>
+      <SelectTrigger accessibilityLabel="Sort by">
+        <SelectValue placeholder="Sort by" />
+      </SelectTrigger>
+      <SelectPopup>
+        <SelectItem value="date">
+          <SelectItemText>Date</SelectItemText>
+        </SelectItem>
+        <SelectItem value="name">
+          <SelectItemText>Name</SelectItemText>
+        </SelectItem>
+      </SelectPopup>
+    </SelectRoot>
   );
 }
 ```

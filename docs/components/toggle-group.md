@@ -1,8 +1,8 @@
 ## Toggle Group
 
 Multi-press group: a `View` carrying the group role, with
-`ToggleGroupItem` pressables carrying the button role and
-pressed state. `multiple` (default `false`, the Base UI default)
+`Toggle` pressables (each with a `value`) carrying the button role
+and pressed state. `multiple` (default `false`, the Base UI default)
 selects the cardinality: single-press replaces, multi-press
 toggles membership; activating a pressed item always removes it,
 per the selection-model rule. `orientation` (default
@@ -21,9 +21,9 @@ toggle buttons, not a group of checkboxes. React Native maps no
 Toggle-precedent mapping for toggle-pressed, while `checked`
 stays reserved for checkbox/radio/switch commitments.
 
-Source of truth: `ToggleGroupProps`, `ToggleGroupState`,
-`ToggleGroupItemProps`, `ToggleGroupItemState` in `@xoroh/axis`
-(`packages/axis/src/components/ToggleGroup.tsx:41-117`).
+Source of truth: `ToggleGroupProps`, `ToggleGroupState` in
+`@xoroh/axis` (`packages/axis/src/components/ToggleGroup.tsx`);
+items are `Toggle` (see `toggle.md`) with a `value`.
 
 ### Install
 
@@ -51,10 +51,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
 | `ToggleGroup` | `Toggle.Root` | State owner (`value`/`defaultValue`/`onValueChange`, terminal `disabled`); group role. |
-| `ToggleGroupItem` | `Toggle` | Toggle button (`value` required); button role with pressed state. |
+| `Toggle` (with `value`) | `Toggle` | Toggle button joining the group; button role with pressed state from membership. |
 
-Outside a group, items render unpressed and inert — they must
-render inside a `ToggleGroup` to participate in selection.
+A `Toggle` without `value` inside a group stays standalone — give
+each item a `value` to join.
 
 ### Props
 
@@ -71,25 +71,20 @@ render inside a `ToggleGroup` to participate in selection.
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<ToggleGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
-| `children` | `ReactNode` | yes | — | The group's items (`ToggleGroupItem`). |
+| `children` | `ReactNode` | yes | — | The group's items (`Toggle` with `value`). |
 | `render` | `RenderProp<ToggleGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root group host element. |
 
 `ToggleGroupState`: `{ value: readonly string[]; disabled: boolean; multiple: boolean; orientation: "horizontal" | "vertical" }` — currently pressed item keys, whether the whole group is disabled, the cardinality mode, and the reading order.
 
-#### `ToggleGroupItem`
+#### Items: `Toggle`
 
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `value` | `string` | yes | — | Pressed key contributed to (or removed from) the group when this item is activated. |
-| `disabled` | `boolean` | no | `false` | Terminal for this item only: it never toggles and is announced as disabled. Siblings are unaffected. Combines with root `disabled` (either disables). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `testID` | `string` | no | — | Test identifier. |
-| `style` | `StateStyle<ToggleGroupItemState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
-| `children` | `ReactNode` | no | — | Item content. |
-| `render` | `RenderProp<ToggleGroupItemState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
-
-`ToggleGroupItemState`: `{ pressed: boolean; disabled: boolean }` — whether this item is currently pressed, and whether it is currently disabled.
+Group items are the `Toggle` part (see `toggle.md`): `value`
+(required to join — pressed derives from group membership and
+activation toggles membership), `disabled` (terminal for the item,
+OR'ed with the group's), `accessibilityLabel`, `testID`, `style`
+(value or function of `ToggleState`), `children`, `render`, `ref`.
+`ToggleState` is `{ pressed: boolean; disabled: boolean }`.
 
 ### Examples
 
@@ -97,17 +92,17 @@ Format bar, uncontrolled:
 
 ```tsx
 import { Text } from "react-native";
-import { ToggleGroup, ToggleGroupItem } from "@xoroh/axis";
+import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function FormatBar() {
   return (
     <ToggleGroup accessibilityLabel="Format">
-      <ToggleGroupItem value="bold">
+      <Toggle value="bold">
         <Text>B</Text>
-      </ToggleGroupItem>
-      <ToggleGroupItem value="italic">
+      </Toggle>
+      <Toggle value="italic">
         <Text>I</Text>
-      </ToggleGroupItem>
+      </Toggle>
     </ToggleGroup>
   );
 }
@@ -118,7 +113,7 @@ Controlled with function style over item state:
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { ToggleGroup, ToggleGroupItem } from "@xoroh/axis";
+import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function ControlledFormat() {
   const [value, setValue] = useState<readonly string[]>([]);
@@ -128,12 +123,12 @@ function ControlledFormat() {
       onValueChange={setValue}
       accessibilityLabel="Format"
     >
-      <ToggleGroupItem
+      <Toggle
         value="bold"
         style={(state) => ({ opacity: state.pressed ? 1 : 0.5 })}
       >
         <Text>B</Text>
-      </ToggleGroupItem>
+      </Toggle>
     </ToggleGroup>
   );
 }
@@ -143,14 +138,14 @@ Disabled group (terminal — no toggles, no callbacks):
 
 ```tsx
 import { Text } from "react-native";
-import { ToggleGroup, ToggleGroupItem } from "@xoroh/axis";
+import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function LockedFormat() {
   return (
     <ToggleGroup disabled accessibilityLabel="Format">
-      <ToggleGroupItem value="bold">
+      <Toggle value="bold">
         <Text>B</Text>
-      </ToggleGroupItem>
+      </Toggle>
     </ToggleGroup>
   );
 }
@@ -161,17 +156,17 @@ the container stacks them):
 
 ```tsx
 import { Text } from "react-native";
-import { ToggleGroup, ToggleGroupItem } from "@xoroh/axis";
+import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function Toppings() {
   return (
     <ToggleGroup multiple orientation="vertical" accessibilityLabel="Toppings">
-      <ToggleGroupItem value="cheese">
+      <Toggle value="cheese">
         <Text>Cheese</Text>
-      </ToggleGroupItem>
-      <ToggleGroupItem value="mushrooms">
+      </Toggle>
+      <Toggle value="mushrooms">
         <Text>Mushrooms</Text>
-      </ToggleGroupItem>
+      </Toggle>
     </ToggleGroup>
   );
 }

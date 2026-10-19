@@ -169,11 +169,7 @@ function FieldText({
   );
   if (substituted !== null) return substituted;
   return (
-    <Text
-      accessibilityLiveRegion={liveRegion}
-      testID={testID}
-      style={style}
-    >
+    <Text accessibilityLiveRegion={liveRegion} testID={testID} style={style}>
       {children}
     </Text>
   );

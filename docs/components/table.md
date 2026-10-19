@@ -1,6 +1,6 @@
 ## Table
 
-Tabular structure: a root `View` (`Table`) carrying an optional
+Tabular structure: a root `View` (`TableRoot`) carrying an optional
 header group (`TableHeader`, the column-label row container)
 followed by body rows (`TableRow` of `TableCell`). Plain `View`s
 throughout, no virtualization (`ScrollView` is not in the
@@ -11,7 +11,7 @@ are the caller's. Sorting, pagination, row selection, and column
 resizing are explicitly deferred: each needs its own state
 domain and contract section first, not flags on this type.
 
-Source of truth: `TableProps`, `TableHeaderProps`,
+Source of truth: `TableRootProps`, `TableHeaderProps`,
 `TableRowProps`, `TableRowState`, `TableCellProps` in
 `@xoroh/axis` (`packages/axis/src/components/Table.tsx:37-107`).
 
@@ -40,18 +40,18 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Table` | — | Root container (accessible name via `accessibilityLabel`). No Base UI counterpart. |
+| `TableRoot` | — | Root container (accessible name via `accessibilityLabel`). No Base UI counterpart. |
 | `TableHeader` | — | Column-label row container. |
 | `TableRow` | — | Row container; `header` marks the header row. |
 | `TableCell` | — | Cell container; optional children so empty (spacer) cells render. |
 
 ### Props
 
-#### `Table` (root)
+#### `TableRoot` (root)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `children` | `ReactNode` | yes | — | Table content: a `TableHeader` followed by body `TableRow`s, in order. |
+| `children` | `ReactNode` | yes | — | TableRoot content: a `TableHeader` followed by body `TableRow`s, in order. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source (e.g. "Order history"). |
 | `testID` | `string` | no | — | Test identifier, forwarded to the root host. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Root container style, caller-provided. |
@@ -95,11 +95,11 @@ Order history with a header row:
 
 ```tsx
 import { Text } from "react-native";
-import { Table, TableCell, TableHeader, TableRow } from "@xoroh/axis";
+import { TableRoot, TableCell, TableHeader, TableRow } from "@xoroh/axis";
 
 function Orders() {
   return (
-    <Table accessibilityLabel="Order history">
+    <TableRoot accessibilityLabel="Order history">
       <TableHeader>
         <TableRow header>
           <TableCell>
@@ -118,7 +118,7 @@ function Orders() {
           <Text>$12</Text>
         </TableCell>
       </TableRow>
-    </Table>
+    </TableRoot>
   );
 }
 ```
@@ -127,11 +127,11 @@ Zebra striping is caller style (data rows stay plain `TableRow`s):
 
 ```tsx
 import { Text } from "react-native";
-import { Table, TableCell, TableRow } from "@xoroh/axis";
+import { TableRoot, TableCell, TableRow } from "@xoroh/axis";
 
 function Striped() {
   return (
-    <Table>
+    <TableRoot>
       <TableRow style={{ backgroundColor: "#f5f5f5" }}>
         <TableCell>
           <Text>Row one</Text>
@@ -142,14 +142,14 @@ function Striped() {
           <Text>Row two</Text>
         </TableCell>
       </TableRow>
-    </Table>
+    </TableRoot>
   );
 }
 ```
 
 ### Accessibility
 
-- No table-family role is declared on `Table`, `TableHeader`,
+- No table-family role is declared on `TableRoot`, `TableHeader`,
   or `TableCell`: React Native's screen-reader-mapped
   `accessibilityRole` defines no table, rowgroup, row, cell, or
   columnheader value (verified against `ViewAccessibility.d.ts`
@@ -168,7 +168,7 @@ function Striped() {
 Every part takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function);
 only `TableRow`'s function form receives state (`{ header }`) —
-`Table`/`Header`/`Cell` styles stay static (the `DialogTitle`
+`TableRoot`/`Header`/`Cell` styles stay static (the `DialogTitle`
 precedent — a function of empty state adds nothing); `data-*`
 attributes are deliberately absent on native — state flows
 through those functions instead (contract §11, parity D1).

@@ -8,7 +8,7 @@ replacing: activating the selected trigger keeps it (never
 deselects), per the selection-model rule. An unselected panel
 renders `null`, so exactly one panel is in the tree at a time.
 
-Source of truth: `TabsProps`, `TabsListProps`, `TabsTriggerProps`,
+Source of truth: `TabsRootProps`, `TabsListProps`, `TabsTriggerProps`,
 `TabsPanelProps` in `@xoroh/axis`.
 
 ### Install
@@ -36,14 +36,14 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Tabs` | `Tabs.Root` | State owner (`value`/`defaultValue`/`onValueChange`); renders the container `View`. |
+| `TabsRoot` | `Tabs.Root` | State owner (`value`/`defaultValue`/`onValueChange`); renders the container `View`. |
 | `TabsList` | `Tabs.List` | Container view carrying the `tablist` role. |
 | `TabsTrigger` | `Tabs.Tab` | Pressable with the `tab` role and `selected` state. |
 | `TabsPanel` | `Tabs.Panel` | Content view; mounts only while its `value` is selected. |
 
 ### Props
 
-#### `Tabs` (root)
+#### `TabsRoot` (root)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -51,12 +51,12 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `defaultValue` | `string` | no | — | Uncontrolled initial selection. No default — nothing is selected until a trigger is pressed. |
 | `onValueChange` | `(value: string) => void` | no | — | Fires with the selected trigger value on every committed selection. |
 | `children` | `ReactNode` | yes | — | Group content: one `TabsList` plus the `TabsPanel`s. |
-| `style` | `StateStyle<TabsState, StyleProp<ViewStyle>>` | no | — | Root container style: a value or a function of tab state. |
+| `style` | `StateStyle<TabsRootState, StyleProp<ViewStyle>>` | no | — | Root container style: a value or a function of tab state. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the root container. |
-| `render` | `RenderProp<TabsState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<TabsRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root container host element. |
 
-`TabsState`: `{ value: string | undefined }` — the current selection
+`TabsRootState`: `{ value: string | undefined }` — the current selection
 (`undefined` when nothing is selected).
 
 #### `TabsList`
@@ -91,7 +91,7 @@ hook for a selected-indicator style (see examples).
 | `children` | `ReactNode` | no | — | Panel content (caller-owned). |
 | `style` | `StyleProp<ViewStyle>` | no | — | Panel view style (static — the panel carries no state). |
 | `testID` | `string` | no | — | Test identifier, forwarded to the panel view. |
-| `render` | `RenderProp<TabsState, SlotProps>` | no | — | Element or function substitution; the panel still mounts only while selected. |
+| `render` | `RenderProp<TabsRootState, SlotProps>` | no | — | Element or function substitution; the panel still mounts only while selected. |
 
 ### Examples
 
@@ -99,11 +99,11 @@ Minimal, uncontrolled (starts on `account`):
 
 ```tsx
 import { Text } from "react-native";
-import { Tabs, TabsList, TabsPanel, TabsTrigger } from "@xoroh/axis";
+import { TabsRoot, TabsList, TabsPanel, TabsTrigger } from "@xoroh/axis";
 
 function SettingsTabs() {
   return (
-    <Tabs defaultValue="account">
+    <TabsRoot defaultValue="account">
       <TabsList style={{ flexDirection: "row", gap: 8 }}>
         <TabsTrigger value="account" style={{ padding: 8 }}>
           <Text>Account</Text>
@@ -118,7 +118,7 @@ function SettingsTabs() {
       <TabsPanel value="security">
         <Text>Security settings</Text>
       </TabsPanel>
-    </Tabs>
+    </TabsRoot>
   );
 }
 ```
@@ -128,12 +128,12 @@ Controlled (parent owns the selection):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Tabs, TabsList, TabsPanel, TabsTrigger } from "@xoroh/axis";
+import { TabsRoot, TabsList, TabsPanel, TabsTrigger } from "@xoroh/axis";
 
 function PeriodTabs() {
   const [period, setPeriod] = useState("day");
   return (
-    <Tabs value={period} onValueChange={setPeriod}>
+    <TabsRoot value={period} onValueChange={setPeriod}>
       <TabsList style={{ flexDirection: "row", gap: 8 }}>
         <TabsTrigger value="day" style={{ padding: 8 }}>
           <Text>Day</Text>
@@ -148,7 +148,7 @@ function PeriodTabs() {
       <TabsPanel value="week">
         <Text>Week view</Text>
       </TabsPanel>
-    </Tabs>
+    </TabsRoot>
   );
 }
 ```
@@ -158,11 +158,11 @@ geometry is caller style):
 
 ```tsx
 import { Text } from "react-native";
-import { Tabs, TabsList, TabsTrigger } from "@xoroh/axis";
+import { TabsRoot, TabsList, TabsTrigger } from "@xoroh/axis";
 
 function UnderlinedTabs() {
   return (
-    <Tabs defaultValue="one">
+    <TabsRoot defaultValue="one">
       <TabsList style={{ flexDirection: "row" }}>
         <TabsTrigger
           value="one"
@@ -177,14 +177,14 @@ function UnderlinedTabs() {
           <Text>Two</Text>
         </TabsTrigger>
       </TabsList>
-    </Tabs>
+    </TabsRoot>
   );
 }
 ```
 
 ### Accessibility
 
-- The `Tabs` root is a plain container with no role: the group role
+- The `TabsRoot` root is a plain container with no role: the group role
   lives once, on `TabsList` — a second group role on the root would
   double-announce the control.
 - `TabsList` is an accessibility element with

@@ -6,7 +6,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import { type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";

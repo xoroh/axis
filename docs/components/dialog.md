@@ -1,27 +1,22 @@
 ## Dialog
 
-Unstyled modal dialog with scrim dismissal. Closed renders
-`null`; open presents through `OverlayRoot` + `OverlayPortal`
-painting at the app's `PortalHost`, holding a scrim layer
-with the dialog surface inside it. Structure, behavior, and
-accessibility only — every visual value (`overlayStyle`,
-`surfaceStyle`, `titleStyle`) is caller-provided. State follows
-the controlled + uncontrolled pattern throughout: `open` (plus
-`onOpenChange`) for controlled use, `defaultOpen` for
-uncontrolled. Two APIs ship side by side: the concise
-single-part `Dialog` (anchor props partitioned into
-`title`/`children`/`actions`) and the compound parts below,
-which mirror Base UI's Dialog anatomy with the same names and
-state semantics.
+Unstyled modal dialog with scrim dismissal. The compound parts
+below mirror Base UI's Dialog anatomy with the same names and
+state semantics (the concise single-part `Dialog` is removed —
+naming rule, contract §2; migration in CHANGELOG). Structure,
+behavior, and accessibility only — every visual value is
+caller-provided. State follows the controlled + uncontrolled
+pattern throughout: `open` (plus `onOpenChange`) for controlled
+use, `defaultOpen` for uncontrolled.
 
-Source of truth: `DialogProps`, `DialogRootProps`,
+Source of truth: `DialogRootProps`,
 `DialogRootState`, `DialogTriggerProps`,
 `DialogTriggerState`, `DialogBackdropProps`,
 `DialogBackdropState`, `DialogPopupProps`, `DialogPopupState`,
 `DialogTitleProps`, `DialogDescriptionProps`,
 `DialogCloseProps`, `DialogCloseState`, `DialogPortalProps` in
 `@xoroh/axis`
-(`packages/axis/src/components/Dialog.tsx:72-104, 238-373`).
+(`packages/axis/src/components/Dialog.tsx:107-242`).
 
 ### Install
 
@@ -48,11 +43,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Dialog` | — | Concise single-part API (`title`/`children`/`actions`); kept for existing consumers, not a Base UI part. |
 | `DialogRoot` | `Dialog.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); renders no element. |
 | `DialogTrigger` | `Dialog.Trigger` | Button role, expanded state, tap toggles. |
 | `DialogPortal` | `Dialog.Portal` | `OverlayPortal` host at `PortalHost` — the native portal. |
-| `DialogBackdrop` | `Dialog.Backdrop` | Scrim dismissal (`disablePointerDismissal` lives on Root; the monolith spells it `dismissable`). |
+| `DialogBackdrop` | `Dialog.Backdrop` | Scrim dismissal (`disablePointerDismissal` lives on Root; the removed monolith spelled it `dismissable`). |
 | `DialogPopup` | `Dialog.Popup` | Surface view carrying the dialog role. |
 | `DialogTitle` | `Dialog.Title` | Heading text (`header` role). |
 | `DialogDescription` | `Dialog.Description` | Descriptive text. |
@@ -85,25 +79,6 @@ the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
 `Overlay` compositions (see `docs/components/overlay.md`).
 
 ### Props
-
-#### `Dialog` (concise single-part API)
-
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
-| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed dismiss. |
-| `onDismiss` | `() => void` | no | — | Fires on scrim (or request-close) dismissal, before `onOpenChange(false)`. |
-| `dismissable` | `boolean` | no | `true` | When `false`, scrim press does nothing: the scrim renders as a plain `View` with no dismiss label, so the dialog can only close through the caller's own actions (the AlertDialog pattern). |
-| `title` | `ReactNode` | no | — | Dialog title, rendered in a `Text` when provided. |
-| `children` | `ReactNode` | no | — | Dialog content. |
-| `actions` | `ReactNode` | no | — | Action row content, rendered in a `View` row when provided. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the dialog surface. |
-| `testID` | `string` | no | — | Test identifier; the surface carries it, the scrim carries `<testID>-scrim`. |
-| `overlayStyle` | `StyleProp<ViewStyle>` | no | — | Scrim layer style, caller-provided. |
-| `surfaceStyle` | `StyleProp<ViewStyle>` | no | — | Dialog surface (box) style, caller-provided. |
-| `titleStyle` | `StyleProp<TextStyle>` | no | — | Title text style, caller-provided. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the surface `View`. |
 
 #### `DialogRoot` (state owner)
 
@@ -205,58 +180,74 @@ than dropping silently.
 
 ### Examples
 
-Minimal monolith, uncontrolled (opens on mount):
+Minimal compound dialog, uncontrolled (opens on mount):
 
 ```tsx
 import { Text } from "react-native";
-import { Dialog } from "@xoroh/axis";
+import {
+  DialogBackdrop,
+  DialogPopup,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+} from "@xoroh/axis";
 
 function Welcome() {
   return (
-    <Dialog
-      defaultOpen
-      title="Welcome"
-      accessibilityLabel="Welcome dialog"
-      surfaceStyle={{ margin: 32, padding: 16 }}
-    >
-      <Text>Thanks for installing.</Text>
-    </Dialog>
+    <DialogRoot defaultOpen>
+      <DialogPortal>
+        <DialogBackdrop />
+        <DialogPopup
+          accessibilityLabel="Welcome dialog"
+          style={{ margin: 32, padding: 16 }}
+        >
+          <DialogTitle>Welcome</DialogTitle>
+          <Text>Thanks for installing.</Text>
+        </DialogPopup>
+      </DialogPortal>
+    </DialogRoot>
   );
 }
 ```
 
-Controlled with an explicit non-dismissable action row (the
-AlertDialog pattern — scrim press does nothing, only the
-actions close):
+Controlled with an explicit non-dismissable close (the
+AlertDialog pattern — backdrop press does nothing, only the
+close button shuts it):
 
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Button, Dialog } from "@xoroh/axis";
+import {
+  DialogBackdrop,
+  DialogClose,
+  DialogPopup,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+} from "@xoroh/axis";
 
 function DeleteConfirm() {
   const [open, setOpen] = useState(false);
   return (
-    <>
-      <Button onPress={() => setOpen(true)} accessibilityLabel="Delete item">
-        <Text>Delete</Text>
-      </Button>
-      <Dialog
-        open={open}
-        onOpenChange={setOpen}
-        dismissable={false}
-        title="Delete this item?"
-        accessibilityLabel="Delete confirmation"
-        surfaceStyle={{ margin: 32, padding: 16 }}
-        actions={
-          <Button onPress={() => setOpen(false)} accessibilityLabel="Confirm delete">
-            <Text>Delete</Text>
-          </Button>
-        }
-      >
-        <Text>This cannot be undone.</Text>
-      </Dialog>
-    </>
+      <DialogRoot open={open} onOpenChange={setOpen}>
+        <DialogTrigger accessibilityLabel="Delete item">
+          <Text>Delete</Text>
+        </DialogTrigger>
+        <DialogPortal>
+          <DialogBackdrop />
+          <DialogPopup
+            accessibilityLabel="Delete confirmation"
+            style={{ margin: 32, padding: 16 }}
+          >
+            <DialogTitle>Delete this item?</DialogTitle>
+            <Text>This cannot be undone.</Text>
+            <DialogClose accessibilityLabel="Confirm delete">
+              <Text>Delete</Text>
+            </DialogClose>
+          </DialogPopup>
+        </DialogPortal>
+      </DialogRoot>
   );
 }
 ```

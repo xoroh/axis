@@ -14,7 +14,7 @@ context, toggle, or ref helper (the group selection domain and
 the single boolean domain would meet only in a wrapper that
 hides both contracts).
 
-Source of truth: `CollapsibleProps`, `CollapsibleState`,
+Source of truth: `CollapsibleRootProps`, `CollapsibleRootState`,
 `CollapsibleTriggerProps`, `CollapsibleTriggerState`,
 `CollapsiblePanelProps` in `@xoroh/axis`
 (`packages/axis/src/components/Collapsible.tsx:48-116`).
@@ -44,16 +44,16 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Collapsible` | `Collapsible.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`, terminal `disabled`); renders the root disclosure view. |
+| `CollapsibleRoot` | `Collapsible.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`, terminal `disabled`); renders the root disclosure view. |
 | `CollapsibleTrigger` | `Collapsible.Trigger` | Button role, expanded state, tap toggles; root `disabled` is terminal here too. |
 | `CollapsiblePanel` | `Collapsible.Panel` | Content view; mounts only while open. |
 
-Outside a `Collapsible` the parts degrade honestly: the trigger
+Outside a `CollapsibleRoot` the parts degrade honestly: the trigger
 renders collapsed and inert, and the panel never mounts.
 
 ### Props
 
-#### `Collapsible` (state owner)
+#### `CollapsibleRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -62,12 +62,12 @@ renders collapsed and inert, and the panel never mounts.
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: disables the trigger — no toggles, no callbacks. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the root host. |
-| `style` | `StateStyle<CollapsibleState, StyleProp<ViewStyle>>` | no | — | Root disclosure view style: a value or a function of disclosure state. |
+| `style` | `StateStyle<CollapsibleRootState, StyleProp<ViewStyle>>` | no | — | Root disclosure view style: a value or a function of disclosure state. |
 | `children` | `ReactNode` | yes | — | The disclosure parts (`CollapsibleTrigger`, `CollapsiblePanel`). |
-| `render` | `RenderProp<CollapsibleState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<CollapsibleRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root disclosure host element. |
 
-`CollapsibleState`: `{ open: boolean; disabled: boolean }` —
+`CollapsibleRootState`: `{ open: boolean; disabled: boolean }` —
 whether the unit is currently open, and whether the whole unit
 is disabled.
 
@@ -91,7 +91,7 @@ is disabled.
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Panel view style, caller-provided (static — the panel mounts only while open; its state is constant). |
 | `children` | `ReactNode` | no | — | Panel content, rendered inside a `View` only while open. |
-| `render` | `RenderProp<CollapsibleState, SlotProps>` | no | — | Element or function substitution; the panel still mounts only while open. |
+| `render` | `RenderProp<CollapsibleRootState, SlotProps>` | no | — | Element or function substitution; the panel still mounts only while open. |
 
 ### Examples
 
@@ -100,21 +100,21 @@ Minimal disclosure, uncontrolled:
 ```tsx
 import { Text } from "react-native";
 import {
-  Collapsible,
+  CollapsibleRoot,
   CollapsiblePanel,
   CollapsibleTrigger,
 } from "@xoroh/axis";
 
 function Details() {
   return (
-    <Collapsible>
+    <CollapsibleRoot>
       <CollapsibleTrigger accessibilityLabel="Show details">
         <Text>Details</Text>
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <Text>Built in 2026.</Text>
       </CollapsiblePanel>
-    </Collapsible>
+    </CollapsibleRoot>
   );
 }
 ```
@@ -125,7 +125,7 @@ Controlled with function style over disclosure state:
 import { useState } from "react";
 import { Text } from "react-native";
 import {
-  Collapsible,
+  CollapsibleRoot,
   CollapsiblePanel,
   CollapsibleTrigger,
 } from "@xoroh/axis";
@@ -133,7 +133,7 @@ import {
 function ControlledDetails() {
   const [open, setOpen] = useState(false);
   return (
-    <Collapsible
+    <CollapsibleRoot
       open={open}
       onOpenChange={setOpen}
       style={(state) => ({ opacity: state.open ? 1 : 0.9 })}
@@ -144,7 +144,7 @@ function ControlledDetails() {
       <CollapsiblePanel>
         <Text>Built in 2026.</Text>
       </CollapsiblePanel>
-    </Collapsible>
+    </CollapsibleRoot>
   );
 }
 ```
@@ -154,21 +154,21 @@ Disabled unit (terminal — no toggles, no callbacks):
 ```tsx
 import { Text } from "react-native";
 import {
-  Collapsible,
+  CollapsibleRoot,
   CollapsiblePanel,
   CollapsibleTrigger,
 } from "@xoroh/axis";
 
 function LockedDetails() {
   return (
-    <Collapsible disabled>
+    <CollapsibleRoot disabled>
       <CollapsibleTrigger accessibilityLabel="Show details">
         <Text>Details</Text>
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <Text>Built in 2026.</Text>
       </CollapsiblePanel>
-    </Collapsible>
+    </CollapsibleRoot>
   );
 }
 ```

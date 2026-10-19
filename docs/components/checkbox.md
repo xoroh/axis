@@ -21,10 +21,10 @@ the difference through the indicator's `indeterminate` state.
 Toggling reports through `onCheckedChange`; `indeterminate`
 itself is caller-owned state (toggling does not clear it).
 
-Source of truth: `CheckboxRootProps`, `CheckboxState`,
+Source of truth: `CheckboxRootProps`, `CheckboxRootState`,
 `CheckboxIndicatorProps`, `CheckboxIndicatorState` in
 `@xoroh/axis`
-(`packages/axis/src/components/Checkbox.tsx:31-96`).
+(`packages/axis/src/components/Checkbox.tsx:40-136`).
 
 ### Install
 
@@ -77,12 +77,12 @@ aligned).
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
-| `style` | `StateStyle<CheckboxState, StyleProp<ViewStyle>>` | no | — | Value or function of checkbox state, caller-provided. |
+| `style` | `StateStyle<CheckboxRootState, StyleProp<ViewStyle>>` | no | — | Value or function of checkbox state, caller-provided. |
 | `children` | `ReactNode` | no | — | Box content (`CheckboxIndicator` composed by the caller). |
-| `render` | `RenderProp<CheckboxState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `render` | `RenderProp<CheckboxRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof Pressable>>` | no | — | Forwarded to the root pressable host element. |
 
-`CheckboxState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean; readOnly: boolean }`.
+`CheckboxRootState`: `{ checked: boolean; disabled: boolean; indeterminate: boolean; readOnly: boolean }`.
 
 #### `CheckboxIndicator`
 

@@ -208,7 +208,10 @@ export const DisplayDemo: Demo = {
               }}
             >
               <View
-                style={{ flexDirection: "row", justifyContent: "space-between" }}
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
               >
                 <ProgressLabel>
                   <Text style={{ fontSize: 13, color: theme.text }}>
@@ -216,7 +219,11 @@ export const DisplayDemo: Demo = {
                   </Text>
                 </ProgressLabel>
                 <ProgressValue
-                  style={{ fontSize: 13, fontWeight: "600", color: theme.primary }}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.primary,
+                  }}
                 />
               </View>
               <ProgressTrack
@@ -388,9 +395,7 @@ export const DisplayDemo: Demo = {
               style={{ flexDirection: "row", gap: 8 }}
             >
               <ToolbarLink accessibilityLabel="Docs">
-                <Text style={{ fontSize: 13, color: theme.primary }}>
-                  Docs
-                </Text>
+                <Text style={{ fontSize: 13, color: theme.primary }}>Docs</Text>
               </ToolbarLink>
             </ToolbarGroup>
             <ToolbarInput

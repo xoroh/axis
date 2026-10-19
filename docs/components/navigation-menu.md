@@ -12,8 +12,8 @@ render in flow below the bar; fly-out geometry beyond that is
 caller `style`. Closed presence is mount/unmount: closed
 renders the bar only — no panels, no scrim.
 
-Source of truth: `NavigationMenuProps`,
-`NavigationMenuState`, `NavigationMenuItemProps`,
+Source of truth: `NavigationMenuRootProps`,
+`NavigationMenuRootState`, `NavigationMenuItemProps`,
 `NavigationMenuTriggerProps`, `NavigationMenuTriggerState`,
 `NavigationMenuPanelProps` in `@xoroh/axis`
 (`packages/axis/src/components/NavigationMenu.tsx:58-130`).
@@ -43,7 +43,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `NavigationMenu` | `NavigationMenu.Root` | State owner (`openValue`/`defaultOpenValue`/`onOpenValueChange`/`onDismiss`); bar row container. |
+| `NavigationMenuRoot` | `NavigationMenu.Root` | State owner (`openValue`/`defaultOpenValue`/`onOpenValueChange`/`onDismiss`); bar row container. |
 | `NavigationMenuItem` | `NavigationMenu.Item` | Trigger/panel pair (`value` identifies it); partitions children by type into trigger content and one panel. |
 | `NavigationMenuTrigger` | `NavigationMenu.Trigger` | Button role, expanded state, tap opens its item; a bare trigger-zone element gets open composed onto its `onPress`. |
 | `NavigationMenuPanel` | `NavigationMenu.Content` | `menu`-role panel; mounts only inside its item, while open. |
@@ -54,7 +54,7 @@ rather than menu-command panels (see
 
 ### Props
 
-#### `NavigationMenu` (state owner)
+#### `NavigationMenuRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
@@ -63,12 +63,12 @@ rather than menu-command panels (see
 | `onOpenValueChange` | `(value: string \| null) => void` | no | — | Fires with the next open value on every committed open or dismissal. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenValueChange(null)`. |
 | `testID` | `string` | no | — | Test identifier; the open panel carries its own `testID` when provided, the scrim carries `<testID>-scrim`. |
-| `style` | `StateStyle<NavigationMenuState, StyleProp<ViewStyle>>` | no | — | Bar container style: a value or a function of menu state (row layout is default). |
+| `style` | `StateStyle<NavigationMenuRootState, StyleProp<ViewStyle>>` | no | — | Bar container style: a value or a function of menu state (row layout is default). |
 | `children` | `ReactNode` | yes | — | `NavigationMenuItem` elements. |
-| `render` | `RenderProp<NavigationMenuState, SlotProps>` | no | — | Element or function substitution; replaces the bar container. |
+| `render` | `RenderProp<NavigationMenuRootState, SlotProps>` | no | — | Element or function substitution; replaces the bar container. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the bar container `View`. |
 
-`NavigationMenuState`: `{ openValue: string | null }` —
+`NavigationMenuRootState`: `{ openValue: string | null }` —
 currently open item value (`null` closed).
 
 #### `NavigationMenuItem`
@@ -91,7 +91,7 @@ currently open item value (`null` closed).
 
 `NavigationMenuTriggerState`: `{ open: boolean; disabled: boolean }` — whether this trigger's panel is currently open, and whether the trigger is currently disabled.
 
-Outside a `NavigationMenu` the trigger renders collapsed and
+Outside a `NavigationMenuRoot` the trigger renders collapsed and
 inert. Any non-`NavigationMenuTrigger` element in the trigger
 zone gets open composed onto its `onPress` (internal open
 first, then the caller's handler).
@@ -112,7 +112,7 @@ Docs bar with two sections, uncontrolled:
 ```tsx
 import { Text } from "react-native";
 import {
-  NavigationMenu,
+  NavigationMenuRoot,
   NavigationMenuItem,
   NavigationMenuPanel,
   NavigationMenuTrigger,
@@ -120,7 +120,7 @@ import {
 
 function DocsBar() {
   return (
-    <NavigationMenu>
+    <NavigationMenuRoot>
       <NavigationMenuItem value="guides">
         <NavigationMenuTrigger accessibilityLabel="Guides">
           <Text>Guides</Text>
@@ -137,7 +137,7 @@ function DocsBar() {
           <Text>Components</Text>
         </NavigationMenuPanel>
       </NavigationMenuItem>
-    </NavigationMenu>
+    </NavigationMenuRoot>
   );
 }
 ```
@@ -149,7 +149,7 @@ navigation):
 import { useState } from "react";
 import { Text } from "react-native";
 import {
-  NavigationMenu,
+  NavigationMenuRoot,
   NavigationMenuItem,
   NavigationMenuPanel,
   NavigationMenuTrigger,
@@ -158,7 +158,7 @@ import {
 function ControlledBar() {
   const [openValue, setOpenValue] = useState<string | null>(null);
   return (
-    <NavigationMenu openValue={openValue} onOpenValueChange={setOpenValue}>
+    <NavigationMenuRoot openValue={openValue} onOpenValueChange={setOpenValue}>
       <NavigationMenuItem value="guides">
         <NavigationMenuTrigger accessibilityLabel="Guides">
           <Text>Guides</Text>
@@ -167,7 +167,7 @@ function ControlledBar() {
           <Text>Getting started</Text>
         </NavigationMenuPanel>
       </NavigationMenuItem>
-    </NavigationMenu>
+    </NavigationMenuRoot>
   );
 }
 ```

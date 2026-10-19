@@ -3,9 +3,9 @@
 Menu-command bar: a row of `MenubarMenu` commands, each opening
 a dropdown panel; exactly one panel is open at a time. This is
 composition, not a second menu implementation: each
-`MenubarMenu` IS a `DropdownMenu` (same trigger/item/sub
+`MenubarMenu` IS a `DropdownMenuRoot` (same trigger/item/sub
 parts, same dismissal stack, same scrim), controlled by the
-root's open value. It differs from `NavigationMenu` in what
+root's open value. It differs from `NavigationMenuRoot` in what
 opens: menu-command panels (`menuitem` content,
 cascade-capable) rather than navigation panels. The desktop-bar
 pattern adapts to touch by press (no hover): pressing another
@@ -14,13 +14,13 @@ menu's scrim fills only its own container — never the whole
 bar. The open menu follows the controlled + uncontrolled
 pattern (`openValue`/`defaultOpenValue`/`onOpenValueChange`,
 `null` closed): the open panel is application state, like
-`NavigationMenu`.
+`NavigationMenuRoot`.
 
 Source of truth: `MenubarProps`, `MenubarState`,
 `MenubarMenuProps` in `@xoroh/axis`
 (`packages/axis/src/components/Menubar.tsx:41-83`); panel
-parts from `DropdownMenuProps` in `@xoroh/axis`
-(`packages/axis/src/components/DropdownMenu.tsx:79-102`).
+parts from `DropdownMenuRootProps` in `@xoroh/axis`
+(`packages/axis/src/components/DropdownMenu.tsx:81-104`).
 
 ### Install
 
@@ -48,7 +48,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
 | `Menubar` | `Menubar.Root` | State owner (`openValue`/`defaultOpenValue`/`onOpenValueChange`); bar row container with the `menubar` role. |
-| `MenubarMenu` | `Menubar.Menu` (composition) | Controlled `DropdownMenu` bound to the root's open value (`value` identifies it). Trigger/item/sub parts come from `DropdownMenu` (see `docs/components/dropdown-menu.md`). |
+| `MenubarMenu` | `Menubar.Menu` (composition) | Controlled `DropdownMenuRoot` bound to the root's open value (`value` identifies it). Trigger/item/sub parts come from `DropdownMenuRoot` (see `docs/components/dropdown-menu.md`). |
 
 Outside a `Menubar` a `MenubarMenu` renders nothing rather
 than an uncoordinated dropdown — there is no coordinated open
@@ -81,7 +81,7 @@ open menu value (`null` closed).
 | `children` | `ReactNode` | no | — | Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the menu container. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Menu content box style, caller-provided. |
-| `render` | `RenderProp<DropdownMenuState, SlotProps>` | no | — | Element or function substitution, forwarded to the menu's content box (see `DropdownMenuProps.render`). |
+| `render` | `RenderProp<DropdownMenuRootState, SlotProps>` | no | — | Element or function substitution, forwarded to the menu's content box (see `DropdownMenuRootProps.render`). |
 
 ### Examples
 
@@ -152,7 +152,7 @@ function ControlledBar() {
 
 - The bar is an accessibility element (`accessible`)
   carrying the `menubar` role and the caller's label.
-- Each open menu is a `DropdownMenu`: same trigger/item/sub
+- Each open menu is a `DropdownMenuRoot`: same trigger/item/sub
   parts, same `menu`/`menuitem` roles, same "Dismiss menu"
   scrim — see `docs/components/dropdown-menu.md`.
 - Pressing another menu's trigger while one is open switches
@@ -166,7 +166,7 @@ function ControlledBar() {
 
 Every part takes `render` and value-or-function `style` over
 its state object (`{ openValue }`; menu content-box style via
-`DropdownMenuState`); `data-*` attributes are deliberately
+`DropdownMenuRootState`); `data-*` attributes are deliberately
 absent on native — state flows through those functions instead
 (contract §11, parity D1). Verified by the menubar RNTL suites
 (9 tests — `docs/COVERAGE.md`). Renders in

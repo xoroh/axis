@@ -5,17 +5,15 @@ Tap the anchor to toggle; the box is measured and placed with
 `useFloatingPlacement` (anchor `measure()` + viewport +
 `resolveFloatingRect`) — until measured it stays transparent at
 origin rather than flashing somewhere wrong. Structure,
-behavior, and accessibility only — every visual value (`style`,
-`popoverStyle`) is caller-provided. State follows the controlled
+behavior, and accessibility only — every visual value is
+caller-provided. State follows the controlled
 + uncontrolled pattern throughout: `open` (plus `onOpenChange`)
-for controlled use, `defaultOpen` for uncontrolled. Two APIs ship
-side by side: the concise single-part `Popover` (anchor and body
-partitioned into the `children`/`content` props, always
-non-modal) and the compound parts below, which mirror
-Base UI's Popover anatomy with the same names and state
-semantics.
+for controlled use, `defaultOpen` for uncontrolled. The compound
+parts below mirror Base UI's Popover anatomy with the same names
+and state semantics (the concise single-part `Popover` is
+removed — naming rule, contract §2; migration in CHANGELOG).
 
-Source of truth: `PopoverProps`, `PopoverRootProps`,
+Source of truth: `PopoverRootProps`,
 `PopoverRootState`, `PopoverTriggerProps`,
 `PopoverTriggerState`, `PopoverBackdropProps`,
 `PopoverBackdropState`, `PopoverPositionerProps`,
@@ -94,27 +92,6 @@ this stack: scrim and box present through `Portal` at the app's
 wrapper — always non-modal by design.
 
 ### Props
-
-#### `Popover` (concise inline API)
-
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
-| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismiss. |
-| `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
-| `placement` | `Placement` | no | `"bottom"` | Preferred side (the `resolveFloatingRect` fallback). Clamped into the viewport. |
-| `children` | `ReactNode` | yes | — | Anchor content the popover is attached to. Tap toggles. |
-| `content` | `ReactNode` | yes | — | Popover body content (an empty box is a bug). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the popover region. |
-| `testID` | `string` | no | — | Test identifier; the box carries it, the scrim carries `<testID>-scrim`. |
-| `style` | `StyleProp<ViewStyle>` | no | — | Anchor wrapper style, caller-provided. |
-| `popoverStyle` | `StyleProp<ViewStyle>` | no | — | Popover box style, caller-provided. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the anchor wrapper host element. |
-
-Closed renders the anchor only — no scrim, no box. Unlike
-Dialog there is no `Modal` here: scrim and box present through
-`Portal` at the app's `PortalHost`, above sibling content.
 
 #### `PopoverRoot` (state owner)
 
@@ -245,20 +222,29 @@ than dropping silently.
 
 ### Examples
 
-Minimal monolith, uncontrolled (tap the anchor to toggle):
+Minimal compound popover, uncontrolled (tap the anchor to toggle):
 
 ```tsx
 import { Text } from "react-native";
-import { Popover } from "@xoroh/axis";
+import {
+  PopoverPopup,
+  PopoverPositioner,
+  PopoverRoot,
+  PopoverTrigger,
+} from "@xoroh/axis";
 
 function Info() {
   return (
-    <Popover
-      content={<Text>Saved yesterday at 14:02.</Text>}
-      accessibilityLabel="Saved details"
-    >
-      <Text>Info</Text>
-    </Popover>
+    <PopoverRoot>
+      <PopoverTrigger accessibilityLabel="Saved details">
+        <Text>Info</Text>
+      </PopoverTrigger>
+      <PopoverPositioner>
+        <PopoverPopup>
+          <Text>Saved yesterday at 14:02.</Text>
+        </PopoverPopup>
+      </PopoverPositioner>
+    </PopoverRoot>
   );
 }
 ```
@@ -268,21 +254,26 @@ Controlled with placement (parent owns the open state):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { Popover } from "@xoroh/axis";
+import {
+  PopoverPopup,
+  PopoverPositioner,
+  PopoverRoot,
+  PopoverTrigger,
+} from "@xoroh/axis";
 
 function Help() {
   const [open, setOpen] = useState(false);
   return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-      placement="top"
-      content={<Text>Press any row for options.</Text>}
-      accessibilityLabel="Help"
-      popoverStyle={{ padding: 12 }}
-    >
-      <Text>Help</Text>
-    </Popover>
+    <PopoverRoot open={open} onOpenChange={setOpen}>
+      <PopoverTrigger accessibilityLabel="Help">
+        <Text>Help</Text>
+      </PopoverTrigger>
+      <PopoverPositioner side="top">
+        <PopoverPopup style={{ padding: 12 }}>
+          <Text>Press any row for options.</Text>
+        </PopoverPopup>
+      </PopoverPositioner>
+    </PopoverRoot>
   );
 }
 ```

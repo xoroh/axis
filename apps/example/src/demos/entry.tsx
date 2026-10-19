@@ -91,7 +91,10 @@ export const EntryDemo: Demo = {
             />
           </FieldRoot>
 
-          <FieldRoot error={notes === "" ? "Notes are required" : undefined} style={{ gap: 8 }}>
+          <FieldRoot
+            error={notes === "" ? "Notes are required" : undefined}
+            style={{ gap: 8 }}
+          >
             <FieldLabel
               style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
             >
@@ -110,14 +113,10 @@ export const EntryDemo: Demo = {
                 style={[inputStyle, { minHeight: 70 }]}
               />
             </FieldControl>
-            <FieldDescription
-              style={{ fontSize: 12, color: theme.textSubtle }}
-            >
+            <FieldDescription style={{ fontSize: 12, color: theme.textSubtle }}>
               A sentence or two is plenty.
             </FieldDescription>
-            <FieldError
-              style={{ fontSize: 12, color: theme.danger }}
-            >
+            <FieldError style={{ fontSize: 12, color: theme.danger }}>
               Notes are required
             </FieldError>
           </FieldRoot>
