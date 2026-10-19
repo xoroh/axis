@@ -28,6 +28,9 @@ export type CalendarMonthParts = {
 /** 0 = Sunday … 6 = Saturday (matches `getUTCDay`). */
 export type FirstDayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+/** Month-name length for `resolveCalendarMonthNames`. */
+export type CalendarMonthNameStyle = "long" | "short" | "narrow";
+
 export type CalendarDirection = "ltr" | "rtl";
 
 export type CalendarSelectionMode = "single" | "range";
@@ -197,6 +200,74 @@ function validBound(value: string | undefined): string | null {
 }
 
 /**
+ * Twelve month names for a locale, in calendar order.
+ * Formatted at UTC noon mid-month so neither DST edges nor month ends
+ * can shift the read. Falls back to English on missing `Intl` —
+ * never throws.
+ */
+export function resolveCalendarMonthNames(
+  locale: string = "en-US",
+  style: CalendarMonthNameStyle = "long",
+): string[] {
+  const fallback = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  try {
+    const format = new Intl.DateTimeFormat(locale, {
+      month: style,
+      timeZone: "UTC",
+    });
+    return Array.from({ length: 12 }, (_, monthIndex) =>
+      format.format(new Date(Date.UTC(2026, monthIndex, 15, 12))),
+    );
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Locale-aware week start (0 = Sunday … 6 = Saturday) via
+ * `Intl.Locale` week info (`firstDay` numbers days 1 = Monday …
+ * 7 = Sunday). Falls back to Sunday (0) when week info is unavailable —
+ * never throws. The grid functions keep their explicit `firstDayOfWeek`
+ * parameter; this helper supplies the locale default for it.
+ */
+export function resolveLocaleFirstDay(
+  locale: string = "en-US",
+): FirstDayOfWeek {
+  try {
+    const loc = new Intl.Locale(locale) as Intl.Locale & {
+      getWeekInfo?: () => { firstDay?: unknown };
+    };
+    const info =
+      typeof loc.getWeekInfo === "function" ? loc.getWeekInfo() : undefined;
+    const firstDay = info?.firstDay;
+    if (
+      typeof firstDay === "number" &&
+      Number.isInteger(firstDay) &&
+      firstDay >= 1 &&
+      firstDay <= 7
+    ) {
+      return (((firstDay % 7) + 7) % 7) as FirstDayOfWeek;
+    }
+  } catch {
+    // Intl.Locale or week info unavailable — fall through to Sunday.
+  }
+  return 0;
+}
+
+/**
  * Whether an ISO date is unselectable: whole-grid `disabled`, outside
  * `[minDate, maxDate]`, or rejected by `isDateDisabled`. Invalid bounds
  * are ignored (never throw on caller input).
@@ -277,9 +348,32 @@ function clampDay(year: number, monthIndex: number, day: number): number {
 }
 
 /**
+ * Day arithmetic in UTC — the DST-safe primitive. Local-time mutation
+ * (`setDate`/`setHours`) skips or repeats days across DST transitions;
+ * UTC construction has no DST, so month ends and DST weekends resolve
+ * exactly. Never throws: callers validate first.
+ */
+function shiftCalendarDay(
+  year: number,
+  monthIndex: number,
+  day: number,
+  deltaDays: number,
+): CalendarDateParts {
+  const shifted = new Date(Date.UTC(year, monthIndex, day + deltaDays));
+  return {
+    year: shifted.getUTCFullYear(),
+    monthIndex: shifted.getUTCMonth(),
+    day: shifted.getUTCDate(),
+  };
+}
+
+/**
  * Roving-focus key mapping: the next focused ISO date for a grid key.
- * Arrows move within the week (`±1`, row `±7`); `dir` swaps Left/Right.
- * Home/End jump to the visual row edges (honoring `firstDayOfWeek`);
+ * Arrows move within the week (`±1`) and across rows (`±7`), crossing
+ * month (and year) boundaries through DST-safe UTC arithmetic — no
+ * clamping at month ends, so grids that paint outside days stay
+ * reachable. `dir` swaps Left/Right. Home/End jump to the visual row
+ * edges and stay grid-local (clamped to the visible month).
  * PageUp/PageDown move the same day across months (clamped to the
  * month length). Returns `null` for invalid input — never throws.
  */
@@ -297,29 +391,26 @@ export function resolveCalendarFocus(
   const { year, monthIndex, day } = parts;
   switch (key) {
     case "ArrowLeft":
-      return toCalendarDate(
+    case "ArrowRight": {
+      const step = key === "ArrowLeft" ? -1 : 1;
+      const next = shiftCalendarDay(
         year,
         monthIndex,
-        clampDay(year, monthIndex, day + (dir === "rtl" ? 1 : -1)),
+        day,
+        dir === "rtl" ? -step : step,
       );
-    case "ArrowRight":
-      return toCalendarDate(
-        year,
-        monthIndex,
-        clampDay(year, monthIndex, day + (dir === "rtl" ? -1 : 1)),
-      );
+      return toCalendarDate(next.year, next.monthIndex, next.day);
+    }
     case "ArrowUp":
-      return toCalendarDate(
+    case "ArrowDown": {
+      const next = shiftCalendarDay(
         year,
         monthIndex,
-        clampDay(year, monthIndex, day - 7),
+        day,
+        key === "ArrowUp" ? -7 : 7,
       );
-    case "ArrowDown":
-      return toCalendarDate(
-        year,
-        monthIndex,
-        clampDay(year, monthIndex, day + 7),
-      );
+      return toCalendarDate(next.year, next.monthIndex, next.day);
+    }
     case "Home":
     case "End": {
       // Visual row edges: the row starts `offset` days after the

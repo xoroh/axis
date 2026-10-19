@@ -21,6 +21,16 @@ export type TimePickerValue = {
 
 export type TimePickerFormat = "12h" | "24h";
 
+/** Display-ready parts: localized digits with a localized day period. */
+export type TimeParts = {
+  /** Hours as displayed (no leading zero in 12h mode, two digits in 24h). */
+  hours: string;
+  /** Two-digit minutes. */
+  minutes: string;
+  /** Localized day period in 12h mode (`AM`/`PM` for en-US), else `null`. */
+  period: string | null;
+};
+
 /**
  * Minute options for a step, as 0-based offsets from the hour.
  *
@@ -83,4 +93,78 @@ export function toTwentyFourHour(
 ): number {
   const base = twelveHour % 12;
   return period === "PM" ? base + 12 : base;
+}
+
+function formatDigits(value: number, digits: number, locale?: string): string {
+  try {
+    return new Intl.NumberFormat(locale, {
+      minimumIntegerDigits: digits,
+      useGrouping: false,
+    }).format(value);
+  } catch {
+    return String(value).padStart(digits, "0");
+  }
+}
+
+function resolveDayPeriod(locale: string | undefined, hours24: number): string {
+  try {
+    const format = new Intl.DateTimeFormat(locale, {
+      hour: "numeric",
+      hour12: true,
+    });
+    const found = format
+      .formatToParts(new Date(Date.UTC(2026, 0, 1, hours24)))
+      .find((part) => part.type === "dayPeriod")?.value;
+    if (found !== undefined) return found;
+  } catch {
+    // Intl unavailable — fall through to the ASCII fallback.
+  }
+  return hours24 < 12 ? "AM" : "PM";
+}
+
+/**
+ * Display-ready parts for a value: localized digits plus, in 12h mode,
+ * the locale's day-period name (`AM`/`PM` for en-US). The state stays
+ * 24-hour; only the presentation localizes. Never throws.
+ */
+export function formatTimeParts(
+  value: TimePickerValue,
+  format: TimePickerFormat = "24h",
+  locale?: string,
+): TimeParts {
+  const normalised = normalizeTimeValue(value);
+  if (format === "24h") {
+    return {
+      hours: formatDigits(normalised.hours, 2, locale),
+      minutes: formatDigits(normalised.minutes, 2, locale),
+      period: null,
+    };
+  }
+  const twelve = normalised.hours % 12 === 0 ? 12 : normalised.hours % 12;
+  return {
+    hours: formatDigits(twelve, 1, locale),
+    minutes: formatDigits(normalised.minutes, 2, locale),
+    period: resolveDayPeriod(locale, normalised.hours),
+  };
+}
+
+/**
+ * Step a value by minutes on the clock: wraps past midnight in both
+ * directions (clock arithmetic, not clamping — stepping is cyclic),
+ * then snaps down onto the step grid (the `normalizeTimeValue`
+ * contract). Negative steps move backward. Never throws.
+ */
+export function addTimeMinutes(
+  value: TimePickerValue | undefined,
+  deltaMinutes: number,
+  step: number = 1,
+): TimePickerValue {
+  const base = normalizeTimeValue(value, step);
+  const delta = Number.isFinite(deltaMinutes) ? Math.trunc(deltaMinutes) : 0;
+  const total = base.hours * 60 + base.minutes + delta;
+  const wrapped = ((total % 1440) + 1440) % 1440;
+  return normalizeTimeValue(
+    { hours: Math.floor(wrapped / 60), minutes: wrapped % 60 },
+    step,
+  );
 }
