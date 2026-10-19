@@ -86,6 +86,28 @@ describe("Switch on React Native", () => {
     });
   });
 
+  it("readOnly is focusable and announced as enabled, but presses change nothing", async () => {
+    let calls = 0;
+    await render(
+      <Switch
+        testID="sw"
+        accessibilityLabel="Airplane mode"
+        readOnly
+        onCheckedChange={() => (calls += 1)}
+      />,
+    );
+    expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
+      checked: false,
+      disabled: false,
+    });
+    expect(screen.getByTestId("sw").props.disabled).toBeFalsy();
+    await press("sw");
+    expect(calls).toBe(0);
+    expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
+      checked: false,
+    });
+  });
+
   it("forwards a ref to the root host element", async () => {
     const ref = createRef<ElementRef<typeof Pressable>>();
     await render(<Switch testID="sw" ref={ref} />);

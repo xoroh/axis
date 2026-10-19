@@ -12,7 +12,7 @@ import {
   TabsPanel,
   TabsTrigger,
 } from "@xoroh/axis";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
@@ -195,26 +195,53 @@ export const DisclosureDemo: Demo = {
                 <AccordionHeader>
                   <AccordionTrigger
                     accessibilityLabel={label}
-                    style={{
-                      padding: 12,
-                      backgroundColor: theme.surfaceSubtle,
-                      flexDirection: "row",
-                      justifyContent: "space-between",
+                    render={(props, state) => {
+                      const onPress =
+                        typeof props.onPress === "function"
+                          ? (props.onPress as () => void)
+                          : undefined;
+                      return (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityState={{
+                            expanded: state.open,
+                            disabled: state.disabled,
+                          }}
+                          accessibilityLabel={label}
+                          disabled={state.disabled}
+                          onPress={onPress}
+                          style={{
+                            padding: 12,
+                            backgroundColor: theme.surfaceSubtle,
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 14,
+                              fontWeight: "600",
+                              color: theme.text,
+                            }}
+                          >
+                            {title}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: theme.textSubtle,
+                              transform: [
+                                { rotate: state.open ? "180deg" : "0deg" },
+                              ],
+                            }}
+                          >
+                            ▼
+                          </Text>
+                        </Pressable>
+                      );
                     }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: theme.text,
-                      }}
-                    >
-                      {title}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: theme.textSubtle }}>
-                      ▼
-                    </Text>
-                  </AccordionTrigger>
+                  />
                 </AccordionHeader>
                 <AccordionPanel>
                   <View style={{ padding: 12, backgroundColor: theme.surface }}>

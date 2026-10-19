@@ -170,6 +170,64 @@ describe("Accordion on React Native", () => {
     expect(screen.getByRole("button")).toBeTruthy();
   });
 
+  it("keepMounted keeps the panel mounted but hidden while closed", async () => {
+    await render(
+      <AccordionRoot>
+        <AccordionItem value="a">
+          <AccordionHeader>
+            <AccordionTrigger testID="a" accessibilityLabel="General">
+              <Text>General</Text>
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel testID="a-panel" keepMounted>
+            <Text>General panel</Text>
+          </AccordionPanel>
+        </AccordionItem>
+      </AccordionRoot>,
+    );
+    // Mounted (layout + content present) but invisible
+    // (`display: "none"` after caller style) and hidden from
+    // assistive tech on all three platforms, with closed state.
+    // (RNTL hides hidden-from-AT elements from queries by default —
+    // which is itself the proof — so the hidden assertions query
+    // with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("a-panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("a-panel")).toBeNull();
+    const hidden = screen.getByTestId("a-panel", {
+      includeHiddenElements: true,
+    }).props;
+    expect(hidden.accessibilityElementsHidden).toBe(true);
+    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    expect(hidden["aria-hidden"]).toBe(true);
+    const flatHidden = Object.assign(
+      {},
+      ...(Array.isArray(hidden.style)
+        ? hidden.style.flat(Infinity)
+        : [hidden.style]),
+    );
+    expect(flatHidden.display).toBe("none");
+    // Content stays mounted while hidden (query it inclusively).
+    expect(
+      screen.getByText("General panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByText("General panel")).toBeNull();
+    await press("a");
+    const shown = screen.getByTestId("a-panel").props;
+    expect(shown.accessibilityElementsHidden).toBe(false);
+    expect(shown.importantForAccessibility).toBe("auto");
+    expect(shown["aria-hidden"]).toBe(false);
+    const flatShown = Object.assign(
+      {},
+      ...(Array.isArray(shown.style)
+        ? shown.style.flat(Infinity)
+        : [shown.style]),
+    );
+    expect(flatShown.display).toBeUndefined();
+    expect(screen.getByText("General panel")).toBeTruthy();
+  });
+
   it("disabled root blocks every item: no toggles, no callbacks", async () => {
     let calls = 0;
     await render(

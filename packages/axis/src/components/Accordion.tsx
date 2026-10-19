@@ -23,7 +23,10 @@ import { useControllableState } from "../useControllableState";
  * composing one `AccordionHeader` (heading host) with an
  * `AccordionTrigger` `Pressable` (button role, `expanded` state)
  * and one `AccordionPanel` `View` that renders ONLY while its item
- * is open — presence is mount/unmount, never hiding styles. No
+ * is open — presence is mount/unmount, never hiding styles — unless
+ * `keepMounted` holds it mounted while closed (then it is strictly
+ * hidden: `display: "none"` after the caller style, plus hidden
+ * from assistive tech on iOS, Android, and web). No
  * default visuals — every visual value (`style` on each part) is
  * caller-provided. State follows the `useControllableState`
  * pattern: `value` (+ `onValueChange`) for controlled use,
@@ -194,13 +197,25 @@ export type AccordionTriggerProps = {
 
 export type AccordionPanelProps = {
   testID?: string;
-  /** Panel view style (the panel mounts only while open). */
+  /** Panel view style (the panel mounts only while open, unless `keepMounted`). */
   style?: StyleProp<ViewStyle>;
-  /** Panel content, rendered inside a `View` only while the item is open. */
+  /** Panel content, rendered inside a `View` only while the item is open (or always with `keepMounted`). */
   children?: ReactNode;
   /**
-   * Element or function substitution (Base UI parity). The panel
-   * still mounts only while the item is open.
+   * When `true`, the panel stays mounted while the item is closed:
+   * mounted but invisible (`display: "none"` merged after the
+   * caller style — the Base UI `hidden` attribute equivalent) and
+   * hidden from assistive tech (`accessibilityElementsHidden` on
+   * iOS, `importantForAccessibility="no-hide-descendants"` on
+   * Android, `aria-hidden` on web — `accessible={false}` alone
+   * does not hide children), with `{ open: false }` state.
+   * Default `false` (mounts only while open — D3: keep-alive
+   * stays opt-in).
+   */
+  keepMounted?: boolean;
+  /**
+   * Element or function substitution (Base UI parity). Without
+   * `keepMounted` the panel still mounts only while the item is open.
    */
   render?: RenderProp<AccordionPanelState, SlotProps>;
 };
@@ -519,12 +534,14 @@ export function AccordionPanel({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: AccordionPanelProps): React.ReactNode {
   const item = useContext(AccordionItemDisclosureContext);
-  if (!(item?.open ?? false)) return null;
+  const open = item?.open ?? false;
+  if (!open && !keepMounted) return null;
   const state: AccordionPanelState = {
-    open: true,
+    open,
     disabled: item?.disabled ?? false,
   };
   const substituted = resolveRender(
@@ -539,7 +556,19 @@ export function AccordionPanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      // A closed keepMounted panel must not be visible: Base UI sets
+      // the `hidden` attribute, so the native equivalent is
+      // `display: "none"` merged AFTER the caller style (state-driven
+      // visibility, not a default style). `accessible={false}` alone
+      // does NOT hide children from VoiceOver/TalkBack, so the panel
+      // is hidden on all three platforms explicitly.
+      style={[style, open ? null : { display: "none" as const }]}
+      accessibilityElementsHidden={!open}
+      importantForAccessibility={open ? "auto" : "no-hide-descendants"}
+      aria-hidden={!open}
+    >
       {children}
     </View>
   );
