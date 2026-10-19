@@ -291,4 +291,22 @@ describe("RadioGroup on React Native", () => {
     await render(<RadioIndicator testID="orphan" />);
     expect(screen.queryByTestId("orphan")).toBeNull();
   });
+
+  it("indicator mounts under a render-substituted root", async () => {
+    await render(
+      <RadioGroup testID="rg" defaultValue="s">
+        <RadioRoot
+          value="s"
+          testID="s"
+          render={(props) => <Text testID="s-sub">{props.children}</Text>}
+        >
+          <RadioIndicator testID="s-mark">
+            <Text>●</Text>
+          </RadioIndicator>
+        </RadioRoot>
+      </RadioGroup>,
+    );
+    expect(screen.getByTestId("s-sub")).toBeTruthy();
+    expect(screen.getByTestId("s-mark")).toBeTruthy();
+  });
 });

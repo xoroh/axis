@@ -337,7 +337,19 @@ export function RadioRoot({
     } satisfies SlotProps,
     state,
   );
-  if (substituted !== null) return substituted;
+  if (substituted !== null) {
+    return (
+      <RadioItemDisclosureContext.Provider
+        value={{
+          checked,
+          disabled: effectiveDisabled,
+          readOnly: effectiveReadOnly,
+        }}
+      >
+        {substituted}
+      </RadioItemDisclosureContext.Provider>
+    );
+  }
 
   return (
     <Pressable
