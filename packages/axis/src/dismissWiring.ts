@@ -39,6 +39,34 @@ export type DismissSource =
 
 export type DismissBranches = Record<DismissSource, boolean>;
 
+/**
+ * Why an overlay open state changed. Base UI
+ * `Dialog.Root.ChangeEventReason` parity subset: `trigger-press`
+ * (trigger toggle, either direction), `outside-press` (scrim/backdrop
+ * press), `escape-key` (Android hardware back and iOS VoiceOver
+ * scrub — the native escape equivalents; RN has no Escape key),
+ * `close-press` (close affordance). `focus-out` is declared but never
+ * bound on native (no global key listener); `imperative-action` and
+ * `none` cover programmatic closes without a user gesture — notably
+ * drag-release dismissal reports `none`, because Base UI has no
+ * gesture-dismiss reason and a drag is neither an outside press nor a
+ * close press. DOM-only details (`event`, `cancel()`, the trigger
+ * element) are omitted: there is no DOM event to carry on native.
+ */
+export type OverlayOpenChangeReason =
+  | "trigger-press"
+  | "outside-press"
+  | "escape-key"
+  | "close-press"
+  | "focus-out"
+  | "imperative-action"
+  | "none";
+
+/** Open-change details: the reason, and nothing else (see above). */
+export type OverlayOpenChangeDetails = {
+  reason: OverlayOpenChangeReason;
+};
+
 export type DismissWiringOptions = {
   /** A modal surface locks interaction outside itself, so outside signals dismiss. */
   modal: boolean;

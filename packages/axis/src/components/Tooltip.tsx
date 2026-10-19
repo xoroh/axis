@@ -20,7 +20,7 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
-import { useAccessibilityFocusRestore } from "./useAccessibilityFocus";
+import { useModalFocus } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -153,10 +153,10 @@ export function Tooltip({
   // Labelled tips move SR focus into the tip on open and restore it to
   // the anchor on close (the upstream `Content`/`Trigger` pair);
   // unlabelled tips stay silent. No containment (parity D5).
-  useAccessibilityFocusRestore({
+  useModalFocus({
     open: visible ?? false,
     enabled: accessibilityLabel !== undefined,
-    targetRef: tipRef,
+    popupRef: tipRef,
     restoreRef: anchorHostRef,
   });
 
@@ -673,12 +673,27 @@ export function TooltipPopup({
 }: TooltipPopupProps): React.ReactNode {
   const root = useContext(TooltipRootContext);
 
+  // Hooks before guards: the focus node ref must exist on every
+  // render, and the move/restore wiring below no-ops while hidden.
+  const tipNodeRef = useRef<ElementRef<typeof View> | null>(null);
   const setTipRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      tipNodeRef.current = node;
       assignTipRef(ref, node);
     },
     [ref],
   );
+
+  const open = root?.open ?? false;
+  // Labelled tips move SR focus into the tip on open and restore it
+  // to the trigger anchor on close (the upstream `Content`/`Trigger`
+  // pair); unlabelled tips stay silent. No containment.
+  useModalFocus({
+    open,
+    enabled: accessibilityLabel !== undefined && root !== null,
+    popupRef: tipNodeRef,
+    restoreRef: root?.anchorHostRef ?? { current: null },
+  });
 
   if (!root) return null;
   if (!root.open) return null;

@@ -29,7 +29,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { Portal } from "./Portal";
-import { useAccessibilityFocusRestore } from "./useAccessibilityFocus";
+import { useModalFocus } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -190,10 +190,10 @@ export function Popover({
   // Non-modal popovers move SR focus into the box on open and restore
   // it to the anchor on close (the upstream `Content`/`Trigger` pair) —
   // silent when the box carries no label. No containment (parity D5).
-  useAccessibilityFocusRestore({
+  useModalFocus({
     open: isOpen ?? false,
     enabled: accessibilityLabel !== undefined,
-    targetRef: boxRef,
+    popupRef: boxRef,
     restoreRef: anchorHostRef,
   });
 
@@ -781,10 +781,10 @@ export function PopoverPopup({
   // Move SR focus into the box on open, restore to the anchor on
   // close (the upstream `Content`/`Trigger` pair) — silent when the
   // box carries no label. No containment (parity D5).
-  useAccessibilityFocusRestore({
+  useModalFocus({
     open,
     enabled: accessibilityLabel !== undefined && disclosure !== null,
-    targetRef: popupNodeRef,
+    popupRef: popupNodeRef,
     restoreRef: disclosure?.anchorHostRef ?? { current: null },
   });
 
