@@ -132,13 +132,18 @@ jobs:
         run: |
           cd apps/example
           npx expo prebuild --platform android --non-interactive
-      - name: Install emulator system libraries
+      - name: Build Android app
+        run: |
+          cd apps/example/android
+          ./gradlew assembleDebug
+      - name: Install emulator system libraries and enable KVM
         # The ubuntu-24.04 image lacks libpulse, which qemu links against
         # even with -no-audio; without it the emulator never boots.
         run: |
           sudo apt-get update
           sudo apt-get install -y libpulse0
-      - name: Build, boot and screenshot on the emulator
+          sudo chmod 666 /dev/kvm || true
+      - name: Boot and screenshot on the emulator
         uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
         with:
           api-level: 34
@@ -149,31 +154,16 @@ jobs:
           script: |
             mkdir -p "$GITHUB_WORKSPACE/device-shots"
             adb reverse tcp:8081 tcp:8081
-            cd apps/example
-            npx expo start --non-interactive > "$GITHUB_WORKSPACE/metro-android.log" 2>&1 &
-            for _ in $(seq 1 36); do
-              curl -sf http://127.0.0.1:8081/status && break
-              sleep 5
-            done
+            cd apps/example && npx expo start --non-interactive > "$GITHUB_WORKSPACE/metro-android.log" 2>&1 &
+            for _ in $(seq 1 36); do curl -sf http://127.0.0.1:8081/status && break; sleep 5; done
             curl -sf http://127.0.0.1:8081/status
-            cd android
-            ./gradlew assembleDebug
-            adb install -r app/build/outputs/apk/debug/app-debug.apk
+            adb install -r apps/example/android/app/build/outputs/apk/debug/app-debug.apk
             adb shell monkey -p org.xoroh.axis.example -c android.intent.category.LAUNCHER 1
             sleep 25
-            # The app process must be alive: it reached the home screen and stayed up.
             adb shell pidof org.xoroh.axis.example
             adb exec-out screencap -p > "$GITHUB_WORKSPACE/device-shots/home-android.png"
             ls -la "$GITHUB_WORKSPACE/device-shots/"
-            # The home screen lists the demo families under an "Axis examples" header.
-            HOME_OK=0
-            for _ in $(seq 1 12); do
-              adb shell uiautomator dump /sdcard/axis-ui.xml > /dev/null
-              adb pull /sdcard/axis-ui.xml "$RUNNER_TEMP/axis-ui.xml" > /dev/null
-              grep -o "Axis examples" "$RUNNER_TEMP/axis-ui.xml" && { HOME_OK=1; break; }
-              sleep 5
-            done
-            test "$HOME_OK" = "1"
+            for _ in $(seq 1 12); do adb shell uiautomator dump /sdcard/axis-ui.xml > /dev/null && adb pull /sdcard/axis-ui.xml "$RUNNER_TEMP/axis-ui.xml" > /dev/null && grep -o "Axis examples" "$RUNNER_TEMP/axis-ui.xml" && exit 0; sleep 5; done; exit 1
       - name: Upload home-screen screenshot
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
