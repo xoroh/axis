@@ -110,6 +110,12 @@ export {
   type TrapMove,
 } from "./focusTrap";
 export {
+  type FieldErrors,
+  isEmptyValue,
+  mergeFormErrors,
+  normalizeFieldErrors,
+} from "./form";
+export {
   clampNumberValue,
   formatNumberValue,
   type NumberFormatSpec,

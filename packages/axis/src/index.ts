@@ -236,8 +236,34 @@ export {
   type DropdownMenuTriggerProps,
   type DropdownMenuTriggerState,
 } from "./components/DropdownMenu";
-export { Field, type FieldProps, type FieldState } from "./components/Field";
+export {
+  Field,
+  FieldControl,
+  type FieldControlChildProps,
+  type FieldControlProps,
+  FieldDescription,
+  type FieldDescriptionProps,
+  FieldError,
+  type FieldErrorProps,
+  FieldLabel,
+  type FieldLabelProps,
+  type FieldProps,
+  FieldRoot,
+  type FieldRootProps,
+  type FieldState,
+  type FieldValidate,
+  type FieldValidationMode,
+  FieldValidity,
+  type FieldValidityProps,
+  type FieldValidityState,
+} from "./components/Field";
 export { Fieldset, type FieldsetProps } from "./components/Fieldset";
+export {
+  Form,
+  type FormActions,
+  type FormProps,
+  type FormState,
+} from "./components/Form";
 export { Input, type InputProps, type InputState } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
 export {
@@ -571,6 +597,12 @@ export {
   resolveAutofocus,
   type TrapMove,
 } from "./focusTrap";
+export {
+  type FieldErrors,
+  isEmptyValue,
+  mergeFormErrors,
+  normalizeFieldErrors,
+} from "./form";
 export {
   clampNumberValue,
   formatNumberValue,

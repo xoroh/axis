@@ -42,6 +42,8 @@ export type InputProps = {
   onSubmitEditing?: () => void;
   /** Fires when the host input loses focus (blur commit lives here). */
   onBlur?: () => void;
+  /** Fires when the host input gains focus (focus state lives here). */
+  onFocus?: () => void;
   /**
    * Multiline entry (the folded `Textarea`). Default `false`.
    * `numberOfLines` defaults to 3 in multiline mode.
@@ -75,6 +77,11 @@ export type InputProps = {
   onHeightChange?: (height: number) => void;
   /** Accessible name source. */
   accessibilityLabel?: string;
+  /**
+   * Label association id (set automatically by `FieldControl` from
+   * the field's label). Passed straight to the host.
+   */
+  accessibilityLabelledBy?: string;
   testID?: string;
   /** Input style: value or function of input state, caller-provided. */
   style?: StateStyle<InputState, StyleProp<TextStyle>>;
@@ -149,6 +156,7 @@ export function Input({
   onValueChange,
   onSubmitEditing,
   onBlur,
+  onFocus,
   placeholder,
   secureTextEntry = false,
   editable = true,
@@ -159,6 +167,7 @@ export function Input({
   maxRows,
   onHeightChange,
   accessibilityLabel,
+  accessibilityLabelledBy,
   testID,
   style,
   render,
@@ -212,6 +221,7 @@ export function Input({
       onChangeText: editable ? setText : undefined,
       onSubmitEditing: editable ? onSubmitEditing : undefined,
       onBlur: editable ? onBlur : undefined,
+      onFocus: editable ? onFocus : undefined,
       placeholder,
       secureTextEntry,
       editable,
@@ -220,6 +230,7 @@ export function Input({
       onContentSizeChange: grow ? handleContentSizeChange : undefined,
       onHeightChange,
       accessibilityLabel,
+      accessibilityLabelledBy,
       testID,
       style: resolvedStyle,
       ref: setHostRef,
@@ -235,6 +246,7 @@ export function Input({
       onChangeText={editable ? setText : undefined}
       onSubmitEditing={editable ? onSubmitEditing : undefined}
       onBlur={editable ? onBlur : undefined}
+      onFocus={editable ? onFocus : undefined}
       placeholder={placeholder}
       secureTextEntry={secureTextEntry}
       editable={editable}
@@ -242,6 +254,7 @@ export function Input({
       numberOfLines={lines}
       onContentSizeChange={grow ? handleContentSizeChange : undefined}
       accessibilityLabel={accessibilityLabel}
+      accessibilityLabelledBy={accessibilityLabelledBy}
       testID={testID}
       style={
         grow

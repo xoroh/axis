@@ -326,7 +326,8 @@ named reason (not oversight):
 | Tabs | no `Indicator` | Indicator geometry is caller style |
 | Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
 | Date/time entry | no Axis component (removed by ADR 012) | `calendar` model (grid, roving keys, min/max + `isDateDisabled`, single + range selection, locale, `firstDayOfWeek`, dir) and `time` model (`TimePickerValue`/`TimePickerFormat` stay exported) carry the behavior; composition added this pass for the remaining families. |
-| Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
+| Form + compound Field | Base UI parity (actionsRef superset for submit; Validity state adapted, no DOM roles) | Validation modes, per-field and form-level validate, server-error maps, submit gating, label association (native ids), error live regions. |
+| Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card). |
 
 ### AI chat — new surface (no Base UI counterpart)
 

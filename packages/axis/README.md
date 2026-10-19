@@ -82,6 +82,7 @@ Per-component notes (props, examples, accessibility) live in
 | [Dropdown Menu](https://github.com/xoroh/axis/blob/main/docs/components/dropdown-menu.md) |
 | [Field](https://github.com/xoroh/axis/blob/main/docs/components/field.md) |
 | [Fieldset](https://github.com/xoroh/axis/blob/main/docs/components/fieldset.md) |
+| [Form](https://github.com/xoroh/axis/blob/main/docs/components/form.md) |
 | [Input](https://github.com/xoroh/axis/blob/main/docs/components/input.md) |
 | [Label](https://github.com/xoroh/axis/blob/main/docs/components/label.md) |
 | [Menu](https://github.com/xoroh/axis/blob/main/docs/components/menu.md) |

@@ -6,6 +6,7 @@ import { DisclosureDemo } from "./disclosure";
 import { DisplayDemo } from "./display";
 import { DropdownDemo } from "./dropdown";
 import { EntryDemo } from "./entry";
+import { FormsDemo } from "./forms";
 import { ListSelectDemo } from "./list-select";
 import { MenuDemo } from "./menu";
 import { OverlaysDemo } from "./overlays";
@@ -50,4 +51,5 @@ export const DEMOS: Demo[] = [
   DropdownDemo,
   BarsDemo,
   PopoverDemo,
+  FormsDemo,
 ];
