@@ -78,6 +78,7 @@ Per-component notes (props, examples, accessibility) live in
 | [Combobox](https://github.com/xoroh/axis/blob/main/docs/components/combobox.md) |
 | [Context Menu](https://github.com/xoroh/axis/blob/main/docs/components/context-menu.md) |
 | [Dialog](https://github.com/xoroh/axis/blob/main/docs/components/dialog.md) |
+| [Direction Provider](https://github.com/xoroh/axis/blob/main/docs/components/direction-provider.md) |
 | [Drawer](https://github.com/xoroh/axis/blob/main/docs/components/drawer.md) |
 | [Dropdown Menu](https://github.com/xoroh/axis/blob/main/docs/components/dropdown-menu.md) |
 | [Field](https://github.com/xoroh/axis/blob/main/docs/components/field.md) |

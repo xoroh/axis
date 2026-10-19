@@ -183,6 +183,18 @@ export {
   useSelection,
 } from "./selection";
 export {
+  clampSliderValue,
+  nearestSliderThumbIndex,
+  normalizeSliderValues,
+  resolveSliderCommit,
+  type SliderCommitOptions,
+  type SliderOrientation,
+  sliderRatioFromLocation,
+  sliderValueFromRatio,
+  sliderValuePercent,
+  snapSliderValue,
+} from "./slider";
+export {
   composeEventHandlers,
   mergeSlotProps,
   type SlotProps,

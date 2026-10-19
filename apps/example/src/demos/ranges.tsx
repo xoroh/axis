@@ -1,10 +1,17 @@
 import {
   buildCalendarGrid,
   type CalendarRange,
+  DirectionProvider,
   parseCalendarMonth,
   resolveCalendarFocus,
   resolveCalendarSelection,
-  Slider,
+  SliderControl,
+  SliderIndicator,
+  SliderLabel,
+  SliderRoot,
+  SliderThumb,
+  SliderTrack,
+  SliderValue,
   shiftCalendarMonth,
   toCalendarDate,
   toCalendarMonth,
@@ -23,9 +30,20 @@ import type { Demo } from "./registry";
 export const RangesDemo: Demo = {
   slug: "ranges",
   title: "Ranges",
-  components: ["Slider"],
+  components: [
+    "SliderRoot",
+    "SliderControl",
+    "SliderTrack",
+    "SliderIndicator",
+    "SliderThumb",
+    "SliderValue",
+    "SliderLabel",
+    "DirectionProvider",
+  ],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
+    const [price, setPrice] = useState<readonly number[]>([25, 75]);
+    const [vertical, setVertical] = useState(40);
     const now = new Date();
     const thisMonth = toCalendarMonth(now.getUTCFullYear(), now.getUTCMonth());
     const [month, setMonth] = useState(thisMonth);
@@ -94,51 +112,255 @@ export const RangesDemo: Demo = {
             gap: 12,
           }}
         >
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          <SliderRoot
+            value={volume}
+            onValueChange={(v) => typeof v === "number" && setVolume(v)}
           >
-            <Text
-              style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              Slider Control
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                color: theme.primary,
-              }}
+              <SliderLabel
+                testID="demo-volume-label"
+                style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+              >
+                Slider Control
+              </SliderLabel>
+              <SliderValue
+                testID="demo-volume-value"
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: theme.primary,
+                }}
+              >
+                {(values) => `${values[0]}%`}
+              </SliderValue>
+            </View>
+            <View style={{ paddingVertical: 10 }}>
+              <SliderControl>
+                <SliderTrack
+                  testID="demo-volume-track"
+                  style={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <SliderIndicator
+                    style={{
+                      backgroundColor: theme.primary,
+                      borderRadius: 4,
+                    }}
+                  />
+                  <SliderThumb
+                    aria-label="Demo volume slider"
+                    testID="demo-volume-thumb"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.primary,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.25)",
+                    }}
+                  />
+                </SliderTrack>
+              </SliderControl>
+            </View>
+          </SliderRoot>
+        </View>
+
+        {/* Range slider: two thumbs, minimum gap, committed values */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <SliderRoot
+            value={price}
+            onValueChange={(v) => {
+              if (Array.isArray(v)) setPrice([...v]);
+            }}
+            minStepsBetweenValues={5}
+          >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              {volume}%
-            </Text>
-          </View>
-          <View style={{ paddingVertical: 10 }}>
-            <Slider
-              accessibilityLabel="Demo volume slider"
-              value={volume}
-              onValueChange={setVolume}
-              trackStyle={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-              fillStyle={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.primary,
-              }}
-              thumbStyle={{
-                width: 22,
-                height: 22,
-                borderRadius: 11,
-                backgroundColor: theme.surface,
-                borderWidth: 2,
-                borderColor: theme.primary,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.25)",
-              }}
-            />
+              <SliderLabel
+                testID="demo-range-label"
+                style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+              >
+                Price range
+              </SliderLabel>
+              <SliderValue
+                testID="demo-range-value"
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: theme.primary,
+                }}
+              >
+                {(values) => `$${values[0]} – $${values[1]}`}
+              </SliderValue>
+            </View>
+            <View style={{ paddingVertical: 10 }}>
+              <SliderControl>
+                <SliderTrack
+                  style={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.surfaceSubtle,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <SliderIndicator
+                    style={{
+                      backgroundColor: theme.accent,
+                      borderRadius: 4,
+                    }}
+                  />
+                  <SliderThumb
+                    index={0}
+                    aria-label="Demo minimum price"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.accent,
+                    }}
+                  />
+                  <SliderThumb
+                    index={1}
+                    aria-label="Demo maximum price"
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 11,
+                      backgroundColor: theme.surface,
+                      borderWidth: 2,
+                      borderColor: theme.accent,
+                    }}
+                  />
+                </SliderTrack>
+              </SliderControl>
+            </View>
+          </SliderRoot>
+        </View>
+
+        {/* Vertical + disabled sliders */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 16,
+          }}
+        >
+          <View style={{ flexDirection: "row", gap: 24 }}>
+            <View style={{ alignItems: "center", gap: 8 }}>
+              <DirectionProvider direction="rtl">
+                <SliderRoot
+                  value={vertical}
+                  onValueChange={(v) => typeof v === "number" && setVertical(v)}
+                  orientation="vertical"
+                >
+                  <SliderValue
+                    testID="demo-vertical-value"
+                    style={{ fontSize: 13, color: theme.text }}
+                  >
+                    {(values) => `${values[0]}`}
+                  </SliderValue>
+                  <SliderControl>
+                    <SliderTrack
+                      testID="demo-vertical-track"
+                      style={{
+                        width: 8,
+                        height: 140,
+                        borderRadius: 4,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <SliderIndicator
+                        style={{
+                          backgroundColor: theme.primary,
+                          borderRadius: 4,
+                        }}
+                      />
+                      <SliderThumb
+                        aria-label="Demo vertical slider"
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          backgroundColor: theme.surface,
+                          borderWidth: 2,
+                          borderColor: theme.primary,
+                        }}
+                      />
+                    </SliderTrack>
+                  </SliderControl>
+                </SliderRoot>
+              </DirectionProvider>
+              <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                Vertical
+              </Text>
+            </View>
+            <View style={{ alignItems: "center", gap: 8, opacity: 0.7 }}>
+              <SliderRoot value={30} disabled orientation="vertical">
+                <SliderValue
+                  testID="demo-disabled-value"
+                  style={{ fontSize: 13, color: theme.text }}
+                >
+                  {(values) => `${values[0]}`}
+                </SliderValue>
+                <SliderControl>
+                  <SliderTrack
+                    style={{
+                      width: 8,
+                      height: 140,
+                      borderRadius: 4,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <SliderIndicator
+                      style={{ backgroundColor: theme.textSubtle }}
+                    />
+                    <SliderThumb
+                      aria-label="Demo disabled slider"
+                      testID="demo-disabled-thumb"
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: theme.surface,
+                        borderWidth: 2,
+                        borderColor: theme.textSubtle,
+                      }}
+                    />
+                  </SliderTrack>
+                </SliderControl>
+              </SliderRoot>
+              <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                Disabled
+              </Text>
+            </View>
           </View>
         </View>
 
