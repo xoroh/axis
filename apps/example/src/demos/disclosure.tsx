@@ -1,6 +1,9 @@
 import {
-  Accordion,
+  AccordionHeader,
   AccordionItem,
+  AccordionPanel,
+  AccordionRoot,
+  AccordionTrigger,
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
@@ -21,8 +24,11 @@ export const DisclosureDemo: Demo = {
   slug: "disclosure",
   title: "Disclosure",
   components: [
-    "Accordion",
+    "AccordionRoot",
     "AccordionItem",
+    "AccordionHeader",
+    "AccordionTrigger",
+    "AccordionPanel",
     "Collapsible",
     "CollapsiblePanel",
     "CollapsibleTrigger",
@@ -152,8 +158,10 @@ export const DisclosureDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Accordion:
           </Text>
-          <Accordion
+          <AccordionRoot
             accessibilityLabel="Demo accordion"
+            multiple
+            defaultValue={["general"]}
             style={{
               borderRadius: 8,
               borderWidth: 1,
@@ -161,41 +169,63 @@ export const DisclosureDemo: Demo = {
               overflow: "hidden",
             }}
           >
-            <AccordionItem
-              value="a"
-              accessibilityLabel="General section"
-              header={
-                <View
-                  style={{
-                    padding: 12,
-                    backgroundColor: theme.surfaceSubtle,
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text
+            {(
+              [
+                [
+                  "general",
+                  "General Settings",
+                  "General",
+                  "Accordion details rendered cleanly.",
+                ],
+                [
+                  "privacy",
+                  "Privacy",
+                  "Privacy",
+                  "Privacy controls live here.",
+                ],
+                [
+                  "notifications",
+                  "Notifications",
+                  "Notifications",
+                  "Notification preferences live here.",
+                ],
+              ] as Array<[string, string, string, string]>
+            ).map(([itemValue, title, label, panel]) => (
+              <AccordionItem key={itemValue} value={itemValue}>
+                <AccordionHeader>
+                  <AccordionTrigger
+                    accessibilityLabel={label}
                     style={{
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color: theme.text,
+                      padding: 12,
+                      backgroundColor: theme.surfaceSubtle,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
                     }}
                   >
-                    General Settings
-                  </Text>
-                  <Text style={{ fontSize: 12, color: theme.textSubtle }}>
-                    ▼
-                  </Text>
-                </View>
-              }
-            >
-              <View style={{ padding: 12, backgroundColor: theme.surface }}>
-                <Text style={{ fontSize: 13, color: theme.text }}>
-                  Accordion details rendered cleanly with smooth animated
-                  reveal.
-                </Text>
-              </View>
-            </AccordionItem>
-          </Accordion>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: theme.text,
+                      }}
+                    >
+                      {title}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: theme.textSubtle }}>
+                      ▼
+                    </Text>
+                  </AccordionTrigger>
+                </AccordionHeader>
+                <AccordionPanel>
+                  <View style={{ padding: 12, backgroundColor: theme.surface }}>
+                    <Text style={{ fontSize: 13, color: theme.text }}>
+                      {panel}
+                    </Text>
+                  </View>
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
+          </AccordionRoot>
         </View>
 
         {/* Collapsible */}

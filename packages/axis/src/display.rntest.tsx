@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { type Image, Text, type View } from "react-native";
-import { Avatar, Progress } from "./index";
+import { AvatarFallback, AvatarImage, AvatarRoot, Progress } from "./index";
 
 /**
  * Display primitives through the public entry: announced values,
@@ -38,51 +38,140 @@ describe("Progress on React Native", () => {
 });
 
 describe("Avatar on React Native", () => {
-  it("shows fallback content without a source", async () => {
+  it("shows fallback content without a source (idle)", async () => {
     await render(
-      <Avatar testID="av" accessibilityLabel="Ada">
-        <Text>AD</Text>
-      </Avatar>,
+      <AvatarRoot testID="av">
+        <AvatarFallback testID="av-fb">
+          <Text>AD</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
     );
-    expect(screen.getByTestId("av")).toBeTruthy();
-    expect(screen.getByLabelText("Ada")).toBeTruthy();
+    expect(screen.getByTestId("av-fb")).toBeTruthy();
+    expect(screen.getByText("AD")).toBeTruthy();
+    expect(screen.queryByRole("image")).toBeNull();
   });
 
-  it("shows the image with role and label when sourced", async () => {
+  it("hides the loading image from assistive tech so the fallback names it", async () => {
     await render(
-      <Avatar
-        testID="av"
-        accessibilityLabel="Ada"
-        source={{ uri: "https://example.com/ada.png" }}
-      />,
+      <AvatarRoot testID="av">
+        <AvatarImage
+          testID="av-img"
+          source={{ uri: "https://example.com/ada.png" }}
+          accessibilityLabel="Ada"
+        />
+        <AvatarFallback testID="av-fb">
+          <Text>AD</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
     );
-    expect(screen.getByRole("image")).toBeTruthy();
-    expect(screen.getByLabelText("Ada")).toBeTruthy();
+    // Loading: the image is mounted (still fetching) but hidden from
+    // assistive tech; the fallback provides the name.
+    expect(screen.getByTestId("av-img")).toBeTruthy();
+    expect(screen.queryByRole("image")).toBeNull();
+    expect(screen.getByTestId("av-fb")).toBeTruthy();
   });
 
-  it("falls back after a load error", async () => {
+  it("announces the loaded image with role and label, fallback unmounts", async () => {
     await render(
-      <Avatar testID="av" source={{ uri: "https://example.com/nope.png" }} />,
+      <AvatarRoot testID="av">
+        <AvatarImage
+          testID="av-img"
+          source={{ uri: "https://example.com/ada.png" }}
+          accessibilityLabel="Ada"
+        />
+        <AvatarFallback testID="av-fb">
+          <Text>AD</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
     );
     await act(async () => {
-      fireEvent(screen.getByRole("image"), "error");
+      fireEvent(screen.getByTestId("av-img"), "load");
     });
-    expect(screen.queryByRole("image")).toBeNull();
-    expect(screen.getByTestId("av")).toBeTruthy();
+    expect(screen.getByRole("image")).toBeTruthy();
+    expect(screen.getByLabelText("Ada")).toBeTruthy();
+    expect(screen.queryByTestId("av-fb")).toBeNull();
+  });
+
+  it("falls back after a load error and reports the status sequence", async () => {
+    const seen: string[] = [];
+    await render(
+      <AvatarRoot testID="av">
+        <AvatarImage
+          testID="av-img"
+          source={{ uri: "https://example.com/nope.png" }}
+          onLoadingStatusChange={(s) => seen.push(s)}
+        />
+        <AvatarFallback testID="av-fb">
+          <Text>AD</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
+    );
+    await act(async () => {
+      fireEvent(screen.getByTestId("av-img"), "loadStart");
+    });
+    await act(async () => {
+      fireEvent(screen.getByTestId("av-img"), "error");
+    });
+    expect(seen).toEqual(["loading", "error"]);
+    // Error unmounts the image; the fallback shows.
+    expect(screen.queryByTestId("av-img")).toBeNull();
+    expect(screen.getByTestId("av-fb")).toBeTruthy();
+  });
+
+  it("fallback delay suppresses the flash while loading", async () => {
+    jest.useFakeTimers();
+    try {
+      await render(
+        <AvatarRoot>
+          <AvatarImage
+            testID="av-img"
+            source={{ uri: "https://example.com/ada.png" }}
+          />
+          <AvatarFallback testID="av-fb" delay={1000}>
+            <Text>AD</Text>
+          </AvatarFallback>
+        </AvatarRoot>,
+      );
+      // Still loading, delay not elapsed: no fallback.
+      expect(screen.queryByTestId("av-fb")).toBeNull();
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(screen.getByTestId("av-fb")).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("image outside a root never loads", async () => {
+    await render(
+      <AvatarImage
+        testID="orphan"
+        source={{ uri: "https://example.com/a.png" }}
+      />,
+    );
+    expect(screen.queryByTestId("orphan")).toBeNull();
   });
 });
 
 describe("Avatar ref forwarding", () => {
-  it("forwards a ref to the host element", async () => {
-    const ref = createRef<ElementRef<typeof Image>>();
+  it("forwards refs to the root container and the image host", async () => {
+    const rootRef = createRef<ElementRef<typeof View>>();
+    const imageRef = createRef<ElementRef<typeof Image>>();
     await render(
-      <Avatar
-        ref={ref}
-        source={{ uri: "https://example.com/a.png" }}
-        testID="a"
-      />,
+      <AvatarRoot ref={rootRef} testID="av">
+        <AvatarImage
+          ref={imageRef}
+          testID="av-img"
+          source={{ uri: "https://example.com/a.png" }}
+        />
+        <AvatarFallback>
+          <Text>AD</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
     );
-    expect(ref.current).toBeTruthy();
+    expect(rootRef.current).toBeTruthy();
+    expect(imageRef.current).toBeTruthy();
   });
 });
 

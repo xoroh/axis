@@ -105,12 +105,21 @@ export {
   useCollectionRegistry,
 } from "./collection";
 export {
-  Accordion,
+  AccordionHeader,
+  type AccordionHeaderProps,
+  type AccordionHeaderState,
   AccordionItem,
   type AccordionItemProps,
   type AccordionItemState,
-  type AccordionProps,
-  type AccordionState,
+  AccordionPanel,
+  type AccordionPanelProps,
+  type AccordionPanelState,
+  AccordionRoot,
+  type AccordionRootProps,
+  type AccordionRootState,
+  AccordionTrigger,
+  type AccordionTriggerProps,
+  type AccordionTriggerState,
 } from "./components/Accordion";
 export {
   AlertDialog,
@@ -124,9 +133,16 @@ export {
   type AutocompleteState,
 } from "./components/Autocomplete";
 export {
-  Avatar,
-  type AvatarProps,
-  type AvatarState,
+  AvatarFallback,
+  type AvatarFallbackProps,
+  type AvatarFallbackState,
+  AvatarImage,
+  type AvatarImageProps,
+  type AvatarImageState,
+  AvatarRoot,
+  type AvatarRootProps,
+  type AvatarRootState,
+  type ImageLoadingStatus,
 } from "./components/Avatar";
 export {
   Button,
@@ -134,8 +150,11 @@ export {
   type ButtonState,
 } from "./components/Button";
 export {
-  Checkbox,
-  type CheckboxProps,
+  CheckboxIndicator,
+  type CheckboxIndicatorProps,
+  type CheckboxIndicatorState,
+  CheckboxRoot,
+  type CheckboxRootProps,
   type CheckboxState,
 } from "./components/Checkbox";
 export {
@@ -284,7 +303,19 @@ export {
   type MenubarProps,
   type MenubarState,
 } from "./components/Menubar";
-export { Meter, type MeterProps, type MeterState } from "./components/Meter";
+export {
+  MeterIndicator,
+  type MeterIndicatorProps,
+  MeterLabel,
+  type MeterLabelProps,
+  MeterRoot,
+  type MeterRootProps,
+  type MeterRootState,
+  MeterTrack,
+  type MeterTrackProps,
+  MeterValue,
+  type MeterValueProps,
+} from "./components/Meter";
 export {
   NavigationMenu,
   NavigationMenuItem,

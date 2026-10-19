@@ -3,14 +3,20 @@ import { act } from "react";
 import { Pressable, Text, View } from "react-native";
 import {
   AspectRatio,
-  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  AvatarRoot,
   Button,
-  Checkbox,
+  CheckboxIndicator,
+  CheckboxRoot,
   Field,
   Fieldset,
   Input,
   Label,
-  Meter,
+  MeterIndicator,
+  MeterRoot,
+  MeterTrack,
+  MeterValue,
   NumberField,
   OtpField,
   Progress,
@@ -113,11 +119,13 @@ describe("render composition: pressables", () => {
   it("Checkbox element render substitutes and preserves toggle", async () => {
     const seen: boolean[] = [];
     await render(
-      <Checkbox
+      <CheckboxRoot
         accessibilityLabel="Accept"
         onCheckedChange={(v) => seen.push(v)}
         render={<Pressable testID="sub" />}
-      />,
+      >
+        <CheckboxIndicator />
+      </CheckboxRoot>,
     );
     await press("sub");
     expect(seen).toEqual([true]);
@@ -181,28 +189,47 @@ describe("render composition: display parts", () => {
     expect(style[0]).toMatchObject({ aspectRatio: 2 });
   });
 
-  it("Avatar function render observes the fallback branch", async () => {
+  it("AvatarImage function render observes loading status", async () => {
     await render(
-      <Avatar
-        render={(_props, state) => (
-          <Text testID="st">
-            {state.showingFallback ? "fallback" : "image"}
-          </Text>
-        )}
-      >
-        <Text>AB</Text>
-      </Avatar>,
+      <AvatarRoot>
+        <AvatarImage
+          testID="av-img"
+          source={{ uri: "https://example.com/a.png" }}
+          render={(_props, state) => (
+            <Text testID="st">{state.imageLoadingStatus}</Text>
+          )}
+        />
+        <AvatarFallback>
+          <Text>FB</Text>
+        </AvatarFallback>
+      </AvatarRoot>,
     );
-    expect(screen.getByText("fallback")).toBeTruthy();
+    expect(screen.getByText("loading")).toBeTruthy();
+  });
+
+  it("MeterValue element render substitutes the host", async () => {
+    await render(
+      <MeterRoot value={70}>
+        <MeterTrack>
+          <MeterIndicator />
+        </MeterTrack>
+        <MeterValue render={<Text testID="sub">v</Text>} />
+      </MeterRoot>,
+    );
+    expect(screen.getByTestId("sub")).toBeTruthy();
   });
 
   it("Meter function style resolves against the clamped value", async () => {
     await render(
-      <Meter
+      <MeterRoot
         testID="meter"
         value={40}
         style={(s) => ({ opacity: s.value === 40 ? 1 : 0 })}
-      />,
+      >
+        <MeterTrack>
+          <MeterIndicator />
+        </MeterTrack>
+      </MeterRoot>,
     );
     expect(screen.getByTestId("meter").props.style).toMatchObject({
       opacity: 1,

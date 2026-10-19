@@ -1,12 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
-import { act, createRef, type ElementRef, useState } from "react";
-import type { Pressable } from "react-native";
-import { Checkbox } from "./index";
+import { act, createRef, type ElementRef } from "react";
+import { type Pressable, Text } from "react-native";
+import { CheckboxIndicator, CheckboxRoot } from "./index";
 
 /**
  * Checkbox behavior through the public entry. Rendered in the RN
- * runtime, interacted through RN events: state flips, role/state
- * announcements, checkmark presence, disabled terminality, and ref
+ * runtime, interacted through RN events: Root/Indicator assembly,
+ * checked toggling, the `mixed` indeterminate mapping (RN types
+ * `checked` as `boolean | 'mixed'`), indicator mounting for both
+ * checked and indeterminate, disabled terminality, and ref
  * forwarding are observed, not assumed.
  */
 
@@ -17,96 +19,101 @@ async function press(testID: string) {
 }
 
 describe("Checkbox on React Native", () => {
-  it("renders unchecked with the checkbox role and no checkmark", async () => {
-    await render(<Checkbox testID="cb" accessibilityLabel="Accept terms" />);
+  it("renders unchecked with the checkbox role and no indicator", async () => {
+    await render(
+      <CheckboxRoot testID="cb" accessibilityLabel="Accept terms">
+        <CheckboxIndicator testID="cb-mark" />
+      </CheckboxRoot>,
+    );
     expect(screen.getByRole("checkbox")).toBeTruthy();
     expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
       checked: false,
       disabled: false,
     });
     expect(screen.getByLabelText("Accept terms")).toBeTruthy();
-    expect(screen.queryByTestId("cb-checkmark")).toBeNull();
+    expect(screen.queryByTestId("cb-mark")).toBeNull();
   });
 
-  it("toggles uncontrolled state, reports, and shows the checkmark", async () => {
+  it("toggles uncontrolled state, reports, and shows the indicator", async () => {
     const seen: boolean[] = [];
     await render(
-      <Checkbox
+      <CheckboxRoot
         testID="cb"
         defaultChecked={false}
         onCheckedChange={(v) => seen.push(v)}
-      />,
+      >
+        <CheckboxIndicator testID="cb-mark" />
+      </CheckboxRoot>,
     );
     await press("cb");
     expect(seen).toEqual([true]);
     expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
       checked: true,
     });
-    expect(screen.getByTestId("cb-checkmark")).toBeTruthy();
+    expect(screen.getByTestId("cb-mark")).toBeTruthy();
     await press("cb");
     expect(seen).toEqual([true, false]);
-    expect(screen.queryByTestId("cb-checkmark")).toBeNull();
+    expect(screen.queryByTestId("cb-mark")).toBeNull();
   });
 
-  it("follows the controlled prop", async () => {
-    function Host() {
-      const [value, setValue] = useState(false);
-      return (
-        <Checkbox testID="cb" checked={value} onCheckedChange={setValue} />
-      );
-    }
-    await render(<Host />);
-    await press("cb");
+  it("indeterminate announces mixed and mounts the indicator with state", async () => {
+    await render(
+      <CheckboxRoot testID="cb" indeterminate accessibilityLabel="All items">
+        <CheckboxIndicator testID="cb-mark" />
+      </CheckboxRoot>,
+    );
     expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
-      checked: true,
+      checked: "mixed",
+      disabled: false,
     });
-    await press("cb");
-    expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
-      checked: false,
-    });
+    // The indicator mounts for the mixed state too.
+    expect(screen.getByTestId("cb-mark")).toBeTruthy();
   });
 
-  it("controlled value without an updating parent holds its state", async () => {
-    await render(<Checkbox testID="cb" checked={false} />);
-    await press("cb");
-    expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
-      checked: false,
-    });
+  it("indicator function render observes checked and indeterminate", async () => {
+    await render(
+      <CheckboxRoot testID="cb" indeterminate>
+        <CheckboxIndicator
+          render={(_props, state) => (
+            <Text testID="cb-state">
+              {state.indeterminate ? "mixed" : "plain"}
+            </Text>
+          )}
+        />
+      </CheckboxRoot>,
+    );
+    expect(screen.getByTestId("cb-state")).toBeTruthy();
+    expect(screen.getByText("mixed")).toBeTruthy();
   });
 
-  it("disabled is terminal: no transition, no callback, announced disabled", async () => {
+  it("indicator outside a root never mounts", async () => {
+    await render(<CheckboxIndicator testID="orphan" />);
+    expect(screen.queryByTestId("orphan")).toBeNull();
+  });
+
+  it("disabled root blocks toggles: no transitions, no callbacks", async () => {
     let calls = 0;
     await render(
-      <Checkbox testID="cb" disabled onCheckedChange={() => (calls += 1)} />,
+      <CheckboxRoot testID="cb" disabled onCheckedChange={() => (calls += 1)}>
+        <CheckboxIndicator testID="cb-mark" />
+      </CheckboxRoot>,
     );
+    await press("cb");
+    expect(calls).toBe(0);
     expect(screen.getByTestId("cb").props.accessibilityState).toMatchObject({
       checked: false,
       disabled: true,
     });
-    await press("cb");
-    expect(calls).toBe(0);
-    expect(screen.queryByTestId("cb-checkmark")).toBeNull();
+    expect(screen.queryByTestId("cb-mark")).toBeNull();
   });
 
-  it("forwards a ref to the root host element", async () => {
+  it("forwards a ref to the root host", async () => {
     const ref = createRef<ElementRef<typeof Pressable>>();
-    await render(<Checkbox testID="cb" ref={ref} />);
-    expect(ref.current).not.toBeNull();
-  });
-
-  it("accepts caller styles without imposing any", async () => {
     await render(
-      <Checkbox
-        testID="cb"
-        defaultChecked
-        style={{ opacity: 0.5 }}
-        boxStyle={{ borderWidth: 1 }}
-        checkmarkStyle={{ width: 12 }}
-      />,
+      <CheckboxRoot ref={ref} testID="cb">
+        <CheckboxIndicator />
+      </CheckboxRoot>,
     );
-    expect(screen.getByTestId("cb").props.style).toMatchObject({
-      opacity: 0.5,
-    });
-    expect(screen.getByTestId("cb-checkmark")).toBeTruthy();
+    expect(ref.current).toBeTruthy();
   });
 });

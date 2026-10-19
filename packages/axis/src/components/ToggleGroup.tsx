@@ -14,19 +14,28 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * ToggleGroup — an unstyled multi-press group.
+ * ToggleGroup — an unstyled pressed-item group.
  *
  * Structure only: a `View` carrying the group role, with
  * `ToggleGroupItem` pressables carrying the button role and pressed
  * state. No default visuals — every visual value (`style`) is
  * caller-provided. State follows the `useControllableState` pattern:
  * `value` (+ `onValueChange`) for controlled use, `defaultValue` for
- * uncontrolled. Selection is multi-press with toggle semantics:
- * activating a pressed item removes it, per the selection-model rule.
+ * uncontrolled. `multiple` (default `false`, the Base UI default)
+ * selects the cardinality: single-press replaces, multi-press
+ * toggles membership; activating a pressed item always removes it,
+ * per the selection-model rule. `orientation` (default
+ * `"horizontal"`) is structural documentation: it selects the
+ * container's `flexDirection` as a base the caller style overrides.
  *
  * Pressed semantics (not checked semantics): items announce
  * `accessibilityState.selected`, never `checked` — this is a group
- * of toggle buttons, not a group of checkboxes.
+ * of toggle buttons, not a group of checkboxes. React Native maps
+ * no `pressed` state key (verified against the installed RN
+ * `ViewAccessibility` `AccessibilityState` union, which carries
+ * `selected` and `checked` but nothing pressed): `selected` is the
+ * Toggle-precedent mapping for toggle-pressed, while `checked`
+ * stays reserved for checkbox/radio/switch commitments.
  */
 
 export type ToggleGroupState = {
@@ -34,6 +43,13 @@ export type ToggleGroupState = {
   value: readonly string[];
   /** Whether the whole group is disabled. */
   disabled: boolean;
+  /**
+   * When `false` only one item can be pressed (activating an
+   * unpressed item replaces the pressed one). Default `false`.
+   */
+  multiple: boolean;
+  /** Reading order of the grouped items. Default `"horizontal"`. */
+  orientation: "horizontal" | "vertical";
 };
 
 export type ToggleGroupItemState = {
@@ -50,6 +66,18 @@ export type ToggleGroupProps = {
   defaultValue?: readonly string[];
   /** Fires with the pressed keys on every committed toggle. */
   onValueChange?: (value: readonly string[]) => void;
+  /**
+   * When `false` only one item can be pressed: activating an
+   * unpressed item replaces the pressed one. When `true` multiple
+   * items can be pressed. Default `false` (Base UI parity).
+   */
+  multiple?: boolean;
+  /**
+   * Reading order of the grouped items. Default `"horizontal"`.
+   * Applied structurally as the container `flexDirection` (`row` /
+   * `column`); the caller `style` merges over it and wins on conflict.
+   */
+  orientation?: "horizontal" | "vertical";
   /** Terminal: disables every item — no toggles, no callbacks. */
   disabled?: boolean;
   /** Accessible name source. */
@@ -132,6 +160,8 @@ function ToggleGroupRoot({
   value,
   defaultValue = [],
   onValueChange,
+  multiple = false,
+  orientation = "horizontal",
   disabled = false,
   accessibilityLabel,
   testID,
@@ -149,12 +179,14 @@ function ToggleGroupRoot({
       if (disabled) return;
       setPressedValues((previous) => {
         const current = previous ?? [];
-        return current.includes(next)
-          ? current.filter((item) => item !== next)
-          : [...current, next];
+        if (current.includes(next)) {
+          return current.filter((item) => item !== next);
+        }
+        // Single-press replaces; multi-press accumulates.
+        return multiple ? [...current, next] : [next];
       });
     },
-    [disabled, setPressedValues],
+    [disabled, multiple, setPressedValues],
   );
 
   // Stable identity so the host element is not detached and re-attached
@@ -175,7 +207,12 @@ function ToggleGroupRoot({
   const state: ToggleGroupState = {
     value: pressedValues ?? [],
     disabled,
+    multiple,
+    orientation,
   };
+  const baseDirection = {
+    flexDirection: orientation === "vertical" ? "column" : "row",
+  } as const;
   const substituted = resolveRender(
     render,
     {
@@ -183,7 +220,7 @@ function ToggleGroupRoot({
       accessibilityRole: "group",
       accessibilityLabel,
       testID,
-      style: resolveStyle(style, state),
+      style: [baseDirection, resolveStyle(style, state)],
       children,
       ref: setHostRef,
     } satisfies SlotProps,
@@ -201,7 +238,7 @@ function ToggleGroupRoot({
       accessibilityRole="group"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={resolveStyle(style, state)}
+      style={[baseDirection, resolveStyle(style, state)]}
     >
       <ToggleGroupPressedContext.Provider value={pressed}>
         {children}

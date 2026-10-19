@@ -1,7 +1,8 @@
 import {
-  Checkbox,
   CheckboxGroup,
   CheckboxGroupItem,
+  CheckboxIndicator,
+  CheckboxRoot,
   RadioGroup,
   RadioGroupItem,
   Toggle,
@@ -9,7 +10,7 @@ import {
   ToggleGroupItem,
 } from "@xoroh/axis";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
@@ -21,7 +22,8 @@ export const SelectionDemo: Demo = {
   slug: "selection",
   title: "Selection",
   components: [
-    "Checkbox",
+    "CheckboxRoot",
+    "CheckboxIndicator",
     "CheckboxGroup",
     "CheckboxGroupItem",
     "RadioGroup",
@@ -33,6 +35,8 @@ export const SelectionDemo: Demo = {
   render: function SelectionScreen() {
     const [checked, setChecked] = useState(true);
     const [pressed, setPressed] = useState(false);
+    const [allChecked, setAllChecked] = useState(false);
+    const [mixed, setMixed] = useState(true);
     const { theme } = useTheme();
 
     return (
@@ -52,11 +56,11 @@ export const SelectionDemo: Demo = {
             Checkbox:
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Checkbox
+            <CheckboxRoot
               accessibilityLabel="Demo standalone checkbox"
               checked={checked}
               onCheckedChange={setChecked}
-              boxStyle={{
+              style={{
                 width: 22,
                 height: 22,
                 borderRadius: 6,
@@ -66,15 +70,55 @@ export const SelectionDemo: Demo = {
                 alignItems: "center",
                 justifyContent: "center",
               }}
-              checkmarkStyle={{
-                backgroundColor: theme.primaryFg,
-                width: 10,
-                height: 10,
-                borderRadius: 2,
-              }}
-            />
+            >
+              <CheckboxIndicator
+                style={{
+                  backgroundColor: theme.primaryFg,
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                }}
+              />
+            </CheckboxRoot>
             <Text style={{ fontSize: 14, color: theme.text }}>
               {checked ? "Checked option" : "Unchecked option"}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              marginTop: 12,
+            }}
+          >
+            <CheckboxRoot
+              accessibilityLabel="Demo select-all checkbox"
+              checked={allChecked}
+              onCheckedChange={(next) => {
+                setAllChecked(next);
+                setMixed(false);
+              }}
+              indeterminate={mixed}
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 6,
+                borderWidth: 1.5,
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CheckboxIndicator>
+                <Text style={{ fontSize: 12, color: theme.text }}>
+                  {mixed ? "–" : "✓"}
+                </Text>
+              </CheckboxIndicator>
+            </CheckboxRoot>
+            <Text style={{ fontSize: 14, color: theme.text }}>
+              Select all (mixed)
             </Text>
           </View>
         </View>
@@ -95,44 +139,85 @@ export const SelectionDemo: Demo = {
           </Text>
           <CheckboxGroup
             accessibilityLabel="Demo checkbox group"
+            defaultValue={["a"]}
             style={{ gap: 10 }}
           >
-            <CheckboxGroupItem
-              value="a"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: theme.surfaceSubtle,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "500", color: theme.text }}
-              >
-                ☑ Option Alpha
-              </Text>
-            </CheckboxGroupItem>
-            <CheckboxGroupItem
-              value="b"
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingVertical: 6,
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: theme.surfaceSubtle,
-              }}
-            >
-              <Text
-                style={{ fontSize: 14, fontWeight: "500", color: theme.text }}
-              >
-                ☐ Option Beta
-              </Text>
-            </CheckboxGroupItem>
+            {(
+              [
+                ["a", "Option Alpha"],
+                ["b", "Option Beta"],
+              ] as Array<[string, string]>
+            ).map(([itemValue, label]) => (
+              <CheckboxGroupItem
+                key={itemValue}
+                value={itemValue}
+                render={(props, state) => {
+                  const onPress =
+                    typeof props.onPress === "function"
+                      ? (props.onPress as () => void)
+                      : undefined;
+                  return (
+                    <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{
+                        checked: state.checked,
+                        disabled: state.disabled,
+                      }}
+                      accessibilityLabel={label}
+                      testID={`demo-opt-${itemValue}`}
+                      disabled={state.disabled}
+                      onPress={onPress}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 10,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 18,
+                          height: 18,
+                          borderRadius: 4,
+                          borderWidth: 1.5,
+                          borderColor: state.checked
+                            ? theme.primary
+                            : theme.border,
+                          backgroundColor: state.checked
+                            ? theme.primary
+                            : "transparent",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {state.checked ? (
+                          <View
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: 2,
+                              backgroundColor: theme.primaryFg,
+                            }}
+                          />
+                        ) : null}
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: "500",
+                          color: theme.text,
+                        }}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                }}
+              />
+            ))}
           </CheckboxGroup>
         </View>
 
@@ -238,6 +323,7 @@ export const SelectionDemo: Demo = {
 
             <ToggleGroup
               accessibilityLabel="Demo toggle group"
+              defaultValue={["m"]}
               style={{
                 flexDirection: "row",
                 backgroundColor: theme.surfaceSubtle,
@@ -284,6 +370,77 @@ export const SelectionDemo: Demo = {
                   Annual
                 </Text>
               </ToggleGroupItem>
+            </ToggleGroup>
+            <ToggleGroup
+              accessibilityLabel="Demo multiple toggle group"
+              multiple
+              defaultValue={["bold"]}
+              style={{
+                flexDirection: "row",
+                backgroundColor: theme.surfaceSubtle,
+                borderRadius: 8,
+                padding: 3,
+                borderWidth: 1,
+                borderColor: theme.borderSubtle,
+              }}
+            >
+              {(
+                [
+                  ["bold", "B"],
+                  ["italic", "I"],
+                  ["underline", "U"],
+                ] as Array<[string, string]>
+              ).map(([itemValue, label]) => (
+                <ToggleGroupItem
+                  key={itemValue}
+                  value={itemValue}
+                  style={(state) => ({
+                    paddingVertical: 6,
+                    paddingHorizontal: 12,
+                    borderRadius: 6,
+                    backgroundColor: state.pressed
+                      ? theme.surface
+                      : "transparent",
+                  })}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: theme.text,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <ToggleGroup
+              accessibilityLabel="Demo vertical toggle group"
+              orientation="vertical"
+              defaultValue={["left"]}
+              style={{
+                backgroundColor: theme.surfaceSubtle,
+                borderRadius: 8,
+                padding: 3,
+                borderWidth: 1,
+                borderColor: theme.borderSubtle,
+                alignSelf: "flex-start",
+              }}
+            >
+              {(
+                [
+                  ["left", "Left"],
+                  ["center", "Center"],
+                  ["right", "Right"],
+                ] as Array<[string, string]>
+              ).map(([itemValue, label]) => (
+                <ToggleGroupItem key={itemValue} value={itemValue}>
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    {label}
+                  </Text>
+                </ToggleGroupItem>
+              ))}
             </ToggleGroup>
           </View>
         </View>

@@ -112,11 +112,12 @@ Base UI `Switch`: root + thumb parts with
 ### Checkbox — aligned
 
 Base UI `Checkbox`: root + indicator parts with
-`checked`/`defaultChecked`/`onCheckedChange`.
+`checked`/`defaultChecked`/`onCheckedChange` and `indeterminate`.
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `Checkbox` | `Checkbox.Root` + `Checkbox.Indicator` | `checked`, `defaultChecked`, `onCheckedChange` identical; `disabled`, `ref`; checkbox role with `checked` state; `render` + function `style` over `{ checked, disabled }` | Single-part API (indicator renders only when checked per caller style, not a separate part); `data-checked`/`data-disabled`/`data-indeterminate` → D1; no `indeterminate` tri-state (unneeded — record if a consumer needs it) |
+| `CheckboxRoot` | `Checkbox.Root` | `checked`, `defaultChecked`, `onCheckedChange`, `indeterminate`, `disabled`, `ref`; checkbox role with `checked` (`mixed` while indeterminate — RN types `checked` as `boolean \| 'mixed'`); `render` + function `style` over `{ checked, disabled, indeterminate }` | No `readOnly`/`required`/`name`/`value`/`form`/`inputRef`/`id`/`uncheckedValue` (no `Form` owner — native forms are caller-owned, the `Input` precedent); no `parent` (needs the group's `allValues`, which Axis `CheckboxGroup` does not expose — indeterminate stays caller-owned); no `nativeButton` prop (RN `Pressable` is native by construction — the `MenuItem` precedent); `data-*` → D1; no transition attributes (D9) |
+| `CheckboxIndicator` | `Checkbox.Indicator` | mounts while checked or indeterminate; caller styles checked vs mixed through indicator state; `render` over `{ checked, disabled, indeterminate }` | No `keepMounted` (D3 — untestable keep-alive); static `style` (chrome carries no state) |
 
 ### Toggle — aligned
 
@@ -125,6 +126,61 @@ Base UI `Toggle`: `pressed`/`defaultPressed`/`onPressedChange`.
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
 | `Toggle` | `Toggle` | `pressed`, `defaultPressed`, `onPressedChange` identical; `disabled`, `ref`; pressed announced through `selected` (RN has no `pressed` state key — verified against RN 0.87 `ViewAccessibility`); `render` + function `style` over `{ pressed, disabled }` | `data-pressed`/`data-disabled` → D1 |
+
+### Toggle Group — aligned
+
+Base UI `ToggleGroup`: single part owning `value: string[]`
+with `multiple` (default `false`) and `orientation` (default
+`'horizontal'`); items are `Toggle` buttons composed inside.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `ToggleGroup` | `ToggleGroup` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false` — single replaces, multi accumulates), `orientation` (default `'horizontal'`, structural `flexDirection` base), `disabled`, `ref`; group role; state carries `{ value, disabled, multiple, orientation }` | No `loopFocus` (no roving layer — the `Toolbar` precedent); `data-*` → D1 |
+| `ToggleGroupItem` | (composed `Toggle`) | button role, pressed state, per-item `disabled`; pressed announced through `selected`, never `checked` (RN maps no `pressed` key; `checked` stays reserved for checkbox/radio/switch commitments — the `Toggle` precedent) | Axis keeps the Item part (Base UI composes bare `Toggle`s — the Item carries Axis group wiring and terminal-disabled) |
+
+### Accordion — aligned
+
+Base UI `Accordion`: Root/Item/Header/Trigger/Panel with
+`value: Value[]`, `multiple` (default `false`), `orientation`
+(default `'vertical'`), `hiddenUntilFound` (default `false`).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `AccordionRoot` | `Accordion.Root` | `value`/`defaultValue`/`onValueChange` over `string[]`, `multiple` (default `false`), `orientation` (default `'vertical'`, structural `flexDirection` base), `disabled`, `ref`; no root role (RN defines no accordion role) | No `loopFocus` (no roving layer); `orientation` carries no focus behavior (deprecated upstream too); `data-*` → D1 |
+| `AccordionItem` | `Accordion.Item` | `value` (string domain), `disabled`, per-item `onOpenChange` (fires even when another item's activation changes it) | No `index` in state (no `data-index` on native — D1) |
+| `AccordionHeader` | `Accordion.Header` | heading host (`header` role) wrapping the trigger | — |
+| `AccordionTrigger` | `Accordion.Trigger` | button role, `expanded` state, tap toggles; inert outside an item | No `nativeButton` prop (not a Base UI Accordion prop; RN `Pressable` is native by construction in any case) |
+| `AccordionPanel` | `Accordion.Panel` | mounts only while the item is open | No `hiddenUntilFound` (N/A — no find-in-page on native); no `keepMounted` (D3); no transition attributes (D9) |
+
+The old `Accordion`/`AccordionItem` monoliths are removed (Base UI-exact parts replace them — ADR 001, ADR 011; migration in CHANGELOG).
+
+### Avatar — aligned
+
+Base UI `Avatar`: Root/Image/Fallback with `ImageLoadingStatus`
+(`idle` | `loading` | `loaded` | `error`), `Fallback delay`
+(default `0`), `Image onLoadingStatusChange`.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `AvatarRoot` | `Avatar.Root` | status owner (`imageLoadingStatus` state); positioning container | `render` over status; `data-*` → D1 |
+| `AvatarImage` | `Avatar.Image` | `source` (required), `onLoadingStatusChange`, image role + label announced only while loaded; hidden from assistive tech until loaded (Base UI stacking guidance, automatic on RN) | No `keepMounted` (N/A — the image must mount to load; unmount-on-error is automatic); `data-loading`/`data-error` → D1 (state flows through `render`/status instead) |
+| `AvatarFallback` | `Avatar.Fallback` | `delay` (default `0` — shows immediately when `idle`/`error`, waits while `loading`); caller children | — |
+
+The old `Avatar` monolith is removed (Base UI has no monolith — ADR 001, ADR 011; migration in CHANGELOG).
+
+### Meter — aligned
+
+Base UI `Meter`: Root/Track/Indicator/Label(`Meter.Label`)/Value with `value*`, `min` (default `0`), `max` (default `100`).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `MeterRoot` | `Meter.Root` | `value` (required), `min`/`max`, meter role with `{ min, max, now }` (clamped); `ref` | No `aria-valuetext`/`getAriaValueText`/`locale`/`format` (no `Intl` layer — the caller formats through `MeterValue` function children); `data-*` → D1 |
+| `MeterTrack` | `Meter.Track` | range container | static `style` (chrome carries no state) |
+| `MeterIndicator` | `Meter.Indicator` | data-driven fill (clamped percentage, merged under caller style) | static `style` (chrome carries no state) |
+| `MeterLabel` | `Meter.Label` | accessible-name text host | — |
+| `MeterValue` | `Meter.Value` | current-value text; node or function of value | — |
+
+The old `Meter` monolith (`value?`/`fillStyle`) is removed (Base UI has no monolith — ADR 001, ADR 011; migration in CHANGELOG).
 
 ### Popover — aligned
 
@@ -255,15 +311,15 @@ named reason (not oversight):
 
 | Family | Remaining gap | Blocker / disposition |
 |---|---|---|
-| Accordion | no `Header`/`Trigger`/`Panel` split (`header` prop + `children`) | Single-part API retained; split needs no new behavior — record if a consumer needs part-level substitution |
+| Accordion | compound Root/Item/Header/Trigger/Panel landed (parity-1); `hiddenUntilFound` N/A on native, no `loopFocus` (no roving layer) | Done |
 | AlertDialog | rebuilt on the compound `Dialog` parts this pass (was monolith-only) | — |
 | Autocomplete | no `Input`/`Portal`/`List`/`Row`/`Empty`/`Status` parts | `collection` transfer has landed (row registration available); wiring is pending |
-| Checkbox Group / Radio Group / Toggle Group | Root + Item only (no Indicator parts) | Indicator is caller style, not a part (Checkbox precedent) |
+| Checkbox Group / Radio Group / Toggle Group | Root + Item only (no Indicator parts) | Indicator is caller style, not a part (Checkbox precedent). ToggleGroup `multiple`/`orientation` landed (parity-1); pressed announces `selected` (RN maps no `pressed` key) |
 | Collapsible | Root/Trigger/Panel present; composition added this pass | — |
 | Combobox / Autocomplete | no compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`) | `collection` transfer has landed and is consumed (menu filter parts, select lookup, combobox filtering); wiring `Combobox`/`Autocomplete` rows onto it is pending |
 | Context Menu | monolith (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
 | Field / Fieldset | no `Control`/`Description`/`Validity`/`Legend` parts | Validity is caller state (`error`); control wiring deferred until a consumer demonstrates the need |
-| Meter / Progress | no `Track`/`Indicator`/`Label`/`Value` parts | Fill is data-driven width under caller style; label/value are caller text. Indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
+| Meter / Progress | Meter compound Root/Track/Indicator/Label/Value landed (parity-1); no `Intl` formatting props (`aria-valuetext`/`getAriaValueText`/`locale`/`format` — caller formats through `MeterValue` function children) | Fill is data-driven width under caller style. Progress indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
 | Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
 | OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
 | Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
