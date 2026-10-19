@@ -3,6 +3,7 @@ import {
   clampRectToViewport,
   resolveFloatingOrigin,
   resolveFloatingRect,
+  resolveFloatingSide,
 } from "./positioning";
 
 const ANCHOR = { x: 100, y: 100, width: 80, height: 40 };
@@ -129,5 +130,62 @@ describe("resolveFloatingRect", () => {
         viewport: { width: 400, height: 400 },
       }),
     ).toEqual({ x: 280, y: 340 });
+  });
+});
+
+describe("resolveFloatingSide", () => {
+  const VIEWPORT = { width: 400, height: 400 };
+
+  it("retains preferred side when it fits inside viewport", () => {
+    expect(
+      resolveFloatingSide(ANCHOR, SIZE, {
+        viewport: VIEWPORT,
+        placement: "bottom",
+      }),
+    ).toBe("bottom");
+    expect(
+      resolveFloatingSide({ x: 100, y: 200, width: 80, height: 40 }, SIZE, {
+        viewport: VIEWPORT,
+        placement: "top",
+      }),
+    ).toBe("top");
+  });
+
+  it("flips bottom to top when anchor is near the bottom edge", () => {
+    const nearBottom = { x: 100, y: 350, width: 80, height: 40 };
+    expect(
+      resolveFloatingSide(nearBottom, SIZE, {
+        viewport: VIEWPORT,
+        placement: "bottom",
+      }),
+    ).toBe("top");
+  });
+
+  it("flips top to bottom when anchor is near the top edge", () => {
+    const nearTop = { x: 100, y: 10, width: 80, height: 40 };
+    expect(
+      resolveFloatingSide(nearTop, SIZE, {
+        viewport: VIEWPORT,
+        placement: "top",
+      }),
+    ).toBe("bottom");
+  });
+
+  it("flips right to left and left to right near viewport horizontal edges", () => {
+    const nearRight = { x: 350, y: 100, width: 40, height: 40 };
+    expect(
+      resolveFloatingSide(nearRight, SIZE, {
+        viewport: VIEWPORT,
+        placement: "right",
+      }),
+    ).toBe("left");
+
+    const nearLeft = { x: 10, y: 100, width: 40, height: 40 };
+    expect(
+      resolveFloatingSide(nearLeft, SIZE, {
+        viewport: VIEWPORT,
+        placement: "left",
+      }),
+    ).toBe("right");
   });
 });

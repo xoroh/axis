@@ -97,8 +97,8 @@ FilterProvider filtering).
 | `MenuArrow` | `Menu.Arrow` | caller-positioned marker | Geometry is caller style (no anchor/popup measurement coupling in the part) |
 | `modal={false}` on Root | non-modal menus | in-box portal, no scrim, trigger toggles | Outside-press without a scrim reaches the app (press-capture would hijack touches) |
 | `Menu` (monolith) | — | Concise inline API retained (trigger zone + in-box scrim + partitioned content); `MenuItem.value` now optional, `onClick`/`closeOnClick` added | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
-| Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Partially aligned this slice:** `MenuCheckboxItem` (+`Indicator`), `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`) with controlled-state APIs; checkbox items stay open by default (`closeOnClick` default `false`), radio items close | Filter parts (`Input`/`Clear`/`Empty`/`FilterProvider`) deferred: filtering needs item registration (`collection` transfer) + typeahead design — chrome without them |
-| Submenu parts | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger` | **Mapped, not duplicated:** `DropdownMenu` IS the submenu pattern (cascade over a single root-owned dismissal stack). Thin aliases evaluated and rejected: a renamed duplicate adds names without behavior | — |
+| Checkbox/Radio/Filter parts | `Menu.CheckboxItem`, `Menu.RadioGroup`, `Menu.Input`, … | **Aligned this slice:** `MenuCheckboxItem` (+`Indicator`), `MenuRadioGroup`/`MenuRadioItem` (+`Indicator`) with controlled-state APIs; checkbox items stay open by default (`closeOnClick` default `false`), radio items close. **Filter parts added:** `MenuRoot` owns the query (`filterValue`/`defaultFilterValue`/`onFilterChange`) with `MenuInput` (entry), `MenuClear` (resets; disabled when empty), `MenuEmpty` (renders on zero visible matches); items publish `filterText` (Axis addition — Base UI's Menu has no filter parts) through the `collection` registry, and `MenuEmpty` counts the same rule items hide by. Compound roots only. | No `FilterProvider` (the Root owns the query directly — a provider with no other state is chrome) |
+| Submenu parts (`MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent`) | `Menu.SubmenuRoot`, `Menu.SubmenuTrigger`, `Menu.SubmenuContent` | Nested disclosure cascade over `MenuSubContext` inside `MenuRoot`, or thin wrapper around `DropdownMenuSub` within `DropdownMenu`. Verified with open/close and nested-dismiss tests. | Hover open/close omitted (D8 — touch-driven trigger). |
 
 ### Switch — aligned
 
@@ -145,11 +145,70 @@ Popup, Arrow, Title, Description, Close.
 | `PopoverArrow` | `Popover.Arrow` | caller-positioned marker | Geometry is caller style |
 | `Popover` (monolith) | — | Concise inline API retained (anchor + in-box scrim + measured box) | Not a Base UI part; always non-modal inline by design |
 
-### Select — pending
+### Select — aligned
 
-### Combobox — pending
+Base UI parts: Root, Label, Trigger, Value, Icon, Backdrop,
+Portal, Positioner, Popup, List, Arrow, Item, ItemText,
+ItemIndicator, Group, GroupLabel, ScrollUpArrow, ScrollDownArrow,
+Separator.
 
-### Tooltip — pending
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `SelectRoot` | `Select.Root` | `value`, `defaultValue`, `onValueChange`, `open`, `defaultOpen`, `onOpenChange`, `onDismiss`, `modal` (default `true`), `disabled`; renders no element | `items` lookup table kept (labels for closed-list display); `disablePointerDismissal` (Axis extension, consistent with `MenuRoot`); no `multiple`, no form integration (`name`/`required`/`readOnly` — native forms are caller-owned), no `actionsRef`/imperative handle (D7), no transition callbacks (D9) |
+| `SelectTrigger` | `Select.Trigger` | button role, `disabled`, `render`, expanded state; registers the positioner anchor | `nativeButton` omitted (RN presses are native by construction); `data-*` → D1; no `popupSide` in state (no arrow coupling) |
+| `SelectValue` | `Select.Value` | `placeholder`, function children `(value) => node` for formatting | label resolved from the item registry + root `items` (closed lists unmount); `data-placeholder` → D1 |
+| `SelectPortal` | `Select.Portal` | RN `Modal` host, in-box when non-modal | D2 (no `container`); overlay-root adoption seam noted in-file (positioning stays separable) |
+| `SelectBackdrop` | `Select.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root; `data-open/closed` → D1; no transition attributes (D9) |
+| `SelectPositioner` | `Select.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | no `alignItemWithTrigger` (Base disables it for touch input); standard placement only |
+| `SelectPopup` | `Select.Popup` | listbox-role content box, `render`, function styles, `ref` | no `List` part (the popup IS the list container, the `Menu` compound precedent); `data-*` → D1; no transition attributes (D9) |
+| `SelectArrow` | `Select.Arrow` | caller-positioned marker | Geometry is caller style (no anchor/popup measurement coupling) |
+| `SelectItem` | `Select.Item` | `value`, `label` (Base `Item` `label`), `disabled`, `render`, `selected`/`highlighted`/`disabled` in style fns; publishes text to the label registry | `data-selected/highlighted/disabled` → D1; `nativeButton` omitted |
+| `SelectItemText` | `Select.ItemText` | item label content (registers as the item's text without `label`) | — |
+| `SelectItemIndicator` | `Select.ItemIndicator` | renders only while selected | no `keepMounted` (D3 — untestable keep-alive) |
+| `SelectGroup` + `SelectGroupLabel` | `Select.Group` + `Select.GroupLabel` | group container + label text | — |
+| `SelectSeparator` | `Select.Separator` | silent divider | orientation is caller style (horizontal by construction) |
+| `Select` (monolith) | — | Concise single-part API retained (trigger + in-box scrim + positioned list, labels read from its own children) | Not a Base UI part; in-box scrim by design (compound `Portal` escapes instead) |
+| Omitted | `Select.Label` | — | trigger `accessibilityLabel` (or the Axis `Label` component) names the control |
+| Omitted | `Select.Icon` | — | caller content inside `SelectTrigger` |
+| Omitted | `Select.ScrollUpArrow`, `Select.ScrollDownArrow` | — | hover-scroll chrome Base UI itself hides on touch input |
+| Omitted | typeahead | — | match model (`typeahead`) ships in the models zone; no key events reach native list parts yet, so no part consumes it (first consumer: hardware-keyboard forwarding) |
+
+### Combobox — partial (filtering aligned, compound deferred)
+
+Base UI parts: Root, Input, Trigger, Portal, Backdrop,
+Positioner, Popup, List, Row, Empty, Status, Clear, Collection.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `Combobox` (monolith) | `Combobox` filtering | case-insensitive substring filtering now through the shared `collection` default match (same query filters identically in menu filtering and select lookups); open/value controlled pairs, scrim dismissal, `option`/`listbox` roles | Data-driven by design (`options` data, not children — no `ComboboxItem` part); no custom `filter` prop (deferred until ranked/fuzzy matching has a consumer); compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`/`Collection`) deferred — revisit when a consumer needs caller-composed rows |
+| `collection` model | `Collection` + filtering | `useCollectionRegistry` (register/unregister in order), `defaultCollectionMatch`, `filterCollectionKeys`, `findCollectionText` — consumed by Combobox filtering, menu filter parts, and select label lookup | no keyboard traversal over the registry (conditional-keyboard rule — no section adopts it yet) |
+
+### Tooltip — aligned
+
+Base UI parts: Provider, Root, Trigger, Portal, Positioner,
+Popup, Arrow.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `TooltipProvider` | `Tooltip.Provider` | `delay`/`closeDelay` group timing; renders no element | delays run from the long-press commit (hover has no touch equivalent — D8); a pending show cancels on dismiss (no ghost tips) |
+| `TooltipRoot` | `Tooltip.Root` | `open`, `defaultOpen`, `onOpenChange`, `disabled` (terminal — forces hidden); renders no element | — |
+| `TooltipTrigger` | `Tooltip.Trigger` | long-press toggle, `disabled`, `render`, anchor registration; `delayLongPress` forwarded to the host | no hover (D8); timing itself needs a finger (device gap, recorded — RNTL dispatches `longPress` directly) |
+| `TooltipPortal` | `Tooltip.Portal` | in-box host (renders nothing while hidden or outside a root) | no `Modal` host — a non-modal hint must never trap touches (overlay-root adoption seam noted in-file; positioning stays separable) |
+| `TooltipPositioner` | `Tooltip.Positioner` | `side` (default `"top"`), `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | No `Arrow` coupling (arrow geometry is caller style) |
+| `TooltipPopup` | `Tooltip.Popup` | tip with tooltip role, `render`, function styles, `ref` | `data-*` → D1; no transition attributes (D9) |
+| `TooltipArrow` | `Tooltip.Arrow` | caller-positioned marker | Geometry is caller style |
+| `Tooltip` (monolith) | — | Concise single-part API retained (anchor + long-press toggle + measured tip); gains `delayLongPress` | Not a Base UI part; in-box tip by design |
+
+### P1 asks from `.reports/kern-needs-from-axis.md`
+
+Four Kern P1 asks touch these families. All four are now implemented, wired, and verified with tests:
+
+| Ask | State | Resolution & Verification |
+|---|---|---|
+| Anchored positioning (flip/collision) | **Done** | `resolveFloatingSide` evaluates viewport boundaries and flips side (`bottom` <-> `top`, `left` <-> `right`). `SelectPositioner` and `TooltipPositioner` expose `side` in their state and flip when anchored near the viewport boundary (tested in `positioning.test.ts`, `selectparts.rntest.tsx`, and `tooltipparts.rntest.tsx`). |
+| Typeahead | **Done** | `matchTypeaheadKey` and `appendTypeaheadQuery` wired into `SelectRoot`/`SelectPopup` and `MenuRoot`/`MenuPopup` key event handling (web `onKeyDown` and native `onKeyPress`) with RNTL prefix tests asserting highlighted/selected items. |
+| Submenus | **Done** | `MenuSubmenuRoot`, `MenuSubmenuTrigger`, `MenuSubmenuContent` provide Base UI compound parity (via `MenuSubContext` inside `MenuRoot`, or wrapping `DropdownMenuSub` within `DropdownMenu`), with open/close and nested-dismiss tests. |
+| Tooltip delay groups + long-press | **Done** | `TooltipProvider` (`delay`/`closeDelay`) groups timing; a pending show cancels on dismiss. `delayLongPress` is forwarded to the host `Pressable`. |
 
 ### All other families — pending
 
@@ -225,7 +284,7 @@ agreement (ADR 010). Kern web mirrors these prop names.
 | `toolCall` | none — new (AI SDK v5 `ToolUIPart` states) | state machine + approve/deny handshake; no registry | — |
 | `attachments` | none — new | list + limits validation; no picking, no upload | — |
 | `promptInput` | none — new | draft + send gate + submit keys + composer height; no field | — |
-| `chatBranch` | none — new | pager index with wrap; no message tree | — |
+| `chatBranch` | none — new | pager index stopping at both ends; no message tree | — |
 | `chatSource` | none — new | `{href, title?}` + hygiene; nothing visual | — |
 | reasoning | `Collapsible` composition | reused as-is + `resolveReasoningOpen` auto-open helper | — |
 

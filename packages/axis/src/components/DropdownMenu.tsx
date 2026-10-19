@@ -206,9 +206,8 @@ type DropdownDisclosure = {
  * collapsed and inert and items render inert, like `MenuItem` outside
  * `Menu`.
  */
-const DropdownDisclosureContext = createContext<DropdownDisclosure | null>(
-  null,
-);
+export const DropdownDisclosureContext =
+  createContext<DropdownDisclosure | null>(null);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)

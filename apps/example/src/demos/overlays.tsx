@@ -10,6 +10,13 @@ import {
   ToastProvider,
   ToastViewport,
   Tooltip,
+  TooltipArrow,
+  TooltipPopup,
+  TooltipPortal,
+  TooltipPositioner,
+  TooltipProvider,
+  TooltipRoot,
+  TooltipTrigger,
   Trigger,
   useToast,
 } from "@xoroh/axis";
@@ -20,8 +27,9 @@ import type { Demo } from "./registry";
 
 /**
  * Overlays demo: blocking dialog, sheet, drawer, toast (single-shot
- * and queued), tooltip, long-press menu, standalone portal host, and
- * semantics-free trigger — all with clean caller styles.
+ * and queued), tooltip (monolith and compound), long-press menu,
+ * standalone portal host, and semantics-free trigger — all with
+ * clean caller styles.
  */
 export const OverlaysDemo: Demo = {
   slug: "overlays",
@@ -36,6 +44,13 @@ export const OverlaysDemo: Demo = {
     "Portal",
     "PortalHost",
     "Tooltip",
+    "TooltipArrow",
+    "TooltipPopup",
+    "TooltipPortal",
+    "TooltipPositioner",
+    "TooltipProvider",
+    "TooltipRoot",
+    "TooltipTrigger",
     "ContextMenu",
     "Trigger",
   ],
@@ -52,6 +67,35 @@ export const OverlaysDemo: Demo = {
         <Tooltip content={<Text>Hint text</Text>}>
           <Text>Long-press me</Text>
         </Tooltip>
+        <TooltipProvider delay={100}>
+          <TooltipRoot>
+            <TooltipTrigger accessibilityLabel="Demo compound tip anchor">
+              <Text style={{ fontSize: 13, color: theme.text }}>
+                Long-press me (compound)
+              </Text>
+            </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipPositioner side="top">
+                <TooltipPopup
+                  accessibilityLabel="Compound hint"
+                  style={{
+                    backgroundColor: theme.surface,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    paddingVertical: 6,
+                    paddingHorizontal: 10,
+                  }}
+                >
+                  <TooltipArrow />
+                  <Text style={{ fontSize: 12, color: theme.text }}>
+                    Compound hint text
+                  </Text>
+                </TooltipPopup>
+              </TooltipPositioner>
+            </TooltipPortal>
+          </TooltipRoot>
+        </TooltipProvider>
         {/* Trigger & ContextMenu */}
         <View
           style={{
