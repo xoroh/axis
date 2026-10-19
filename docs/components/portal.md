@@ -108,7 +108,7 @@ function App() {
 }
 ```
 
-Named host (a sheet zone paints separately from the default
+Named host (a panel zone paints separately from the default
 host):
 
 ```tsx
@@ -117,10 +117,10 @@ import { Portal, PortalHost } from "@xoroh/axis";
 
 function Hosts() {
   return (
-    <PortalHost name="sheet">
-      <Text>Sheet zone</Text>
-      <Portal hostName="sheet">
-        <Text>Sheet content</Text>
+    <PortalHost name="panel">
+      <Text>Panel zone</Text>
+      <Portal hostName="panel">
+        <Text>Panel content</Text>
       </Portal>
     </PortalHost>
   );
