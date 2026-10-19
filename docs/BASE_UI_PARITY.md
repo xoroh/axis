@@ -10,6 +10,11 @@ mature RN libraries serve as implementation references for native
 behavior, accessibility, gestures, and portals only: no dependency,
 no wholesale copying.
 
+rn-primitives reference: 1bebe66b12e7ddd3c313226e0bc2ee02b6e78ab4 (2026-08-08, upstream `main` HEAD at review time).
+Overlays behaviour review (2026-10-19): Dialog, AlertDialog,
+Popover, Tooltip, Portal, Overlay, Toast compared file-by-file
+against that SHA; every remaining difference is a D-rule below.
+
 Systematic deviations (recorded once here, not per component —
 see contract §11):
 
@@ -19,12 +24,14 @@ see contract §11):
 | D2 | `Portal` has no `container` | No DOM to append to; RN `Modal` always presents at root level. |
 | D3 | `Portal` has no `keepMounted` | Invisible modal subtrees hide from RNTL exactly like the platform hides them — an untestable keep-alive prop violates the contract's test requirements. Deferred until a device-verified strategy exists. |
 | D4 | No `Viewport` part on Dialog | A Popup scrolls through caller `ScrollView` content; a positioning container with no positioning work is chrome. |
-| D5 | No `initialFocus`/`finalFocus`, no `"trap-focus"` containment | Needs the `focusTrap` + `overlayModality` RN adaptation (no DOM tab order to borrow). Surfaces declare role + label; traversal stays with the host. |
+| D5 | No `initialFocus`/`finalFocus`, no `"trap-focus"` containment | Needs the `focusTrap` + `overlayModality` RN adaptation (no DOM tab order to borrow). Surfaces declare role + label; traversal stays with the host. **Retired for overlays 2026-10-19 (focus PR): the RN adaptation landed — `initialFocus`/`finalFocus` on roots/popups, iOS `accessibilityViewIsModal` on the top popup, Android app-root hiding via `useModalActive`, web `aria-modal` + Tab trap. Other lanes still carry D5 until their focus pass.** |
 | D6 | No nested-overlay coordination | Nested Modals render independently; no parent dimming or dismissal-stack sharing. |
 | D7 | No `createHandle` detached triggers | Needs an imperative registry owner; payload patterns unneeded pre-1.0. |
 | D8 | No hover or keyboard traversal on menus/popups | No touch equivalent; `roving`/`collection` unadopted for these families (contract's conditional-keyboard rule). |
 | D9 | No animation states (`transitionStatus`, starting/ending styles) | Surfaces mount/unmount synchronously (Accordion-panel precedent); `presence`-driven transitions wait for a consumer. |
 | D10 | No `Modal`/`portal` host on inline (non-modal) menus | Non-modal menus paint inside the parent's box; painting outside it is the compound `Portal` parts' job (`OverlayPortal` at `PortalHost` when modal) — the Portal model they build on. |
+| D11 (overlays) | Unmounted trigger restores nowhere on native | RN has no focusable-ancestor query; a stale restore target is a silent no-op, never a throw. On web the nearest focusable ancestor (stashed while open) takes focus. |
+| D12 (overlays) | Default initial focus on native resolves from the part registry, not the DOM | RN exposes no focusable enumeration: marked initial, else first registered stop (drawers skip stops — never a destructive action), else Title, else the popup. Web queries the first tabbable instead (marked wins on both). |
 
 ## Per-component parity
 
@@ -72,6 +79,33 @@ Popup, Title, Description, Close.
 | `DialogDescription` | `Dialog.Description` | descriptive text | — |
 | `DialogClose` | `Dialog.Close` | closes root, `disabled`, `render` with `{disabled}` | `nativeButton` omitted (RN presses are native by construction); `data-disabled` → D1 |
 
+
+### AlertDialog — aligned (blocking compound)
+
+Base UI parts: Root, Trigger, Portal, Backdrop, Popup, Title,
+Description, Close (`Cancel`/`Action` map to `Close` — see below).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `AlertDialogRoot` | `AlertDialog.Root` | `open`, `defaultOpen`, `onOpenChange` (+ reason), `initialFocus`, `finalFocus`; renders no element | forces `disablePointerDismissal` + `modal` — a blocking dialog has no dismissable shape (D12-adjacent product rule, recorded in the focus PR) |
+| `AlertDialogTrigger` | `AlertDialog.Trigger` | button role, `disabled`, `render`, expanded state | `nativeButton`/`payload`/`id`/`handle` omitted (D7) |
+| `AlertDialogPortal` | `AlertDialog.Portal` | `OverlayPortal` at `PortalHost`, `testID` (Axis addition) | D2, D3 |
+| `AlertDialogBackdrop` | `AlertDialog.Backdrop` | inert by construction (no handler, no label) | blocking scrim has no dismiss path (deliberate — the blocking contract) |
+| `AlertDialogPopup` | `AlertDialog.Popup` | surface with `alertdialog` role, `render`, function styles | D9; role forced (never plain `dialog`) |
+| `AlertDialogTitle` | `AlertDialog.Title` | heading text (`header` role) | — |
+| `AlertDialogDescription` | `AlertDialog.Description` | descriptive text | — |
+| `AlertDialogClose` | `AlertDialog.Cancel` / `Action` | closes root, `disabled`, `render`; `initialFocus` marks Cancel (Axis cannot infer destructiveness) | one Close part covers both Base UI action parts (documented mapping, not a gap) |
+
+`onOpenChange` reasons: `trigger-press`, `close-press`
+(`outside-press`/`escape-key` never fire — blocking). Focus:
+marked-Cancel default, else first stop/title default (D12);
+restore to trigger or `finalFocus`, D11 unmounted-trigger rule.
+The bare `AlertDialog` monolith is removed (naming rule — no
+bare monolith beside a compound family). rn-primitives
+behaviour: alert-dialog dialog-role content, blocking scrim,
+back + VO-escape handling — Axis matches except the VO-escape
+(kept blocking deliberately) and the `alertdialog` role (kept —
+upstream parity).
 
 ### Menu — aligned
 
@@ -263,6 +297,66 @@ Four Kern P1 asks touch these families. All four are now implemented, wired, and
 | Tooltip delay groups + long-press | **Done** | `TooltipProvider` (`delay`/`closeDelay`) groups timing; a pending show cancels on dismiss. `delayLongPress` is forwarded to the host `Pressable`. |
 
 ### All other families — pending
+
+### Drawer — aligned (snap compound + Handle)
+
+Base UI parts: Root, Trigger, Portal, Backdrop, Viewport, Popup,
+Content, Title, Description, Close. Axis maps `Viewport` to the
+Portal's measured container and `Content` to caller content;
+`DrawerHandle` is an Axis addition (Base UI demos use a plain
+`div` — a drag-only grip strands screen-reader users).
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `DrawerRoot` | `Drawer.Root` | `open`, `defaultOpen`, `onOpenChange` (+ reason), `side`, `snapPoints`, `snapPoint`, `defaultSnapPoint`, `onSnapPointChange`, `modal`, `dismissable`, `initialFocus`, `finalFocus`; renders no element | `swipeDirection` is `side` (Axis names the edge, not the gesture); snap fractions resolve against the measured container, not the viewport |
+| `DrawerTrigger` | `Drawer.Trigger` | button role, `disabled`, `render`, expanded state | `nativeButton`/`handle` omitted (D7) |
+| `DrawerPortal` | `Drawer.Portal` | `OverlayPortal` at `PortalHost` + measured full-bleed container | D2, D3 |
+| `DrawerBackdrop` | `Drawer.Backdrop` | scrim dismissal modal-only (plain host otherwise) | same documented rule as PopoverBackdrop |
+| `DrawerPopup` | `Drawer.Popup` | edge-anchored surface with dialog role, drag, translate, `render`, function styles | D9; caller geometry (cross-axis size, snap chrome) |
+| `DrawerTitle` | `Drawer.Title` | heading text (`header` role) | — |
+| `DrawerDescription` | `Drawer.Description` | descriptive text | — |
+| `DrawerClose` | `Drawer.Close` | closes root, `disabled`, `render`; `initialFocus` marker | — |
+| `DrawerHandle` | — (Axis addition) | button role, `dismiss`/`expand`/`collapse` accessibility actions, caller-styled; tap expands | gesture parity, not chrome — the SR path for drag |
+
+`onOpenChange` reasons: `trigger-press`, `outside-press`,
+`escape-key`, `close-press`, plus `none` for drag-release
+dismissal (Base UI has no gesture-dismiss reason — a drag is
+neither an outside press nor a close press, documented on the
+reason type). Focus: container-or-Title default (never
+destructive — stops skipped, D12); restore to trigger or
+`finalFocus`, D11 unmounted-trigger rule. The bare `Drawer`
+monolith is removed (naming rule). rn-primitives has no drawer
+counterpart — no upstream behaviour to mirror; the design
+follows Dialog/Popover precedents.
+
+### Overlay — aligned (shared root for modal surfaces)
+
+No single Base UI counterpart — the shared owner every family
+root builds on (state, modality stack, dismissal branches,
+scroll lock, presence; one focus executor per surface). Base UI
+parity holds at the family roots; the overlay itself is
+infrastructure Axis owns.
+
+| Axis part | Base counterpart | API parity | Deviations |
+|---|---|---|---|
+| `OverlayRoot` | `Dialog.Root` state shape (adopted by every family root) | `open`, `defaultOpen`, `onOpenChange` (+ reason), `modal`, `dismissable`, granular `dismiss` branches, `initialFocus`, `finalFocus`, `trapFocus`, `restoreFocus`, `preventScroll` | `reason` details are Axis-shaped Base UI parity (Base UI carries richer DOM-bound details — `event`, `cancel()`, trigger element — omitted: no DOM event exists on native) |
+| `OverlayTrigger` | `*.Trigger` | button role, expanded/disabled state, anchor registration | no imperative handle (D7) |
+| `OverlayPortal` | `*.Portal` | presence-gated host at `PortalHost`, monotonic `zIndex` | D2, D3 |
+| `OverlayBackdrop` | `*.Backdrop` | scrim dismissal modal-only (in-box nothing otherwise) | — |
+| `OverlayPopup` | `*.Popup` | `dialog`/`alertdialog` role, single focus executor, top-only iOS modality, web `aria-modal` + Tab trap | the family popups extend this with scopes and defaults |
+| `OverlayClose` | `*.Close` | closes root, `disabled` | — |
+| `useModalActive` | — (Axis addition) | reports any modal open in the shared registry | Android app-root wiring needs a reader; no Base UI equivalent exists |
+| `useOverlay` / `useScrollLock` | — | context + scroll-lock readers | infrastructure |
+
+rn-primitives behaviour: dialog/portal have no stacking logic
+(insertion-order paint, no `zIndex`/top flags, ungated back
+handler). Axis registers every overlay in a shared modality
+registry (top-only back handling, top-only modality claims,
+deterministic `zIndex`) — strictly more correct on native, where
+no top-layer exists. iOS VoiceOver scrub dismisses (`escape`
+branch); Android hardware back dismisses topmost only (both
+reported as `escape-key`); `focus-out` is declared but never
+bound (no key listener — D-rule, not an oversight).
 
 ### Toast — aligned (provider + queue)
 

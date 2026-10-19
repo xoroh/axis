@@ -1,17 +1,32 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import { Text as RNText, type View } from "react-native";
-import { Drawer, PortalHost } from "./index";
+import {
+  DrawerBackdrop,
+  DrawerClose,
+  DrawerDescription,
+  DrawerHandle,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+  PortalHost,
+} from "./index";
 
 /**
- * Drawer behavior through the public entry. Edge-anchored panel with
- * scrim dismissal and side anchoring, plus the folded Sheet: snap
- * points from measured layout, drag-to-dismiss vs snap-back,
- * drag-to-snap with settle reporting, expand/collapse accessibility
- * actions, controlled following, and ref forwarding — observed in the
- * RN runtime. Drags go through the real PanResponder with synthetic
- * touch histories (the Slider precedent); velocity-triggered dismissal
- * is not synthesized (the distance trigger is the pinned path).
+ * Drawer compound parts through the public entry. Edge-anchored panel
+ * with scrim dismissal and side anchoring, plus snap points from
+ * measured layout, drag-to-dismiss vs snap-back, drag-to-snap with
+ * settle reporting, handle expand/collapse/dismiss actions,
+ * controlled following, focus move/restore, and ref forwarding —
+ * observed in the RN runtime. Drags go through the real PanResponder
+ * with synthetic touch histories (the Slider precedent);
+ * velocity-triggered dismissal is not synthesized (the distance
+ * trigger is the pinned path).
+ *
+ * The popup carries `testID` itself; the portal container carries
+ * `<portal-testID>-container` and the backdrop `<testID>-scrim`.
  */
 
 function touchBank(
@@ -43,7 +58,7 @@ function touchBank(
 
 async function layoutContainer(width: number, height: number) {
   await act(async () => {
-    await fireEvent.layout(screen.getByTestId("drawer-container"), {
+    await fireEvent.layout(screen.getByTestId("drawer-portal-container"), {
       x: 0,
       y: 0,
       width,
@@ -98,17 +113,68 @@ function translateOf(testID: string): number {
 
 async function pressLabel(label: string) {
   await act(async () => {
-    fireEvent.press(screen.getByLabelText(label));
+    fireEvent.press(
+      screen.getByLabelText(label, { includeHiddenElements: true }),
+    );
   });
 }
 
-describe("Drawer on React Native", () => {
+function Shell({
+  onOpen,
+  onDismiss,
+  onSnap,
+  side = "left",
+  snapPoints,
+  dismissable,
+  modal,
+  defaultOpen = true,
+  children,
+}: {
+  onOpen?: (open: boolean, details?: { reason: string }) => void;
+  onDismiss?: () => void;
+  onSnap?: (p: number | string) => void;
+  side?: "left" | "right" | "top" | "bottom";
+  snapPoints?: (number | string)[];
+  dismissable?: boolean;
+  modal?: boolean;
+  defaultOpen?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <DrawerRoot
+      defaultOpen={defaultOpen}
+      side={side}
+      snapPoints={snapPoints}
+      dismissable={dismissable}
+      modal={modal}
+      onOpenChange={onOpen}
+      onDismiss={onDismiss}
+      onSnapPointChange={onSnap}
+    >
+      <DrawerTrigger testID="drawer-trigger">
+        <RNText>Open drawer</RNText>
+      </DrawerTrigger>
+      <DrawerPortal testID="drawer-portal">
+        <DrawerBackdrop testID="drawer-scrim" />
+        <DrawerPopup testID="drawer" accessibilityLabel="App navigation">
+          <DrawerHandle testID="drawer-handle" />
+          <DrawerTitle>Navigation</DrawerTitle>
+          <DrawerDescription>Destinations</DrawerDescription>
+          {children}
+          <DrawerClose testID="drawer-close">
+            <RNText>Close</RNText>
+          </DrawerClose>
+        </DrawerPopup>
+      </DrawerPortal>
+    </DrawerRoot>
+  );
+}
+
+describe("Drawer compound parts on React Native", () => {
   it("renders nothing when closed", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" accessibilityLabel="App navigation">
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <Shell defaultOpen={false} />
       </PortalHost>,
     );
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -117,9 +183,7 @@ describe("Drawer on React Native", () => {
   it("renders the dialog surface when open", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen accessibilityLabel="App navigation">
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <Shell />
       </PortalHost>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -130,28 +194,24 @@ describe("Drawer on React Native", () => {
     const order: string[] = [];
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
+        <Shell
           onDismiss={() => order.push("dismiss")}
-          onOpenChange={() => order.push("change")}
-        >
-          <RNText>Destinations</RNText>
-        </Drawer>
+          onOpen={(open, details) =>
+            order.push(`change:${String(open)}:${details?.reason}`)
+          }
+        />
       </PortalHost>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     await pressLabel("Dismiss");
-    expect(order).toEqual(["dismiss", "change"]);
+    expect(order).toEqual(["dismiss", "change:false:outside-press"]);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("renders an inert scrim when not dismissable", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen dismissable={false}>
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <Shell dismissable={false} />
       </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
@@ -161,21 +221,28 @@ describe("Drawer on React Native", () => {
   it("renders an inert scrim when non-modal", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen modal={false}>
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <Shell modal={false} />
       </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
+  it("non-modal popups claim no modality", async () => {
+    await render(
+      <PortalHost>
+        <Shell modal={false} />
+      </PortalHost>,
+    );
+    expect(
+      screen.getByTestId("drawer").props.accessibilityViewIsModal,
+    ).not.toBe(true);
+  });
+
   it("anchors to the trailing edge on the right side", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen side="right">
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <Shell side="right" />
       </PortalHost>,
     );
     const flat: Record<string, unknown> = Object.assign(
@@ -193,12 +260,83 @@ describe("Drawer on React Native", () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
       <PortalHost>
-        <Drawer defaultOpen ref={ref}>
-          <RNText>Destinations</RNText>
-        </Drawer>
+        <DrawerRoot defaultOpen>
+          <DrawerPortal testID="drawer-portal">
+            <DrawerBackdrop testID="drawer-scrim" />
+            <DrawerPopup testID="drawer" ref={ref}>
+              <RNText>Destinations</RNText>
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
       </PortalHost>,
     );
     expect(ref.current).toBeTruthy();
+  });
+
+  it("moves screen-reader focus into the popup on open", async () => {
+    const focusSpy = jest.fn();
+    // No Title part here: the scope resolves no default, so the popup
+    // itself is the move-in target and the duck-typed imperative path
+    // (synchronous) observes it.
+    await render(
+      <PortalHost>
+        <DrawerRoot defaultOpen>
+          <DrawerPortal testID="drawer-portal">
+            <DrawerBackdrop testID="drawer-scrim" />
+            <DrawerPopup
+              testID="drawer"
+              accessibilityLabel="App navigation"
+              ref={(node) => {
+                if (node) {
+                  (node as { focus?: () => void }).focus = focusSpy;
+                }
+              }}
+            >
+              <RNText>Destinations</RNText>
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
+      </PortalHost>,
+    );
+    expect(screen.getByTestId("drawer")).toBeTruthy();
+    expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it("toggles with the trigger-press reason", async () => {
+    const changed: Array<{ open: boolean; reason?: string }> = [];
+    await render(
+      <PortalHost>
+        <Shell
+          defaultOpen={false}
+          onOpen={(open, details) =>
+            changed.push({ open, reason: details?.reason })
+          }
+        />
+      </PortalHost>,
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("drawer-trigger"));
+    });
+    expect(changed).toEqual([{ open: true, reason: "trigger-press" }]);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("closes with the close-press reason", async () => {
+    const changed: Array<{ open: boolean; reason?: string }> = [];
+    await render(
+      <PortalHost>
+        <Shell
+          onOpen={(open, details) =>
+            changed.push({ open, reason: details?.reason })
+          }
+        />
+      </PortalHost>,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("drawer-close"));
+    });
+    expect(changed).toEqual([{ open: false, reason: "close-press" }]);
   });
 });
 
@@ -206,12 +344,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("rests at the first snap point of the measured container", async () => {
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
-          side="bottom"
-          snapPoints={[0.5, 1]}
-        />
+        <Shell side="bottom" snapPoints={[0.5, 1]} />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -221,7 +354,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("rests fully open by default with no snap points given", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen side="bottom" />
+        <Shell side="bottom" />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -232,19 +365,22 @@ describe("Drawer snap points (folded Sheet)", () => {
     const order: string[] = [];
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
+        <Shell
           side="bottom"
           snapPoints={[0.5, 1]}
           onDismiss={() => order.push("dismiss")}
-          onOpenChange={() => order.push("change")}
+          onOpen={(open, details) =>
+            order.push(`change:${String(open)}:${details?.reason}`)
+          }
         />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
     await drag(0, 200);
-    expect(order).toEqual(["dismiss", "change"]);
+    // Drag-release dismissal reports `none`: Base UI has no
+    // gesture-dismiss reason, and a drag is neither an outside press
+    // nor a close press.
+    expect(order).toEqual(["dismiss", "change:false:none"]);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -252,12 +388,10 @@ describe("Drawer snap points (folded Sheet)", () => {
     const seen: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
+        <Shell
           side="bottom"
           snapPoints={[0.5, 1]}
-          onSnapPointChange={(p) => seen.push(p)}
+          onSnap={(p) => seen.push(p)}
         />
       </PortalHost>,
     );
@@ -274,12 +408,10 @@ describe("Drawer snap points (folded Sheet)", () => {
     const seen: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
+        <Shell
           side="bottom"
           snapPoints={[0.5, 1]}
-          onSnapPointChange={(p) => seen.push(p)}
+          onSnap={(p) => seen.push(p)}
         />
       </PortalHost>,
     );
@@ -289,57 +421,105 @@ describe("Drawer snap points (folded Sheet)", () => {
     expect(translateOf("drawer")).toBe(0);
   });
 
-  it("moves through expand/collapse actions, collapsing at the floor dismisses", async () => {
+  it("moves through handle expand/collapse actions, collapsing at the floor dismisses", async () => {
     const dismissed: boolean[] = [];
     const snaps: Array<number | string> = [];
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
+        <Shell
           side="bottom"
           snapPoints={[0.5, 1]}
           onDismiss={() => dismissed.push(true)}
-          onSnapPointChange={(p) => snaps.push(p)}
+          onSnap={(p) => snaps.push(p)}
         />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
-    const surface = screen.getByTestId("drawer");
+    const handle = screen.getByTestId("drawer-handle");
     await act(async () => {
-      await fireEvent(surface, "accessibilityAction", {
+      await fireEvent(handle, "accessibilityAction", {
         nativeEvent: { actionName: "expand" },
       });
     });
     expect(snaps).toEqual([1]);
     await act(async () => {
-      await fireEvent(surface, "accessibilityAction", {
+      await fireEvent(handle, "accessibilityAction", {
         nativeEvent: { actionName: "collapse" },
       });
     });
     expect(snaps).toEqual([1, 0.5]);
     await act(async () => {
-      await fireEvent(surface, "accessibilityAction", {
+      await fireEvent(handle, "accessibilityAction", {
         nativeEvent: { actionName: "collapse" },
       });
     });
     expect(dismissed).toEqual([true]);
   });
 
+  it("handle tap expands one snap", async () => {
+    const snaps: Array<number | string> = [];
+    await render(
+      <PortalHost>
+        <Shell
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnap={(p) => snaps.push(p)}
+        />
+      </PortalHost>,
+    );
+    await layoutContainer(400, 800);
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("drawer-handle"));
+    });
+    expect(snaps).toEqual([1]);
+    expect(translateOf("drawer")).toBe(0);
+  });
+
+  it("handle dismiss action closes with the close-press reason", async () => {
+    const changed: Array<{ open: boolean; reason?: string }> = [];
+    await render(
+      <PortalHost>
+        <Shell
+          side="bottom"
+          onOpen={(open, details) =>
+            changed.push({ open, reason: details?.reason })
+          }
+        />
+      </PortalHost>,
+    );
+    await layoutContainer(400, 800);
+    await act(async () => {
+      await fireEvent(
+        screen.getByTestId("drawer-handle"),
+        "accessibilityAction",
+        {
+          nativeEvent: { actionName: "dismiss" },
+        },
+      );
+    });
+    expect(changed).toEqual([{ open: false, reason: "close-press" }]);
+  });
+
   it("follows controlled snap point values", async () => {
     function Host() {
-      const [open, setOpen] = useState(true);
+      const [o, setO] = useState(true);
       const [point, setPoint] = useState<number | string>(0.5);
       return (
-        <Drawer
-          testID="drawer"
+        <DrawerRoot
           side="bottom"
-          open={open}
-          onOpenChange={setOpen}
+          open={o}
+          onOpenChange={setO}
           snapPoints={[0.5, 1]}
           snapPoint={point}
           onSnapPointChange={setPoint}
-        />
+        >
+          <DrawerPortal testID="drawer-portal">
+            <DrawerBackdrop testID="drawer-scrim" />
+            <DrawerPopup testID="drawer">
+              <DrawerHandle testID="drawer-handle" />
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
       );
     }
     await render(
@@ -349,9 +529,9 @@ describe("Drawer snap points (folded Sheet)", () => {
     );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(400);
-    const surface = screen.getByTestId("drawer");
+    const handle = screen.getByTestId("drawer-handle");
     await act(async () => {
-      await fireEvent(surface, "accessibilityAction", {
+      await fireEvent(handle, "accessibilityAction", {
         nativeEvent: { actionName: "expand" },
       });
     });
@@ -361,12 +541,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("resolves non-positive snap points to fully open without throwing", async () => {
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
-          side="bottom"
-          snapPoints={[Number.NaN, -1, 0]}
-        />
+        <Shell side="bottom" snapPoints={[Number.NaN, -1, 0]} />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -377,12 +552,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("supports dp and px snap points as visible sizes", async () => {
     await render(
       <PortalHost>
-        <Drawer
-          testID="drawer"
-          defaultOpen
-          side="bottom"
-          snapPoints={[200, "400px"]}
-        />
+        <Shell side="bottom" snapPoints={[200, "400px"]} />
       </PortalHost>,
     );
     await layoutContainer(400, 800);
@@ -393,7 +563,7 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("snaps a side drawer along the horizontal axis", async () => {
     await render(
       <PortalHost>
-        <Drawer testID="drawer" defaultOpen side="left" snapPoints={[0.5, 1]} />
+        <Shell side="left" snapPoints={[0.5, 1]} />
       </PortalHost>,
     );
     await layoutContainer(400, 800);

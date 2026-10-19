@@ -7,7 +7,11 @@ import {
   AccordionPanel,
   AccordionRoot,
   AccordionTrigger,
-  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogPortal,
+  AlertDialogRoot,
+  AlertDialogTitle,
   Autocomplete,
   CheckboxGroup,
   CheckboxRoot,
@@ -16,7 +20,10 @@ import {
   CollapsibleTrigger,
   Combobox,
   ContextMenuRoot,
-  Drawer,
+  DrawerBackdrop,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerRoot,
   DropdownMenuItem,
   DropdownMenuRoot,
   DropdownMenuSub,
@@ -251,15 +258,19 @@ describe("render composition: overlays", () => {
   it("AlertDialog surface render substitutes the popup", async () => {
     await render(
       <PortalHost>
-        <AlertDialog
-          testID="ad"
-          defaultOpen
-          title="Sure?"
-          actions={<Text>OK</Text>}
-          render={<View testID="sub">{null}</View>}
-        >
-          <Text>Body</Text>
-        </AlertDialog>
+        <AlertDialogRoot defaultOpen>
+          <AlertDialogPortal>
+            <AlertDialogBackdrop testID="ad-scrim" />
+            <AlertDialogPopup
+              testID="ad"
+              accessibilityLabel="Sure?"
+              render={<View testID="sub">{null}</View>}
+            >
+              <AlertDialogTitle>Sure?</AlertDialogTitle>
+              <Text>Body</Text>
+            </AlertDialogPopup>
+          </AlertDialogPortal>
+        </AlertDialogRoot>
       </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
@@ -284,13 +295,14 @@ describe("render composition: overlays", () => {
   it("Drawer surface render substitutes the surface", async () => {
     await render(
       <PortalHost>
-        <Drawer
-          testID="dr"
-          defaultOpen
-          render={<View testID="sub">{null}</View>}
-        >
-          <Text>Nav</Text>
-        </Drawer>
+        <DrawerRoot defaultOpen>
+          <DrawerPortal testID="dr-portal">
+            <DrawerBackdrop testID="dr-scrim" />
+            <DrawerPopup testID="dr" render={<View testID="sub">{null}</View>}>
+              <Text>Nav</Text>
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
       </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
@@ -300,14 +312,14 @@ describe("render composition: overlays", () => {
   it("Drawer bottom-sheet surface render substitutes the surface", async () => {
     await render(
       <PortalHost>
-        <Drawer
-          testID="sh"
-          defaultOpen
-          side="bottom"
-          render={<View testID="sub">{null}</View>}
-        >
-          <Text>Content</Text>
-        </Drawer>
+        <DrawerRoot defaultOpen side="bottom">
+          <DrawerPortal testID="sh-portal">
+            <DrawerBackdrop testID="sh-scrim" />
+            <DrawerPopup testID="sh" render={<View testID="sub">{null}</View>}>
+              <Text>Content</Text>
+            </DrawerPopup>
+          </DrawerPortal>
+        </DrawerRoot>
       </PortalHost>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();

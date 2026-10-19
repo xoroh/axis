@@ -70,16 +70,46 @@ non-modal overlays), `Drawer`; `DropdownMenu` and `ContextMenu`
 render inline and are not on this stack.
 
 Omitted behaviors are documented deviations, not oversights:
-`escape` and focus-out are declared in the dismiss branch set
-but never bound (React Native has no global key listener — only
-outside-pointer and system-back fire natively); focus
-CONTAINMENT still needs the `focusTrap` RN adaptation (what
-ships is `accessibilityViewIsModal` plus focus move/restore, not
-a traversal loop); exits unmount in the same commit (no
-animation to wait for — the presence machine stays wired for the
-first consumer that drives one); `container` has no native
-meaning; `keepMounted` stays omitted — all recorded in
-`docs/BASE_UI_PARITY.md` (D2/D3/D5/D9).
+`focus-out` is declared in the dismiss branch set but never bound
+(React Native has no global key listener; the bound escape path on
+native is iOS VoiceOver scrub plus Android hardware back, reported
+as `escape-key`); exits unmount in the same commit (no animation
+to wait for — the presence machine stays wired for the first
+consumer that drives one); `container` has no native meaning;
+`keepMounted` stays omitted — all recorded in
+`docs/BASE_UI_PARITY.md` (D2/D3/D9; D5 is retired for overlays).
+
+### Focus architecture: move, restore, contain, hide
+
+One executor per surface: the popup that paints the surface moves
+SR focus into it on open and restores it on close (the root never
+executes focus itself). Resolution order: explicit `initialFocus`
+(element, ref, function of the open interaction, or `false` to
+stay put), else the family default (first focusable element via
+the focus scope, else Title, else the popup — drawers default to
+container-or-Title; on web the first tabbable element wins
+unless a target is marked), else the popup itself. Restore:
+explicit `finalFocus`, else the trigger; if the trigger
+unmounted, the web falls back to the nearest focusable
+ancestor while it is still connected (D11), on native nothing
+happens — never a throw.
+
+- iOS: the top modal popup claims `accessibilityViewIsModal`
+  (siblings hide, including the scrim — the upstream precedent).
+  Non-modal surfaces claim nothing.
+- Android: the app root that sits beside `PortalHost` takes
+  `importantForAccessibility="no-hide-descendants"` while any
+  modal is open. Read it from `useModalActive()` and wire the
+  prop in the app shell (the example app does this in
+  `App.tsx`); non-modal overlays never count.
+- Web: the modal popup carries `aria-modal` plus a Tab trap
+  (`onKeyDown` cycles first/last tabbable). Non-modal surfaces
+  trap nothing.
+- Lower layers hide via `accessibilityElementsHidden` +
+  `importantForAccessibility="no-hide-descendants"` and take no
+  pointer events — driven by the shared overlay-modality
+  registry, which tracks modality per registration
+  (`modalTop`, `isModalActive`).
 
 ### Overlay hosting: OverlayRoot, OverlayPortal, PortalHost, useModal
 
@@ -118,14 +148,14 @@ meaning; `keepMounted` stays omitted — all recorded in
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed change. |
-| `modal` | `boolean \| "trap-focus"` | no | `true` | Whether the overlay presents modally. Modal overlays trap focus, prevent background interaction, and lock scroll. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state on every committed change, with the reason (`trigger-press`, `outside-press`, `escape-key`, `close-press`, `none`). |
+| `modal` | `boolean \| "trap-focus"` | no | `true` | Whether the overlay presents modally. Modal overlays contain screen-reader focus, prevent background interaction, and lock scroll. |
 | `dismissable` | `boolean` | no | `true` | Whether user actions (outside press, back, escape) can dismiss it. |
 | `dismiss` | `OverlayDismissOptions` | no | — | Granular dismissal branch options (each defaults `true`, all gated on `dismissable`). |
 | `onDismiss` | `() => void` | no | — | Fires on outside-press/back/escape dismissal (not on programmatic close). |
-| `trapFocus` | `boolean` | no | `true` | Whether to trap focus inside the overlay when modal. |
-| `initialFocus` | `RefObject<ElementRef<typeof View> \| null> \| ElementRef<typeof View> \| null` | no | — | Element or ref to receive initial focus upon opening. |
-| `finalFocus` | `RefObject<ElementRef<typeof View> \| null> \| ElementRef<typeof View> \| null` | no | — | Element or ref to restore focus to upon closing. |
+| `trapFocus` | `boolean` | no | `true` | Whether the popup executes focus move-in (and the web Tab trap) when modal. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target for the popup (popup props win). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target for close (wins over the trigger). |
 | `restoreFocus` | `boolean` | no | `true` | Whether to restore focus to trigger/`finalFocus` on close. |
 | `preventScroll` | `boolean` | no | `true` | Whether to lock background scroll while open and modal. |
 | `registry` | `OverlayModalityRegistry` | no | — | Custom overlay modality registry. Defaults to the shared registry. |
@@ -188,8 +218,14 @@ dismissal path); non-dismissable modal roots render a plain
 | `children` | `ReactNode` | no | — | Surface content. |
 | `render` | `RenderProp<OverlayPopupState, SlotProps>` | no | — | Element or function substitution; role and label stay on the part. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the surface `View` and registered as the focus-move target. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the root's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 
-`OverlayPopupState`: `{ open: boolean; isTop: boolean }`.
+`OverlayPopupState`: `{ open: boolean; isTop: boolean }`. The
+single focus executor for the surface (see Focus architecture
+above). `useModalActive()` (exported hook) reports whether any
+modal is open in the shared registry — wire it to the app root's
+`importantForAccessibility` on Android.
 
 #### `OverlayClose`
 
@@ -330,12 +366,15 @@ function Hosts() {
   events (`pointerEvents="box-none"`) and hide from assistive
   tech (`accessibilityElementsHidden`,
   `importantForAccessibility="no-hide-descendants"`).
-- `accessibilityViewIsModal` sits on the top modal LAYER, not on
-  the popup inside it — the flag hides everything that is not a
-  descendant of the marked view, so marking the popup would hide
-  its own backdrop as a sibling. Only the top layer claims it; a
-  stack where two siblings both claim modality would hide each
-  other.
+- `accessibilityViewIsModal` sits on the top modal POPUP (the
+  lead-ordered placement): the flag hides everything that is not
+  a descendant of the marked view — including the scrim sibling,
+  exactly like the upstream scrim that AT never sees. Only the
+  top popup claims it; a stack where two siblings both claim
+  modality would hide each other. Non-modal popups claim
+  nothing. (On Android the scrim keeps its `"Dismiss"` label —
+  modality there is the app-root hook, and the scrim stays
+  reachable.)
 - The dismissable backdrop is a `Pressable` labelled "Dismiss"
   closing through `dismiss`; the non-dismissable scrim is a plain
   `View` with no label and no handler — no fake affordance.
@@ -346,14 +385,17 @@ function Hosts() {
   with `disabled` state.
 - Focus moves into the surface on open and restores to the
   trigger/`finalFocus` on close (reduced motion honoured);
-  background scroll locks while open and modal.
+  background scroll locks while open and modal. Web adds
+  `aria-modal` plus a Tab trap on modal popups.
 - Closed or exiting renders nothing at the host: no scrim, no
   surface, for assistive tech or tests to find.
 - Explicitly deferred, each for a named reason: no `escape` or
-  focus-out binding (declared, never bound — no global key
-  listener on native); no focus containment (announced modal
-  state plus move/restore, not a traversal loop — parity D5);
-  no exit animation (unmounts in the same commit — parity D9).
+  focus-out binding on native (declared, never bound — no global
+  key listener; the bound escape path is iOS VoiceOver scrub plus
+  Android hardware back, reported as `escape-key`); no native
+  traversal loop (modality flags plus move/restore — D5 is
+  retired for overlays); no exit animation (unmounts in the same
+  commit — parity D9).
 
 ### Composition
 

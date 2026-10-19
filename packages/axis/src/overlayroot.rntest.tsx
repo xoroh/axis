@@ -9,6 +9,7 @@ import {
   OverlayRoot,
   OverlayTrigger,
   PortalHost,
+  useModalActive,
   useOverlay,
   useScrollLock,
 } from "./index";
@@ -143,13 +144,17 @@ describe("OverlayRoot on React Native", () => {
     );
 
     // The trigger sits BEHIND an open modal layer, so it is hidden
-    // from assistive tech (`accessibilityViewIsModal` on the top
-    // layer) — querying it needs the hidden-element opt-in.
+    // from assistive tech (modality on the top popup) — querying it
+    // needs the hidden-element opt-in. The backdrop scrim is a sibling
+    // of the modal popup, so the same rule hides it on iOS (on Android
+    // the labelled scrim stays reachable — see overlay.md).
     expect(
       screen.getByTestId("ov-trigger", { includeHiddenElements: true }),
     ).toBeTruthy();
     expect(screen.getByTestId("ov-portal")).toBeTruthy();
-    expect(screen.getByTestId("ov-backdrop")).toBeTruthy();
+    expect(
+      screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+    ).toBeTruthy();
     expect(screen.getByTestId("ov-popup")).toBeTruthy();
     expect(screen.getByText("Content of ov")).toBeTruthy();
   });
@@ -204,7 +209,9 @@ describe("OverlayRoot on React Native", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByTestId("ov-backdrop"));
+      fireEvent.press(
+        screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+      );
     });
 
     expect(changes).toEqual([false]);
@@ -223,7 +230,9 @@ describe("OverlayRoot on React Native", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByTestId("ov-backdrop"));
+      fireEvent.press(
+        screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+      );
     });
 
     expect(changes).toEqual([]);
@@ -399,6 +408,164 @@ describe("OverlayRoot on React Native", () => {
       </PortalHost>,
     );
     expect(focusSpy).toHaveBeenCalled();
+  });
+
+  it("restores focus to the trigger on close", async () => {
+    const triggerFocusSpy = jest.fn();
+
+    function TriggerExample({ open }: { open: boolean }) {
+      return (
+        <PortalHost testID="host">
+          <OverlayRoot open={open}>
+            <OverlayTrigger
+              testID="t-trigger"
+              ref={(node) => {
+                if (node) {
+                  (node as { focus?: () => void }).focus = triggerFocusSpy;
+                }
+              }}
+            >
+              <Text>Open</Text>
+            </OverlayTrigger>
+            <OverlayPortal testID="t-portal">
+              <OverlayPopup testID="t-popup">
+                <Text>Content</Text>
+              </OverlayPopup>
+            </OverlayPortal>
+          </OverlayRoot>
+        </PortalHost>
+      );
+    }
+
+    const { rerender } = await render(<TriggerExample open={true} />);
+    expect(screen.getByTestId("t-popup")).toBeTruthy();
+
+    await rerender(<TriggerExample open={false} />);
+    expect(triggerFocusSpy).toHaveBeenCalled();
+  });
+
+  it("reports reasons: trigger-press, outside-press, escape-key, close-press", async () => {
+    const seen: Array<{ open: boolean; reason?: string }> = [];
+    const { unmount } = await render(
+      <PortalHost testID="host">
+        <OverlayRoot
+          open={true}
+          onOpenChange={(next, details) =>
+            seen.push({ open: next, reason: details?.reason })
+          }
+        >
+          <OverlayTrigger testID="r-trigger">
+            <Text>Open</Text>
+          </OverlayTrigger>
+          <OverlayPortal testID="r-portal">
+            <OverlayBackdrop testID="r-backdrop" />
+            <OverlayPopup testID="r-popup">
+              <Text>Content</Text>
+              <OverlayClose testID="r-close">
+                <Text>Close</Text>
+              </OverlayClose>
+            </OverlayPopup>
+          </OverlayPortal>
+        </OverlayRoot>
+      </PortalHost>,
+    );
+
+    // Close press.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("r-close"));
+    });
+    expect(seen).toEqual([{ open: false, reason: "close-press" }]);
+    await unmount();
+
+    // Backdrop press on a fresh uncontrolled mount.
+    seen.length = 0;
+    await render(
+      <PortalHost testID="host">
+        <OverlayRoot
+          defaultOpen
+          onOpenChange={(next, details) =>
+            seen.push({ open: next, reason: details?.reason })
+          }
+        >
+          <OverlayPortal testID="r-portal">
+            <OverlayBackdrop testID="r-backdrop" />
+            <OverlayPopup testID="r-popup">
+              <Text>Content</Text>
+            </OverlayPopup>
+          </OverlayPortal>
+        </OverlayRoot>
+      </PortalHost>,
+    );
+    await act(async () => {
+      fireEvent.press(
+        screen.getByTestId("r-backdrop", { includeHiddenElements: true }),
+      );
+    });
+    expect(seen).toEqual([{ open: false, reason: "outside-press" }]);
+  });
+
+  it("reports trigger-press on toggle and escape-key on hardware back", async () => {
+    const seen: Array<{ open: boolean; reason?: string }> = [];
+    const addListenerSpy = jest.spyOn(BackHandler, "addEventListener");
+    await render(
+      <PortalHost testID="host">
+        <OverlayRoot
+          defaultOpen={false}
+          onOpenChange={(next, details) =>
+            seen.push({ open: next, reason: details?.reason })
+          }
+        >
+          <OverlayTrigger testID="b-trigger">
+            <Text>Open</Text>
+          </OverlayTrigger>
+          <OverlayPortal testID="b-portal">
+            <OverlayBackdrop testID="b-backdrop" />
+            <OverlayPopup testID="b-popup">
+              <Text>Content</Text>
+            </OverlayPopup>
+          </OverlayPortal>
+        </OverlayRoot>
+      </PortalHost>,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("b-trigger"));
+    });
+    expect(seen).toEqual([{ open: true, reason: "trigger-press" }]);
+
+    const handler = addListenerSpy.mock.calls
+      .map((call) => call[1])
+      .find(Boolean);
+    expect(handler).toBeDefined();
+    await act(async () => {
+      handler?.({} as never);
+    });
+    expect(seen).toEqual([
+      { open: true, reason: "trigger-press" },
+      { open: false, reason: "escape-key" },
+    ]);
+    addListenerSpy.mockRestore();
+  });
+
+  it("useModalActive reflects modal opens in the shared registry", async () => {
+    function ModalProbe() {
+      const active = useModalActive();
+      return <Text testID="modal-probe">{active ? "modal" : "idle"}</Text>;
+    }
+    const { rerender } = await render(
+      <PortalHost testID="host">
+        <ModalProbe />
+        <OverlayExample open={false} testPrefix="probe" />
+      </PortalHost>,
+    );
+    expect(screen.getByTestId("modal-probe").props.children).toBe("idle");
+    await rerender(
+      <PortalHost testID="host">
+        <ModalProbe />
+        <OverlayExample open={true} testPrefix="probe" />
+      </PortalHost>,
+    );
+    expect(screen.getByTestId("modal-probe").props.children).toBe("modal");
   });
 
   it("exposes context value via useOverlay() inside OverlayRoot", async () => {

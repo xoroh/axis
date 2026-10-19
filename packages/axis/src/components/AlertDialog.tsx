@@ -1,118 +1,282 @@
 import type { ElementRef, ReactNode, Ref } from "react";
-import { type StyleProp, View, type ViewStyle } from "react-native";
-import type { StateStyle } from "../render";
-import { type RenderProp, resolveStyle } from "../render";
+import type { StyleProp, TextStyle, View, ViewStyle } from "react-native";
+import type { OverlayOpenChangeDetails } from "../dismissWiring";
+import type { RenderProp, StateStyle } from "../render";
 import type { SlotProps } from "../slot";
-import { useControllableState } from "../useControllableState";
 import {
   DialogBackdrop,
+  DialogClose,
+  DialogDescription,
   DialogPopup,
   DialogPortal,
   DialogRoot,
   DialogTitle,
+  DialogTrigger,
 } from "./Dialog";
+import type { OverlayFocusValue } from "./useAccessibilityFocus";
 
 /**
  * AlertDialog — a blocking dialog that only closes through its actions.
  *
- * A thin specialization of the compound `Dialog` parts (in-`src`
- * composition): `DialogRoot` (forced non-dismissable), `DialogPortal`,
- * `DialogBackdrop` (inert — no dismiss label, no handler), and
- * `DialogPopup` carrying the title, content, and REQUIRED action row.
- * `dismissable` is not accepted at all (omitted from this type), so no
- * caller can accidentally make a blocking dialog dismissable. Closing
- * happens only through the caller's own action buttons calling back
- * (typically `onOpenChange(false)`).
+ * Compound anatomy per Base UI (Root, Trigger, Portal, Backdrop,
+ * Popup, Title, Description, Close), sharing the `Dialog` compound
+ * implementation with the blocking contract forced: the root always
+ * sets `disablePointerDismissal`, the backdrop is inert (no dismiss
+ * label, no handler), and the popup carries `role="alertdialog"`.
+ * Blocking means blocking: scrim press, Android hardware back, and
+ * iOS VoiceOver scrub all no-op — closing happens only through the
+ * caller's own action buttons calling back (typically
+ * `onOpenChange(false)`).
  *
- * `actions` is REQUIRED: a blocking dialog without an explicit action
- * traps the user on the surface with no way out. State follows the
- * `useControllableState` pattern: `open` (+ `onOpenChange`) for
- * controlled use, `defaultOpen` for uncontrolled (default `false`).
- * Presence is mount/unmount: closed renders `null` (via `DialogPortal`).
+ * Focus: SR focus moves into the popup on open; the default initial
+ * target is the element the caller marks least destructive via
+ * `initialFocus` on `AlertDialogClose` (typically Cancel — Axis cannot
+ * infer destructiveness), else the first stop/title default, else the
+ * popup. Restore goes to the trigger or `finalFocus`.
+ *
+ * Test ids: the popup carries `testID`; the backdrop carries
+ * `<testID>-scrim` when `testID` is given (the Dialog precedent).
  */
 
-export type AlertDialogState = {
-  /** Whether the dialog is currently open. */
-  open: boolean;
-};
-
-export type AlertDialogProps = {
+export type AlertDialogRootProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
   defaultOpen?: boolean;
-  /** Fires with the next open state; actions report `false` through here. */
-  onOpenChange?: (open: boolean) => void;
-  /** Dialog title, rendered in a `DialogTitle` when provided. */
-  title?: ReactNode;
-  /** Dialog content. */
+  /** Fires with the next open state; actions report `false` through here, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
+  /**
+   * Explicit initial focus target (wins over the popup's). See
+   * `OverlayRootProps.initialFocus` for the value shape.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
+  /** Trigger, Portal, and shared content. Renders no element itself. */
   children?: ReactNode;
-  /**
-   * Action row content. REQUIRED — a blocking dialog with no explicit
-   * action leaves the user with no way to leave the surface.
-   */
-  actions: ReactNode;
-  /** Accessible name source for the dialog surface. */
-  accessibilityLabel?: string;
-  testID?: string;
-  /** Dialog surface (box) style: value or function of dialog state. */
-  style?: StateStyle<AlertDialogState, StyleProp<ViewStyle>>;
-  /**
-   * Element or function substitution (Base UI parity) for the dialog
-   * surface: an element is cloned with the popup props merged under
-   * its own; a function receives `(props, state)`. Blocking
-   * (non-dismissable) semantics stay on the part.
-   */
-  render?: RenderProp<AlertDialogState, SlotProps>;
-  /** Forwarded to the dialog surface `View` (via `DialogPopup`). */
-  ref?: Ref<ElementRef<typeof View>>;
 };
 
-export function AlertDialog({
+export type AlertDialogRootState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
+
+export function AlertDialogRoot({
   open,
   defaultOpen = false,
   onOpenChange,
-  title,
+  initialFocus,
+  finalFocus,
   children,
-  actions,
-  accessibilityLabel,
-  testID,
-  style,
-  render,
-  ref,
-}: AlertDialogProps): React.ReactNode {
-  // Single state owner: `DialogRoot` below runs controlled off this
-  // value, so open state has one source and the function-form `style`
-  // reads the same value the portal presents.
-  const [isOpen, setOpen] = useControllableState<boolean>(
-    open,
-    defaultOpen,
-    onOpenChange,
-  );
-  const state: AlertDialogState = { open: isOpen ?? false };
-
+}: AlertDialogRootProps): React.JSX.Element {
   return (
     <DialogRoot
-      open={isOpen}
-      onOpenChange={setOpen}
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
       // Forced, never caller-provided: a blocking dialog must not
       // dismiss from the scrim (or the request-close path).
       disablePointerDismissal
+      modal
+      initialFocus={initialFocus}
+      finalFocus={finalFocus}
     >
-      <DialogPortal>
-        <DialogBackdrop testID={testID ? `${testID}-scrim` : undefined} />
-        <DialogPopup
-          accessibilityLabel={accessibilityLabel}
-          testID={testID}
-          style={resolveStyle(style, state)}
-          render={render}
-          ref={ref}
-        >
-          {title != null ? <DialogTitle>{title}</DialogTitle> : null}
-          {children}
-          <View>{actions}</View>
-        </DialogPopup>
-      </DialogPortal>
+      {children}
     </DialogRoot>
   );
+}
+
+export type AlertDialogTriggerProps = {
+  /** Terminal: it never opens and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of trigger state, caller-provided. */
+  style?: StateStyle<AlertDialogTriggerState, StyleProp<ViewStyle>>;
+  /** Trigger content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<AlertDialogTriggerState, SlotProps>;
+};
+
+export type AlertDialogTriggerState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
+export function AlertDialogTrigger(
+  props: AlertDialogTriggerProps,
+): React.ReactNode {
+  return <DialogTrigger {...props} />;
+}
+
+export type AlertDialogPortalProps = {
+  /** Portal content (Backdrop + Popup composed by the caller). */
+  children?: ReactNode;
+  testID?: string;
+};
+
+export function AlertDialogPortal(
+  props: AlertDialogPortalProps,
+): React.JSX.Element | null {
+  return <DialogPortal {...props} />;
+}
+
+export type AlertDialogBackdropProps = {
+  testID?: string;
+  /** Value or function of backdrop state, caller-provided. */
+  style?: StateStyle<AlertDialogBackdropState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * scrim host; dismissal wiring stays on the part.
+   */
+  render?: RenderProp<AlertDialogBackdropState, SlotProps>;
+};
+
+export type AlertDialogBackdropState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
+
+export function AlertDialogBackdrop(
+  props: AlertDialogBackdropProps,
+): React.ReactNode {
+  // Inert by construction: the root forces `disablePointerDismissal`,
+  // so the Dialog backdrop renders its plain host here.
+  return <DialogBackdrop {...props} />;
+}
+
+export type AlertDialogPopupState = {
+  /** Whether the dialog is currently open. */
+  open: boolean;
+};
+
+export type AlertDialogPopupProps = {
+  /** Accessible name source for the dialog surface. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of popup state, caller-provided. */
+  style?: StateStyle<AlertDialogPopupState, StyleProp<ViewStyle>>;
+  /** Surface content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * surface host; the alertdialog role stays on the part.
+   */
+  render?: RenderProp<AlertDialogPopupState, SlotProps>;
+  /** Forwarded to the surface `View`. */
+  ref?: Ref<ElementRef<typeof View>>;
+  /**
+   * Explicit initial focus target (wins over the root's). Element, ref,
+   * function of the open interaction, or `false` to keep focus where
+   * it is. Default: the marked `AlertDialogClose`, else first
+   * stop/title default, else the popup itself.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
+};
+
+export function AlertDialogPopup({
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  render,
+  ref,
+  initialFocus,
+  finalFocus,
+}: AlertDialogPopupProps): React.ReactNode {
+  return (
+    <DialogPopup
+      accessibilityLabel={accessibilityLabel}
+      role="alertdialog"
+      testID={testID}
+      style={style}
+      render={render}
+      ref={ref}
+      initialFocus={initialFocus}
+      finalFocus={finalFocus}
+    >
+      {children}
+    </DialogPopup>
+  );
+}
+
+export type AlertDialogTitleProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Heading content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function AlertDialogTitle(
+  props: AlertDialogTitleProps,
+): React.ReactNode {
+  return <DialogTitle {...props} />;
+}
+
+export type AlertDialogDescriptionProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Description content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function AlertDialogDescription(
+  props: AlertDialogDescriptionProps,
+): React.ReactNode {
+  return <DialogDescription {...props} />;
+}
+
+export type AlertDialogCloseState = {
+  /** Whether the button is currently disabled. */
+  disabled: boolean;
+};
+
+export type AlertDialogCloseProps = {
+  /** Terminal: it never closes and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of close state, caller-provided. */
+  style?: StateStyle<AlertDialogCloseState, StyleProp<ViewStyle>>;
+  /** Button content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<AlertDialogCloseState, SlotProps>;
+  /**
+   * Mark this Close as the default initial focus target (how
+   * AlertDialog marks Cancel — Axis cannot infer destructiveness).
+   * Default `false`.
+   */
+  initialFocus?: boolean;
+};
+
+export function AlertDialogClose(
+  props: AlertDialogCloseProps,
+): React.ReactNode {
+  // The `initialFocus` marker prop marks this Close as the default
+  // initial target (Cancel) — see `DialogClose`.
+  return <DialogClose {...props} />;
 }

@@ -42,9 +42,14 @@ function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
   );
 }
 
-async function pressLabel(label: string) {
+async function pressLabel(label: string, hidden = false) {
   await act(async () => {
-    fireEvent.press(screen.getByLabelText(label));
+    fireEvent.press(
+      screen.getByLabelText(
+        label,
+        hidden ? { includeHiddenElements: true } : undefined,
+      ),
+    );
   });
 }
 
@@ -82,17 +87,40 @@ describe("Dialog compound parts on React Native", () => {
     ).toMatchObject({ expanded: true });
   });
 
-  it("closes through the close button", async () => {
-    const seen: boolean[] = [];
+  it("reports trigger-press, close-press, and outside-press reasons", async () => {
+    const seen: Array<{ open: boolean; reason?: string }> = [];
     await render(
       <PortalHost>
-        <Compound onOpen={(v) => seen.push(v)} />
+        <DialogRoot
+          onOpenChange={(v, details) =>
+            seen.push({ open: v, reason: details?.reason })
+          }
+        >
+          <DialogTrigger accessibilityLabel="Open dialog">
+            <RNText>Open</RNText>
+          </DialogTrigger>
+          <DialogPortal>
+            <DialogBackdrop testID="dlg-backdrop" />
+            <DialogPopup testID="dlg-popup" accessibilityLabel="Example">
+              <DialogClose accessibilityLabel="Close dialog">
+                <RNText>Close</RNText>
+              </DialogClose>
+            </DialogPopup>
+          </DialogPortal>
+        </DialogRoot>
       </PortalHost>,
     );
     await pressLabel("Open dialog");
     await pressLabel("Close dialog");
-    expect(seen).toEqual([true, false]);
-    expect(screen.queryByRole("dialog")).toBeNull();
+    // Reopen for the scrim path (the close unmounted the popup).
+    await pressLabel("Open dialog", true);
+    await pressLabel("Dismiss", true);
+    expect(seen).toEqual([
+      { open: true, reason: "trigger-press" },
+      { open: false, reason: "close-press" },
+      { open: true, reason: "trigger-press" },
+      { open: false, reason: "outside-press" },
+    ]);
   });
 
   it("dismisses through the backdrop with onDismiss first", async () => {
@@ -115,7 +143,11 @@ describe("Dialog compound parts on React Native", () => {
       </PortalHost>,
     );
     await pressLabel("Open dialog");
-    await pressLabel("Dismiss");
+    // The open modal popup claims iOS modality, so the scrim sibling
+    // hides from assistive tech exactly like the trigger does (same
+    // hidden-element opt-in as the trigger assertion above) — on
+    // Android the labelled scrim stays reachable (see overlay.md).
+    await pressLabel("Dismiss", true);
     expect(dismissed).toEqual([true]);
     expect(seen).toEqual([true, false]);
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -134,7 +166,11 @@ describe("Dialog compound parts on React Native", () => {
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByTestId("dlg-backdrop")).toBeTruthy();
+    // Inert but present — and hidden from AT behind the modal popup
+    // (the iOS modality rule above), so the hidden opt-in applies.
+    expect(
+      screen.getByTestId("dlg-backdrop", { includeHiddenElements: true }),
+    ).toBeTruthy();
   });
 
   it("renders nothing outside a root, even with content", async () => {

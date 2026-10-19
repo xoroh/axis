@@ -1,27 +1,27 @@
 ## Alert Dialog
 
-Blocking confirm that only closes through its actions: a thin
-specialization of the compound `Dialog` parts (`DialogRoot` with
-forced non-dismissal, `DialogPortal`, inert `DialogBackdrop`,
-`DialogPopup` carrying title, content, and a REQUIRED action
-row). A blocking dialog without an explicit action traps the
-user on the surface with no way out — `actions` is required, and
-`dismissable` is not accepted at all (omitted from the type), so
-no caller can accidentally make a blocking dialog dismissable.
-Structure, behavior, and accessibility only — every visual value
-(`style`) is caller-provided. State follows the controlled +
-uncontrolled pattern throughout: `open` (plus `onOpenChange`)
-for controlled use, `defaultOpen` for uncontrolled. Closing
-happens only through the caller's own action buttons calling
-back (typically `onOpenChange(false)`).
+Blocking confirm that only closes through its actions. Compound
+anatomy per Base UI (Root, Trigger, Portal, Backdrop, Popup, Title,
+Description, Close), sharing the `Dialog` compound implementation
+with the blocking contract forced: the root always sets
+`disablePointerDismissal`, the backdrop is inert (no dismiss label,
+no handler), and the popup carries `role="alertdialog"`. Blocking
+means blocking: scrim press, Android hardware back, and iOS
+VoiceOver scrub all no-op — closing happens only through the
+caller's own action buttons calling back (typically
+`onOpenChange(false)`).
 
-Source of truth: `AlertDialogProps`, `AlertDialogState` in
-`@xoroh/axis`
-(`packages/axis/src/components/AlertDialog.tsx:34-69`); composed
-from `DialogRootProps`, `DialogPortalProps`,
-`DialogBackdropProps`, `DialogPopupProps` in `@xoroh/axis`
-(`packages/axis/src/components/Dialog.tsx:265-273, 401-467,
-519-631`).
+State follows the controlled + uncontrolled pattern throughout:
+`open` (plus `onOpenChange`) for controlled use, `defaultOpen` for
+uncontrolled. Structure, behavior, and accessibility only — every
+visual value (`style`) is caller-provided.
+
+Source of truth: `AlertDialogRootProps`, `AlertDialogRootState`,
+`AlertDialogTriggerProps`,
+`AlertDialogPortalProps`, `AlertDialogBackdropProps`,
+`AlertDialogPopupProps`, `AlertDialogTitleProps`,
+`AlertDialogDescriptionProps`, `AlertDialogCloseProps` in
+`@xoroh/axis` (`packages/axis/src/components/AlertDialog.tsx`).
 
 ### Install
 
@@ -48,57 +48,136 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `AlertDialog` | `AlertDialog.Root` (single-part specialization) | The whole API: forced-blocking dialog over the `Dialog` compound parts. Not a part-for-part Base UI port — see below. |
+| `AlertDialogRoot` | `AlertDialog.Root` | State owner (`open`/`defaultOpen`/`onOpenChange`); forces `disablePointerDismissal` and `modal`; renders no element. |
+| `AlertDialogTrigger` | `AlertDialog.Trigger` | Button role, expanded state, tap toggles. |
+| `AlertDialogPortal` | `AlertDialog.Portal` | `OverlayPortal` host at `PortalHost` — the native portal. |
+| `AlertDialogBackdrop` | `AlertDialog.Backdrop` | Inert scrim by construction (no handler, no label). |
+| `AlertDialogPopup` | `AlertDialog.Popup` | Surface view carrying the `alertdialog` role. |
+| `AlertDialogTitle` | `AlertDialog.Title` | Heading text (`header` role). |
+| `AlertDialogDescription` | `AlertDialog.Description` | Descriptive text. |
+| `AlertDialogClose` | `AlertDialog.Close` / `Cancel` / `Action` | Button that closes the root; `initialFocus` marks the least-destructive action (Cancel). |
 
-There are no compound parts of its own: the composition is
-in-`src` (`DialogRoot` + `DialogPortal` + `DialogBackdrop` +
-`DialogPopup` + `DialogTitle`), and substitution happens through
-`render` on the surface. Base UI's `AlertDialog` ships
-`Root`/`Trigger`/`Portal`/`Backdrop`/`Popup`/`Title`/
-`Description`/`Cancel`/`Action` parts; Axis covers that shape
-with the `Dialog` compound parts (see
-`docs/components/dialog.md`) and keeps `AlertDialog` a
-single-part blocking specialization — `Cancel`/`Action` are
-caller buttons in `actions`, closing through `onOpenChange`.
+Base UI splits the actions into `Cancel`/`Action` parts; Axis
+covers both with `AlertDialogClose` — a blocking dialog's actions
+are all closes, and the `initialFocus` marker (not a separate part)
+is how the caller names Cancel.
 
 ### Overlay hosting
 
-`AlertDialog` presents through `OverlayRoot` + `OverlayPortal`
-painting at the app's `PortalHost` — it inherits the stack from
-the `DialogRoot` it composes (single state owner: the inner
-`DialogRoot` runs controlled off the outer value). `modal` is
-always on (blocking dialogs are modal by definition);
-`disablePointerDismissal` is forced, never caller-provided: the
-backdrop renders inert (no dismiss label, no handler) and every
-dismiss branch is off, so scrim press and Android back do
-nothing. There is no `onDismiss` (no scrim path exists) and no
-`useModal` opt-in on this API — the RN `Modal` host is an
-`OverlayRoot`-level opt-in for direct `Overlay` compositions
-(see `docs/components/overlay.md`).
+`AlertDialogRoot` presents through `OverlayRoot` + `OverlayPortal`
+painting at the app's `PortalHost` — the surface escapes clipped
+parents without an RN `Modal` of its own. `modal` is always on
+(blocking dialogs are modal by definition);
+`disablePointerDismissal` is forced, never caller-provided: every
+dismiss branch is off, so scrim press, Android back, and iOS
+VoiceOver scrub do nothing. There is no `onDismiss` (no dismiss
+path exists) and no `useModal` opt-in on this API — the RN `Modal`
+host is an `OverlayRoot`-level opt-in for direct `Overlay`
+compositions (see `docs/components/overlay.md`).
+
+### Focus
+
+SR focus moves into the popup on open. The default initial target
+is the element the caller marks least destructive via
+`initialFocus` on `AlertDialogClose` (typically Cancel — Axis
+cannot infer destructiveness), else the first stop/title default,
+else the popup itself; on web the first tabbable element wins
+unless a Close is marked. `initialFocus` (element, ref, function
+of the open interaction, or `false`) may also be set on the root
+or popup, with the popup winning; `finalFocus` (or the trigger)
+takes focus back on close. If the trigger unmounted, the web falls
+back to the nearest focusable ancestor while it is still
+connected (D11); on native nothing happens, never a throw.
+
+Modality: on iOS the popup claims `accessibilityViewIsModal`
+(top layer only); on Android the app root beside `PortalHost`
+takes `importantForAccessibility="no-hide-descendants"` while a
+modal is open (see `useModalActive`); on web the popup carries
+`aria-modal` and traps Tab.
+
+### Reasons
+
+`onOpenChange(open, details)` carries `details.reason`:
+`trigger-press` (trigger toggle, either direction) and
+`close-press` (Close press). `outside-press` and `escape-key`
+never fire — the dialog is blocking by construction.
 
 ### Props
 
-#### `AlertDialog` (single-part API)
+#### `AlertDialogRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state; actions report `false` through here. |
-| `title` | `ReactNode` | no | — | Dialog title, rendered in a `DialogTitle` when provided. |
-| `children` | `ReactNode` | no | — | Dialog content. |
-| `actions` | `ReactNode` | yes | — | Action row content, rendered in a `View` row. REQUIRED — a blocking dialog with no explicit action leaves the user with no way to leave the surface. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state; actions report `false` through here, with the reason. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the popup's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
+| `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
+
+`AlertDialogRootState`: `{ open }`.
+
+#### `AlertDialogTrigger`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. |
+| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | value or function of `{ open, disabled }` | no | — | Trigger style, caller-provided. |
+| `children` | `ReactNode` | no | — | Trigger content. |
+| `render` | element or function | no | — | Element or function substitution (Base UI parity). |
+
+#### `AlertDialogPortal`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Portal content (Backdrop + Popup composed by the caller). |
+| `testID` | `string` | no | — | Test identifier. |
+
+#### `AlertDialogBackdrop`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | value or function of `{ open }` | no | — | Scrim style, caller-provided. |
+| `render` | element or function | no | — | Element or function substitution (Base UI parity). |
+
+#### `AlertDialogPopup` (surface)
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the dialog surface. |
-| `testID` | `string` | no | — | Test identifier; the surface carries it, the scrim carries `<testID>-scrim`. |
-| `style` | `StateStyle<AlertDialogState, StyleProp<ViewStyle>>` | no | — | Dialog surface (box) style: a value or a function of dialog state. |
-| `render` | `RenderProp<AlertDialogState, SlotProps>` | no | — | Element or function substitution for the dialog surface; blocking (non-dismissable) semantics stay on the part. |
-| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the dialog surface `View` (via `DialogPopup`). |
+| `testID` | `string` | no | — | Test identifier; the popup carries it, the backdrop carries `<testID>-scrim`. |
+| `style` | value or function of `{ open }` | no | — | Surface style, caller-provided. |
+| `children` | `ReactNode` | no | — | Surface content. |
+| `render` | element or function | no | — | Element or function substitution; the alertdialog role stays on the part. |
+| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the surface `View`. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the root's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 
-`AlertDialogState`: `{ open: boolean }` — whether the dialog is
-currently open.
+#### `AlertDialogTitle` / `AlertDialogDescription`
 
-Closed renders `null` (via `DialogPortal`): no scrim, no
-surface, no host for assistive tech or tests to find.
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | `StyleProp<TextStyle>` | no | — | Text style, caller-provided. |
+| `children` | `ReactNode` | no | — | Heading / description content. |
+| `render` | element or function | no | — | Element or function substitution (Base UI parity). |
+
+`AlertDialogTitle` renders with the `header` role.
+
+#### `AlertDialogClose`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `disabled` | `boolean` | no | `false` | Terminal: it never closes and is announced as disabled. |
+| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | value or function of `{ disabled }` | no | — | Button style, caller-provided. |
+| `children` | `ReactNode` | no | — | Button content. |
+| `render` | element or function | no | — | Element or function substitution (Base UI parity). |
+| `initialFocus` | `boolean` | no | `false` | Mark this Close as the default initial focus target (Cancel). |
 
 ### Examples
 
@@ -106,21 +185,38 @@ Minimal blocking confirm, uncontrolled:
 
 ```tsx
 import { Text } from "react-native";
-import { AlertDialog, Button } from "@xoroh/axis";
+import {
+  AlertDialogBackdrop,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogPopup,
+  AlertDialogPortal,
+  AlertDialogRoot,
+  AlertDialogTitle,
+} from "@xoroh/axis";
 
 function DeleteConfirm() {
   return (
-    <AlertDialog
-      title="Delete this item?"
-      accessibilityLabel="Delete confirmation"
-      actions={
-        <Button accessibilityLabel="Confirm delete">
-          <Text>Delete</Text>
-        </Button>
-      }
-    >
-      <Text>This cannot be undone.</Text>
-    </AlertDialog>
+    <AlertDialogRoot>
+      <AlertDialogPortal>
+        <AlertDialogBackdrop testID="delete-scrim" />
+        <AlertDialogPopup
+          testID="delete"
+          accessibilityLabel="Delete confirmation"
+        >
+          <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This cannot be undone.
+          </AlertDialogDescription>
+          <AlertDialogClose initialFocus>
+            <Text>Cancel</Text>
+          </AlertDialogClose>
+          <AlertDialogClose>
+            <Text>Delete</Text>
+          </AlertDialogClose>
+        </AlertDialogPopup>
+      </AlertDialogPortal>
+    </AlertDialogRoot>
   );
 }
 ```
@@ -131,89 +227,65 @@ Controlled (parent owns the open state; the action reports
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { AlertDialog, Button } from "@xoroh/axis";
+import {
+  AlertDialogClose,
+  AlertDialogPopup,
+  AlertDialogPortal,
+  AlertDialogRoot,
+  AlertDialogTitle,
+} from "@xoroh/axis";
 
 function ControlledConfirm() {
   const [open, setOpen] = useState(false);
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={setOpen}
-      title="Discard changes?"
-      accessibilityLabel="Discard confirmation"
-      actions={
-        <Button
-          onPress={() => setOpen(false)}
-          accessibilityLabel="Discard changes"
+    <AlertDialogRoot open={open} onOpenChange={setOpen}>
+      <AlertDialogPortal>
+        <AlertDialogPopup
+          testID="discard"
+          accessibilityLabel="Discard confirmation"
         >
-          <Text>Discard</Text>
-        </Button>
-      }
-    >
-      <Text>Unsaved changes will be lost.</Text>
-    </AlertDialog>
-  );
-}
-```
-
-Styled surface with function style over dialog state:
-
-```tsx
-import { Text } from "react-native";
-import { AlertDialog, Button } from "@xoroh/axis";
-
-function StyledConfirm() {
-  return (
-    <AlertDialog
-      title="Sign out?"
-      accessibilityLabel="Sign out confirmation"
-      style={{ margin: 32, padding: 16 }}
-      actions={
-        <Button accessibilityLabel="Sign out">
-          <Text>Sign out</Text>
-        </Button>
-      }
-    >
-      <Text>You can sign back in at any time.</Text>
-    </AlertDialog>
+          <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+          <AlertDialogClose initialFocus>
+            <Text>Keep editing</Text>
+          </AlertDialogClose>
+          <AlertDialogClose>
+            <Text>Discard</Text>
+          </AlertDialogClose>
+        </AlertDialogPopup>
+      </AlertDialogPortal>
+    </AlertDialogRoot>
   );
 }
 ```
 
 ### Accessibility
 
-- The surface is an accessibility element (`accessible`)
-  carrying the `dialog` role (via `DialogPopup`), so the role
-  reaches assistive technology — a role on a non-element `View`
-  would be invisible to it.
+- The popup is an accessibility element (`accessible`) carrying
+  the `alertdialog` role (never a plain `dialog`), so the role
+  reaches assistive technology.
 - The `modal` flag is deliberately omitted from
   `accessibilityState`: React Native's `AccessibilityState` host
   type has no `modal` key (checked against the RN 0.87
-  `ViewAccessibility` types), so it is left out rather than
-  smuggled past the typechecker (the Dialog precedent).
+  `ViewAccessibility` types). iOS modality is the popup-level
+  `accessibilityViewIsModal`; Android modality is the app-root
+  hook; web modality is `aria-modal` plus the Tab trap.
 - The scrim is a plain `View` with no label and no handler —
   no fake affordance on a surface that cannot be scrim-dismissed.
+  (On iOS it additionally hides behind the modal popup; on
+  Android it stays a silent layout host.)
 - Closed renders `null`: no scrim, no surface, for assistive
   tech or tests to find.
-- Explicitly deferred, each for a named reason: no animation
-  (the surface mounts/unmounts synchronously with state — exit
-  transitions would need the `presence` model to keep it
-  mounted, unneeded until a consumer needs animated dismissal —
-  the Dialog precedent); no focus trap beyond the overlay root's
-  modal announcement and focus move/restore (containing
-  accessibility focus needs the `focusTrap` + `overlayModality`
-  RN adaptation — no DOM tab order to borrow).
+- Focus: move-in honors the marked Cancel; restore honors the
+  trigger or `finalFocus`; blocking ignores back and VoiceOver
+  scrub deliberately (recorded in `docs/BASE_UI_PARITY.md`).
 
 ### Composition
 
-`AlertDialog` takes `render` (an element, cloned with the popup
+Every part takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function) and
-value-or-function `style` over its state object (`{ open }`);
-`data-*` attributes are deliberately absent on native — state
-flows through those functions instead (contract §11, parity D1).
-It is rebuilt on the `Dialog` compound parts, not a parallel
-implementation: `DialogRoot` (forced `disablePointerDismissal`,
-`modal` default `true`), `DialogPortal` (at `PortalHost`),
-inert `DialogBackdrop`, `DialogPopup` + `DialogTitle`. Verified
-by the alert-dialog RNTL suites (5 tests — `docs/COVERAGE.md`).
-Renders in `apps/example/src/demos/overlays.tsx`.
+value-or-function `style` over its state object (`{ open }`,
+`{ disabled }`); `data-*` attributes are deliberately absent on
+native — state flows through those functions instead (contract
+§11, parity D1). Verified by the alert-dialog RNTL suites and
+the web focus suites. Renders in
+`apps/example/src/demos/overlays.tsx`.

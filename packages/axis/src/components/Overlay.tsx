@@ -3,7 +3,6 @@ import {
   type ElementRef,
   type ReactNode,
   type Ref,
-  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -15,7 +14,6 @@ import {
 import {
   AccessibilityInfo,
   BackHandler,
-  findNodeHandle,
   Modal,
   Pressable,
   type StyleProp,
@@ -25,6 +23,8 @@ import {
 import {
   type DismissBranches,
   dismissBranchesFor,
+  type OverlayOpenChangeDetails,
+  type OverlayOpenChangeReason,
   shouldDismissOn,
 } from "../dismissWiring";
 import {
@@ -44,6 +44,15 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
+import {
+  type FocusInteraction,
+  type FocusTransitionState,
+  isWebEnvironment,
+  type OverlayFocusValue,
+  trapTabKey,
+  useModalFocus,
+  webTabIndexProps,
+} from "./useAccessibilityFocus";
 
 /**
  * Overlay — the native overlay root on PortalHost (ADR 001/006/007,
@@ -52,9 +61,15 @@ import { Portal } from "./Portal";
  * Provides a unified foundation for dismissable, modal, layered surfaces:
  * 1. Dismissable layer: outside press (the backdrop) and Android system
  *    back (`BackHandler`), wired through the shared `dismissWiring`
- *    branch set.
- * 2. Modal: accessibility-modal surface with focus moved into it on open
- *    and restored to the trigger / `finalFocus` on close.
+ *    branch set, each reporting an `OverlayOpenChangeReason`.
+ * 2. Modal: screen-reader containment — iOS
+ *    `accessibilityViewIsModal` on the top popup, Android
+ *    background hiding via `useModalActive` on the app root, and on
+ *    web `aria-modal` plus a DOM Tab trap — with focus moved into the
+ *    surface on open and restored to the trigger / `finalFocus` on
+ *    close. There is no DOM tab order to borrow on native, so native
+ *    containment is the modality flags plus move/restore, never a
+ *    traversal loop (the retired-parity-D5 position).
  * 3. Stacking of nested layers with monotonic `zIndex` and top-layer
  *    interaction isolation (lower layers take no pointer events and hide
  *    from assistive tech).
@@ -69,13 +84,11 @@ import { Portal } from "./Portal";
  *
  * Documented native limits (parity record, not oversights):
  * - `escape` and `focus-out` are DECLARED in the branch set (platform-free
- *   by design, per `dismissWiring`) but never BOUND here: React Native has
- *   no global key listener, so only `outside-pointer` and `system-back`
- *   fire natively.
- * - Focus CONTAINMENT (traversal trapping) still needs the `focusTrap`
- *   RN adaptation (parity D5): what ships is `accessibilityViewIsModal`
- *   plus focus move/restore, not a traversal loop.
- * - Exit has no animation to wait for (parity D9), so a closing surface
+ *   by design, per `dismissWiring`); on native the bound escape path is
+ *   the iOS VoiceOver scrub (`onAccessibilityEscape`) and Android
+ *   hardware back (reported as `escape-key`) — React Native has no
+ *   global key listener for the Escape key itself.
+ * - Exit has no animation to wait for (parity record D9), so a closing surface
  *   unmounts in the same commit; the presence machine stays wired for the
  *   first consumer that drives one.
  */
@@ -118,19 +131,24 @@ export type OverlayContextValue = {
   modal: boolean | "trap-focus";
   dismissable: boolean;
   dismissBranches: DismissBranches;
-  dismiss: () => void;
-  close: () => void;
-  toggle: () => void;
+  /** Dismiss with a reason (default `"outside-press"`). No-op when not `dismissable`. */
+  dismiss: (reason?: OverlayOpenChangeReason) => void;
+  /** Close with a reason (default `"close-press"`). Always closes, even when not `dismissable`. */
+  close: (reason?: OverlayOpenChangeReason) => void;
+  /** Toggle with a reason (default `"trigger-press"`). */
+  toggle: (reason?: OverlayOpenChangeReason) => void;
   isTop: boolean;
   stackIndex: number;
   present: boolean;
   presenceState: PresenceState;
   finishExit: () => void;
   useModal: boolean;
+  trapFocus: boolean;
+  restoreFocus: boolean;
   triggerRef: { current: ElementRef<typeof View> | null };
   popupRef: { current: ElementRef<typeof View> | null };
-  initialFocusRef: { current: ElementRef<typeof View> | null };
-  finalFocusRef: { current: ElementRef<typeof View> | null };
+  initialFocus: OverlayFocusValue;
+  finalFocus: OverlayFocusValue;
   reducedMotion: boolean;
 };
 
@@ -138,6 +156,30 @@ export type OverlayContextValue = {
  * `useScrollLock` (the raw context objects are plumbing, not API —
  * exporting them would invite consumer re-providers with no owner). */
 const OverlayContext = createContext<OverlayContextValue | null>(null);
+
+/**
+ * Stable focus-node refs, split from `OverlayContext` on purpose: the
+ * full context value changes identity whenever modality settles
+ * (registration, top change), which would re-render every part that
+ * only needs the ref objects (DialogTrigger's bridge) — one extra
+ * render per open on every trigger. This value is built once per root
+ * and never changes, so bridgers subscribe for free.
+ */
+export type OverlayRefs = {
+  id: OverlayId;
+  triggerRef: { current: ElementRef<typeof View> | null };
+  popupRef: { current: ElementRef<typeof View> | null };
+  /** How the surface last opened (trigger press vs programmatic). Written by triggers, read by the focus hook. */
+  interaction: { current: FocusInteraction };
+  /**
+   * Open-transition bookkeeping for the focus hook. Stable for the
+   * root's lifetime, so a portal remount never loses the transition
+   * the restore path needs (see `FocusTransitionState`).
+   */
+  focus: FocusTransitionState;
+};
+
+const OverlayRefsContext = createContext<OverlayRefs | null>(null);
 
 const ScrollLockContext = createContext<boolean>(false);
 
@@ -167,13 +209,46 @@ export function useOverlay(): OverlayContextValue {
   return ctx;
 }
 
+/**
+ * Read the nearest overlay's stable focus refs, or `null` outside
+ * one. Internal (not barrel-exported): lets compound parts that must
+ * stay inert without a root (DialogTrigger, DialogPopup) bridge their
+ * node into the overlay's focus refs when a root IS present — with no
+ * re-render when modality settles, no public API change, and no throw
+ * on the inert path.
+ */
+export function useOverlayRefsMaybe(): OverlayRefs | null {
+  return useContext(OverlayRefsContext);
+}
+
+/**
+ * Read the nearest overlay context, or `null` outside one. Internal
+ * (not barrel-exported): family popups that render null without a
+ * root need live overlay state (topmost, dismiss) past the inert
+ * guard, without the throw.
+ */
+export function useOverlayMaybe(): OverlayContextValue | null {
+  return useContext(OverlayContext);
+}
+
+/**
+ * Whether any MODAL overlay is currently open in the shared registry.
+ * Android app-root wiring (focus adaptation, item 1): while this is
+ * true, the app root that sits beside `PortalHost` takes
+ * `importantForAccessibility="no-hide-descendants"` so TalkBack
+ * stays inside the top modal. Non-modal overlays never count.
+ */
+export function useModalActive(): boolean {
+  return useOverlayModality(getSharedOverlayModality()).isModalActive;
+}
+
 export type OverlayRootProps = {
   /** Controlled open state. */
   open?: boolean;
   /** Uncontrolled initial open state. Default false. */
   defaultOpen?: boolean;
-  /** Callback fired when open state changes. */
-  onOpenChange?: (open: boolean) => void;
+  /** Callback fired when open state changes, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
   /**
    * Whether the overlay presents modally. Default true.
    * Modal overlays trap focus, prevent background interaction, and lock scroll.
@@ -190,16 +265,21 @@ export type OverlayRootProps = {
   onDismiss?: () => void;
   /** Whether to trap focus inside the overlay when modal. Default true. */
   trapFocus?: boolean;
-  /** Element or ref to receive initial focus upon opening. */
-  initialFocus?:
-    | RefObject<ElementRef<typeof View> | null>
-    | ElementRef<typeof View>
-    | null;
-  /** Element or ref to restore focus to upon closing. */
-  finalFocus?:
-    | RefObject<ElementRef<typeof View> | null>
-    | ElementRef<typeof View>
-    | null;
+  /**
+   * Element, ref, or function receiving the open interaction to receive
+   * initial focus upon opening — or `false` to keep focus where it is.
+   * Resolution: explicit target, else the focus-scope default (marked,
+   * stops, title), else the popup itself. On native "focus" is
+   * `setAccessibilityFocus`; on web it is DOM `.focus()`.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Element, ref, or function to restore focus to upon closing — or
+   * `false` to leave focus where dismissal left it. Defaults to the
+   * trigger. If the trigger unmounted: on web the nearest focusable
+   * ancestor takes it (D11); on native nothing happens, never a throw.
+   */
+  finalFocus?: OverlayFocusValue;
   /** Whether to restore focus to trigger/finalFocus on close. Default true. */
   restoreFocus?: boolean;
   /** Whether to lock background scroll while open and modal. Default true. */
@@ -257,8 +337,16 @@ export function OverlayRoot({
     [registry],
   );
 
-  // Register in overlay modality stack while open
-  useOverlayRegistration(activeRegistry, id, isOpen ?? false);
+  // Register in overlay modality stack while open. Modality travels
+  // with the registration so the shared registry can answer "is any
+  // modal open" (the Android app-root hook); non-modal surfaces
+  // register without it and never count.
+  useOverlayRegistration(
+    activeRegistry,
+    id,
+    isOpen ?? false,
+    modal === true || modal === "trap-focus",
+  );
   const modalityState = useOverlayModality(activeRegistry);
   const isTop = modalityState.isTop(id);
   const stackIndex = modalityState.stack.indexOf(id);
@@ -321,34 +409,43 @@ export function OverlayRoot({
     return base;
   }, [modal, dismissable, customDismiss]);
 
-  const dismiss = useCallback(() => {
-    if (!dismissable) return;
-    onDismiss?.();
-    setIsOpen(false);
-  }, [dismissable, onDismiss, setIsOpen]);
+  const dismiss = useCallback(
+    (reason: OverlayOpenChangeReason = "outside-press") => {
+      if (!dismissable) return;
+      onDismiss?.();
+      setIsOpen(false, { reason });
+    },
+    [dismissable, onDismiss, setIsOpen],
+  );
 
-  const close = useCallback(() => {
-    setIsOpen(false);
-  }, [setIsOpen]);
+  const close = useCallback(
+    (reason: OverlayOpenChangeReason = "close-press") => {
+      setIsOpen(false, { reason });
+    },
+    [setIsOpen],
+  );
 
-  const toggle = useCallback(() => {
-    if (!dismissable && (isOpen ?? false)) return;
-    setIsOpen((prev) => !(prev ?? false));
-  }, [dismissable, isOpen, setIsOpen]);
+  const toggle = useCallback(
+    (reason: OverlayOpenChangeReason = "trigger-press") => {
+      if (!dismissable && (isOpen ?? false)) return;
+      setIsOpen((prev) => !(prev ?? false), { reason });
+    },
+    [dismissable, isOpen, setIsOpen],
+  );
 
   const isTopRef = useRef(isTop);
   isTopRef.current = isTop;
   const dismissRef = useRef(dismiss);
   dismissRef.current = dismiss;
 
-  // Android system back button dismissal (topmost only). Web has no
-  // system back button: React Native Web's `BackHandler` only logs
-  // "not supported on web", so the subscription is skipped there.
+  // Android system back button dismissal (topmost only) — the native
+  // escape equivalent, reported as `escape-key`. Web has no system
+  // back button: React Native Web's `BackHandler` only logs "not
+  // supported on web", so the subscription is skipped there.
   // No DOM lib, no DOM import: the check reads an optional
   // `globalThis` shape, which the boundary gate and the compiler
   // both accept as plain values.
-  const isWeb =
-    typeof (globalThis as { document?: unknown }).document !== "undefined";
+  const isWeb = isWebEnvironment();
   useEffect(() => {
     if (
       isWeb ||
@@ -359,7 +456,7 @@ export function OverlayRoot({
     }
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (isTopRef.current) {
-        dismissRef.current();
+        dismissRef.current("escape-key");
         return true;
       }
       return false;
@@ -380,65 +477,34 @@ export function OverlayRoot({
     };
   }, [isOpen, modal, preventScroll]);
 
-  // Focus trap & restoration refs
+  // Focus trap & restoration refs. Focus itself is executed by the
+  // popup that paints the surface (`useModalFocus` in `OverlayPopup`
+  // and the family popups) — never here — so a surface has exactly
+  // one focus executor and a root without popups moves nothing.
   const triggerRef = useRef<ElementRef<typeof View> | null>(null);
   const popupRef = useRef<ElementRef<typeof View> | null>(null);
-  const initialFocusRef = useRef<ElementRef<typeof View> | null>(null);
-  const finalFocusRef = useRef<ElementRef<typeof View> | null>(null);
 
-  // Resolve initial focus
-  useEffect(() => {
-    if (initialFocus) {
-      if ("current" in initialFocus) {
-        initialFocusRef.current = initialFocus.current;
-      } else {
-        initialFocusRef.current = initialFocus;
-      }
-    }
-  }, [initialFocus]);
-
-  // Resolve final focus
-  useEffect(() => {
-    if (finalFocus) {
-      if ("current" in finalFocus) {
-        finalFocusRef.current = finalFocus.current;
-      } else {
-        finalFocusRef.current = finalFocus;
-      }
-    }
-  }, [finalFocus]);
-
-  // Auto-focus on open
-  // Move accessibility focus into the surface. `AccessibilityInfo`
-  // is the RN-honest move (no DOM tab order exists here); the
-  // duck-typed `focus()` call is for hosts that expose one (a caller
-  // can wire a ref to an imperative focus API).
-  const focusHost = useCallback((target: unknown): void => {
-    if (!target) return;
-    const maybeFocusable = target as { focus?: () => void };
-    if (typeof maybeFocusable.focus === "function") maybeFocusable.focus();
-    const tag = findNodeHandle(target as ElementRef<typeof View>);
-    if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
-  }, []);
-
-  useEffect(() => {
-    if (
-      (isOpen ?? false) &&
-      (modal === true || modal === "trap-focus") &&
-      trapFocus
-    ) {
-      focusHost(initialFocusRef.current || popupRef.current);
-    }
-  }, [isOpen, modal, trapFocus, focusHost]);
-
-  // Focus restore on close
-  const wasOpenRef = useRef(isOpen ?? false);
-  useEffect(() => {
-    if (wasOpenRef.current && !(isOpen ?? false) && restoreFocus) {
-      focusHost(finalFocusRef.current || triggerRef.current);
-    }
-    wasOpenRef.current = isOpen ?? false;
-  }, [isOpen, restoreFocus, focusHost]);
+  // Stable identity: every object above is a `useRef` (never
+  // re-created) and `id` never changes, so bridgers through
+  // `useOverlayRefsMaybe` never re-render when modality settles.
+  // `interaction` tracks how the surface last opened (trigger press vs
+  // programmatic) for function-form focus targets.
+  const interactionRef = useRef<FocusInteraction>("programmatic");
+  const focusStateRef = useRef<FocusTransitionState>({
+    wasOpen: false,
+    moved: false,
+    ancestor: null,
+  });
+  const refsValue = useMemo<OverlayRefs>(
+    () => ({
+      id,
+      triggerRef,
+      popupRef,
+      interaction: interactionRef,
+      focus: focusStateRef.current,
+    }),
+    [id],
+  );
 
   const contextValue = useMemo<OverlayContextValue>(
     () => ({
@@ -456,10 +522,12 @@ export function OverlayRoot({
       presenceState: presence.state,
       finishExit: presence.finishExit,
       useModal,
+      trapFocus,
+      restoreFocus,
       triggerRef,
       popupRef,
-      initialFocusRef,
-      finalFocusRef,
+      initialFocus,
+      finalFocus,
       reducedMotion,
     }),
     [
@@ -477,15 +545,21 @@ export function OverlayRoot({
       presence.state,
       presence.finishExit,
       useModal,
+      trapFocus,
+      restoreFocus,
+      initialFocus,
+      finalFocus,
       reducedMotion,
     ],
   );
 
   return (
     <OverlayContext.Provider value={contextValue}>
-      <ScrollLockContext.Provider value={modal === true && (isOpen ?? false)}>
-        {children}
-      </ScrollLockContext.Provider>
+      <OverlayRefsContext.Provider value={refsValue}>
+        <ScrollLockContext.Provider value={modal === true && (isOpen ?? false)}>
+          {children}
+        </ScrollLockContext.Provider>
+      </OverlayRefsContext.Provider>
     </OverlayContext.Provider>
   );
 }
@@ -503,6 +577,10 @@ export function OverlayPortal({
   children,
 }: OverlayPortalProps): React.JSX.Element | null {
   const overlay = useContext(OverlayContext);
+  // The stable refs travel beside the full context: portaled content
+  // renders at the host, outside this root's subtree, so both are
+  // re-provided explicitly below.
+  const overlayRefs = useOverlayRefsMaybe();
   if (!overlay?.present) return null;
 
   if (overlay.useModal) {
@@ -510,7 +588,7 @@ export function OverlayPortal({
       <Modal
         transparent
         visible={overlay.open}
-        onRequestClose={overlay.dismiss}
+        onRequestClose={() => overlay.dismiss("escape-key")}
         testID={testID}
       >
         {children}
@@ -520,33 +598,32 @@ export function OverlayPortal({
 
   const zIndex = 1000 + Math.max(0, overlay.stackIndex) * 10;
 
-  // `accessibilityViewIsModal` is the RN-honest way to say "this
-  // layer is modal to assistive tech" (what a focus trap announces on
-  // iOS; there is no DOM tab order to borrow — parity D5). Two rules,
-  // both load-bearing:
-  // - It sits on the LAYER, not on the popup inside it: the flag hides
-  //   everything that is not a DESCENDANT of the marked view, so
-  //   marking the popup would hide its own backdrop as a sibling.
-  // - Only the TOP layer claims modality. Lower layers are already
-  //   hidden below (`accessibilityElementsHidden`); a stack where two
-  //   siblings both claim modality would hide each other.
-  const accessibilityViewIsModal = overlay.modal === true && overlay.isTop;
+  // Background isolation lives on the layer: lower layers hide from
+  // assistive tech (`accessibilityElementsHidden`,
+  // `importantForAccessibility="no-hide-descendants"`) and take no
+  // pointer events. The iOS modal claim itself
+  // (`accessibilityViewIsModal`) sits on the POPUP, not here — the
+  // flag hides everything that is not a descendant of the marked
+  // view. Only the TOP layer's popup claims it; a stack where two
+  // siblings both claim modality would hide each other. (Focus
+  // adaptation, item 1 — the layer-level claim is retired.)
 
   return (
     <Portal hostName={hostName}>
       <OverlayContext.Provider value={overlay}>
-        <View
-          testID={testID}
-          pointerEvents={overlay.isTop ? "auto" : "box-none"}
-          accessibilityElementsHidden={!overlay.isTop}
-          importantForAccessibility={
-            overlay.isTop ? "yes" : "no-hide-descendants"
-          }
-          accessibilityViewIsModal={accessibilityViewIsModal}
-          style={[FULL_FILL_STYLE, { zIndex }]}
-        >
-          {children}
-        </View>
+        <OverlayRefsContext.Provider value={overlayRefs}>
+          <View
+            testID={testID}
+            pointerEvents={overlay.isTop ? "auto" : "box-none"}
+            accessibilityElementsHidden={!overlay.isTop}
+            importantForAccessibility={
+              overlay.isTop ? "yes" : "no-hide-descendants"
+            }
+            style={[FULL_FILL_STYLE, { zIndex }]}
+          >
+            {children}
+          </View>
+        </OverlayRefsContext.Provider>
       </OverlayContext.Provider>
     </Portal>
   );
@@ -582,12 +659,15 @@ export function OverlayBackdrop({
     overlay.isTop && overlay.dismissBranches["outside-pointer"];
 
   if (canDismiss) {
+    // Reason is explicit: the backdrop press is the outside-press
+    // dismiss path (never the raw press event).
+    const handlePress = () => overlay.dismiss("outside-press");
     const substituted = resolveRender(
       render,
       {
         accessibilityLabel: "Dismiss",
         testID,
-        onPress: overlay.dismiss,
+        onPress: handlePress,
         style: [FULL_FILL_STYLE, resolveStyle(style, state)],
       } satisfies SlotProps,
       state,
@@ -598,7 +678,7 @@ export function OverlayBackdrop({
       <Pressable
         accessibilityLabel="Dismiss"
         testID={testID}
-        onPress={overlay.dismiss}
+        onPress={handlePress}
         style={[FULL_FILL_STYLE, resolveStyle(style, state)]}
       />
     );
@@ -635,6 +715,16 @@ export type OverlayPopupProps = {
   children?: ReactNode;
   render?: RenderProp<OverlayPopupState, SlotProps>;
   ref?: Ref<ElementRef<typeof View>>;
+  /**
+   * Explicit initial focus target (wins over the root's). See
+   * `OverlayRootProps.initialFocus` for the value shape.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
 };
 
 export function OverlayPopup({
@@ -645,8 +735,11 @@ export function OverlayPopup({
   children,
   render,
   ref,
+  initialFocus,
+  finalFocus,
 }: OverlayPopupProps): React.ReactNode {
   const overlay = useContext(OverlayContext);
+  const overlayRefs = useOverlayRefsMaybe();
 
   // Hooks first: the popup may unmount (closed overlay), and an early
   // return above `useCallback` would break hook ordering.
@@ -658,12 +751,59 @@ export function OverlayPopup({
     [overlay, ref],
   );
 
+  const modal =
+    overlay !== null && overlay !== undefined && overlay.modal !== false;
+  // The single focus executor for this surface: move in on open,
+  // restore to the trigger on close. Runs whether or not a trap is
+  // armed; containment and hiding are separate props below. Disabled
+  // entirely when the root opts out via `trapFocus`, restore half when
+  // it opts out via `restoreFocus`.
+  useModalFocus({
+    open: overlay?.open ?? false,
+    enabled: overlay?.trapFocus ?? true,
+    restoreEnabled: overlay?.restoreFocus ?? true,
+    initialFocus: initialFocus ?? overlay?.initialFocus,
+    finalFocus: finalFocus ?? overlay?.finalFocus,
+    interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
+    popupRef: overlay?.popupRef ?? { current: null },
+    restoreRef: overlay?.triggerRef ?? { current: null },
+  });
+
   if (!overlay?.present) return null;
 
   const state: OverlayPopupState = {
     open: overlay.open,
     isTop: overlay.isTop,
   };
+
+  // iOS VoiceOver scrub dismisses — the bound form of the `escape`
+  // branch (RN has no global key listener for the Escape key itself).
+  // Gated like the back-button path: only the top layer dismisses, and
+  // only when the surface armed the branch. The prop is iOS-only and
+  // a no-op elsewhere.
+  const canEscape =
+    overlay.isTop &&
+    shouldDismissOn("escape", overlay.open, overlay.dismissBranches);
+  const handleAccessibilityEscape = canEscape
+    ? () => overlay.dismiss("escape-key")
+    : undefined;
+
+  // iOS modal claim on the popup: the flag hides everything that is
+  // not a descendant of the marked view — top layer only, so stacked
+  // layers never hide each other. Non-modal surfaces claim nothing
+  // (neither trap focus nor hide anything).
+  // On web the same modality is `aria-modal` plus the Tab trap below.
+  const web = isWebEnvironment();
+  const modalActive = modal && overlay.isTop;
+  const handleKeyDown =
+    web && modalActive && overlay.trapFocus
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(overlay.popupRef.current, event)
+      : undefined;
 
   const substituted = resolveRender(
     render,
@@ -673,6 +813,11 @@ export function OverlayPopup({
       accessibilityRole: role,
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
+      accessibilityViewIsModal: modalActive,
+      ...(web && modalActive ? { "aria-modal": true } : null),
+      onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -689,6 +834,11 @@ export function OverlayPopup({
       accessibilityRole={role}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
+      accessibilityViewIsModal={modalActive}
+      {...(web && modalActive ? { "aria-modal": true } : null)}
+      onKeyDown={handleKeyDown}
+      {...webTabIndexProps(web)}
       style={resolveStyle(style, state)}
     >
       {children}
@@ -721,6 +871,7 @@ export function OverlayTrigger({
   ref,
 }: OverlayTriggerProps): React.ReactNode {
   const overlay = useContext(OverlayContext);
+  const overlayRefs = useOverlayRefsMaybe();
   const open = overlay?.open ?? false;
   const inert = overlay === null;
   const state: OverlayTriggerState = { open, disabled: disabled || inert };
@@ -737,8 +888,9 @@ export function OverlayTrigger({
 
   const handlePress = useCallback(() => {
     if (disabled || inert) return;
-    overlay.toggle();
-  }, [disabled, inert, overlay]);
+    if (overlayRefs) overlayRefs.interaction.current = "trigger-press";
+    overlay.toggle("trigger-press");
+  }, [disabled, inert, overlay, overlayRefs]);
 
   const substituted = resolveRender(
     render,

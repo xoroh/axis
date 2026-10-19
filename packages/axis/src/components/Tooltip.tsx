@@ -20,6 +20,12 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
+import {
+  type FocusTransitionState,
+  isWebEnvironment,
+  useModalFocus,
+  webTabIndexProps,
+} from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -42,8 +48,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* The compound `Tooltip` parts below mirror Base UI's Tooltip        */
-/* anatomy — Root (state owner, renders no element), Trigger            */
+/* The parts below mirror Base UI's Tooltip anatomy — Root (state    */
+/* owner, renders no element), Trigger                                 */
 /* (long-press toggle + anchor registration), Portal (in-box host),     */
 /* Positioner (measured placement against the trigger anchor), Popup    */
 /* (the tip), Arrow (caller-positioned marker) — with `render`          */
@@ -52,8 +58,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
 /* timing (delays run from the long-press commit — hover has no touch  */
 /* equivalent). Omitted Base UI pieces are documented deviations, not  */
 /* oversights: no `Modal` portal host (a non-modal hint must never     */
-/* trap touches; the tip paints in-box (the non-modal shape) — the     */
-/* shared overlay root has landed for modal surfaces, and Tooltip       */
+/* trap touches; the tip paints in-box — the shared                      */
+/* overlay root has landed for modal surfaces, and Tooltip deliberately */
 /* stays off it; positioning stays separable from the host either way), */
 /* no hover or keyboard                                                */
 /* traversal (D8), no animation states (D9), and no `data-*`           */
@@ -204,6 +210,12 @@ type TooltipRootDisclosure = {
   groupDisabled: boolean;
   anchorHostRef: { current: ElementRef<typeof View> | null };
   setAnchorRef: (node: ElementRef<typeof View> | null) => void;
+  /**
+   * Open-transition bookkeeping for the focus hook. Stable for the
+   * root's lifetime so a portal remount never loses the transition
+   * the restore path needs (see `FocusTransitionState`).
+   */
+  focusState: FocusTransitionState;
 };
 
 type TooltipDelay = {
@@ -314,6 +326,14 @@ export function TooltipRoot({
     anchorHostRef.current = node;
   }, []);
 
+  // Stable transition bookkeeping for the focus hook (see
+  // `FocusTransitionState`): survives portal remounts.
+  const focusStateRef = useRef<FocusTransitionState>({
+    wasOpen: false,
+    moved: false,
+    ancestor: null,
+  });
+
   // Terminal: a disabled root reads hidden under any open state.
   const effectiveOpen = disabled ? false : (visible ?? false);
 
@@ -324,6 +344,7 @@ export function TooltipRoot({
       groupDisabled: disabled,
       anchorHostRef,
       setAnchorRef,
+      focusState: focusStateRef.current,
     }),
     [effectiveOpen, toggle, disabled, setAnchorRef],
   );
@@ -403,8 +424,10 @@ export function TooltipPortal({
 }: TooltipPortalProps): React.JSX.Element | null {
   const root = useContext(TooltipRootContext);
   // Outside a root there is no visibility to present: render nothing.
+  // NOTE: no `open` gate — the portal stays mounted through the exit
+  // commit so the popup's focus hook observes the close transition;
+  // the parts below still paint nothing while hidden.
   if (!root) return null;
-  if (!root.open) return null;
 
   // Plain portal host, never a `Modal`: a non-modal hint must not trap
   // touches (documented above). The part exists so callers compose
@@ -508,16 +531,35 @@ export function TooltipPopup({
 }: TooltipPopupProps): React.ReactNode {
   const root = useContext(TooltipRootContext);
 
+  // Hooks before guards: the focus node ref must exist on every
+  // render, and the move/restore wiring below no-ops while hidden.
+  const tipNodeRef = useRef<ElementRef<typeof View> | null>(null);
   const setTipRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      tipNodeRef.current = node;
       assignTipRef(ref, node);
     },
     [ref],
   );
 
+  const open = root?.open ?? false;
+  // Labelled tips move SR focus into the tip on open and restore it
+  // to the trigger anchor on close (the upstream `Content`/`Trigger`
+  // pair); unlabelled tips stay silent. No containment (tooltips are
+  // never modal). iOS VoiceOver scrub dismisses the open tip.
+  const web = isWebEnvironment();
+  useModalFocus({
+    open,
+    enabled: accessibilityLabel !== undefined && root !== null,
+    popupRef: tipNodeRef,
+    restoreRef: root?.anchorHostRef ?? { current: null },
+    sharedState: root?.focusState,
+  });
+
   if (!root) return null;
   if (!root.open) return null;
   const state: TooltipPopupState = { open: root.open };
+  const handleAccessibilityEscape = () => root.toggle();
 
   const substituted = resolveRender(
     render,
@@ -526,6 +568,8 @@ export function TooltipPopup({
       accessibilityRole: "tooltip",
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setTipRef,
@@ -541,6 +585,8 @@ export function TooltipPopup({
       accessibilityRole="tooltip"
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
+      {...webTabIndexProps(web)}
       style={resolveStyle(style, state)}
     >
       {children}

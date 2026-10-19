@@ -25,6 +25,10 @@ export type OverlayModalityState = {
   readonly top: OverlayId | null;
   /** Every registered overlay, bottom-first. */
   readonly stack: readonly OverlayId[];
+  /** The topmost registered MODAL overlay, or `null` when none is open. */
+  readonly modalTop: OverlayId | null;
+  /** True when at least one modal overlay is registered (i.e. open). */
+  readonly isModalActive: boolean;
   /** True when `id` is the topmost overlay — i.e. it is the interactive one. */
   isTop(id: OverlayId): boolean;
   /**
@@ -42,13 +46,20 @@ export type OverlayModalityState = {
  * the only interactive one, and a counter cannot express that. Registering the
  * same id twice is a no-op rather than a second stack entry: a re-render that
  * re-registers must not make one overlay look two-deep.
+ *
+ * Modality travels with the registration (`{ modal: true }` for modal
+ * surfaces): the Android app-root hook (`useModalActive`) needs to know
+ * whether ANY modal is open, and the registry is the one owner that sees
+ * every overlay. Non-modal overlays (popovers, tooltips, non-modal drawers)
+ * register without it and never count as modal.
  */
 export function createOverlayModality(): {
-  register(id: OverlayId): () => void;
+  register(id: OverlayId, options?: { modal?: boolean }): () => void;
   subscribe(listener: () => void): () => void;
   getState(): OverlayModalityState;
 } {
   const stack: OverlayId[] = [];
+  const modalById = new Map<OverlayId, boolean>();
   const listeners = new Set<() => void>();
 
   const emit = () => {
@@ -56,9 +67,10 @@ export function createOverlayModality(): {
   };
 
   return {
-    register(id: OverlayId) {
+    register(id: OverlayId, options?: { modal?: boolean }) {
       if (!stack.includes(id)) {
         stack.push(id);
+        modalById.set(id, options?.modal ?? false);
         emit();
       }
       let released = false;
@@ -71,6 +83,7 @@ export function createOverlayModality(): {
         const i = stack.indexOf(id);
         if (i !== -1) {
           stack.splice(i, 1);
+          modalById.delete(id);
           emit();
         }
       };
@@ -83,9 +96,14 @@ export function createOverlayModality(): {
     },
     getState(): OverlayModalityState {
       const snapshot = stack.slice();
+      const modalTop =
+        [...snapshot].reverse().find((id) => modalById.get(id) === true) ??
+        null;
       return {
         top: snapshot.length ? snapshot[snapshot.length - 1] : null,
         stack: snapshot,
+        modalTop,
+        isModalActive: modalTop !== null,
         isTop: (id) => snapshot[snapshot.length - 1] === id,
         isInertOutside: (id) =>
           snapshot.length > 0 && snapshot[snapshot.length - 1] !== id,
@@ -99,24 +117,29 @@ export function createOverlayModality(): {
  *
  * `active: false` unregisters without unmounting, which is what a sheet that is
  * mounted-but-closed needs — an overlay that is present in the tree but not
- * open must not make content outside it inert.
+ * open must not make content outside it inert. `modal` marks modal surfaces
+ * so the shared registry can answer "is any modal open" (the Android
+ * app-root hook); non-modal overlays register without it.
  */
 export function useOverlayRegistration(
   registry: ReturnType<typeof createOverlayModality>,
   id: OverlayId,
   active = true,
+  modal = false,
 ): void {
   // The registry and id are read through refs so that passing an inline id
   // object, or swapping registries, does not tear down and re-register — which
   // would emit twice and briefly mark content as not-inert.
-  const latest = useRef({ registry, id, active });
-  latest.current = { registry, id, active };
+  const latest = useRef({ registry, id, active, modal });
+  latest.current = { registry, id, active, modal };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reads through `latest` on purpose -- adding it would re-run every render, the exact tear-down the ref prevents
   useEffect(() => {
     if (!latest.current.active) return;
-    return latest.current.registry.register(latest.current.id);
-  }, [registry, id, active]);
+    return latest.current.registry.register(latest.current.id, {
+      modal: latest.current.modal,
+    });
+  }, [registry, id, active, modal]);
 }
 
 /** Subscribe to the overlay stack. Returns the current state, re-rendering on change. */

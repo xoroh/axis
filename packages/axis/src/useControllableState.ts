@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { OverlayOpenChangeDetails } from "./dismissWiring";
 
 export type StateAction<T> = T | ((previous: T | undefined) => T);
 
@@ -6,8 +7,11 @@ export type StateAction<T> = T | ((previous: T | undefined) => T);
 export function useControllableState<T>(
   value: T | undefined,
   defaultValue: T | undefined,
-  onChange?: (next: T) => void,
-): [T | undefined, (next: StateAction<T>) => void] {
+  onChange?: (next: T, details?: OverlayOpenChangeDetails) => void,
+): [
+  T | undefined,
+  (next: StateAction<T>, details?: OverlayOpenChangeDetails) => void,
+] {
   const [internal, setInternal] = useState<T | undefined>(defaultValue);
   const controlled = value !== undefined;
   const current = controlled ? value : internal;
@@ -28,7 +32,7 @@ export function useControllableState<T>(
   }, [controlled]);
 
   const setValue = useCallback(
-    (action: StateAction<T>) => {
+    (action: StateAction<T>, details?: OverlayOpenChangeDetails) => {
       const previous = currentRef.current;
       const next =
         typeof action === "function"
@@ -36,7 +40,13 @@ export function useControllableState<T>(
           : action;
       currentRef.current = next;
       if (!controlled) setInternal(next);
-      if (!Object.is(previous, next)) onChange?.(next);
+      if (!Object.is(previous, next)) {
+        // Preserve the exact historical call shape when no reason is
+        // attached: `onChange(next)` — some suites assert argument
+        // count, and lanes outside this one own those suites.
+        if (details === undefined) onChange?.(next);
+        else onChange?.(next, details);
+      }
     },
     [controlled, onChange],
   );

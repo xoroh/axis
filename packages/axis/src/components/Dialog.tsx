@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
 } from "react";
 import {
   Pressable,
@@ -15,11 +16,33 @@ import {
   View,
   type ViewStyle,
 } from "react-native";
+import type {
+  OverlayOpenChangeDetails,
+  OverlayOpenChangeReason,
+} from "../dismissWiring";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { OverlayPortal, OverlayRoot } from "./Overlay";
+import {
+  OverlayPortal,
+  OverlayRoot,
+  useOverlayMaybe,
+  useOverlayRefsMaybe,
+} from "./Overlay";
+import {
+  createFocusScope,
+  type FocusScope,
+  FocusScopeProvider,
+  isWebEnvironment,
+  type OverlayFocusValue,
+  trapTabKey,
+  useFocusScopeMaybe,
+  useModalFocus,
+  useScopeStop,
+  useScopeTitle,
+  webTabIndexProps,
+} from "./useAccessibilityFocus";
 
 /**
  * Dialog — a compound modal dialog (Base UI parity).
@@ -41,11 +64,13 @@ import { OverlayPortal, OverlayRoot } from "./Overlay";
  * - No animation: the surface mounts/unmounts synchronously with
  *   state (parity D9). The overlay root's `presence` machine is wired
  *   for the first consumer that drives an exit animation.
- * - No focus CONTAINMENT: the overlay root moves accessibility focus
- *   into the surface on open and restores it to the trigger on
- *   close, and declares `accessibilityViewIsModal`; traversal
- *   trapping still needs the `focusTrap` RN adaptation (parity D5,
- *   no DOM tab order to borrow).
+ * - Focus containment: on iOS the surface claims
+ *   `accessibilityViewIsModal`; on Android the app root takes
+ *   `importantForAccessibility="no-hide-descendants"` while the modal
+ *   is open (see `useModalActive`); on web the surface carries
+ *   `aria-modal` and traps Tab. SR focus moves into the surface on
+ *   open; there is no trigger to restore to, so close leaves focus
+ *   where dismissal left it.
  *
  * Accessibility notes: the popup is an accessibility element
  * (`accessible`) so the `dialog` role reaches assistive tech — a
@@ -84,9 +109,8 @@ function assignRef(
 /* ------------------------------------------------------------------ */
 /* Compound parts (Base UI parity)                                      */
 /*                                                                      */
-/* The parts below mirror Base UI's Dialog anatomy — Root (state       */
-/* owner, renders no element), Trigger, Portal (the overlay root at   */
-/* `PortalHost`),                                                     */
+/* The parts below mirror Base UI's Dialog anatomy — Root (state owner, renders no */
+/* element), Trigger, Portal (the overlay root at `PortalHost`),      */
 /* Backdrop (the scrim), Popup (the surface), Title, Description,      */
 /* Close — with `render` element/function composition and              */
 /* value-or-function `style` on every part. Omitted Base UI pieces     */
@@ -113,21 +137,31 @@ export type DialogRootProps = {
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
   defaultOpen?: boolean;
-  /** Fires with the next open state on every committed open or dismissal. */
-  onOpenChange?: (open: boolean) => void;
+  /** Fires with the next open state on every committed open or dismissal, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
   /** Fires on backdrop (or request-close) dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
-   * When `true`, backdrop press does not dismiss. Default `false`.
+   * When `true`, backdrop press does not dismiss (Base UI parity name;
+   * the removed concise API spelled it `dismissable`, default `true`).
+   * Default `false`.
    */
   disablePointerDismissal?: boolean;
   /**
    * Kept for Base UI parity. The surface always presents modally on
-   * native; `"trap-focus"` is accepted but focus containment still
-   * needs the `focusTrap` RN adaptation (documented, not silent —
-   * see the module note).
+   * native; `"trap-focus"` behaves as modal. Default `true`.
    */
   modal?: boolean | "trap-focus";
+  /**
+   * Explicit initial focus target (wins over the popup's). See
+   * `OverlayRootProps.initialFocus` for the value shape.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
   /** Trigger, Portal, and shared content. Renders no element itself. */
   children?: ReactNode;
 };
@@ -181,6 +215,12 @@ export type DialogPopupState = {
 export type DialogPopupProps = {
   /** Accessible name source for the surface. */
   accessibilityLabel?: string;
+  /**
+   * Surface role. Default `"dialog"`; `AlertDialog` passes
+   * `"alertdialog"` (the upstream AlertDialog precedent — a blocking
+   * dialog announces as an alert dialog, not a plain dialog).
+   */
+  role?: "dialog" | "alertdialog";
   testID?: string;
   /** Value or function of popup state, caller-provided. */
   style?: StateStyle<DialogPopupState, StyleProp<ViewStyle>>;
@@ -193,6 +233,19 @@ export type DialogPopupProps = {
   render?: RenderProp<DialogPopupState, SlotProps>;
   /** Forwarded to the surface `View`. */
   ref?: Ref<ElementRef<typeof View>>;
+  /**
+   * Explicit initial focus target (wins over the root's). Element, ref,
+   * function of the open interaction, or `false` to keep focus where
+   * it is. Default: first focusable element in the popup (marked
+   * initial, else first stop, else Title), else the popup itself —
+   * on native from the part registry, on web from the DOM.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
 };
 
 export type DialogTitleProps = {
@@ -232,6 +285,12 @@ export type DialogCloseProps = {
   children?: ReactNode;
   /** Element or function substitution (Base UI parity). */
   render?: RenderProp<DialogCloseState, SlotProps>;
+  /**
+   * Mark this Close as the default initial focus target (how AlertDialog
+   * marks Cancel — Axis cannot infer destructiveness). The marked Close
+   * wins over first-stop/title defaults. Default `false`.
+   */
+  initialFocus?: boolean;
 };
 
 export type DialogPortalProps = {
@@ -244,8 +303,10 @@ type DialogCompoundDisclosure = {
   open: boolean;
   toggle: () => void;
   close: () => void;
-  dismiss: () => void;
+  /** Dismiss with a reason (default `"outside-press"`). */
+  dismiss: (reason?: OverlayOpenChangeReason) => void;
   disablePointerDismissal: boolean;
+  modal: boolean | "trap-focus";
 };
 
 /**
@@ -265,6 +326,8 @@ export function DialogRoot({
   onDismiss,
   disablePointerDismissal = false,
   modal = true,
+  initialFocus,
+  finalFocus,
   children,
 }: DialogRootProps): React.JSX.Element {
   const [isOpen, setOpen] = useControllableState<boolean>(
@@ -274,22 +337,27 @@ export function DialogRoot({
   );
 
   const toggle = useCallback(() => {
-    setOpen((previous) => !(previous ?? false));
+    setOpen((previous) => !(previous ?? false), {
+      reason: "trigger-press",
+    });
   }, [setOpen]);
 
   const close = useCallback(() => {
-    setOpen(false);
+    setOpen(false, { reason: "close-press" });
   }, [setOpen]);
 
   // Backdrop/request-close path: `onDismiss` first, then report
   // `false` — guarded on `disablePointerDismissal` so a
   // non-dismissable dialog (and the platform back button) cannot
   // close it.
-  const dismiss = useCallback(() => {
-    if (disablePointerDismissal) return;
-    onDismiss?.();
-    setOpen(false);
-  }, [disablePointerDismissal, onDismiss, setOpen]);
+  const dismiss = useCallback(
+    (reason: OverlayOpenChangeReason = "outside-press") => {
+      if (disablePointerDismissal) return;
+      onDismiss?.();
+      setOpen(false, { reason });
+    },
+    [disablePointerDismissal, onDismiss, setOpen],
+  );
 
   const disclosure = useMemo<DialogCompoundDisclosure>(
     () => ({
@@ -298,8 +366,9 @@ export function DialogRoot({
       close,
       dismiss,
       disablePointerDismissal,
+      modal,
     }),
-    [isOpen, toggle, close, dismiss, disablePointerDismissal],
+    [isOpen, toggle, close, dismiss, disablePointerDismissal, modal],
   );
 
   // The root owns state, never layout: no host element (Base UI parity).
@@ -310,6 +379,8 @@ export function DialogRoot({
       onDismiss={onDismiss}
       modal={modal}
       dismissable={!disablePointerDismissal}
+      initialFocus={initialFocus}
+      finalFocus={finalFocus}
       dismiss={{
         outsidePointer: !disablePointerDismissal,
         systemBack: !disablePointerDismissal,
@@ -334,11 +405,25 @@ export function DialogTrigger({
   const disclosure = useContext(DialogCompoundContext);
   const open = disclosure?.open ?? false;
   const state: DialogTriggerState = { open, disabled };
+  // Bridge the trigger node into the overlay: `OverlayRoot` restores
+  // SR focus here on close. Outside a root there is no overlay — the
+  // bridge is a no-op and the trigger stays inert (see below).
+  const overlayRefs = useOverlayRefsMaybe();
 
   const toggleTrigger = useCallback(() => {
     if (disabled) return;
+    // The trigger press is the open interaction for function-form
+    // focus targets (read by the popup's focus hook on open).
+    if (overlayRefs) overlayRefs.interaction.current = "trigger-press";
     disclosure?.toggle();
-  }, [disabled, disclosure]);
+  }, [disabled, disclosure, overlayRefs]);
+
+  const setTriggerRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      if (overlayRefs) overlayRefs.triggerRef.current = node;
+    },
+    [overlayRefs],
+  );
 
   // Outside a root there is no dialog to open: render inert
   // (announced disabled, press is a no-op) rather than dropping the
@@ -355,6 +440,7 @@ export function DialogTrigger({
       onPress: toggleTrigger,
       style: resolveStyle(style, state),
       children,
+      ref: setTriggerRef,
     } satisfies SlotProps,
     state,
   );
@@ -362,6 +448,7 @@ export function DialogTrigger({
 
   return (
     <Pressable
+      ref={setTriggerRef}
       accessibilityRole="button"
       accessibilityState={{ expanded: open, disabled: disabled || inert }}
       accessibilityLabel={accessibilityLabel}
@@ -381,8 +468,11 @@ export function DialogPortal({
 }: DialogPortalProps): React.JSX.Element | null {
   const disclosure = useContext(DialogCompoundContext);
   // Outside a root there is no open state to present: render nothing.
+  // NOTE: no `open` gate here — the portal stays mounted through the
+  // exit commit so the popup's focus hook observes the close
+  // transition and restores focus; `OverlayPortal` (presence-gated)
+  // and the parts below still paint nothing while closed.
   if (!disclosure) return null;
-  if (!disclosure.open) return null;
 
   // The portal host: the overlay root paints at the app's `PortalHost`
   // (the native equivalent of appending to `body`). `container` and
@@ -415,12 +505,15 @@ export function DialogBackdrop({
   const state: DialogBackdropState = { open: disclosure.open };
 
   if (!disclosure.disablePointerDismissal) {
+    // Reason is explicit: the backdrop press is the outside-press
+    // dismiss path (never the raw press event).
+    const handlePress = () => disclosure.dismiss("outside-press");
     const substituted = resolveRender(
       render,
       {
         accessibilityLabel: "Dismiss",
         testID,
-        onPress: disclosure.dismiss,
+        onPress: handlePress,
         style: resolveStyle(style, state),
       } satisfies SlotProps,
       state,
@@ -430,14 +523,14 @@ export function DialogBackdrop({
       <Pressable
         accessibilityLabel="Dismiss"
         testID={testID}
-        onPress={disclosure.dismiss}
+        onPress={handlePress}
         style={resolveStyle(style, state)}
       />
     );
   }
 
   // Non-dismissable: a plain host with no label and no handler — no
-  // fake affordance.
+  // fake affordance (the removed concise API's `dismissable={false}` shape).
   const substituted = resolveRender(
     render,
     { testID, style: resolveStyle(style, state) } satisfies SlotProps,
@@ -449,53 +542,125 @@ export function DialogBackdrop({
 
 export function DialogPopup({
   accessibilityLabel,
+  role = "dialog",
   testID,
   style,
   children,
   render,
   ref,
+  initialFocus,
+  finalFocus,
 }: DialogPopupProps): React.ReactNode {
   const disclosure = useContext(DialogCompoundContext);
+  // Bridge into the overlay's focus refs: the compound popup is the
+  // surface the focus hook moves SR focus into on open, and the trigger
+  // (bridged in `DialogTrigger`) is where it restores on close.
+  // Outside a root there is no overlay — the bridge is a no-op.
+  const overlayRefs = useOverlayRefsMaybe();
+  const overlay = useOverlayMaybe();
 
+  // Hooks before guards: the focus node ref and scope must exist on
+  // every render, and the focus wiring below no-ops while closed.
+  const popupNodeRef = useRef<ElementRef<typeof View> | null>(null);
   const setPopupRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      popupNodeRef.current = node;
+      if (overlayRefs) overlayRefs.popupRef.current = node;
       assignRef(ref, node);
     },
-    [ref],
+    [overlayRefs, ref],
   );
+
+  // One focus scope per popup: Title/Close parts register here so the
+  // default initial target resolves without a DOM query on native.
+  const focusScope = useMemo<FocusScope>(() => createFocusScope(), []);
+
+  const open = disclosure?.open ?? false;
+  const modal = disclosure?.modal ?? true;
+  // The single focus executor for this surface. Default target: first
+  // focusable element (marked initial, else first stop, else Title),
+  // else the popup itself. Explicit popup props win over the root's.
+  useModalFocus({
+    open,
+    initialFocus: initialFocus ?? overlay?.initialFocus,
+    finalFocus: finalFocus ?? overlay?.finalFocus,
+    scope: focusScope,
+    interactionRef: overlayRefs?.interaction,
+    sharedState: overlayRefs?.focus,
+    popupRef: popupNodeRef,
+    restoreRef: overlayRefs?.triggerRef ?? { current: null },
+  });
 
   if (!disclosure) return null;
   if (!disclosure.open) return null;
   const state: DialogPopupState = { open: disclosure.open };
 
+  // iOS VoiceOver scrub dismisses — the bound form of the `escape`
+  // branch, reported as `escape-key`. Guarded on
+  // `disablePointerDismissal` so a blocking `AlertDialog` keeps
+  // ignoring it (deliberate, recorded).
+  const handleAccessibilityEscape = !disclosure.disablePointerDismissal
+    ? () => disclosure.dismiss("escape-key")
+    : undefined;
+
+  // iOS modal claim on the popup (top layer only — stacked layers
+  // never hide each other). Non-modal popups claim nothing. On web the
+  // same modality is `aria-modal` plus the Tab trap below.
+  const top = overlay?.isTop ?? true;
+  const modalActive = modal && top;
+  const web = isWebEnvironment();
+  const handleKeyDown =
+    web && modalActive
+      ? (event: {
+          key?: unknown;
+          shiftKey?: unknown;
+          preventDefault?: unknown;
+        }) => trapTabKey(popupNodeRef.current, event)
+      : undefined;
+
   const substituted = resolveRender(
     render,
     {
       accessible: true,
-      role: "dialog",
-      accessibilityRole: "dialog",
+      role,
+      accessibilityRole: role,
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
+      accessibilityViewIsModal: modalActive,
+      ...(web && modalActive ? { "aria-modal": true } : null),
+      onKeyDown: handleKeyDown,
+      ...webTabIndexProps(web),
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
     } satisfies SlotProps,
     state,
   );
-  if (substituted !== null) return substituted;
+  if (substituted !== null)
+    return (
+      <FocusScopeProvider scope={focusScope}>{substituted}</FocusScopeProvider>
+    );
 
   return (
-    <View
-      ref={setPopupRef}
-      accessible
-      role="dialog"
-      accessibilityRole="dialog"
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      style={resolveStyle(style, state)}
-    >
-      {children}
-    </View>
+    <FocusScopeProvider scope={focusScope}>
+      <View
+        ref={setPopupRef}
+        accessible
+        role={role}
+        accessibilityRole={role}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        onAccessibilityEscape={handleAccessibilityEscape}
+        accessibilityViewIsModal={modalActive}
+        {...(web && modalActive ? { "aria-modal": true } : null)}
+        onKeyDown={handleKeyDown}
+        {...webTabIndexProps(web)}
+        style={resolveStyle(style, state)}
+      >
+        {children}
+      </View>
+    </FocusScopeProvider>
   );
 }
 
@@ -505,14 +670,30 @@ export function DialogTitle({
   children,
   render,
 }: DialogTitleProps): React.ReactNode {
+  const scope = useFocusScopeMaybe();
+  const setTitleNode = useScopeTitle(scope);
+  const web = isWebEnvironment();
+
   const substituted = resolveRender(
     render,
-    { testID, style, children } satisfies SlotProps,
+    {
+      testID,
+      style,
+      children,
+      ref: setTitleNode,
+      ...webTabIndexProps(web),
+    } satisfies SlotProps,
     {},
   );
   if (substituted !== null) return substituted;
   return (
-    <Text accessibilityRole="header" testID={testID} style={style}>
+    <Text
+      ref={setTitleNode}
+      accessibilityRole="header"
+      testID={testID}
+      style={style}
+      {...webTabIndexProps(web)}
+    >
       {children}
     </Text>
   );
@@ -544,9 +725,14 @@ export function DialogClose({
   style,
   children,
   render,
+  initialFocus = false,
 }: DialogCloseProps): React.ReactNode {
   const disclosure = useContext(DialogCompoundContext);
   const state: DialogCloseState = { disabled };
+  // Register as a focus stop — or as the marked initial target when
+  // the caller flags it (how AlertDialog marks Cancel).
+  const scope = useFocusScopeMaybe();
+  const setCloseNode = useScopeStop(scope, initialFocus);
 
   const closeDialog = useCallback(() => {
     if (disabled) return;
@@ -567,6 +753,7 @@ export function DialogClose({
       onPress: closeDialog,
       style: resolveStyle(style, state),
       children,
+      ref: setCloseNode,
     } satisfies SlotProps,
     state,
   );
@@ -574,6 +761,7 @@ export function DialogClose({
 
   return (
     <Pressable
+      ref={setCloseNode}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || inert }}
       accessibilityLabel={accessibilityLabel}

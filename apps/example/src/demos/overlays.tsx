@@ -1,8 +1,23 @@
 import {
-  AlertDialog,
+  AlertDialogBackdrop,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogPopup,
+  AlertDialogPortal,
+  AlertDialogRoot,
+  AlertDialogTitle,
+  AlertDialogTrigger,
   Button,
   ContextMenuRoot,
-  Drawer,
+  DrawerBackdrop,
+  DrawerClose,
+  DrawerDescription,
+  DrawerHandle,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
   OverlayBackdrop,
   OverlayClose,
   OverlayPopup,
@@ -38,8 +53,23 @@ export const OverlaysDemo: Demo = {
   slug: "overlays",
   title: "Overlays",
   components: [
-    "AlertDialog",
-    "Drawer",
+    "AlertDialogRoot",
+    "AlertDialogTrigger",
+    "AlertDialogPortal",
+    "AlertDialogBackdrop",
+    "AlertDialogPopup",
+    "AlertDialogTitle",
+    "AlertDialogDescription",
+    "AlertDialogClose",
+    "DrawerRoot",
+    "DrawerTrigger",
+    "DrawerPortal",
+    "DrawerBackdrop",
+    "DrawerPopup",
+    "DrawerTitle",
+    "DrawerDescription",
+    "DrawerClose",
+    "DrawerHandle",
     "ToastRoot",
     "ToastProvider",
     "ToastViewport",
@@ -62,8 +92,7 @@ export const OverlaysDemo: Demo = {
   ],
   render: function OverlaysScreen() {
     const { theme } = useTheme();
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [sheetPoint, setSheetPoint] = useState<number | string>(1);
+    const [sheetSnap, setSheetSnap] = useState<number | string>(1);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [alertOpen, setAlertOpen] = useState(false);
     const [toastVisible, setToastVisible] = useState(true);
@@ -288,7 +317,7 @@ export const OverlaysDemo: Demo = {
           </ToastProvider>
         </View>
 
-        {/* Bottom sheet (Drawer), side Drawer & AlertDialog */}
+        {/* Bottom sheet (DrawerRoot), side DrawerRoot & AlertDialogRoot */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -303,212 +332,200 @@ export const OverlaysDemo: Demo = {
             Modal Sheets & Drawers:
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            <Button
-              accessibilityLabel="Open bottom sheet"
-              onPress={() => setSheetOpen(true)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
+            <DrawerRoot
+              side="bottom"
+              snapPoints={[0.5, 1]}
+              snapPoint={sheetSnap}
+              onSnapPointChange={setSheetSnap}
             >
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-              >
-                Open Bottom Sheet
-              </Text>
-            </Button>
-
-            <Button
-              accessibilityLabel="Open bottom sheet at half snap"
-              onPress={() => {
-                setSheetPoint(0.5);
-                setSheetOpen(true);
-              }}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-              >
-                Open Half Sheet
-              </Text>
-            </Button>
-
-            <Button
-              accessibilityLabel="Open Drawer"
-              onPress={() => setDrawerOpen(true)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-              >
-                Open Drawer
-              </Text>
-            </Button>
-
-            <Button
-              accessibilityLabel="Open Alert Dialog"
-              onPress={() => setAlertOpen(true)}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: "#ef4444",
-              }}
-            >
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: "#ffffff" }}
-              >
-                Open Alert Dialog
-              </Text>
-            </Button>
-          </View>
-
-          <Drawer
-            open={sheetOpen}
-            onOpenChange={setSheetOpen}
-            side="bottom"
-            snapPoints={[0.5, 1]}
-            snapPoint={sheetPoint}
-            onSnapPointChange={setSheetPoint}
-            accessibilityLabel="Demo filter settings"
-            overlayStyle={{ backgroundColor: theme.overlay, padding: 16 }}
-            surfaceStyle={{
-              top: 0,
-              backgroundColor: theme.surface,
-              borderTopLeftRadius: 16,
-              borderTopRightRadius: 16,
-              borderWidth: 1,
-              borderColor: theme.border,
-              padding: 20,
-              gap: 14,
-            }}
-          >
-            <Text
-              style={{ fontSize: 18, fontWeight: "700", color: theme.text }}
-            >
-              Filter Settings
-            </Text>
-            <Text style={{ color: theme.textSubtle, fontSize: 14 }}>
-              Choose which updates appear in your activity feed.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close filter sheet"
-              onPress={() => setSheetOpen(false)}
-              style={{
-                alignSelf: "flex-end",
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text style={{ color: theme.text, fontWeight: "600" }}>Done</Text>
-            </Pressable>
-          </Drawer>
-          <Drawer
-            open={drawerOpen}
-            onOpenChange={setDrawerOpen}
-            accessibilityLabel="Demo drawer"
-            side="right"
-            overlayStyle={{ backgroundColor: theme.overlay }}
-            surfaceStyle={{
-              width: 320,
-              maxWidth: "85%",
-              backgroundColor: theme.surface,
-              borderLeftWidth: 1,
-              borderLeftColor: theme.border,
-              padding: 24,
-              gap: 16,
-            }}
-          >
-            <Text
-              style={{ color: theme.text, fontSize: 18, fontWeight: "700" }}
-            >
-              Navigation
-            </Text>
-            <Text style={{ color: theme.textSubtle, fontSize: 14 }}>
-              Move between sections of the example app.
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close demo drawer"
-              onPress={() => setDrawerOpen(false)}
-              style={{
-                alignSelf: "flex-start",
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text style={{ color: theme.text, fontWeight: "600" }}>
-                Close drawer
-              </Text>
-            </Pressable>
-          </Drawer>
-          <AlertDialog
-            open={alertOpen}
-            onOpenChange={setAlertOpen}
-            title="Discard changes?"
-            accessibilityLabel="Discard changes dialog"
-            style={{
-              position: "absolute",
-              top: "30%",
-              width: "90%",
-              maxWidth: 420,
-              alignSelf: "center",
-              padding: 24,
-              borderRadius: 14,
-              backgroundColor: theme.surface,
-              borderWidth: 1,
-              borderColor: theme.border,
-              boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
-              gap: 12,
-            }}
-            actions={
-              <Button
-                accessibilityLabel="Confirm discard"
-                onPress={() => setAlertOpen(false)}
+              <DrawerTrigger
+                accessibilityLabel="Open bottom sheet"
                 style={{
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  backgroundColor: theme.primary,
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
                   borderRadius: 6,
+                  backgroundColor: theme.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border,
                 }}
               >
-                <Text style={{ color: theme.primaryFg, fontWeight: "600" }}>
-                  Confirm Discard
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+                >
+                  Open Bottom Sheet
                 </Text>
-              </Button>
-            }
-          >
-            <Text style={{ color: theme.textSubtle, fontSize: 14 }}>
-              Are you sure? Unsaved modifications will be permanently lost.
-            </Text>
-          </AlertDialog>
+              </DrawerTrigger>
+              <DrawerPortal testID="demo-sheet-portal">
+                <DrawerBackdrop testID="demo-sheet-scrim" />
+                <DrawerPopup
+                  testID="demo-sheet"
+                  accessibilityLabel="Demo filter settings"
+                  style={{
+                    top: 0,
+                    backgroundColor: theme.surface,
+                    borderTopLeftRadius: 16,
+                    borderTopRightRadius: 16,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    padding: 20,
+                    gap: 14,
+                  }}
+                >
+                  <DrawerHandle testID="demo-sheet-handle" />
+                  <DrawerTitle>Filter Settings</DrawerTitle>
+                  <DrawerDescription>
+                    Choose which updates appear in your activity feed.
+                  </DrawerDescription>
+                  <DrawerClose
+                    accessibilityLabel="Close filter sheet"
+                    style={{
+                      alignSelf: "flex-end",
+                      paddingVertical: 8,
+                      paddingHorizontal: 14,
+                      borderRadius: 6,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontWeight: "600" }}>
+                      Done
+                    </Text>
+                  </DrawerClose>
+                </DrawerPopup>
+              </DrawerPortal>
+            </DrawerRoot>
+
+            <DrawerRoot
+              side="right"
+              open={drawerOpen}
+              onOpenChange={setDrawerOpen}
+            >
+              <DrawerTrigger
+                accessibilityLabel="Open Drawer"
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 6,
+                  backgroundColor: theme.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+                >
+                  Open Drawer
+                </Text>
+              </DrawerTrigger>
+              <DrawerPortal testID="demo-drawer-portal">
+                <DrawerBackdrop testID="demo-drawer-scrim" />
+                <DrawerPopup
+                  testID="demo-drawer"
+                  accessibilityLabel="Demo drawer"
+                  style={{
+                    width: 320,
+                    maxWidth: "85%",
+                    backgroundColor: theme.surface,
+                    borderLeftWidth: 1,
+                    borderLeftColor: theme.border,
+                    padding: 24,
+                    gap: 16,
+                  }}
+                >
+                  <DrawerHandle testID="demo-drawer-handle" />
+                  <DrawerTitle>Navigation</DrawerTitle>
+                  <DrawerDescription>
+                    Move between sections of the example app.
+                  </DrawerDescription>
+                  <DrawerClose
+                    accessibilityLabel="Close demo drawer"
+                    style={{
+                      alignSelf: "flex-start",
+                      paddingVertical: 8,
+                      paddingHorizontal: 14,
+                      borderRadius: 6,
+                      backgroundColor: theme.surfaceSubtle,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Text style={{ color: theme.text, fontWeight: "600" }}>
+                      Close drawer
+                    </Text>
+                  </DrawerClose>
+                </DrawerPopup>
+              </DrawerPortal>
+            </DrawerRoot>
+
+            <AlertDialogRoot open={alertOpen} onOpenChange={setAlertOpen}>
+              <AlertDialogTrigger
+                accessibilityLabel="Open Alert Dialog"
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 6,
+                  backgroundColor: "#ef4444",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: "#ffffff" }}
+                >
+                  Open Alert Dialog
+                </Text>
+              </AlertDialogTrigger>
+              <AlertDialogPortal>
+                <AlertDialogBackdrop testID="demo-alert-scrim" />
+                <AlertDialogPopup
+                  testID="demo-alert"
+                  accessibilityLabel="Discard changes dialog"
+                  style={{
+                    position: "absolute",
+                    top: "30%",
+                    width: "90%",
+                    maxWidth: 420,
+                    alignSelf: "center",
+                    padding: 24,
+                    borderRadius: 14,
+                    backgroundColor: theme.surface,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
+                    gap: 12,
+                  }}
+                >
+                  <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure? Unsaved modifications will be permanently
+                    lost.
+                  </AlertDialogDescription>
+                  <AlertDialogClose initialFocus testID="demo-alert-cancel">
+                    <Text style={{ color: theme.textSubtle, fontSize: 14 }}>
+                      Keep editing
+                    </Text>
+                  </AlertDialogClose>
+                  <AlertDialogClose testID="demo-alert-confirm">
+                    <Button
+                      accessibilityLabel="Confirm discard"
+                      onPress={() => setAlertOpen(false)}
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        backgroundColor: theme.primary,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text
+                        style={{ color: theme.primaryFg, fontWeight: "600" }}
+                      >
+                        Confirm Discard
+                      </Text>
+                    </Button>
+                  </AlertDialogClose>
+                </AlertDialogPopup>
+              </AlertDialogPortal>
+            </AlertDialogRoot>
+          </View>
         </View>
 
         {/* Overlay Root Primitives */}

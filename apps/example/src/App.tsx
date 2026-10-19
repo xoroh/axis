@@ -1,4 +1,4 @@
-import { PortalHost } from "@xoroh/axis";
+import { PortalHost, useModalActive } from "@xoroh/axis";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { DEMOS } from "./demos/registry";
@@ -9,9 +9,19 @@ function AppShell(): React.JSX.Element {
   const demo = DEMOS.find((d) => d.slug === active);
   const DemoScreen = demo?.render;
   const { theme } = useTheme();
+  // Android background hiding for modal surfaces (focus adaptation,
+  // item 1): while any modal is open, TalkBack stays inside the top
+  // modal. The portaled layers paint as later siblings of this root
+  // inside `PortalHost`, so they stay visible. iOS is unaffected
+  // (the prop is Android-only; iOS uses the popup-level
+  // `accessibilityViewIsModal`).
+  const modalActive = useModalActive();
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+    <View
+      style={{ flex: 1, backgroundColor: theme.bg }}
+      importantForAccessibility={modalActive ? "no-hide-descendants" : "auto"}
+    >
       <View
         style={{
           paddingTop: 54,
