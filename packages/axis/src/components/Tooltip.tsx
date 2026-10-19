@@ -61,6 +61,13 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
 /* so there is no Backdrop part.                                        */
 /* ------------------------------------------------------------------ */
 
+export type TooltipRootState = {
+  /** Whether the tip is currently showing. */
+  open: boolean;
+  /** Whether the root is terminally disabled. */
+  disabled: boolean;
+};
+
 export type TooltipRootProps = {
   /** Controlled visibility. */
   open?: boolean;

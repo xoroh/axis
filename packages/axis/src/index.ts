@@ -575,6 +575,7 @@ export {
   type TooltipProviderProps,
   TooltipRoot,
   type TooltipRootProps,
+  type TooltipRootState,
   TooltipTrigger,
   type TooltipTriggerProps,
   type TooltipTriggerState,
