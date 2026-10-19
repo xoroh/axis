@@ -424,9 +424,7 @@ export const SelectionDemo: Demo = {
                           />
                         ) : null}
                       </View>
-                      <Text
-                        style={{ fontSize: 13, color: theme.text }}
-                      >
+                      <Text style={{ fontSize: 13, color: theme.text }}>
                         {label}
                       </Text>
                     </Pressable>

@@ -80,7 +80,7 @@ export type SliderRootState = {
   /** Index of the active thumb. */
   activeThumbIndex: number;
   /** Reading direction of the track. Default `"horizontal"`. */
-  orientation: "horizontal" | "vertical";
+  orientation: SliderOrientation;
   /** Range lower bound. */
   min: number;
   /** Range upper bound. */
@@ -106,7 +106,7 @@ export type SliderControlState = {
   /** Whether a drag is currently in flight. */
   dragging: boolean;
   /** Reading direction of the track. */
-  orientation: "horizontal" | "vertical";
+  orientation: SliderOrientation;
 };
 
 export type SliderTrackState = Record<string, never>;
@@ -175,7 +175,7 @@ export type SliderRootProps = {
    * Reading direction of the track. Default `"horizontal"`.
    * Vertical drags map track-bottom to `min` and track-top to `max`.
    */
-  orientation?: "horizontal" | "vertical";
+  orientation?: SliderOrientation;
   /**
    * Thumb alignment against the control edge. Default `"center"`
    * (the thumb centers on the value point). `"edge"` pins the
@@ -303,7 +303,7 @@ type SliderDisclosure = {
   disabled: boolean;
   dragging: boolean;
   activeThumbIndex: number;
-  orientation: "horizontal" | "vertical";
+  orientation: SliderOrientation;
   min: number;
   max: number;
   step: number;
@@ -381,7 +381,7 @@ export function SliderRoot({
       defaultValue === undefined
         ? [min]
         : normalizeSliderValues(defaultValue, min, max),
-    [defaultValue, min, max, step],
+    [defaultValue, min, max],
   );
   const wasArray = Array.isArray(value ?? defaultValue);
   const [rawValues, setRawValues] = useControllableState<number[]>(

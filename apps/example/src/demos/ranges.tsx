@@ -4,13 +4,13 @@ import {
   parseCalendarMonth,
   resolveCalendarFocus,
   resolveCalendarSelection,
-  shiftCalendarMonth,
   SliderControl,
   SliderIndicator,
   SliderRoot,
   SliderThumb,
   SliderTrack,
   SliderValue,
+  shiftCalendarMonth,
   toCalendarDate,
   toCalendarMonth,
 } from "@xoroh/axis";
@@ -28,7 +28,14 @@ import type { Demo } from "./registry";
 export const RangesDemo: Demo = {
   slug: "ranges",
   title: "Ranges",
-  components: ["SliderRoot", "SliderControl", "SliderTrack", "SliderIndicator", "SliderThumb", "SliderValue"],
+  components: [
+    "SliderRoot",
+    "SliderControl",
+    "SliderTrack",
+    "SliderIndicator",
+    "SliderThumb",
+    "SliderValue",
+  ],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
     const now = new Date();
@@ -99,26 +106,30 @@ export const RangesDemo: Demo = {
             gap: 12,
           }}
         >
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          <SliderRoot
+            value={volume}
+            onValueChange={(v) => typeof v === "number" && setVolume(v)}
           >
-            <Text
-              style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
             >
-              Slider Control
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "700",
-                color: theme.primary,
-              }}
-            >
-              {volume}%
-            </Text>
-          </View>
-          <View style={{ paddingVertical: 10 }}>
-            <SliderRoot value={volume} onValueChange={(v) => typeof v === "number" && setVolume(v)}>
+              <Text
+                style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+              >
+                Slider Control
+              </Text>
+              <SliderValue
+                testID="demo-volume-value"
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: theme.primary,
+                }}
+              >
+                {(values) => `${values[0]}%`}
+              </SliderValue>
+            </View>
+            <View style={{ paddingVertical: 10 }}>
               <SliderControl>
                 <SliderTrack
                   testID="demo-volume-track"
@@ -151,8 +162,8 @@ export const RangesDemo: Demo = {
                   />
                 </SliderTrack>
               </SliderControl>
-            </SliderRoot>
-          </View>
+            </View>
+          </SliderRoot>
         </View>
 
         {/* Calendar-model grid */}
