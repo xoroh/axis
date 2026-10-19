@@ -77,7 +77,7 @@ Per-component notes (props, examples, accessibility) live in
 | [Checkbox Group](https://github.com/xoroh/axis/blob/main/docs/components/checkbox-group.md) |
 | [Collapsible](https://github.com/xoroh/axis/blob/main/docs/components/collapsible.md) |
 | [Combobox](https://github.com/xoroh/axis/blob/main/docs/components/combobox.md) |
-| [ContextMenu](https://github.com/xoroh/axis/blob/main/docs/components/context-menu.md) |
+| [Context Menu](https://github.com/xoroh/axis/blob/main/docs/components/context-menu.md) |
 | [Dialog](https://github.com/xoroh/axis/blob/main/docs/components/dialog.md) |
 | [Drawer](https://github.com/xoroh/axis/blob/main/docs/components/drawer.md) |
 | [Dropdown Menu](https://github.com/xoroh/axis/blob/main/docs/components/dropdown-menu.md) |
@@ -92,6 +92,7 @@ Per-component notes (props, examples, accessibility) live in
 | [Navigation Menu](https://github.com/xoroh/axis/blob/main/docs/components/navigation-menu.md) |
 | [Number Field](https://github.com/xoroh/axis/blob/main/docs/components/number-field.md) |
 | [OTP Field](https://github.com/xoroh/axis/blob/main/docs/components/otp-field.md) |
+| [Overlay](https://github.com/xoroh/axis/blob/main/docs/components/overlay.md) |
 | [Popover](https://github.com/xoroh/axis/blob/main/docs/components/popover.md) |
 | [Portal](https://github.com/xoroh/axis/blob/main/docs/components/portal.md) |
 | [Progress](https://github.com/xoroh/axis/blob/main/docs/components/progress.md) |

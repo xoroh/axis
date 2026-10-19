@@ -1,62 +1,315 @@
 ## Tooltip
 
-Source of truth: `TooltipProps`, `TooltipProviderProps`, `TooltipRootProps`, `TooltipTriggerProps`, `TooltipPortalProps`, `TooltipPositionerProps`, `TooltipPopupProps`, `TooltipArrowProps` in `@xoroh/axis`.
-
-Anchored hint on long-press: `content` (required), `children`
-(anchor, required), `open?`, `defaultOpen?` (default `false`),
-`onOpenChange?`, `placement?` (default `"top"`, clamped into the
-viewport), `accessibilityLabel?`, `delayLongPress?` (host timing,
-platform default when absent), `testID?`, `style?` (anchor),
-`tipStyle?`, `ref` (anchor wrapper). The tip carries the tooltip
-role; it is measured and placed with the shared floating-placement
+Anchored hint on long-press: long-press the anchor to toggle; the
+tip is measured and placed with the shared floating-placement
 plumbing (anchor `measure()` + viewport + rect math) and stays
-transparent until measured. Pixel placement needs the native
-runtime — covered by placement-math unit tests, not asserted in
-jsdom-free RNTL. No hover model, no scrim. All props optional
-except `content`/`children`.
+transparent until measured rather than flashing somewhere wrong.
+Structure, behavior, and accessibility only — every visual value
+(`style`, `tipStyle`) is caller-provided. State follows the
+controlled + uncontrolled pattern throughout: `open` (plus
+`onOpenChange`) for controlled use, `defaultOpen` for
+uncontrolled. Two APIs ship side by side: the concise
+single-part `Tooltip` (anchor and tip partitioned into the
+`children`/`content` props, always in-box) and the compound parts
+below, which mirror Base UI's Tooltip anatomy with the same names
+and state semantics.
 
-Compound form (Base UI parity — same names, same state
-semantics): `TooltipProvider` (`delay?`/`closeDelay?` in ms,
-default `0` — one timing for a group of tips; delays run from
-the long-press commit since hover has no touch equivalent;
-renders no element) with `TooltipRoot` (`open?`/`defaultOpen?`/
-`onOpenChange?`, `disabled?` (terminal — forces hidden); renders
-no element), `TooltipTrigger` (long-press toggle,
-anchor-registering, `delayLongPress?`), `TooltipPortal` (in-box
-host — a non-modal hint never takes a `Modal` host; when the
-shared overlay root lands, tips can host there with positioning
-kept separable), `TooltipPositioner` (`side?` (default `"top"`)/
-`align?`/`sideOffset?`/`alignOffset?`, measured against the
-trigger), `TooltipPopup` (tooltip role), `TooltipArrow`
-(caller-positioned marker). A pending show cancels when a dismiss
-lands first (no ghost tips). Every part takes `render` (element
-or `(props, state)` function) and value-or-function `style`;
-`data-*` attributes are deliberately absent on native (contract
-§11). No `Modal` host, no hover, no Backdrop (dismissal is a
-second long-press — there is no scrim). Example:
+Source of truth: `TooltipProps`, `TooltipState`,
+`TooltipProviderProps`, `TooltipRootProps`,
+`TooltipTriggerProps`, `TooltipTriggerState`,
+`TooltipPortalProps`, `TooltipPositionerProps`,
+`TooltipPositionerState`, `TooltipPopupProps`,
+`TooltipPopupState`, `TooltipArrowProps` in `@xoroh/axis`
+(`packages/axis/src/components/Tooltip.tsx:43-180, 205-323`).
+
+### Install
+
+`@xoroh/axis` is not on npm yet (version `0.0.0`; releases are
+owner-gated — `docs/RELEASING.md`). Install from source with the
+repo's pack-vendor script, the same flow Kern uses to vendor Axis:
+
+```sh
+git clone https://github.com/xoroh/axis.git
+cd axis
+bun install --frozen-lockfile
+node scripts/pack-vendor.mjs --out /tmp/axis-vendor
+# prints /tmp/axis-vendor/axis-<short-sha>.tgz + sha512
+```
+
+Then add the printed tarball to your app (peers `react >= 18`,
+`react-native >=0.86 <0.89`):
+
+```sh
+bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
+```
+
+### Anatomy
+
+| Axis part | Base UI part | Role |
+| --- | --- | --- |
+| `Tooltip` | — | Concise inline API (anchor `children` + body `content`, always in-box); kept for existing consumers, not a Base UI part. |
+| `TooltipProvider` | `Tooltip.Provider` | Groups tips under one show/hide timing (`delay`/`closeDelay`); renders no element. |
+| `TooltipRoot` | `Tooltip.Root` | Visibility state owner (`open`/`defaultOpen`/`onOpenChange`, terminal `disabled`); renders no element. |
+| `TooltipTrigger` | `Tooltip.Trigger` | Long-press toggle, anchor-registering; `delayLongPress` forwarded to the host. |
+| `TooltipPortal` | `Tooltip.Portal` | In-box host — deliberately never a `Modal` host (see below). |
+| `TooltipPositioner` | `Tooltip.Positioner` | Measured placement against the trigger anchor (`side`/`align`/offsets, viewport flip). |
+| `TooltipPopup` | `Tooltip.Popup` | Tip carrying the `tooltip` role. |
+| `TooltipArrow` | `Tooltip.Arrow` | Caller-positioned marker; geometry is caller style. |
+
+Omitted Base UI pieces are documented deviations, not
+oversights: no `Modal` portal host (see below), no hover model
+(no pointer on touch devices), no scrim/Backdrop (dismissal is a
+second long-press — there is no scrim), no transition attributes
+(D9), no `data-*` attributes (D1) — all recorded in
+`docs/BASE_UI_PARITY.md` (§ Tooltip — aligned).
+
+### Why the tooltip is not on OverlayRoot
+
+A tooltip is a non-modal hint: it must never trap touches, so it
+must never take a `Modal` host — and `OverlayRoot` exists to own
+modal presentation (scrim, back handling, scroll lock, top-layer
+isolation for surfaces that take over the screen). Mounting a
+hint in that stack would buy nothing and risk everything: a
+full-fill scrim with no dismissal path except the trigger, focus
+moves on every hint show, scroll locks under a fingertip. So both
+the monolith and `TooltipPortal` paint in-box, as siblings of
+the anchor inside the anchor wrapper — positioning stays
+separable from the host either way, so tips could host in the
+overlay root later without depending on it now. The other
+overlay families (`Select`, `Menu`, `Dialog`, `Popover`,
+`Drawer`) DO present through `OverlayRoot` + `OverlayPortal` at
+the app's `PortalHost` — see `docs/components/overlay.md` for
+that stack and the `useModal` opt-in, which tooltips
+deliberately do not use.
+
+### Props
+
+#### `Tooltip` (concise inline API)
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `content` | `ReactNode` | yes | — | Tooltip body content (an empty tip is a bug). |
+| `children` | `ReactNode` | yes | — | Anchor content the tip describes. |
+| `open` | `boolean` | no | — | Controlled visibility. Wins over `defaultOpen` when defined. |
+| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial visibility. |
+| `onOpenChange` | `(open: boolean) => void` | no | — | Fires on every visibility change. |
+| `placement` | `Placement` | no | `"top"` | Preferred side for the tip (the `resolveFloatingRect` fallback). Clamped into the viewport. |
+| `accessibilityLabel` | `string` | no | — | Accessible name source for the tip. |
+| `delayLongPress` | `number` | no | — | Long-press duration in milliseconds before the toggle fires, forwarded to the anchor `Pressable`. Absent means the platform default — Axis never invents timing. |
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | `StateStyle<TooltipState, StyleProp<ViewStyle>>` | no | — | Anchor wrapper style: a value or a function of tooltip state. |
+| `tipStyle` | `StyleProp<ViewStyle>` | no | — | Tip container style, caller-provided. |
+| `render` | `RenderProp<TooltipState, SlotProps>` | no | — | Element or function substitution; replaces the anchor wrapper (anchor plus tip) with long-press toggle wiring travelling in the props. |
+| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the anchor wrapper host element. |
+
+`TooltipState`: `{ open: boolean }` — whether the tip is
+currently visible.
+
+#### `TooltipProvider` (timing owner)
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `delay` | `number` | no | `0` | Delay in milliseconds before a tip shows after its trigger fires. Groups tips under one timing so a screen of hints behaves as one (the Base UI `Provider` delay, adapted: hover has no touch equivalent, so the delay runs from the long-press commit, not from hover). |
+| `closeDelay` | `number` | no | `0` | Delay in milliseconds before a tip hides after its dismiss fires. |
+| `children` | `ReactNode` | no | — | Tooltip roots sharing this timing. |
+
+A pending show cancels when a dismiss lands first — no ghost tips.
+
+#### `TooltipRoot` (state owner)
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `open` | `boolean` | no | — | Controlled visibility. Wins over `defaultOpen` when defined. |
+| `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial visibility. |
+| `onOpenChange` | `(open: boolean) => void` | no | — | Fires on every visibility change. |
+| `disabled` | `boolean` | no | `false` | Terminal: the tip never shows, no callbacks. |
+| `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
+| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded nowhere (the root renders no element); accepted so ref-spreading callers typecheck. |
+
+#### `TooltipTrigger`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `disabled` | `boolean` | no | `false` | Terminal: long-press never toggles and is announced as disabled. |
+| `accessibilityLabel` | `string` | no | — | Accessible name source for the anchor. |
+| `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
+| `delayLongPress` | `number` | no | — | Long-press duration in milliseconds, forwarded to the host `Pressable`. Absent means the platform default. |
+| `style` | `StateStyle<TooltipTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
+| `children` | `ReactNode` | no | — | Anchor content the tip describes. |
+| `render` | `RenderProp<TooltipTriggerState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+
+`TooltipTriggerState`: `{ open: boolean; disabled: boolean }` —
+whether the tip is currently showing, and whether the trigger is
+disabled.
+
+#### `TooltipPortal`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Portal content (Positioner composed by the caller). |
+| `testID` | `string` | no | — | Test identifier, forwarded to the portal host. |
+
+In-box host, never a `Modal`: a non-modal hint must not trap
+touches. Renders `null` outside a root and while hidden. The
+part exists so callers compose the Base UI shape — and keep the
+escape hatch if a modal tip is ever proven necessary.
+
+#### `TooltipPositioner`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `side` | `Placement` | no | `"top"` | Preferred side for the tip. |
+| `align` | `Align` | no | `"center"` | Cross-axis alignment. |
+| `sideOffset` | `number` | no | `0` | Gap between anchor and tip edges. |
+| `alignOffset` | `number` | no | `0` | Shift along the cross axis after alignment. |
+| `testID` | `string` | no | — | Test identifier, forwarded to the positioner host. |
+| `style` | `StateStyle<TooltipPositionerState, StyleProp<ViewStyle>>` | no | — | Positioner style: a value or a function of positioner state. |
+| `children` | `ReactNode` | no | — | Popup (and optional Arrow content) composed by the caller. |
+| `render` | `RenderProp<TooltipPositionerState, SlotProps>` | no | — | Element or function substitution; measurement stays on the part. |
+
+`TooltipPositionerState`: `{ open: boolean; side: Placement }` —
+the effective side after viewport flip/clamping. Renders `null`
+outside a root and while hidden.
+
+#### `TooltipPopup`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `accessibilityLabel` | `string` | no | — | Accessible name source for the tip. |
+| `testID` | `string` | no | — | Test identifier, forwarded to the tip `View`. |
+| `style` | `StateStyle<TooltipPopupState, StyleProp<ViewStyle>>` | no | — | Tip style: a value or a function of popup state. |
+| `children` | `ReactNode` | no | — | Tip content. |
+| `render` | `RenderProp<TooltipPopupState, SlotProps>` | no | — | Element or function substitution; the tooltip role stays on the part. |
+| `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the tip `View`. |
+
+`TooltipPopupState`: `{ open: boolean }`. Renders `null`
+outside a root and while hidden.
+
+#### `TooltipArrow`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier, forwarded to the arrow host. |
+| `style` | `StyleProp<ViewStyle>` | no | — | Marker style, caller-provided (static — positioning is caller geometry). |
+| `children` | `ReactNode` | no | — | Marker content (usually none — the shape is caller style). |
+| `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution; the function form receives an empty state object. |
+
+### Examples
+
+Minimal monolith, uncontrolled (long-press the anchor for the
+tip):
 
 ```tsx
-<TooltipProvider delay={100}>
-  <TooltipRoot>
-    <TooltipTrigger accessibilityLabel="More info">
+import { Text } from "react-native";
+import { Tooltip } from "@xoroh/axis";
+
+function Hint() {
+  return (
+    <Tooltip
+      content={<Text>Saved yesterday at 14:02.</Text>}
+      accessibilityLabel="Saved details"
+      tipStyle={{ padding: 8 }}
+    >
       <Text>Info</Text>
-    </TooltipTrigger>
-    <TooltipPortal>
-      <TooltipPositioner side="top">
-        <TooltipPopup accessibilityLabel="Details">
-          <Text>Details here</Text>
-        </TooltipPopup>
-      </TooltipPositioner>
-    </TooltipPortal>
-  </TooltipRoot>
-</TooltipProvider>
+    </Tooltip>
+  );
+}
 ```
+
+Controlled with placement (parent owns the visibility):
+
+```tsx
+import { useState } from "react";
+import { Text } from "react-native";
+import { Tooltip } from "@xoroh/axis";
+
+function ControlledHint() {
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip
+      open={open}
+      onOpenChange={setOpen}
+      placement="top"
+      content={<Text>Press any row for options.</Text>}
+      accessibilityLabel="Row help"
+    >
+      <Text>Help</Text>
+    </Tooltip>
+  );
+}
+```
+
+Compound form (Base UI anatomy — provider, root, trigger,
+portal, positioner, popup), sharing one show timing across tips:
+
+```tsx
+import { Text } from "react-native";
+import {
+  TooltipPopup,
+  TooltipPortal,
+  TooltipPositioner,
+  TooltipProvider,
+  TooltipRoot,
+  TooltipTrigger,
+} from "@xoroh/axis";
+
+function CompoundHint() {
+  return (
+    <TooltipProvider delay={100}>
+      <TooltipRoot>
+        <TooltipTrigger accessibilityLabel="More info">
+          <Text>Info</Text>
+        </TooltipTrigger>
+        <TooltipPortal>
+          <TooltipPositioner side="top">
+            <TooltipPopup accessibilityLabel="Details">
+              <Text>Details here</Text>
+            </TooltipPopup>
+          </TooltipPositioner>
+        </TooltipPortal>
+      </TooltipRoot>
+    </TooltipProvider>
+  );
+}
+```
+
+### Accessibility
+
+- The tip is an accessibility element (`accessible`) carrying
+  the `tooltip` role and `accessibilityLabel`, so the hint is
+  announced — a tip whose role never reaches assistive tech is
+  broken.
+- The trigger carries the accessible name and `delayLongPress`;
+  a disabled trigger is announced as disabled and never toggles.
+- The arrow renders `accessible={false}` so it never appears in
+  the tree.
+- No scrim exists to dismiss through: dismissal is a second
+  long-press or the controlled prop.
+- Hidden renders the anchor only (monolith) or nothing at all
+  (compound portal): no tip for assistive tech or tests to find.
+- Explicitly deferred, each for a named reason: no hover model
+  (no pointer on touch devices — parity D8; timing itself needs a
+  finger — RNTL dispatches `longPress` directly, and a
+  device/screen-reader pass has never been run); no animation
+  (the tip mounts/unmounts synchronously with state — exit
+  transitions would need the `presence` model to keep it mounted,
+  unneeded until a consumer needs animated dismissal); no focus
+  trap (a hint must not move or contain focus — the opposite of
+  the Dialog precedent).
 
 ### Composition
 
-Every part takes `render` (element or `(props, state)` function);
-parts with interaction state take value-or-function `style`, while
-stateless parts keep a static `style` (the `DialogTitle` precedent).
-`data-*` attributes are deliberately absent on native — state flows
-through those functions instead (contract §11). See
-`docs/BASE_UI_PARITY.md` for the per-family parity record.
+Every part takes `render` (an element, cloned with the part
+props merged under its own, or a `(props, state)` function) and
+value-or-function `style` over its state object (`{ open }`,
+`{ open, disabled }`), except `Arrow`, whose style stays static
+(the `DialogTitle` precedent — a function of empty state adds
+nothing); `data-*` attributes are deliberately absent on
+native — state flows through those functions instead (contract
+§11, parity D1). `TooltipProvider` is the only timing owner:
+`delay`/`closeDelay` both default `0` (instant). The omitted
+Base UI pieces (hover, `Modal` host, transition attributes) are
+recorded in `docs/BASE_UI_PARITY.md` (§ Tooltip — aligned).
+Verified by the tooltip RNTL suites (13 tests —
+`docs/COVERAGE.md`). The compound anatomy renders in
+`apps/example/src/demos/overlays.tsx`.
