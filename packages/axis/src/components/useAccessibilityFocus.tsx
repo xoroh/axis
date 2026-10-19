@@ -105,32 +105,55 @@ export function focusAccessibilityNode(target: unknown): () => void {
 const FOCUSABLE_SELECTOR =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+const FOCUSABLE_TAGS = new Set([
+  "BUTTON",
+  "INPUT",
+  "SELECT",
+  "TEXTAREA",
+  "AUDIO",
+  "VIDEO",
+]);
+
 function isFocusableElement(value: unknown): boolean {
+  // Tag-based, not `.focus`-based: every HTMLElement carries a
+  // `.focus` function (including in jsdom), which would make every
+  // container "focusable". Only genuinely tabbable elements count.
   if (typeof value !== "object" || value === null) return false;
   const el = value as {
     disabled?: unknown;
     focus?: unknown;
+    hidden?: unknown;
+    tagName?: unknown;
     getAttribute?: unknown;
   };
   if (typeof el.focus !== "function") return false;
-  if (el.disabled === true) return false;
-  if (typeof el.getAttribute === "function") {
+  if (el.disabled === true || el.hidden === true) return false;
+  const get = (name: string): string | null => {
+    if (typeof el.getAttribute !== "function") return null;
     try {
-      const get = el.getAttribute as (name: string) => string | null;
-      if (get.call(el, "aria-hidden") === "true") return false;
-      if (get.call(el, "tabindex") === "-1") return false;
+      return (el.getAttribute as (n: string) => string | null).call(el, name);
     } catch {
-      return false;
+      return null;
     }
-  }
-  return true;
+  };
+  if (get("aria-hidden") === "true") return false;
+  const tab = get("tabindex");
+  // Opted out of the tab order entirely — even for natively
+  // focusable tags (the querySelectorAll union matches `button`
+  // regardless of its tabindex, so this cannot live in the selector).
+  if (tab === "-1") return false;
+  const tag =
+    typeof el.tagName === "string" ? el.tagName.toUpperCase() : "";
+  if (tag === "INPUT" && get("type") === "hidden") return false;
+  if (FOCUSABLE_TAGS.has(tag)) return true;
+  if (tag === "A" && get("href") !== null) return true;
+  return tab !== null;
 }
 
 /** Tabbable descendants of `container` in DOM order (web only). */
 export function getFocusableElements(container: unknown): unknown[] {
-  const query = (
-    container as { querySelectorAll?: unknown }
-  ).querySelectorAll;
+  if (typeof container !== "object" || container === null) return [];
+  const query = (container as { querySelectorAll?: unknown }).querySelectorAll;
   if (typeof query !== "function") return [];
   let list: ArrayLike<unknown>;
   try {
@@ -146,6 +169,7 @@ export function getFocusableElements(container: unknown): unknown[] {
 
 /** DOM `.focus()` on `node` (web only). Returns whether it was attempted. */
 export function focusDomNode(node: unknown): boolean {
+  if (typeof node !== "object" || node === null) return false;
   const focus = (node as { focus?: unknown }).focus;
   if (typeof focus !== "function") return false;
   try {
@@ -197,17 +221,35 @@ export function trapTabKey(
 }
 
 /**
- * Nearest focusable ancestor of `node` (web only). The D11 fallback:
- * when the trigger unmounted while open, its last-known node is
- * detached but its ancestor chain is intact in memory, so walking up
- * still finds a live target.
+ * Nearest focusable ancestor of `node`, excluding `node` itself (web
+ * only). The D11 fallback is computed from the LIVE trigger while the
+ * surface is open and stashed — a detached node's chain cannot be
+ * focused (browsers no-op `.focus()` on disconnected elements), so
+ * the stash must name an element that is still in the document.
  */
-export function focusAncestorFallback(node: unknown): boolean {
+export function closestFocusableAncestor(node: unknown): unknown | null {
   let current: unknown =
     (node as { parentNode?: unknown } | null)?.parentNode ?? null;
   for (let depth = 0; depth < 64 && current != null; depth += 1) {
-    if (isFocusableElement(current)) return focusDomNode(current);
+    if (isFocusableElement(current)) return current;
     current = (current as { parentNode?: unknown }).parentNode ?? null;
+  }
+  return null;
+}
+
+/** Whether `node` is still in the document (web only). */
+export function isConnectedNode(node: unknown): boolean {
+  if (typeof node !== "object" || node === null) return false;
+  const connected = (node as { isConnected?: unknown }).isConnected;
+  if (typeof connected === "boolean") return connected;
+  const doc = (node as { ownerDocument?: { contains?: unknown } })
+    .ownerDocument;
+  if (doc && typeof doc.contains === "function") {
+    try {
+      return (doc.contains as (n: unknown) => boolean).call(doc, node);
+    } catch {
+      return false;
+    }
   }
   return false;
 }
@@ -381,17 +423,19 @@ export function useModalFocus(options: {
   } = options;
   const wasOpenRef = useRef(false);
   const movedRef = useRef(false);
-  // Last live restore node: the D11 web fallback walks up from it
-  // when the trigger unmounted while open.
-  const lastRestoreRef = useRef<unknown>(null);
+  // Nearest focusable ancestor of the live trigger, stashed while the
+  // surface is open: the D11 web fallback when the trigger unmounted
+  // while open (browsers no-op `.focus()` on disconnected nodes, so
+  // the stash must name an element still in the document).
+  const ancestorRef = useRef<unknown>(null);
 
   useEffect(() => {
-    if (restoreRef.current != null) {
-      lastRestoreRef.current = restoreRef.current;
+    const web = isWebEnvironment();
+    if (web && open && restoreRef.current != null) {
+      ancestorRef.current = closestFocusableAncestor(restoreRef.current);
     }
     const wasOpen = wasOpenRef.current;
     wasOpenRef.current = open;
-    const web = isWebEnvironment();
 
     if (open && !wasOpen) {
       movedRef.current = false;
@@ -424,12 +468,12 @@ export function useModalFocus(options: {
         }
         return focusAccessibilityNode(target);
       }
-      // Trigger unmounted: on web fall back to the nearest focusable
-      // ancestor (D11); on native do nothing and never throw — RN has
-      // no focusable-ancestor query, so a stale target is a silent
-      // no-op.
-      if (web && lastRestoreRef.current != null) {
-        focusAncestorFallback(lastRestoreRef.current);
+      // Trigger unmounted: on web fall back to the stashed nearest
+      // focusable ancestor when it is still connected (D11); on native
+      // do nothing and never throw — RN has no focusable-ancestor
+      // query, so a stale target is a silent no-op.
+      if (web && isConnectedNode(ancestorRef.current)) {
+        focusDomNode(ancestorRef.current);
       }
       return undefined;
     }

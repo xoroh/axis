@@ -21,12 +21,14 @@ import {
  * cannot express.
  */
 describe("overlay modality", () => {
-  it("starts with no overlay on top", () => {
+  it("starts with no overlay on top and no modal active", () => {
     const r = createOverlayModality();
     const s = r.getState();
     expect(s.top).toBeNull();
     expect(s.stack).toEqual([]);
     expect(s.isTop("anything")).toBe(false);
+    expect(s.modalTop).toBeNull();
+    expect(s.isModalActive).toBe(false);
   });
 
   it("registers and releases", () => {
@@ -58,10 +60,57 @@ describe("overlay modality", () => {
     expect(s.isTop("menu")).toBe(false);
     expect(s.isInertOutside("menu")).toBe(true);
     expect(s.isInertOutside("sheet")).toBe(false);
+    // Neither registered modal: no modal is active.
+    expect(s.modalTop).toBeNull();
+    expect(s.isModalActive).toBe(false);
     act(() => {
       releaseA();
       releaseB();
     });
+  });
+
+  it("tracks the topmost MODAL overlay separately from the stack top", () => {
+    const r = createOverlayModality();
+    let releaseModal = () => {};
+    let releasePlain = () => {};
+    act(() => {
+      releaseModal = r.register("dialog", { modal: true });
+      releasePlain = r.register("tip");
+    });
+    const s = r.getState();
+    // The non-modal tip sits on top, but the modal dialog is the active modal.
+    expect(s.top).toBe("tip");
+    expect(s.modalTop).toBe("dialog");
+    expect(s.isModalActive).toBe(true);
+    act(() => {
+      releaseModal();
+    });
+    const after = r.getState();
+    expect(after.modalTop).toBeNull();
+    expect(after.isModalActive).toBe(false);
+    act(() => {
+      releasePlain();
+    });
+  });
+
+  it("a modal that releases leaves the next modal on top", () => {
+    const r = createOverlayModality();
+    let releaseA = () => {};
+    let releaseB = () => {};
+    act(() => {
+      releaseA = r.register("a", { modal: true });
+      releaseB = r.register("b", { modal: true });
+    });
+    expect(r.getState().modalTop).toBe("b");
+    act(() => {
+      releaseB();
+    });
+    expect(r.getState().modalTop).toBe("a");
+    expect(r.getState().isModalActive).toBe(true);
+    act(() => {
+      releaseA();
+    });
+    expect(r.getState().isModalActive).toBe(false);
   });
 
   it("re-registering the same id is a no-op, not a second entry", () => {
