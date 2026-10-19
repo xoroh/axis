@@ -641,6 +641,29 @@ describe("Slider on React Native", () => {
     expect(thumbRef.current).not.toBeNull();
   });
 
+  it("positions a vertical thumb by complement and keeps the disabled indicator mounted", async () => {
+    await render(
+      <SliderRoot testID="sl" defaultValue={30} orientation="vertical" disabled>
+        <SliderControl testID="sl-control">
+          <SliderTrack testID="sl-track">
+            <SliderIndicator testID="sl-fill" />
+            <SliderThumb testID="sl-thumb" />
+          </SliderTrack>
+        </SliderControl>
+      </SliderRoot>,
+    );
+    // Value 30 of 0..100: the thumb's top edge sits 70% down the track.
+    const thumbStyle = StyleSheet.flatten(screen.getByTestId("sl-thumb").props.style);
+    expect(thumbStyle).toMatchObject({ position: "absolute", top: "70%" });
+    // The disabled indicator still renders (non-interactive, not hidden).
+    const fillStyle = StyleSheet.flatten(screen.getByTestId("sl-fill").props.style);
+    expect(fillStyle).toMatchObject({ bottom: "0%", height: "30%" });
+    // Read-only + disabled: focusable, announced as enabled, no commits.
+    expect(screen.getByTestId("sl-thumb").props.accessibilityState).toMatchObject({
+      disabled: true,
+    });
+  });
+
   it("handles web keyboard: arrows move by step, flipped for RTL", async () => {
     const seen: (number | readonly number[])[] = [];
     const committed: (number | readonly number[])[] = [];
