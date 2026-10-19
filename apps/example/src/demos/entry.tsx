@@ -39,6 +39,7 @@ export const EntryDemo: Demo = {
     const [name, setName] = useState("Ada Lovelace");
     const [notes, setNotes] = useState("Pioneering computer programmer.");
     const [count, setCount] = useState<number | null>(42);
+    const [limited, setLimited] = useState<number | null>(0);
     const [code, setCode] = useState("1234");
     const { theme } = useTheme();
 
@@ -66,7 +67,11 @@ export const EntryDemo: Demo = {
             gap: 16,
           }}
         >
-          <Field label="Full Name">
+          <Field
+            label="Full Name"
+            labelStyle={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            style={{ gap: 8 }}
+          >
             <Input
               accessibilityLabel="Name input"
               value={name}
@@ -76,7 +81,11 @@ export const EntryDemo: Demo = {
             />
           </Field>
 
-          <Field label="Biography Notes">
+          <Field
+            label="Biography Notes"
+            labelStyle={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            style={{ gap: 8 }}
+          >
             <Input
               accessibilityLabel="Notes input"
               value={notes}
@@ -102,14 +111,17 @@ export const EntryDemo: Demo = {
             gap: 16,
           }}
         >
-          <Fieldset legend="Numeric & Verification Codes">
+          <Fieldset
+            legend="Numeric & Verification Codes"
+            legendStyle={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+          >
             <View style={{ gap: 14 }}>
-              <View style={{ gap: 6 }}>
+              <View style={{ gap: 8 }}>
                 <Text
                   style={{
                     fontSize: 13,
                     fontWeight: "600",
-                    color: theme.textSubtle,
+                    color: theme.text,
                   }}
                 >
                   Quantity Stepper:
@@ -120,20 +132,23 @@ export const EntryDemo: Demo = {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 8,
+                      width: 220,
                     }}
                   >
                     <NumberFieldDecrement
                       accessibilityLabel="Decrease count"
                       style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 14,
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
                         borderRadius: 8,
                         backgroundColor: theme.surfaceSubtle,
                         borderWidth: 1,
                         borderColor: theme.border,
                       }}
                     >
-                      <Text style={{ color: theme.text }}>-</Text>
+                      <Text style={{ color: theme.text }}>−</Text>
                     </NumberFieldDecrement>
                     <NumberFieldInput
                       accessibilityLabel="Count input"
@@ -142,8 +157,10 @@ export const EntryDemo: Demo = {
                     <NumberFieldIncrement
                       accessibilityLabel="Increase count"
                       style={{
-                        paddingVertical: 8,
-                        paddingHorizontal: 14,
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
                         borderRadius: 8,
                         backgroundColor: theme.surfaceSubtle,
                         borderWidth: 1,
@@ -169,14 +186,198 @@ export const EntryDemo: Demo = {
                     </Text>
                   </NumberFieldScrubArea>
                 </NumberFieldRoot>
+                <Text style={{ fontSize: 12, color: theme.textSubtle }}>
+                  Press and hold − or + to repeat.
+                </Text>
               </View>
 
-              <View style={{ gap: 6 }}>
+              <View style={{ gap: 8 }}>
                 <Text
                   style={{
                     fontSize: 13,
                     fontWeight: "600",
-                    color: theme.textSubtle,
+                    color: theme.text,
+                  }}
+                >
+                  Capped 0 to 10 (at the min, decrement is disabled):
+                </Text>
+                <NumberFieldRoot
+                  value={limited}
+                  onValueChange={setLimited}
+                  min={0}
+                  max={10}
+                >
+                  <NumberFieldGroup
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      width: 220,
+                    }}
+                  >
+                    <NumberFieldDecrement
+                      accessibilityLabel="Decrease capped"
+                      style={(s) => [
+                        {
+                          width: 44,
+                          height: 44,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: 8,
+                          backgroundColor: theme.surfaceSubtle,
+                          borderWidth: 1,
+                          borderColor: theme.border,
+                        },
+                        s.value === 0 && { opacity: 0.4 },
+                      ]}
+                    >
+                      <Text style={{ color: theme.text }}>−</Text>
+                    </NumberFieldDecrement>
+                    <NumberFieldInput
+                      accessibilityLabel="capped input"
+                      style={[inputStyle, { flex: 1, textAlign: "center" }]}
+                    />
+                    <NumberFieldIncrement
+                      accessibilityLabel="Increase capped"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>+</Text>
+                    </NumberFieldIncrement>
+                  </NumberFieldGroup>
+                </NumberFieldRoot>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  Read-only:
+                </Text>
+                <NumberFieldRoot defaultValue={7} readOnly>
+                  <NumberFieldGroup
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      width: 220,
+                    }}
+                  >
+                    <NumberFieldDecrement
+                      accessibilityLabel="Decrease read-only"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>−</Text>
+                    </NumberFieldDecrement>
+                    <NumberFieldInput
+                      accessibilityLabel="read-only input"
+                      style={[inputStyle, { flex: 1, textAlign: "center" }]}
+                    />
+                    <NumberFieldIncrement
+                      accessibilityLabel="Increase read-only"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>+</Text>
+                    </NumberFieldIncrement>
+                  </NumberFieldGroup>
+                </NumberFieldRoot>
+              </View>
+
+              <View style={{ gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.text,
+                  }}
+                >
+                  Disabled:
+                </Text>
+                <NumberFieldRoot defaultValue={3} disabled>
+                  <NumberFieldGroup
+                    style={(s) => [
+                      {
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
+                        width: 220,
+                      },
+                      s.disabled && { opacity: 0.5 },
+                    ]}
+                  >
+                    <NumberFieldDecrement
+                      accessibilityLabel="Decrease disabled"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>−</Text>
+                    </NumberFieldDecrement>
+                    <NumberFieldInput
+                      accessibilityLabel="disabled input"
+                      style={[inputStyle, { flex: 1, textAlign: "center" }]}
+                    />
+                    <NumberFieldIncrement
+                      accessibilityLabel="Increase disabled"
+                      style={{
+                        width: 44,
+                        height: 44,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 8,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      <Text style={{ color: theme.text }}>+</Text>
+                    </NumberFieldIncrement>
+                  </NumberFieldGroup>
+                </NumberFieldRoot>
+              </View>
+              <View style={{ gap: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    color: theme.text,
                   }}
                 >
                   4-Digit OTP Code:
