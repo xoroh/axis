@@ -69,8 +69,26 @@ against 'clean'.
 - review-58 check: `diff` of metro.config.js + check-web-bundle.mjs vs origin/main → identical → deleted.
 - Remote after deletes: only `main`, `feat/axis-example-web{,-styling}`, `feat/axis-overlay-root`, `feat/axis-parity-select-menu`.
 
-## Verification (FINAL — appended when status PR merges)
-`gh pr list` (empty) · `git branch -a` · `git worktree list` ·
-`git stash list` · `git status` — see below.
+## Verification (FINAL — main 2331a27, post-#64)
 
-- `gh pr list --state open` → (final output appended post-#60)
+Captured after every merge and deletion (the appendix worktree +
+branch below are removed right after this PR merges, leaving only
+`axis` on `main`):
+
+- `gh pr list --state open` → `[]` (zero open PRs).
+- `git branch -a` → `docs/axis-cleanup-verification` (this
+  appendix; deleted post-merge), `* main`, `remotes/origin/main`.
+  No other local or remote branches exist.
+- `git worktree list` →
+  `/home/novexo/Desktop/Business/xoroh-monorepo/axis @ 2331a27 [main]`
+  plus this appendix worktree (removed post-merge). No `/tmp`
+  worktrees, no Lane A leftovers (Lane A removed
+  `axis-parity-select`/`axis-overlay-root` itself).
+- `git stash list` → empty.
+- `git status` (main checkout) → clean (no output).
+- T3 checkpoint refs: kept — 70 refs under
+  `refs/t3/orchestration-v2/` intact locally, excluded from all
+  pruning, not counted against 'clean' (owner 03:15 CEST note).
+- Remote: only `origin/main` (`git branch -r` → single entry).
+- No patch archive: `.team/archive/axis-2026-10-19` was removed
+  after use (verified absent); triage rule stayed MERGE-or-DROP.
