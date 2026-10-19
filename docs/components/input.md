@@ -1,17 +1,19 @@
 ## Input
 
-Single-line text entry: the host `TextInput` with
-controlled/uncontrolled value plumbing. Payloads stay primitive
-strings (`onValueChange`) — no event-object types cross this
-boundary. Keyboard selection, masking beyond `secureTextEntry`,
-and multiline belong to future props or the `Textarea`
-component, not hidden behavior here. State follows the
-controlled + uncontrolled pattern throughout: `value` (plus
+Text entry, single-line or multiline: the host `TextInput` with
+controlled/uncontrolled value plumbing. `multiline` switches the
+host into multiline mode (the folded `Textarea`: `numberOfLines`
+defaults to 3 there); `autoGrow` tracks content height with
+optional `minRows`/`maxRows` clamps and `onHeightChange` reports.
+Payloads stay primitive strings (`onValueChange`) — no event-object
+types cross this boundary. Keyboard selection and masking beyond
+`secureTextEntry` stay out, not hidden behavior here. State follows
+the controlled + uncontrolled pattern throughout: `value` (plus
 `onValueChange`) for controlled use, `defaultValue` for
 uncontrolled.
 
 Source of truth: `InputProps`, `InputState` in `@xoroh/axis`
-(`packages/axis/src/components/Input.tsx:18-53`).
+(`packages/axis/src/components/Input.tsx:21-87`).
 
 ### Install
 
@@ -52,7 +54,13 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `placeholder` | `string` | no | — | Placeholder text. Visual only, caller-provided. |
 | `secureTextEntry` | `boolean` | no | `false` | Obscured entry. |
 | `editable` | `boolean` | no | `true` | Editable flag. `false` renders read-only (change and submit handlers detach). |
-| `onSubmitEditing` | `() => void` | no | — | Fires on the return key. |
+| `onSubmitEditing` | `() => void` | no | — | Fires on the return key. Multiline callers typically omit it (return inserts a newline). |
+| `multiline` | `boolean` | no | `false` | Multiline entry (the folded `Textarea`). |
+| `numberOfLines` | `number` | no | `3` in multiline mode, unset otherwise | Visible line hint. |
+| `autoGrow` | `boolean` | no | `false` | Grow the host height with content (multiline only). Measured height merges under caller `style`; no animation. |
+| `minRows` | `number` | no | — | Minimum grown rows: rows × one row (`lineHeight`, else `fontSize`, else 14). Ignored without `autoGrow`. |
+| `maxRows` | `number` | no | — | Maximum grown rows (same row rule; wins over `minRows`). Ignored without `autoGrow`. |
+| `onHeightChange` | `(height: number) => void` | no | — | Fires with the measured content height on every content-size change while `autoGrow` is set (clamped value). |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
 | `style` | `StateStyle<InputState, StyleProp<TextStyle>>` | no | — | Input style: a value or a function of input state, caller-provided. |
@@ -107,6 +115,29 @@ function Password() {
       editable={false}
       defaultValue="hunter2"
       accessibilityLabel="Password"
+    />
+  );
+}
+```
+
+Multiline with growth (the folded `Textarea` — `Textarea` was
+removed in ADR-012; migrate `<Textarea … />` to
+`<Input multiline … />`):
+
+```tsx
+import { Input } from "@xoroh/axis";
+
+function Notes() {
+  return (
+    <Input
+      multiline
+      autoGrow
+      minRows={2}
+      maxRows={6}
+      onHeightChange={(height) => console.log(height)}
+      defaultValue=""
+      placeholder="Enter notes..."
+      accessibilityLabel="Notes"
     />
   );
 }

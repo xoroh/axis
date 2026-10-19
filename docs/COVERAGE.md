@@ -22,10 +22,9 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
-| Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
+| Fieldset | complete | legend group (in fieldset suite), RNTL 3 |
 | Label | complete | nativeID association, RNTL 2 |
-| Input | complete | controlled/uncontrolled entry, RNTL 5 |
-| Textarea | complete | multiline + auto-grow, RNTL 4 |
+| Input | complete | controlled/uncontrolled entry + multiline/autoGrow/rows, RNTL 10 |
 | Number Field | complete | Input+Button composition, RNTL 7 |
 | OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |

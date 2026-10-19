@@ -103,7 +103,6 @@ Per-component notes (props, examples, accessibility) live in
 | [Switch](https://github.com/xoroh/axis/blob/main/docs/components/switch.md) |
 | [Table](https://github.com/xoroh/axis/blob/main/docs/components/table.md) |
 | [Tabs](https://github.com/xoroh/axis/blob/main/docs/components/tabs.md) |
-| [Textarea](https://github.com/xoroh/axis/blob/main/docs/components/textarea.md) |
 | [Time Picker](https://github.com/xoroh/axis/blob/main/docs/components/time-picker.md) |
 | [Toast](https://github.com/xoroh/axis/blob/main/docs/components/toast.md) |
 | [Toggle](https://github.com/xoroh/axis/blob/main/docs/components/toggle.md) |

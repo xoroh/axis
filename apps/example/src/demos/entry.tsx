@@ -1,11 +1,4 @@
-import {
-  Field,
-  Fieldset,
-  Input,
-  NumberField,
-  OtpField,
-  Textarea,
-} from "@xoroh/axis";
+import { Field, Fieldset, Input, NumberField, OtpField } from "@xoroh/axis";
 import { useState } from "react";
 import { Text, View } from "react-native";
 import { useTheme } from "../theme";
@@ -20,7 +13,6 @@ export const EntryDemo: Demo = {
   title: "Entry",
   components: [
     "Input",
-    "Textarea",
     "NumberField",
     "OtpField",
     "Field",
@@ -69,11 +61,15 @@ export const EntryDemo: Demo = {
           </Field>
 
           <Field label="Biography Notes">
-            <Textarea
+            <Input
               accessibilityLabel="Notes input"
               value={notes}
               onValueChange={setNotes}
               placeholder="Enter notes..."
+              multiline
+              autoGrow
+              minRows={2}
+              maxRows={6}
               style={[inputStyle, { minHeight: 70 }]}
             />
           </Field>
