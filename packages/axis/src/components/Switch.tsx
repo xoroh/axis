@@ -1,4 +1,11 @@
-import { type ElementRef, type Ref, useCallback } from "react";
+import {
+  createContext,
+  type ElementRef,
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useContext,
+} from "react";
 import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
@@ -6,21 +13,24 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * Switch — an unstyled on/off control.
+ * SwitchRoot — an unstyled on/off control with a thumb part.
  *
- * Structure only: a `Pressable` row carrying the switch role and state,
- * with a track/thumb `View` pair the caller styles. No default visuals —
- * every visual value (`style`, `trackStyle`, `thumbStyle`) is
- * caller-provided. State follows the `useControllableState` pattern
- * with Base UI names: `checked` (+ `onCheckedChange`) for controlled
- * use, `defaultChecked` for uncontrolled.
+ * Structure only: a `Pressable` row carrying the switch role and
+ * state, with a track/thumb `View` pair the caller styles. No
+ * default visuals — every visual value (`style`, `trackStyle`,
+ * `thumbStyle`) is caller-provided. State follows the
+ * `useControllableState` pattern with Base UI names: `checked` (+
+ * `onCheckedChange`) for controlled use, `defaultChecked` for
+ * uncontrolled. A caller-composed `SwitchThumb` reads the root state
+ * for function styles; pass it as `children` (rendered after the
+ * default track row) or through `render`.
  *
  * One clean current API (owner no-compat rule): no aliases, no
  * warn-once shims. Nothing was published, so there is nobody to
  * migrate.
  */
 
-export type SwitchState = {
+export type SwitchRootState = {
   /** Whether the switch is currently on. */
   checked: boolean;
   /** Whether the switch is currently disabled. */
@@ -34,7 +44,32 @@ export type SwitchState = {
   readOnly: boolean;
 };
 
-export type SwitchProps = {
+export type SwitchThumbState = {
+  /** Whether the switch is currently on. */
+  checked: boolean;
+  /** Whether the switch is currently disabled. */
+  disabled: boolean;
+  /** Whether the switch is read-only (presses do not change state). */
+  readOnly: boolean;
+};
+
+export type SwitchThumbProps = {
+  testID?: string;
+  /** Thumb style: value or function of thumb state, caller-provided. */
+  style?: StateStyle<SwitchThumbState, StyleProp<ViewStyle>>;
+  /** Thumb content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<SwitchThumbState, SlotProps>;
+  /** Forwarded to the thumb `View` host element. */
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type SwitchRootProps = {
   /** Controlled state. Wins over `defaultChecked` when defined. */
   checked?: boolean;
   /** Uncontrolled initial state. Default `false`. */
@@ -57,7 +92,7 @@ export type SwitchProps = {
   accessibilityLabelledBy?: string;
   testID?: string;
   /** Value or function of switch state, caller-provided. */
-  style?: StateStyle<SwitchState, StyleProp<ViewStyle>>;
+  style?: StateStyle<SwitchRootState, StyleProp<ViewStyle>>;
   /** Track container style. */
   trackStyle?: StyleProp<ViewStyle>;
   /** Thumb indicator style. */
@@ -67,7 +102,10 @@ export type SwitchProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<SwitchState, SlotProps>;
+  render?: RenderProp<SwitchRootState, SlotProps>;
+  /** Switch thumb (`SwitchThumb`) composed by the caller. Rendered
+   * after the default track row. */
+  children?: ReactNode;
   /** Forwarded to the root pressable host element. */
   ref?: Ref<ElementRef<typeof Pressable>>;
 };
@@ -80,7 +118,7 @@ export type SwitchProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: SwitchProps["ref"],
+  ref: SwitchRootProps["ref"],
   value: ElementRef<typeof Pressable> | null,
 ): void {
   if (typeof ref === "function") {
@@ -97,7 +135,20 @@ function assignRef(
   }
 }
 
-export function Switch({
+type SwitchDisclosure = {
+  checked: boolean;
+  disabled: boolean;
+  readOnly: boolean;
+};
+
+/**
+ * Shared switch state for the thumb. Internal to this module (not
+ * exported): the thumb reads it to style from; outside a root it
+ * renders a plain `View` with default (off/enabled) state.
+ */
+const SwitchDisclosureContext = createContext<SwitchDisclosure | null>(null);
+
+export function SwitchRoot({
   checked,
   defaultChecked = false,
   onCheckedChange,
@@ -111,7 +162,8 @@ export function Switch({
   thumbStyle,
   render,
   ref,
-}: SwitchProps): React.ReactNode {
+  children,
+}: SwitchRootProps): React.ReactNode {
   const [on, setOn] = useControllableState<boolean>(
     checked,
     defaultChecked,
@@ -133,7 +185,16 @@ export function Switch({
     [ref],
   );
 
-  const state: SwitchState = { checked: on ?? false, disabled, readOnly };
+  const state: SwitchRootState = {
+    checked: on ?? false,
+    disabled,
+    readOnly,
+  };
+  const disclosure: SwitchDisclosure = {
+    checked: on ?? false,
+    disabled,
+    readOnly,
+  };
   const substituted = resolveRender(
     render,
     {
@@ -149,23 +210,85 @@ export function Switch({
     } satisfies SlotProps,
     state,
   );
+  if (substituted !== null) {
+    return (
+      <SwitchDisclosureContext.Provider value={disclosure}>
+        {substituted}
+      </SwitchDisclosureContext.Provider>
+    );
+  }
+
+  return (
+    <SwitchDisclosureContext.Provider value={disclosure}>
+      <Pressable
+        ref={setHostRef}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: on ?? false, disabled }}
+        accessibilityLabel={accessibilityLabel}
+        accessibilityLabelledBy={accessibilityLabelledBy}
+        testID={testID}
+        disabled={disabled}
+        onPress={toggle}
+        style={resolveStyle(style, state)}
+      >
+        <View style={trackStyle}>
+          <View style={thumbStyle} />
+        </View>
+        {children}
+      </Pressable>
+    </SwitchDisclosureContext.Provider>
+  );
+}
+
+export function SwitchThumb({
+  testID,
+  style,
+  children,
+  render,
+  ref,
+}: SwitchThumbProps): React.ReactNode {
+  const disclosure = useContext(SwitchDisclosureContext);
+  // Outside a root there is no switch state to style from: render a
+  // plain `View` rather than dropping the node silently.
+  const state: SwitchThumbState = {
+    checked: disclosure?.checked ?? false,
+    disabled: disclosure?.disabled ?? false,
+    readOnly: disclosure?.readOnly ?? false,
+  };
+
+  const setThumbRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      if (typeof ref === "function") {
+        ref(node);
+        return;
+      }
+      if (ref && typeof ref === "object" && "current" in ref) {
+        try {
+          (ref as { current: unknown }).current = node;
+        } catch {
+          // A frozen ref object cannot take the write — leave it
+          // alone rather than failing the render over it.
+        }
+      }
+    },
+    [ref],
+  );
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setThumbRef,
+    } satisfies SlotProps,
+    state,
+  );
   if (substituted !== null) return substituted;
 
   return (
-    <Pressable
-      ref={setHostRef}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: on ?? false, disabled }}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityLabelledBy={accessibilityLabelledBy}
-      testID={testID}
-      disabled={disabled}
-      onPress={toggle}
-      style={resolveStyle(style, state)}
-    >
-      <View style={trackStyle}>
-        <View style={thumbStyle} />
-      </View>
-    </Pressable>
+    <View ref={setThumbRef} testID={testID} style={resolveStyle(style, state)}>
+      {children}
+    </View>
   );
 }

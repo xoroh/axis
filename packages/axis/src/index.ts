@@ -235,8 +235,25 @@ export {
   type DropdownMenuTriggerProps,
   type DropdownMenuTriggerState,
 } from "./components/DropdownMenu";
-export { Field, type FieldProps, type FieldState } from "./components/Field";
-export { Fieldset, type FieldsetProps } from "./components/Fieldset";
+export {
+  FieldControl,
+  type FieldControlProps,
+  FieldDescription,
+  type FieldDescriptionProps,
+  FieldError,
+  type FieldErrorProps,
+  FieldLabel,
+  type FieldLabelProps,
+  FieldRoot,
+  type FieldRootProps,
+  type FieldRootState,
+} from "./components/Field";
+export {
+  FieldsetLegend,
+  type FieldsetLegendProps,
+  FieldsetRoot,
+  type FieldsetRootProps,
+} from "./components/Fieldset";
 export { Input, type InputProps, type InputState } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
 export {
@@ -408,9 +425,19 @@ export {
   type PortalProps,
 } from "./components/Portal";
 export {
-  Progress,
-  type ProgressProps,
-  type ProgressState,
+  ProgressIndicator,
+  type ProgressIndicatorProps,
+  type ProgressIndicatorState,
+  ProgressLabel,
+  type ProgressLabelProps,
+  ProgressRoot,
+  type ProgressRootProps,
+  type ProgressRootState,
+  ProgressTrack,
+  type ProgressTrackProps,
+  type ProgressTrackState,
+  ProgressValue,
+  type ProgressValueProps,
 } from "./components/Progress";
 export {
   RadioGroup,
@@ -467,9 +494,12 @@ export {
   type SliderState,
 } from "./components/Slider";
 export {
-  Switch,
-  type SwitchProps,
-  type SwitchState,
+  SwitchRoot,
+  type SwitchRootProps,
+  type SwitchRootState,
+  SwitchThumb,
+  type SwitchThumbProps,
+  type SwitchThumbState,
 } from "./components/Switch";
 export {
   TableCell,
@@ -517,9 +547,24 @@ export {
   type ToggleGroupState,
 } from "./components/ToggleGroup";
 export {
-  Toolbar,
-  type ToolbarProps,
-  type ToolbarState,
+  ToolbarButton,
+  type ToolbarButtonProps,
+  type ToolbarButtonState,
+  ToolbarGroup,
+  type ToolbarGroupProps,
+  type ToolbarGroupState,
+  ToolbarInput,
+  type ToolbarInputProps,
+  type ToolbarInputState,
+  ToolbarLink,
+  type ToolbarLinkProps,
+  type ToolbarLinkState,
+  ToolbarRoot,
+  type ToolbarRootProps,
+  type ToolbarRootState,
+  ToolbarSeparator,
+  type ToolbarSeparatorProps,
+  type ToolbarSeparatorState,
 } from "./components/Toolbar";
 export {
   TooltipArrow,

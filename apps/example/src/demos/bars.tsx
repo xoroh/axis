@@ -22,6 +22,7 @@ export const BarsDemo: Demo = {
   components: [
     "NavigationMenuItem",
     "NavigationMenuPanel",
+    "NavigationMenuRoot",
     "NavigationMenuTrigger",
     "Menubar",
     "MenubarMenu",

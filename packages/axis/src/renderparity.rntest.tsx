@@ -9,8 +9,8 @@ import {
   Button,
   CheckboxIndicator,
   CheckboxRoot,
-  Field,
-  Fieldset,
+  FieldRoot,
+  FieldsetRoot,
   Input,
   Label,
   MeterIndicator,
@@ -20,12 +20,12 @@ import {
   NumberFieldGroup,
   NumberFieldRoot,
   OtpField,
-  Progress,
+  ProgressRoot,
   Separator,
   Slider,
-  Switch,
+  SwitchRoot,
   Toggle,
-  Toolbar,
+  ToolbarRoot,
 } from "./index";
 
 /**
@@ -91,10 +91,10 @@ describe("render composition: pressables", () => {
     });
   });
 
-  it("Switch element render substitutes and preserves toggle", async () => {
+  it("SwitchRoot element render substitutes and preserves toggle", async () => {
     const seen: boolean[] = [];
     await render(
-      <Switch
+      <SwitchRoot
         accessibilityLabel="Wifi"
         onCheckedChange={(v) => seen.push(v)}
         render={<Pressable testID="sub" />}
@@ -104,9 +104,9 @@ describe("render composition: pressables", () => {
     expect(seen).toEqual([true]);
   });
 
-  it("Switch function render receives checked state", async () => {
+  it("SwitchRoot function render receives checked state", async () => {
     await render(
-      <Switch
+      <SwitchRoot
         accessibilityLabel="Wifi"
         defaultChecked
         render={(_props, state) => (
@@ -237,9 +237,9 @@ describe("render composition: display parts", () => {
     });
   });
 
-  it("Progress function render observes indeterminate state", async () => {
+  it("ProgressRoot function render observes indeterminate state", async () => {
     await render(
-      <Progress
+      <ProgressRoot
         value={null}
         render={(_props, state) => (
           <Text testID="st">{state.indeterminate ? "busy" : "set"}</Text>
@@ -249,9 +249,9 @@ describe("render composition: display parts", () => {
     expect(screen.getByText("busy")).toBeTruthy();
   });
 
-  it("Field function render observes invalid state", async () => {
+  it("FieldRoot function render observes invalid state", async () => {
     await render(
-      <Field
+      <FieldRoot
         label="Name"
         error="Required"
         render={(_props, state) => (
@@ -262,18 +262,18 @@ describe("render composition: display parts", () => {
     expect(screen.getByText("bad")).toBeTruthy();
   });
 
-  it("Fieldset element render substitutes the host", async () => {
+  it("FieldsetRoot element render substitutes the host", async () => {
     await render(
-      <Fieldset legend="Group" render={<View testID="sub" />}>
+      <FieldsetRoot legend="Group" render={<View testID="sub" />}>
         <Text>Hi</Text>
-      </Fieldset>,
+      </FieldsetRoot>,
     );
     expect(screen.getByTestId("sub")).toBeTruthy();
   });
 
-  it("Toolbar function render observes disabled state", async () => {
+  it("ToolbarRoot function render observes disabled state", async () => {
     await render(
-      <Toolbar
+      <ToolbarRoot
         accessibilityLabel="Bar"
         disabled
         render={(_props, state) => (
@@ -281,7 +281,7 @@ describe("render composition: display parts", () => {
         )}
       >
         <Text>Hi</Text>
-      </Toolbar>,
+      </ToolbarRoot>,
     );
     expect(screen.getByText("off")).toBeTruthy();
   });

@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import type { Pressable } from "react-native";
-import { Switch } from "./index";
+import { SwitchRoot, SwitchThumb } from "./index";
 
 /**
- * Switch behavior through the public entry. Every assertion renders the
+ * SwitchRoot behavior through the public entry. Every assertion renders the
  * real component in the RN runtime and interacts through RN events —
  * state flips, role/state announcements, disabled terminality, and ref
  * forwarding are observed, not assumed.
@@ -16,9 +16,9 @@ async function press(testID: string) {
   });
 }
 
-describe("Switch on React Native", () => {
+describe("SwitchRoot on React Native", () => {
   it("renders off with the switch role and unchecked state", async () => {
-    await render(<Switch testID="sw" accessibilityLabel="Airplane mode" />);
+    await render(<SwitchRoot testID="sw" accessibilityLabel="Airplane mode" />);
     expect(screen.getByRole("switch")).toBeTruthy();
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -30,7 +30,7 @@ describe("Switch on React Native", () => {
   it("toggles uncontrolled state and reports through onCheckedChange", async () => {
     const seen: boolean[] = [];
     await render(
-      <Switch
+      <SwitchRoot
         testID="sw"
         defaultChecked={false}
         onCheckedChange={(v) => seen.push(v)}
@@ -49,7 +49,11 @@ describe("Switch on React Native", () => {
     function Host() {
       const [checked, setChecked] = useState(true);
       return (
-        <Switch testID="sw" checked={checked} onCheckedChange={setChecked} />
+        <SwitchRoot
+          testID="sw"
+          checked={checked}
+          onCheckedChange={setChecked}
+        />
       );
     }
     await render(<Host />);
@@ -63,7 +67,7 @@ describe("Switch on React Native", () => {
   });
 
   it("controlled checked without an updating parent holds its state", async () => {
-    await render(<Switch testID="sw" checked={false} />);
+    await render(<SwitchRoot testID="sw" checked={false} />);
     await press("sw");
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -73,7 +77,7 @@ describe("Switch on React Native", () => {
   it("disabled is terminal: no transition, no callback, announced disabled", async () => {
     let calls = 0;
     await render(
-      <Switch testID="sw" disabled onCheckedChange={() => (calls += 1)} />,
+      <SwitchRoot testID="sw" disabled onCheckedChange={() => (calls += 1)} />,
     );
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -89,7 +93,7 @@ describe("Switch on React Native", () => {
   it("readOnly is focusable and announced as enabled, but presses change nothing", async () => {
     let calls = 0;
     await render(
-      <Switch
+      <SwitchRoot
         testID="sw"
         accessibilityLabel="Airplane mode"
         readOnly
@@ -110,13 +114,13 @@ describe("Switch on React Native", () => {
 
   it("forwards a ref to the root host element", async () => {
     const ref = createRef<ElementRef<typeof Pressable>>();
-    await render(<Switch testID="sw" ref={ref} />);
+    await render(<SwitchRoot testID="sw" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
 
   it("accepts caller styles without imposing any", async () => {
     await render(
-      <Switch
+      <SwitchRoot
         testID="sw"
         style={{ opacity: 0.5 }}
         trackStyle={{ backgroundColor: "red" }}
@@ -126,5 +130,37 @@ describe("Switch on React Native", () => {
     expect(screen.getByTestId("sw").props.style).toMatchObject({
       opacity: 0.5,
     });
+  });
+
+  it("composes a thumb reading root state", async () => {
+    await render(
+      <SwitchRoot testID="sw" defaultChecked>
+        <SwitchThumb testID="sw-thumb" />
+      </SwitchRoot>,
+    );
+    expect(screen.getByTestId("sw-thumb")).toBeTruthy();
+  });
+
+  it("thumb function style observes checked state", async () => {
+    await render(
+      <SwitchRoot testID="sw" defaultChecked={false}>
+        <SwitchThumb
+          testID="sw-thumb"
+          style={(state) => ({ opacity: state.checked ? 1 : 0.4 })}
+        />
+      </SwitchRoot>,
+    );
+    expect(screen.getByTestId("sw-thumb").props.style).toMatchObject({
+      opacity: 0.4,
+    });
+    await press("sw");
+    expect(screen.getByTestId("sw-thumb").props.style).toMatchObject({
+      opacity: 1,
+    });
+  });
+
+  it("thumb outside a root renders with default state", async () => {
+    await render(<SwitchThumb testID="orphan" />);
+    expect(screen.getByTestId("orphan")).toBeTruthy();
   });
 });

@@ -1,7 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import type { View } from "react-native";
-import { Field, Input } from "./index";
+import {
+  FieldControl,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldRoot,
+  Input,
+} from "./index";
 
 /**
  * Form primitives through the public entry: controlled/uncontrolled
@@ -160,12 +167,12 @@ describe("Input on React Native", () => {
   });
 });
 
-describe("Field on React Native", () => {
+describe("FieldRoot on React Native", () => {
   it("renders label, control, and polite error", async () => {
     await render(
-      <Field testID="f" label="Email" error="Required">
+      <FieldRoot testID="f" label="Email" error="Required">
         <Input testID="in" accessibilityLabel="Email" />
-      </Field>,
+      </FieldRoot>,
     );
     expect(screen.getByText("Email")).toBeTruthy();
     expect(screen.getByText("Required")).toBeTruthy();
@@ -174,19 +181,49 @@ describe("Field on React Native", () => {
 
   it("omits label and error when absent", async () => {
     await render(
-      <Field testID="f">
+      <FieldRoot testID="f">
         <Input testID="in" />
-      </Field>,
+      </FieldRoot>,
     );
     expect(screen.getByTestId("f")).toBeTruthy();
     expect(screen.getByTestId("in")).toBeTruthy();
   });
 });
 
-describe("Field ref forwarding", () => {
+describe("FieldRoot ref forwarding", () => {
   it("forwards a ref to the host element", async () => {
     const ref = createRef<ElementRef<typeof View>>();
-    await render(<Field ref={ref} testID="f" label="Name" />);
+    await render(<FieldRoot ref={ref} testID="f" label="Name" />);
     expect(ref.current).toBeTruthy();
+  });
+});
+
+describe("FieldRoot parts on React Native", () => {
+  it("composes label, control, description, and error parts", async () => {
+    await render(
+      <FieldRoot testID="f" error="Required">
+        <FieldLabel testID="f-label">Email</FieldLabel>
+        <FieldControl>
+          <Input testID="in" accessibilityLabel="Email" />
+        </FieldControl>
+        <FieldDescription testID="f-desc">We never share it.</FieldDescription>
+        <FieldError testID="f-error">Required</FieldError>
+      </FieldRoot>,
+    );
+    expect(screen.getByTestId("f-label")).toBeTruthy();
+    expect(screen.getByTestId("in")).toBeTruthy();
+    expect(screen.getByTestId("f-desc")).toBeTruthy();
+    expect(screen.getByTestId("f-error")).toBeTruthy();
+  });
+
+  it("hides the error part while valid and outside a root", async () => {
+    await render(
+      <FieldRoot testID="f">
+        <FieldError testID="f-error">Required</FieldError>
+      </FieldRoot>,
+    );
+    expect(screen.queryByTestId("f-error")).toBeNull();
+    await render(<FieldError testID="orphan">Required</FieldError>);
+    expect(screen.queryByTestId("orphan")).toBeNull();
   });
 });

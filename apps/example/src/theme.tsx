@@ -15,6 +15,7 @@ export interface ThemeColors {
   borderSubtle: string;
   primary: string;
   primaryFg: string;
+  danger: string;
   accent: string;
   muted: string;
   card: string;
@@ -32,6 +33,7 @@ export const lightTheme: ThemeColors = {
   borderSubtle: "#e2e8f0",
   primary: "#0284c7",
   primaryFg: "#ffffff",
+  danger: "#dc2626",
   accent: "#38bdf8",
   muted: "#94a3b8",
   card: "#ffffff",
@@ -49,6 +51,7 @@ export const darkTheme: ThemeColors = {
   borderSubtle: "#1f2937",
   primary: "#38bdf8",
   primaryFg: "#090d16",
+  danger: "#f87171",
   accent: "#0284c7",
   muted: "#6b7280",
   card: "#111827",

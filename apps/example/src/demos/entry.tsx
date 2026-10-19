@@ -1,6 +1,11 @@
 import {
-  Field,
-  Fieldset,
+  FieldControl,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldRoot,
+  FieldsetLegend,
+  FieldsetRoot,
   Input,
   NumberFieldDecrement,
   NumberFieldGroup,
@@ -31,8 +36,13 @@ export const EntryDemo: Demo = {
     "NumberFieldIncrement",
     "NumberFieldScrubArea",
     "OtpField",
-    "Field",
-    "Fieldset",
+    "FieldControl",
+    "FieldDescription",
+    "FieldError",
+    "FieldLabel",
+    "FieldRoot",
+    "FieldsetLegend",
+    "FieldsetRoot",
     "Label",
   ],
   render: function EntryScreen() {
@@ -67,7 +77,7 @@ export const EntryDemo: Demo = {
             gap: 16,
           }}
         >
-          <Field
+          <FieldRoot
             label="Full Name"
             labelStyle={{ fontSize: 13, fontWeight: "600", color: theme.text }}
             style={{ gap: 8 }}
@@ -79,25 +89,38 @@ export const EntryDemo: Demo = {
               placeholder="e.g. Ada"
               style={inputStyle}
             />
-          </Field>
+          </FieldRoot>
 
-          <Field
-            label="Biography Notes"
-            labelStyle={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-            style={{ gap: 8 }}
-          >
-            <Input
-              accessibilityLabel="Notes input"
-              value={notes}
-              onValueChange={setNotes}
-              placeholder="Enter notes..."
-              multiline
-              autoGrow
-              minRows={2}
-              maxRows={6}
-              style={[inputStyle, { minHeight: 70 }]}
-            />
-          </Field>
+          <FieldRoot error={notes === "" ? "Notes are required" : undefined} style={{ gap: 8 }}>
+            <FieldLabel
+              style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            >
+              Biography Notes
+            </FieldLabel>
+            <FieldControl>
+              <Input
+                accessibilityLabel="Notes input"
+                value={notes}
+                onValueChange={setNotes}
+                placeholder="Enter notes..."
+                multiline
+                autoGrow
+                minRows={2}
+                maxRows={6}
+                style={[inputStyle, { minHeight: 70 }]}
+              />
+            </FieldControl>
+            <FieldDescription
+              style={{ fontSize: 12, color: theme.textSubtle }}
+            >
+              A sentence or two is plenty.
+            </FieldDescription>
+            <FieldError
+              style={{ fontSize: 12, color: theme.danger }}
+            >
+              Notes are required
+            </FieldError>
+          </FieldRoot>
         </View>
 
         {/* Fieldset with Number & OTP */}
@@ -111,10 +134,12 @@ export const EntryDemo: Demo = {
             gap: 16,
           }}
         >
-          <Fieldset
-            legend="Numeric & Verification Codes"
-            legendStyle={{ fontSize: 15, fontWeight: "600", color: theme.text }}
-          >
+          <FieldsetRoot>
+            <FieldsetLegend
+              style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
+            >
+              Numeric & Verification Codes
+            </FieldsetLegend>
             <View style={{ gap: 14 }}>
               <View style={{ gap: 8 }}>
                 <Text
@@ -406,7 +431,7 @@ export const EntryDemo: Demo = {
                 />
               </View>
             </View>
-          </Fieldset>
+          </FieldsetRoot>
         </View>
       </View>
     );

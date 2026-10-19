@@ -10,7 +10,7 @@ import { type RenderProp, resolveRender } from "../render";
 import type { SlotProps } from "../slot";
 
 /**
- * Fieldset — an unstyled group of related fields with a legend.
+ * FieldsetRoot — an unstyled group of related fields with a legend part.
  *
  * Structure only: an optional legend `Text` plus caller children. No
  * invented group role (React Native defines none for this) — the
@@ -18,7 +18,21 @@ import type { SlotProps } from "../slot";
  * belong to the caller, never here.
  */
 
-export type FieldsetProps = {
+export type FieldsetLegendProps = {
+  testID?: string;
+  /** Legend text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Legend content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): static text
+   * carries no state, so the function form receives an empty state
+   * object (the `DialogTitle` precedent).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export type FieldsetRootProps = {
   /** Legend content rendered above the group. */
   legend?: ReactNode;
   /** The grouped fields. */
@@ -47,7 +61,7 @@ export type FieldsetProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: FieldsetProps["ref"],
+  ref: FieldsetRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -64,7 +78,7 @@ function assignRef(
   }
 }
 
-export function Fieldset({
+export function FieldsetRoot({
   legend,
   children,
   testID,
@@ -72,7 +86,7 @@ export function Fieldset({
   legendStyle,
   render,
   ref,
-}: FieldsetProps): React.ReactNode {
+}: FieldsetRootProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -102,5 +116,24 @@ export function Fieldset({
       {legend !== undefined ? <Text style={legendStyle}>{legend}</Text> : null}
       {children}
     </View>
+  );
+}
+
+export function FieldsetLegend({
+  testID,
+  style,
+  children,
+  render,
+}: FieldsetLegendProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <Text testID={testID} style={style}>
+      {children}
+    </Text>
   );
 }

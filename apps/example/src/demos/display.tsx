@@ -9,13 +9,22 @@ import {
   MeterRoot,
   MeterTrack,
   MeterValue,
-  Progress,
+  ProgressIndicator,
+  ProgressLabel,
+  ProgressRoot,
+  ProgressTrack,
+  ProgressValue,
   Separator,
   TableCell,
   TableHeader,
   TableRoot,
   TableRow,
-  Toolbar,
+  ToolbarButton,
+  ToolbarGroup,
+  ToolbarInput,
+  ToolbarLink,
+  ToolbarRoot,
+  ToolbarSeparator,
 } from "@xoroh/axis";
 import { Text, View } from "react-native";
 import { useTheme } from "../theme";
@@ -39,13 +48,22 @@ export const DisplayDemo: Demo = {
     "MeterIndicator",
     "MeterLabel",
     "MeterValue",
-    "Progress",
+    "ProgressIndicator",
+    "ProgressLabel",
+    "ProgressRoot",
+    "ProgressTrack",
+    "ProgressValue",
     "Separator",
     "TableRoot",
     "TableCell",
     "TableHeader",
     "TableRow",
-    "Toolbar",
+    "ToolbarButton",
+    "ToolbarGroup",
+    "ToolbarInput",
+    "ToolbarLink",
+    "ToolbarRoot",
+    "ToolbarSeparator",
   ],
   render: function DisplayScreen() {
     const { theme } = useTheme();
@@ -182,23 +200,44 @@ export const DisplayDemo: Demo = {
                 65%
               </Text>
             </View>
-            <Progress
+            <ProgressRoot
               accessibilityLabel="Demo progress"
               value={65}
               style={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.surfaceSubtle,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: theme.borderSubtle,
+                gap: 6,
               }}
-              barStyle={{
-                height: "100%",
-                backgroundColor: theme.primary,
-                borderRadius: 4,
-              }}
-            />
+            >
+              <View
+                style={{ flexDirection: "row", justifyContent: "space-between" }}
+              >
+                <ProgressLabel>
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    Download
+                  </Text>
+                </ProgressLabel>
+                <ProgressValue
+                  style={{ fontSize: 13, fontWeight: "600", color: theme.primary }}
+                />
+              </View>
+              <ProgressTrack
+                style={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: theme.surfaceSubtle,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: theme.borderSubtle,
+                }}
+              >
+                <ProgressIndicator
+                  style={{
+                    height: "100%",
+                    backgroundColor: theme.primary,
+                    borderRadius: 4,
+                  }}
+                />
+              </ProgressTrack>
+            </ProgressRoot>
           </View>
 
           <View style={{ gap: 6 }}>
@@ -301,7 +340,7 @@ export const DisplayDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Toolbar & TableRoot
           </Text>
-          <Toolbar
+          <ToolbarRoot
             accessibilityLabel="Demo toolbar"
             style={{
               flexDirection: "row",
@@ -311,12 +350,55 @@ export const DisplayDemo: Demo = {
               borderRadius: 8,
             }}
           >
-            <Text
-              style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+            <ToolbarButton
+              accessibilityLabel="Bold"
+              style={{
+                paddingVertical: 6,
+                paddingHorizontal: 10,
+                borderRadius: 6,
+                backgroundColor: theme.surface,
+              }}
             >
-              Toolbar: Bold | Italic | Code
-            </Text>
-          </Toolbar>
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: theme.text }}
+              >
+                B
+              </Text>
+            </ToolbarButton>
+            <ToolbarButton
+              accessibilityLabel="Italic"
+              style={{
+                paddingVertical: 6,
+                paddingHorizontal: 10,
+                borderRadius: 6,
+                backgroundColor: theme.surface,
+              }}
+            >
+              <Text
+                style={{ fontSize: 13, fontStyle: "italic", color: theme.text }}
+              >
+                I
+              </Text>
+            </ToolbarButton>
+            <ToolbarSeparator
+              style={{ width: 1, backgroundColor: theme.border }}
+            />
+            <ToolbarGroup
+              accessibilityLabel="Code group"
+              style={{ flexDirection: "row", gap: 8 }}
+            >
+              <ToolbarLink accessibilityLabel="Docs">
+                <Text style={{ fontSize: 13, color: theme.primary }}>
+                  Docs
+                </Text>
+              </ToolbarLink>
+            </ToolbarGroup>
+            <ToolbarInput
+              accessibilityLabel="Toolbar search"
+              placeholder="Search"
+              style={{ flex: 1, fontSize: 13, color: theme.text }}
+            />
+          </ToolbarRoot>
 
           <TableRoot
             accessibilityLabel="Demo table"

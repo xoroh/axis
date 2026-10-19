@@ -1,11 +1,25 @@
-import { type ElementRef, type Ref, useCallback } from "react";
-import { type StyleProp, View, type ViewStyle } from "react-native";
+import {
+  createContext,
+  type ElementRef,
+  type ReactNode,
+  type Ref,
+  useCallback,
+  useContext,
+} from "react";
+import {
+  type StyleProp,
+  Text,
+  type TextStyle,
+  View,
+  type ViewStyle,
+} from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 
 /**
- * Progress — an unstyled determinate/indeterminate progress indicator.
+ * ProgressRoot — an unstyled determinate/indeterminate progress
+ * indicator with track/indicator/label/value parts.
  *
  * Structure only: an outer `View` carrying the progressbar role and
  * value, with an inner bar whose width is the data-driven fill
@@ -17,14 +31,89 @@ import type { SlotProps } from "../slot";
  * (announced without a value) rather than dividing by zero.
  */
 
-export type ProgressState = {
+export type ProgressRootState = {
   /** Clamped value, or `undefined` while indeterminate. */
   value: number | undefined;
   /** Whether the indicator is currently indeterminate. */
   indeterminate: boolean;
 };
 
-export type ProgressProps = {
+export type ProgressTrackState = {
+  /** Clamped value, or `undefined` while indeterminate. */
+  value: number | undefined;
+  /** Whether the indicator is currently indeterminate. */
+  indeterminate: boolean;
+};
+
+export type ProgressTrackProps = {
+  testID?: string;
+  /** Track container style: value or function of progress state. */
+  style?: StateStyle<ProgressTrackState, StyleProp<ViewStyle>>;
+  /** Track content (`ProgressIndicator` composed by the caller). */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ProgressTrackState, SlotProps>;
+  /** Forwarded to the track `View` host element. */
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type ProgressIndicatorState = {
+  /** Clamped value, or `undefined` while indeterminate. */
+  value: number | undefined;
+  /** Whether the indicator is currently indeterminate. */
+  indeterminate: boolean;
+};
+
+export type ProgressIndicatorProps = {
+  testID?: string;
+  /** Fill style: value or function of progress state (merged under the fill width). */
+  style?: StateStyle<ProgressIndicatorState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ProgressIndicatorState, SlotProps>;
+  /** Forwarded to the fill `View` host element. */
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export type ProgressLabelProps = {
+  testID?: string;
+  /** Label text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Label content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): static text
+   * carries no state, so the function form receives an empty state
+   * object (the `DialogTitle` precedent).
+   */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export type ProgressValueProps = {
+  testID?: string;
+  /** Value text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /**
+   * Value text override. Defaults to the current clamped value;
+   * renders nothing while indeterminate (no value to show).
+   */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<ProgressIndicatorState, SlotProps>;
+};
+
+export type ProgressRootProps = {
   /**
    * Current value (Base UI exact semantics). A number is the
    * determinate value; `null` is indeterminate — no value announced,
@@ -39,7 +128,7 @@ export type ProgressProps = {
   accessibilityLabel?: string;
   testID?: string;
   /** Outer container style: value or function of progress state. */
-  style?: StateStyle<ProgressState, StyleProp<ViewStyle>>;
+  style?: StateStyle<ProgressRootState, StyleProp<ViewStyle>>;
   /** Fill bar style, caller-provided (merged under the fill width). */
   barStyle?: StyleProp<ViewStyle>;
   /**
@@ -47,7 +136,9 @@ export type ProgressProps = {
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
-  render?: RenderProp<ProgressState, SlotProps>;
+  render?: RenderProp<ProgressRootState, SlotProps>;
+  /** Progress content (`ProgressTrack` composed by the caller). Rendered after the fill bar. */
+  children?: ReactNode;
   /** Forwarded to the container `View` host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
@@ -60,7 +151,7 @@ export type ProgressProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: ProgressProps["ref"],
+  ref: ProgressRootProps["ref"],
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -77,7 +168,41 @@ function assignRef(
   }
 }
 
-export function Progress({
+type ProgressDisclosure = {
+  value: number | undefined;
+  min: number;
+  max: number;
+  indeterminate: boolean;
+};
+
+/**
+ * Shared progress state for the parts. Internal to this module (not
+ * exported): parts must render inside a `ProgressRoot` to read state;
+ * outside one the stateful parts render nothing and `ProgressLabel`
+ * renders its static text.
+ */
+const ProgressDisclosureContext =
+  createContext<ProgressDisclosure | null>(null);
+
+function setPartRef(
+  ref: Ref<ElementRef<typeof View> | null> | undefined,
+  value: ElementRef<typeof View> | null,
+): void {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref && typeof ref === "object" && "current" in ref) {
+    try {
+      (ref as { current: unknown }).current = value;
+    } catch {
+      // A frozen ref object cannot take the write — leave it alone
+      // rather than failing the render over it.
+    }
+  }
+}
+
+export function ProgressRoot({
   value = 0,
   max = 100,
   min = 0,
@@ -87,7 +212,8 @@ export function Progress({
   barStyle,
   render,
   ref,
-}: ProgressProps): React.ReactNode {
+  children,
+}: ProgressRootProps): React.ReactNode {
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
@@ -104,8 +230,14 @@ export function Progress({
   const clamped = range > 0 ? Math.min(Math.max(numeric, min), max) : min;
   const percent =
     !indeterminate && range > 0 ? ((clamped - min) / range) * 100 : 0;
-  const state: ProgressState = {
+  const state: ProgressRootState = {
     value: indeterminate ? undefined : clamped,
+    indeterminate,
+  };
+  const disclosure: ProgressDisclosure = {
+    value: indeterminate ? undefined : clamped,
+    min,
+    max,
     indeterminate,
   };
   const substituted = resolveRender(
@@ -124,25 +256,169 @@ export function Progress({
     } satisfies SlotProps,
     state,
   );
+  if (substituted !== null) {
+    return (
+      <ProgressDisclosureContext.Provider value={disclosure}>
+        {substituted}
+      </ProgressDisclosureContext.Provider>
+    );
+  }
+
+  return (
+    <ProgressDisclosureContext.Provider value={disclosure}>
+      <View
+        ref={setHostRef}
+        // An unannounced progressbar is broken: a plain View is not an
+        // accessibility element, so the role and value below would never
+        // reach assistive tech (or the role queries that prove it).
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityState={{ busy: indeterminate || undefined }}
+        accessibilityValue={
+          indeterminate ? undefined : { min, max, now: clamped }
+        }
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        style={resolveStyle(style, state)}
+      >
+        <View style={[{ width: `${percent}%` }, barStyle]} />
+        {children}
+      </View>
+    </ProgressDisclosureContext.Provider>
+  );
+}
+
+export function ProgressTrack({
+  testID,
+  style,
+  children,
+  render,
+  ref,
+}: ProgressTrackProps): React.ReactNode {
+  const disclosure = useContext(ProgressDisclosureContext);
+  if (!disclosure) return null;
+  const state: ProgressTrackState = {
+    value: disclosure.value,
+    indeterminate: disclosure.indeterminate,
+  };
+
+  const setTrackRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      setPartRef(ref, node);
+    },
+    [ref],
+  );
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: resolveStyle(style, state),
+      children,
+      ref: setTrackRef,
+    } satisfies SlotProps,
+    state,
+  );
   if (substituted !== null) return substituted;
 
   return (
     <View
-      ref={setHostRef}
-      // An unannounced progressbar is broken: a plain View is not an
-      // accessibility element, so the role and value below would never
-      // reach assistive tech (or the role queries that prove it).
-      accessible
-      accessibilityRole="progressbar"
-      accessibilityState={{ busy: indeterminate || undefined }}
-      accessibilityValue={
-        indeterminate ? undefined : { min, max, now: clamped }
-      }
-      accessibilityLabel={accessibilityLabel}
+      ref={setTrackRef}
       testID={testID}
       style={resolveStyle(style, state)}
     >
-      <View style={[{ width: `${percent}%` }, barStyle]} />
+      {children}
     </View>
+  );
+}
+
+export function ProgressIndicator({
+  testID,
+  style,
+  render,
+  ref,
+}: ProgressIndicatorProps): React.ReactNode {
+  const disclosure = useContext(ProgressDisclosureContext);
+  if (!disclosure) return null;
+  const { value, min, max, indeterminate } = disclosure;
+  const range = max - min;
+  const numeric = indeterminate ? min : (value ?? min);
+  const clamped = range > 0 ? Math.min(Math.max(numeric, min), max) : min;
+  const percent =
+    !indeterminate && range > 0 ? ((clamped - min) / range) * 100 : 0;
+  const state: ProgressIndicatorState = { value, indeterminate };
+
+  const setFillRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      setPartRef(ref, node);
+    },
+    [ref],
+  );
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: [{ width: `${percent}%` }, resolveStyle(style, state)],
+      ref: setFillRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  // The width carries the fill; the caller style merges over it and
+  // wins on conflict (the root's own bar precedent).
+  return (
+    <View
+      ref={setFillRef}
+      testID={testID}
+      style={[{ width: `${percent}%` }, resolveStyle(style, state)]}
+    />
+  );
+}
+
+export function ProgressLabel({
+  testID,
+  style,
+  children,
+  render,
+}: ProgressLabelProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <Text testID={testID} style={style}>
+      {children}
+    </Text>
+  );
+}
+
+export function ProgressValue({
+  testID,
+  style,
+  children,
+  render,
+}: ProgressValueProps): React.ReactNode {
+  const disclosure = useContext(ProgressDisclosureContext);
+  if (!disclosure) return null;
+  const text = children ?? (disclosure.indeterminate ? null : String(disclosure.value));
+  if (text === null) return null;
+  const state: ProgressIndicatorState = {
+    value: disclosure.value,
+    indeterminate: disclosure.indeterminate,
+  };
+  const substituted = resolveRender(
+    render,
+    { testID, style, children: text } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <Text testID={testID} style={style}>
+      {text}
+    </Text>
   );
 }

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { type Image, Text, type View } from "react-native";
-import { AvatarFallback, AvatarImage, AvatarRoot, Progress } from "./index";
+import { AvatarFallback, AvatarImage, AvatarRoot, ProgressRoot } from "./index";
 
 /**
  * Display primitives through the public entry: announced values,
@@ -9,10 +9,10 @@ import { AvatarFallback, AvatarImage, AvatarRoot, Progress } from "./index";
  * runtime, not assumed.
  */
 
-describe("Progress on React Native", () => {
+describe("ProgressRoot on React Native", () => {
   it("announces role and clamped value", async () => {
     await render(
-      <Progress testID="pg" value={42} accessibilityLabel="Loading" />,
+      <ProgressRoot testID="pg" value={42} accessibilityLabel="Loading" />,
     );
     expect(screen.getByRole("progressbar")).toBeTruthy();
     expect(screen.getByTestId("pg").props.accessibilityValue).toMatchObject({
@@ -23,14 +23,14 @@ describe("Progress on React Native", () => {
   });
 
   it("clamps out-of-range values and fills proportionally", async () => {
-    await render(<Progress testID="pg" value={250} max={100} />);
+    await render(<ProgressRoot testID="pg" value={250} max={100} />);
     expect(screen.getByTestId("pg").props.accessibilityValue).toMatchObject({
       now: 100,
     });
   });
 
   it("indeterminate announces busy with no value", async () => {
-    await render(<Progress testID="pg" value={null} />);
+    await render(<ProgressRoot testID="pg" value={null} />);
     const props = screen.getByTestId("pg").props;
     expect(props.accessibilityState).toMatchObject({ busy: true });
     expect(props.accessibilityValue).toBeUndefined();
@@ -175,10 +175,10 @@ describe("Avatar ref forwarding", () => {
   });
 });
 
-describe("Progress ref forwarding", () => {
+describe("ProgressRoot ref forwarding", () => {
   it("forwards a ref to the host element", async () => {
     const ref = createRef<ElementRef<typeof View>>();
-    await render(<Progress ref={ref} testID="p" value={42} />);
+    await render(<ProgressRoot ref={ref} testID="p" value={42} />);
     expect(ref.current).toBeTruthy();
   });
 });
