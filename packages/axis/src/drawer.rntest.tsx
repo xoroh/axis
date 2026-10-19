@@ -204,7 +204,7 @@ describe("Drawer compound parts on React Native", () => {
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     await pressLabel("Dismiss");
-    expect(order).toEqual(["dismiss", "change:outside-press"]);
+    expect(order).toEqual(["dismiss", "change:false:outside-press"]);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
