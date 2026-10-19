@@ -1,6 +1,7 @@
 import {
   buildCalendarGrid,
   type CalendarRange,
+  DirectionProvider,
   parseCalendarMonth,
   resolveCalendarFocus,
   resolveCalendarSelection,
@@ -37,6 +38,7 @@ export const RangesDemo: Demo = {
     "SliderThumb",
     "SliderValue",
     "SliderLabel",
+    "DirectionProvider",
   ],
   render: function RangesScreen() {
     const [volume, setVolume] = useState(60);
@@ -269,49 +271,51 @@ export const RangesDemo: Demo = {
         >
           <View style={{ flexDirection: "row", gap: 24 }}>
             <View style={{ alignItems: "center", gap: 8 }}>
-              <SliderRoot
-                value={vertical}
-                onValueChange={(v) => typeof v === "number" && setVertical(v)}
-                orientation="vertical"
-              >
-                <SliderValue
-                  testID="demo-vertical-value"
-                  style={{ fontSize: 13, color: theme.text }}
+              <DirectionProvider direction="rtl">
+                <SliderRoot
+                  value={vertical}
+                  onValueChange={(v) => typeof v === "number" && setVertical(v)}
+                  orientation="vertical"
                 >
-                  {(values) => `${values[0]}`}
-                </SliderValue>
-                <SliderControl>
-                  <SliderTrack
-                    testID="demo-vertical-track"
-                    style={{
-                      width: 8,
-                      height: 140,
-                      borderRadius: 4,
-                      backgroundColor: theme.surfaceSubtle,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                    }}
+                  <SliderValue
+                    testID="demo-vertical-value"
+                    style={{ fontSize: 13, color: theme.text }}
                   >
-                    <SliderIndicator
+                    {(values) => `${values[0]}`}
+                  </SliderValue>
+                  <SliderControl>
+                    <SliderTrack
+                      testID="demo-vertical-track"
                       style={{
-                        backgroundColor: theme.primary,
+                        width: 8,
+                        height: 140,
                         borderRadius: 4,
+                        backgroundColor: theme.surfaceSubtle,
+                        borderWidth: 1,
+                        borderColor: theme.border,
                       }}
-                    />
-                    <SliderThumb
-                      accessibilityLabel="Demo vertical slider"
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 11,
-                        backgroundColor: theme.surface,
-                        borderWidth: 2,
-                        borderColor: theme.primary,
-                      }}
-                    />
-                  </SliderTrack>
-                </SliderControl>
-              </SliderRoot>
+                    >
+                      <SliderIndicator
+                        style={{
+                          backgroundColor: theme.primary,
+                          borderRadius: 4,
+                        }}
+                      />
+                      <SliderThumb
+                        accessibilityLabel="Demo vertical slider"
+                        style={{
+                          width: 22,
+                          height: 22,
+                          borderRadius: 11,
+                          backgroundColor: theme.surface,
+                          borderWidth: 2,
+                          borderColor: theme.primary,
+                        }}
+                      />
+                    </SliderTrack>
+                  </SliderControl>
+                </SliderRoot>
+              </DirectionProvider>
               <Text style={{ fontSize: 13, color: theme.textSubtle }}>
                 Vertical
               </Text>
