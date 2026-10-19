@@ -653,13 +653,19 @@ describe("Slider on React Native", () => {
       </SliderRoot>,
     );
     // Value 30 of 0..100: the thumb's top edge sits 70% down the track.
-    const thumbStyle = StyleSheet.flatten(screen.getByTestId("sl-thumb").props.style);
+    const thumbStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-thumb").props.style,
+    );
     expect(thumbStyle).toMatchObject({ position: "absolute", top: "70%" });
     // The disabled indicator still renders (non-interactive, not hidden).
-    const fillStyle = StyleSheet.flatten(screen.getByTestId("sl-fill").props.style);
+    const fillStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-fill").props.style,
+    );
     expect(fillStyle).toMatchObject({ bottom: "0%", height: "30%" });
     // Read-only + disabled: focusable, announced as enabled, no commits.
-    expect(screen.getByTestId("sl-thumb").props.accessibilityState).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityState,
+    ).toMatchObject({
       disabled: true,
     });
   });
