@@ -12,6 +12,19 @@ fully unstyled — but several families sit in neither Base UI nor rn-primitives
 Faroeq (04:48 CEST) set two references and four verdicts; Faroeq signed off the
 resulting move table at 05:05 CEST with Kern Lead agreement.
 
+## Scope of this record
+
+This ADR and the Phase 1 scope audit it builds on
+(`.reports/2026-10-19-axis-scope-audit.md`) are scope and inventory
+checks: which families Axis keeps, and how their anatomy maps onto
+Base UI and rn-primitives (plus a grep-level unstyled check). They
+are **not** behaviour reviews — they do not verify runtime
+behaviour, gesture handling, measurement, focus/dismiss wiring,
+platform accessibility mapping, or keyboard handling. Behaviour
+review per family now lives in `docs/BASE_UI_PARITY.md` (Faroeq
+08:18 CEST go: rn-primitives behaviour review plus real-device
+testing are release-ready scope).
+
 ## Decision
 
 What belongs in Axis is defined by two live references, both verified
