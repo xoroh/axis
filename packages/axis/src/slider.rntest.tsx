@@ -77,12 +77,16 @@ describe("Slider on React Native", () => {
     await render(tree(0));
     expect(screen.getByRole("adjustable")).toBeTruthy();
     expect(screen.getByLabelText("Volume")).toBeTruthy();
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       min: 0,
       max: 100,
       now: 0,
     });
-    expect(screen.getByTestId("sl-thumb").props.accessibilityState).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityState,
+    ).toMatchObject({
       disabled: false,
     });
   });
@@ -110,13 +114,17 @@ describe("Slider on React Native", () => {
       );
     }
     await render(<Host />);
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 30,
     });
     // Continuous mode steps by one twentieth of the range: 100 / 20 = 5.
     await accessibilityAction("sl-thumb", "increment");
     expect(seen).toEqual([35]);
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 35,
     });
     await accessibilityAction("sl-thumb", "decrement");
@@ -140,13 +148,17 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 3,
     });
     await accessibilityAction("sl-thumb", "increment");
     // 3 + 10 = 13 snaps to the nearest multiple of 10.
     expect(seen).toEqual([10]);
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 10,
     });
   });
@@ -190,7 +202,9 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(screen.getByTestId("sl-thumb").props.accessibilityState).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityState,
+    ).toMatchObject({
       disabled: true,
     });
     await accessibilityAction("sl-thumb", "increment");
@@ -202,7 +216,9 @@ describe("Slider on React Native", () => {
       );
     });
     expect(calls).toBe(0);
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 40,
     });
   });
@@ -218,7 +234,9 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       min: 0,
       max: 100,
       now: 100,
@@ -235,7 +253,9 @@ describe("Slider on React Native", () => {
         </SliderRoot>,
       );
     });
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 0,
     });
   });
@@ -258,7 +278,9 @@ describe("Slider on React Native", () => {
       </SliderRoot>,
     );
     expect(screen.getByRole("adjustable")).toBeTruthy();
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       min: 80,
       max: 80,
       now: 80,
@@ -297,11 +319,10 @@ describe("Slider on React Native", () => {
     });
     // Press at x=160 on a 200dp track: value 80 — the second thumb.
     await act(async () => {
-      await fireEvent(
-        screen.getByTestId("sl-control"),
-        "responderGrant",
-        { nativeEvent: { locationX: 160, locationY: 10 }, touchHistory: touchEvent(100, 160, 160).touchHistory },
-      );
+      await fireEvent(screen.getByTestId("sl-control"), "responderGrant", {
+        nativeEvent: { locationX: 160, locationY: 10 },
+        touchHistory: touchEvent(100, 160, 160).touchHistory,
+      });
     });
     expect(seen).toEqual([[25, 80]]);
     await act(async () => {
@@ -317,10 +338,7 @@ describe("Slider on React Native", () => {
   it("drags anchor-relative without a measured press point", async () => {
     const seen: (number | readonly number[])[] = [];
     await render(
-      <SliderRoot
-        testID="sl"
-        onValueChange={(v) => seen.push(v)}
-      >
+      <SliderRoot testID="sl" onValueChange={(v) => seen.push(v)}>
         <SliderControl testID="sl-control">
           <SliderTrack>
             <SliderIndicator />
@@ -353,7 +371,9 @@ describe("Slider on React Native", () => {
     });
     // dx of 100 over a 200dp track moves half the 0..100 range from 0.
     expect(seen).toEqual([50]);
-    expect(screen.getByTestId("sl-thumb").props.accessibilityValue).toMatchObject({
+    expect(
+      screen.getByTestId("sl-thumb").props.accessibilityValue,
+    ).toMatchObject({
       now: 50,
     });
     await act(async () => {
@@ -403,9 +423,13 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    const thumbStyle = StyleSheet.flatten(screen.getByTestId("sl-thumb").props.style);
+    const thumbStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-thumb").props.style,
+    );
     expect(thumbStyle).toMatchObject({ position: "absolute", left: "50%" });
-    const fillStyle = StyleSheet.flatten(screen.getByTestId("sl-fill").props.style);
+    const fillStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-fill").props.style,
+    );
     expect(fillStyle).toMatchObject({ width: "50%" });
   });
 
@@ -415,7 +439,9 @@ describe("Slider on React Native", () => {
         <SliderLabel testID="sl-label">
           <Text>Volume</Text>
         </SliderLabel>
-        <SliderValue testID="sl-value">{(values) => `${values[0]}%`}</SliderValue>
+        <SliderValue testID="sl-value">
+          {(values) => `${values[0]}%`}
+        </SliderValue>
         <SliderControl>
           <SliderTrack>
             <SliderIndicator />
@@ -462,32 +488,30 @@ describe("Slider on React Native", () => {
     });
     await act(async () => {
       // Dragging down (+dy) lowers a vertical value.
-      await fireEvent(
-        screen.getByTestId("sl-control"),
-        "responderMove",
-        {
-          nativeEvent: {},
-          touchHistory: {
-            numberActiveTouches: 1,
-            indexOfSingleActiveTouch: 0,
-            mostRecentTimeStamp: 200,
-            touchBank: [
-              {
-                touchActive: true,
-                currentTimeStamp: 200,
-                currentPageX: 10,
-                currentPageY: 110,
-                previousPageX: 10,
-                previousPageY: 10,
-              },
-            ],
-          },
+      await fireEvent(screen.getByTestId("sl-control"), "responderMove", {
+        nativeEvent: {},
+        touchHistory: {
+          numberActiveTouches: 1,
+          indexOfSingleActiveTouch: 0,
+          mostRecentTimeStamp: 200,
+          touchBank: [
+            {
+              touchActive: true,
+              currentTimeStamp: 200,
+              currentPageX: 10,
+              currentPageY: 110,
+              previousPageX: 10,
+              previousPageY: 10,
+            },
+          ],
         },
-      );
+      });
     });
     // dy of 100 over a 200dp track moves half the range down from 50.
     expect(seen).toEqual([0]);
-    const fillStyle = StyleSheet.flatten(screen.getByTestId("sl-fill").props.style);
+    const fillStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-fill").props.style,
+    );
     expect(fillStyle).toMatchObject({ height: "0%" });
   });
 
@@ -502,7 +526,9 @@ describe("Slider on React Native", () => {
         </SliderControl>
       </SliderRoot>,
     );
-    const thumbStyle = StyleSheet.flatten(screen.getByTestId("sl-thumb").props.style);
+    const thumbStyle = StyleSheet.flatten(
+      screen.getByTestId("sl-thumb").props.style,
+    );
     expect(thumbStyle).toMatchObject({ left: "100%" });
     expect(JSON.stringify(thumbStyle.transform)).toContain("-100%");
   });
