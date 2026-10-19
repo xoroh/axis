@@ -361,7 +361,11 @@ export const SelectionDemo: Demo = {
             readOnly
             style={{ flexDirection: "row", gap: 12 }}
           >
-            <RadioRoot value="x" testID="demo-frozen-x">
+            <RadioRoot
+              value="x"
+              testID="demo-frozen-x"
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <RadioIndicator
                 style={{
                   width: 12,
@@ -372,7 +376,11 @@ export const SelectionDemo: Demo = {
               />
               <Text style={{ fontSize: 13, color: theme.text }}>Std</Text>
             </RadioRoot>
-            <RadioRoot value="y" testID="demo-frozen-y">
+            <RadioRoot
+              value="y"
+              testID="demo-frozen-y"
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
               <RadioIndicator
                 style={{
                   width: 12,
