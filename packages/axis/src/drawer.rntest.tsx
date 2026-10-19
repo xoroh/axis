@@ -302,8 +302,27 @@ describe("Drawer compound parts on React Native", () => {
     expect(focusSpy).toHaveBeenCalled();
   });
 
-  it("closes with the close-press reason", async () => {
+  it("toggles with the trigger-press reason", async () => {
     const changed: Array<{ open: boolean; reason?: string }> = [];
+    await render(
+      <PortalHost>
+        <Shell
+          defaultOpen={false}
+          onOpen={(open, details) =>
+            changed.push({ open, reason: details?.reason })
+          }
+        />
+      </PortalHost>,
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await act(async () => {
+      fireEvent.press(screen.getByTestId("drawer-trigger"));
+    });
+    expect(changed).toEqual([{ open: true, reason: "trigger-press" }]);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("closes with the close-press reason", async () => {    const changed: Array<{ open: boolean; reason?: string }> = [];
     await render(
       <PortalHost>
         <Shell

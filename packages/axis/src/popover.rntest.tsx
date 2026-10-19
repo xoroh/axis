@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
-import { Text, type View } from "react-native";
+import { BackHandler, Text, type View } from "react-native";
 import { Popover, PortalHost } from "./index";
 
 /**
@@ -85,6 +85,83 @@ describe("Popover on React Native", () => {
     expect(seen).toEqual([true, false]);
     expect(screen.queryByTestId("pop")).toBeNull();
     expect(screen.queryByTestId("pop-scrim")).toBeNull();
+  });
+
+  it("reports trigger-press and outside-press reasons", async () => {
+    const seen: Array<{ open: boolean; reason?: string }> = [];
+    await render(
+      <PortalHost>
+        <Popover
+          testID="pop"
+          content={<Text>Details here</Text>}
+          onOpenChange={(v, details) =>
+            seen.push({ open: v, reason: details?.reason })
+          }
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
+    );
+    await pressAnchor("Open");
+    expect(seen).toEqual([{ open: true, reason: "trigger-press" }]);
+    await pressScrim("pop");
+    expect(seen).toEqual([
+      { open: true, reason: "trigger-press" },
+      { open: false, reason: "outside-press" },
+    ]);
+  });
+
+  it("reports escape-key on hardware back and VoiceOver scrub", async () => {
+    const seen: Array<{ open: boolean; reason?: string }> = [];
+    const addListenerSpy = jest.spyOn(BackHandler, "addEventListener");
+    const { unmount } = await render(
+      <PortalHost>
+        <Popover
+          testID="pop"
+          open
+          content={<Text>Details here</Text>}
+          accessibilityLabel="More info"
+          onOpenChange={(v, details) =>
+            seen.push({ open: v, reason: details?.reason })
+          }
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
+    );
+    // Android hardware back (controlled open stays up).
+    const handler = addListenerSpy.mock.calls
+      .map((call) => call[1])
+      .find(Boolean);
+    expect(handler).toBeDefined();
+    await act(async () => {
+      handler?.({} as never);
+    });
+    expect(seen).toEqual([{ open: false, reason: "escape-key" }]);
+    await unmount();
+    addListenerSpy.mockRestore();
+
+    // VoiceOver scrub on a fresh uncontrolled mount.
+    seen.length = 0;
+    await render(
+      <PortalHost>
+        <Popover
+          testID="pop"
+          defaultOpen
+          content={<Text>Details here</Text>}
+          accessibilityLabel="More info"
+          onOpenChange={(v, details) =>
+            seen.push({ open: v, reason: details?.reason })
+          }
+        >
+          <Text>Open</Text>
+        </Popover>
+      </PortalHost>,
+    );
+    await act(async () => {
+      fireEvent(screen.getByTestId("pop"), "onAccessibilityEscape");
+    });
+    expect(seen).toEqual([{ open: false, reason: "escape-key" }]);
   });
 
   it("scrim dismisses through onDismiss and onOpenChange(false)", async () => {
