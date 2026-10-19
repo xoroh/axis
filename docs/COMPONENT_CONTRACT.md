@@ -31,18 +31,28 @@ conditional — a time-picker does not inherit a Switch's contract.
   - (a) Where Base UI has `X.Root` with sibling parts, Axis exports
     `XRoot` plus `X<Part>` (Base UI `Tabs.List` becomes `TabsList`),
     and exports no bare `X` beside them: no monolith wrappers
-    (ADR 009; composites belong in Kern).
+    (ADR 009; composites belong in Kern). `ContextMenu` is here:
+    Base UI has `ContextMenu.Root`.
   - (b) Where Base UI's component is bare, the Axis export is bare:
     `Button`, `Input`, `Toggle`, `ToggleGroup` (its items are
     `Toggle`), `RadioGroup` (its items are `RadioRoot` and
-    `RadioIndicator`, as in Base UI `Radio.*`), `CheckboxGroup`,
-    `Separator`, `Menubar`.
+    `RadioIndicator`, as in Base UI `Radio.*`), `CheckboxGroup`
+    (its items are `CheckboxRoot`), `Separator`, `Menubar` (its
+    menus are `MenuRoot`). Single-part components with no Base UI
+    counterpart (`Label`, `Portal`, `PortalHost`, `AspectRatio`)
+    stay bare.
   - (c) A compound family with no Base UI counterpart
-    (`DropdownMenu`, `ContextMenu` where it applies, `Table`,
-    `Overlay`) follows (a).
+    (`DropdownMenu`, `Table`) follows (a). `Overlay` follows (a)
+    with no bare export: `OverlayRoot` plus `Overlay<Part>` only.
   - Types follow their component: `XRootProps` and `XRootState`
     (single-part states keep the component name: `ToggleState`,
     `ButtonState`).
+  - Pending in lane PRs (not renamed here — their lanes own the
+    files): `AlertDialog` and `Drawer` go to Root names in #98
+    (overlays), `Combobox` and `Autocomplete` in #96 (select),
+    `Slider` in #91, `OtpField` to `OTPFieldRoot` in #93 (form).
+  - Known monolith gaps (tracked): `ContextMenuRoot` (content prop)
+    and `ToastRoot` still need Base UI part anatomy.
 - Two public entries, not one package split: the package `.`
   barrel (everything) and the `./models` subpath (behavior
   models and hooks only — no `react-native` in its transitive
@@ -187,9 +197,8 @@ closely as React Native allows. Concretely, per component family:
 - **Compound parts**: `Root` (state owner, renders no element) plus
   the Base UI part names that have native meaning (`Trigger`,
   `Portal`, `Backdrop`, `Popup`, `Title`, `Description`, `Close`,
-  `Item`, `Positioner` where measurement applies, …). Single-part
-  APIs stay where they already ship (they are concise, not wrong),
-  and each family documents which Base UI pieces it omits and why.
+  `Item`, `Positioner` where measurement applies, …), and each
+  family documents which Base UI pieces it omits and why.
 - **Props**: Base UI names and semantics (`open`/`defaultOpen`/
   `onOpenChange`, `value`/`defaultValue`/`onValueChange`,
   `disabled`, controlled + uncontrolled via
