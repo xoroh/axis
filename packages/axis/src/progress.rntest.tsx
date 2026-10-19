@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 import { act } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import {
   ProgressIndicator,
   ProgressLabel,
