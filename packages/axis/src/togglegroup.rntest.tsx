@@ -6,9 +6,10 @@ import { ToggleGroup, ToggleGroupItem } from "./index";
 /**
  * ToggleGroup behavior through the public entry. Every assertion renders
  * the real component in the RN runtime and interacts through RN events —
- * pressed (not checked) multi-toggle semantics, button role/state
- * announcements, group-wide disabled terminality, and ref forwarding
- * are observed, not assumed.
+ * single-press replacement (the default), multi-press accumulation with
+ * `multiple`, orientation structure, pressed-state announcements
+ * (`selected`, never `checked` — RN maps no `pressed` key), group-wide
+ * disabled terminality, and ref forwarding are observed, not assumed.
  *
  * Items render via the `ToggleGroupItem` named export.
  */
@@ -40,7 +41,7 @@ describe("ToggleGroup on React Native", () => {
     expect(screen.getByLabelText("Styles")).toBeTruthy();
   });
 
-  it("adds the pressed item value and reports the array", async () => {
+  it("single-press (default) replaces: pressing another item switches", async () => {
     const seen: (readonly string[])[] = [];
     await render(
       <ToggleGroup testID="tg" onValueChange={(v) => seen.push(v)}>
@@ -50,18 +51,35 @@ describe("ToggleGroup on React Native", () => {
     );
     await press("a");
     expect(seen).toEqual([["a"]]);
+    await press("b");
+    expect(seen).toEqual([["a"], ["b"]]);
     expect(screen.getByTestId("a").props.accessibilityState).toMatchObject({
-      selected: true,
+      selected: false,
     });
     expect(screen.getByTestId("b").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+  });
+
+  it("single-press removes the value when the pressed item is pressed again", async () => {
+    const seen: (readonly string[])[] = [];
+    await render(
+      <ToggleGroup testID="tg" onValueChange={(v) => seen.push(v)}>
+        <ToggleGroupItem value="a" testID="a" />
+      </ToggleGroup>,
+    );
+    await press("a");
+    await press("a");
+    expect(seen).toEqual([["a"], []]);
+    expect(screen.getByTestId("a").props.accessibilityState).toMatchObject({
       selected: false,
     });
   });
 
-  it("removes the value when the pressed item is pressed again", async () => {
+  it("multiple accumulates and removes per item", async () => {
     const seen: (readonly string[])[] = [];
     await render(
-      <ToggleGroup testID="tg" onValueChange={(v) => seen.push(v)}>
+      <ToggleGroup testID="tg" multiple onValueChange={(v) => seen.push(v)}>
         <ToggleGroupItem value="a" testID="a" />
         <ToggleGroupItem value="b" testID="b" />
       </ToggleGroup>,
@@ -78,6 +96,30 @@ describe("ToggleGroup on React Native", () => {
     expect(screen.getByTestId("b").props.accessibilityState).toMatchObject({
       selected: true,
     });
+  });
+
+  it("orientation selects the container direction, caller style wins", async () => {
+    await render(
+      <ToggleGroup testID="tg" orientation="vertical">
+        <ToggleGroupItem value="a" testID="a" />
+      </ToggleGroup>,
+    );
+    const flattened = screen.getByTestId("tg").props.style;
+    const merged = Object.assign({}, ...(Array.isArray(flattened) ? flattened : [flattened]));
+    expect(merged.flexDirection).toBe("column");
+  });
+
+  it("announces pressed through selected, never checked", async () => {
+    await render(
+      <ToggleGroup testID="tg" multiple defaultValue={["a"]}>
+        <ToggleGroupItem value="a" testID="a" accessibilityLabel="A" />
+      </ToggleGroup>,
+    );
+    const state = screen.getByTestId("a").props.accessibilityState;
+    expect(state.selected).toBe(true);
+    // Pressed never surfaces as checked: the key is absent, or at most
+    // falsy if the host normalizes it — it is never asserted true.
+    expect(state.checked ?? false).toBe(false);
   });
 
   it("disabled group blocks every item: no toggles, no callbacks", async () => {

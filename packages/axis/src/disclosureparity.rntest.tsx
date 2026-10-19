@@ -2,8 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act } from "react";
 import { Pressable, Text, View } from "react-native";
 import {
-  Accordion,
+  AccordionHeader,
   AccordionItem,
+  AccordionPanel,
+  AccordionRoot,
+  AccordionTrigger,
   AlertDialog,
   Autocomplete,
   CheckboxGroup,
@@ -118,20 +121,24 @@ describe("render composition: groups", () => {
 });
 
 describe("render composition: disclosure", () => {
-  it("AccordionItem function render observes expanded state", async () => {
+  it("AccordionTrigger function render observes open state", async () => {
     await render(
-      <Accordion defaultValue="a">
-        <AccordionItem
-          value="a"
-          accessibilityLabel="A"
-          header="Header"
-          render={(_props, state) => (
-            <Text testID="st">{state.expanded ? "open" : "shut"}</Text>
-          )}
-        >
-          <Text>Panel</Text>
+      <AccordionRoot defaultValue={["a"]}>
+        <AccordionItem value="a">
+          <AccordionHeader>
+            <AccordionTrigger
+              render={(_props, state) => (
+                <Text testID="st">{state.open ? "open" : "shut"}</Text>
+              )}
+            >
+              <Text>Header</Text>
+            </AccordionTrigger>
+          </AccordionHeader>
+          <AccordionPanel>
+            <Text>Panel</Text>
+          </AccordionPanel>
         </AccordionItem>
-      </Accordion>,
+      </AccordionRoot>,
     );
     expect(screen.getByText("open")).toBeTruthy();
   });
