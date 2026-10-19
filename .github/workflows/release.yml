@@ -36,6 +36,32 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      - name: Lint and format check
+        # The verify job mirrors CI's package gates so a manual
+        # dispatch can never publish a red tree (CI gates PRs, but
+        # this workflow dispatches straight from a branch).
+        run: bun run lint
+
+      - name: Typecheck package
+        run: bun run --filter @xoroh/axis typecheck
+
+      - name: Test package
+        run: bun run --filter @xoroh/axis test
+
+      - name: Test package on React Native
+        run: bun run --filter @xoroh/axis test:jest
+
+      - name: Check package boundary
+        run: |
+          bun run --filter @xoroh/axis check:boundary
+          bun test packages/axis/scripts/lib/boundary-policy.test.mjs
+
+      - name: Check README section discipline
+        run: bun run --filter @xoroh/axis check:readme
+
+      - name: Check README examples accuracy
+        run: bun run --filter @xoroh/axis check:readme-examples
+
       - name: Build publishable package
         run: bun run build
 
@@ -48,6 +74,13 @@ jobs:
     # HOLD switch) + the environment below (human approval, write
     # token isolated to this job). Keep all three; each one alone is
     # a mistake away from an unauthorized publish.
+    # Provenance does NOT come from an env var here: `changeset
+    # publish` passes only --access/--tag to `npm publish` (verified
+    # in @changesets/cli dist/getPublishPlan.mjs), so the attestation
+    # comes from publishConfig.provenance in packages/axis/package.json
+    # plus the id-token:write permission below (Sigstore signing).
+    # Auth is token-based (NPM_TOKEN secret), NOT OIDC trusted
+    # publishing — that switch is owner-authorized and not set up here.
     if: ${{ vars.RELEASE_CHANGESSETS == 'true' }}
     environment: npm-publish
     runs-on: ubuntu-latest
@@ -68,7 +101,7 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
@@ -85,4 +118,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          PUBLISH_PROVENANCE: 'true'
