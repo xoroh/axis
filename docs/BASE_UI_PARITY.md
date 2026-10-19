@@ -157,7 +157,7 @@ Separator.
 | `SelectRoot` | `Select.Root` | `value`, `defaultValue`, `onValueChange`, `open`, `defaultOpen`, `onOpenChange`, `onDismiss`, `modal` (default `true`), `disabled`; renders no element | `items` lookup table kept (labels for closed-list display); `disablePointerDismissal` (Axis extension, consistent with `MenuRoot`); no `multiple`, no form integration (`name`/`required`/`readOnly` — native forms are caller-owned), no `actionsRef`/imperative handle (D7), no transition callbacks (D9) |
 | `SelectTrigger` | `Select.Trigger` | button role, `disabled`, `render`, expanded state; registers the positioner anchor | `nativeButton` omitted (RN presses are native by construction); `data-*` → D1; no `popupSide` in state (no arrow coupling) |
 | `SelectValue` | `Select.Value` | `placeholder`, function children `(value) => node` for formatting | label resolved from the item registry + root `items` (closed lists unmount); `data-placeholder` → D1 |
-| `SelectPortal` | `Select.Portal` | RN `Modal` host, in-box when non-modal | D2 (no `container`); overlay-root adoption seam noted in-file (positioning stays separable) |
+| `SelectPortal` | `Select.Portal` | paints through `OverlayPortal` (RN `Modal` only when the surface opts back in via `useModal`; PortalHost by default) | D2 (no `container`); positioning stays separable |
 | `SelectBackdrop` | `Select.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root; `data-open/closed` → D1; no transition attributes (D9) |
 | `SelectPositioner` | `Select.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | no `alignItemWithTrigger` (Base disables it for touch input); standard placement only |
 | `SelectPopup` | `Select.Popup` | listbox-role content box, `render`, function styles, `ref` | no `List` part (the popup IS the list container, the `Menu` compound precedent); `data-*` → D1; no transition attributes (D9) |
@@ -171,7 +171,7 @@ Separator.
 | Omitted | `Select.Label` | — | trigger `accessibilityLabel` (or the Axis `Label` component) names the control |
 | Omitted | `Select.Icon` | — | caller content inside `SelectTrigger` |
 | Omitted | `Select.ScrollUpArrow`, `Select.ScrollDownArrow` | — | hover-scroll chrome Base UI itself hides on touch input |
-| Omitted | typeahead | — | match model (`typeahead`) ships in the models zone; no key events reach native list parts yet, so no part consumes it (first consumer: hardware-keyboard forwarding) |
+| Omitted | typeahead | — | match model (`typeahead`) ships in the models zone and is consumed by `Select` + `Menu` key handling (`appendTypeaheadQuery`/`matchTypeaheadKey`); no scroll-arrow chrome (Base UI itself hides it on touch input) |
 
 ### Combobox — partial (filtering aligned, compound deferred)
 
@@ -231,7 +231,7 @@ parity (`hostName` naming).
 
 | Axis part | Base counterpart | API parity | Deviations |
 |---|---|---|---|
-| `PortalHost` | `Portal` (host side) | named hosts (`name`), registry-ordered painting, `render` substitution | In-box painting (the `Menu` precedent) — root presentation stays each overlay's own `Modal`; D2 (no `container`), D3 (no `keepMounted`) |
+| `PortalHost` | `Portal` (host side) | named hosts (`name`), registry-ordered painting, `render` substitution | In-box painting — overlay presentation is each `OverlayRoot`'s own (RN `Modal` only via `useModal` opt-in); D2 (no `container`), D3 (no `keepMounted`) |
 | `Portal` | `Portal` (content side) | `hostName` matching, nearest-scope nesting, cleanup on unmount | No matching host renders inline (never silently dropped) |
 
 ### Input / Textarea — Base UI change-event names
@@ -254,10 +254,10 @@ named reason (not oversight):
 |---|---|---|
 | Accordion | no `Header`/`Trigger`/`Panel` split (`header` prop + `children`) | Single-part API retained; split needs no new behavior — record if a consumer needs part-level substitution |
 | AlertDialog | rebuilt on the compound `Dialog` parts this pass (was monolith-only) | — |
-| Autocomplete | no `Input`/`Portal`/`List`/`Row`/`Empty`/`Status` parts | Needs `collection` transfer for row registration; `Empty`/`Status` chrome without it |
+| Autocomplete | no `Input`/`Portal`/`List`/`Row`/`Empty`/`Status` parts | `collection` transfer has landed (row registration available); wiring is pending |
 | Checkbox Group / Radio Group / Toggle Group | Root + Item only (no Indicator parts) | Indicator is caller style, not a part (Checkbox precedent) |
 | Collapsible | Root/Trigger/Panel present; composition added this pass | — |
-| Combobox / Select | no `Collection`/filter parts (`Input`/`Clear`/`Empty`/`FilterProvider`) | Needs `collection` transfer + typeahead design |
+| Combobox / Autocomplete | no compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`) | `collection` transfer has landed and is consumed (menu filter parts, select lookup, combobox filtering); wiring `Combobox`/`Autocomplete` rows onto it is pending |
 | Context Menu | monolith (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
 | Field / Fieldset | no `Control`/`Description`/`Validity`/`Legend` parts | Validity is caller state (`error`); control wiring deferred until a consumer demonstrates the need |
 | Meter / Progress | no `Track`/`Indicator`/`Label`/`Value` parts | Fill is data-driven width under caller style; label/value are caller text |
@@ -265,7 +265,6 @@ named reason (not oversight):
 | OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
 | Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
 | Tabs | no `Indicator` | Indicator geometry is caller style |
-| Tooltip | monolith (no `Provider`/`Trigger`/`Portal`/`Positioner`/`Popup`/`Arrow` split) | Portal-host adoption for the positioning story; long-press toggle is the touch adaptation |
 | Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
 | Calendar / Time Picker / Sheet / Drawer | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred |
 | Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
