@@ -2,6 +2,7 @@ import {
   Children,
   createContext,
   type ElementRef,
+  Fragment,
   isValidElement,
   type ReactNode,
   type Ref,
@@ -325,35 +326,6 @@ function assignRef(
  * an unmatched value yields `undefined` (the placeholder shows).
  */
 /**
- * The selected item's matchable text for joining multi-select labels:
- * the explicit `label` first, then direct string children, then the
- * string content of a top-level `SelectItemText`, else the raw value.
- * Always a string (unlike `findItemLabel`, which preserves elements
- * for single-select display).
- */
-function findItemText(
-  children: ReactNode,
-  value: string | null | undefined,
-): string {
-  if (value === null || value === undefined) return "";
-  let text: string | undefined;
-  Children.forEach(children, (child) => {
-    if (text !== undefined) return;
-    if (
-      isValidElement<SelectItemProps>(child) &&
-      child.type === SelectItem &&
-      child.props.value === value
-    ) {
-      text = selectItemText(
-        child.props.label,
-        child.props.children,
-        child.props.value,
-      );
-    }
-  });
-  return text ?? value;
-}
-/**
  * Wrap raw strings or numbers in `<Text>` so React Native / React Native Web
  * never emit an "Unexpected text node" warning when rendering into a `Pressable` host.
  */
@@ -508,17 +480,34 @@ export function Select({
   });
 
   // Trigger label: the selected item's label, joined with ", "
-  // under `multiple` (an unmatched value shows the raw value, so a
-  // selection is never silently blank).
+  // under `multiple`. Each entry keeps its label node (with caller
+  // styles, so the joined text stays readable in both themes);
+  // unmatched entries fall back to the raw value, so a selection is
+  // never silently blank. Plain strings wrap in `Text` (the
+  // `wrapText` no-warning precedent); nodes pass through untouched.
   const selectedLabel = useMemo(() => {
     if (selectedValue == null) return undefined;
     if (!Array.isArray(selectedValue)) {
       return findItemLabel(children, selectedValue);
     }
     if (selectedValue.length === 0) return undefined;
-    return selectedValue
-      .map((entry) => findItemText(children, entry))
-      .join(", ");
+    const parts: ReactNode[] = [];
+    selectedValue.forEach((entry, index) => {
+      if (index > 0) {
+        // Separator after the previous entry: entries are unique in
+        // the toggled set, so the entry key is stable (no index key).
+        parts.push(<Text key={`select-sep-${entry}`}>, </Text>);
+      }
+      const label = findItemLabel(children, entry) ?? entry;
+      parts.push(
+        typeof label === "string" || typeof label === "number" ? (
+          <Text key={`select-label-${entry}`}>{label}</Text>
+        ) : (
+          <Fragment key={`select-label-${entry}`}>{label}</Fragment>
+        ),
+      );
+    });
+    return parts;
   }, [children, selectedValue]);
 
   const selection = useMemo<SelectSelection>(

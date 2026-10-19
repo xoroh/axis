@@ -263,7 +263,6 @@ export const ListSelectDemo: Demo = {
             <SelectItem
               key={option.value}
               value={option.value}
-              label={option.label}
               style={itemStyle}
             >
               <Text style={textStyle}>{option.label}</Text>

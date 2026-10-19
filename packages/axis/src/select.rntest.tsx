@@ -1,4 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react-native";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react-native";
 import { act, useState } from "react";
 import { Text } from "react-native";
 import { PortalHost, Select, SelectItem } from "./index";
@@ -285,6 +290,8 @@ describe("Select multiple on React Native", () => {
     defaultValue?: string[];
     onValueChange?: (value: string | string[]) => void;
   }) {
+    // No `label` props: the joined trigger preserves each item's
+    // styled label node (the readable-in-dark path the demo uses).
     return (
       <Select
         testID="multi"
@@ -294,10 +301,10 @@ describe("Select multiple on React Native", () => {
         defaultValue={props.defaultValue}
         onValueChange={props.onValueChange}
       >
-        <SelectItem value="apple" label="Apple" testID="m-apple">
+        <SelectItem value="apple" testID="m-apple">
           <Text>Apple</Text>
         </SelectItem>
-        <SelectItem value="mango" label="Mango" testID="m-mango">
+        <SelectItem value="mango" testID="m-mango">
           <Text>Mango</Text>
         </SelectItem>
       </Select>
@@ -338,8 +345,11 @@ describe("Select multiple on React Native", () => {
       </PortalHost>,
     );
     await press("multi");
-    // Joined selection shows in the trigger.
-    expect(screen.getByText("Apple, Mango")).toBeTruthy();
+    // Joined selection shows in the trigger as separate label nodes
+    // (not one text node), so scope the query to the trigger.
+    const trigger = within(screen.getByTestId("multi"));
+    expect(trigger.getByText("Apple")).toBeTruthy();
+    expect(trigger.getByText("Mango")).toBeTruthy();
     await press("m-apple");
     expect(seen).toEqual([["mango"]]);
     // Trigger shows the joined label; the open list still shows the
@@ -371,6 +381,9 @@ describe("Select multiple on React Native", () => {
         </PortalHost>,
       );
     });
-    expect(screen.getByText("Apple, Mango")).toBeTruthy();
+    // Joined parts render as separate nodes inside the trigger.
+    const rerendered = within(screen.getByTestId("multi"));
+    expect(rerendered.getByText("Apple")).toBeTruthy();
+    expect(rerendered.getByText("Mango")).toBeTruthy();
   });
 });

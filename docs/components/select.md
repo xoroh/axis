@@ -140,7 +140,10 @@ and listbox inline, in-box, like the `Menu` monolith.
 Closed renders the anchor only — no scrim, no listbox. Re-pressing
 the selected item keeps it (the close still commits, no extra
 `onValueChange` fire). Under `multiple`, choosing never dismisses
-and an empty selection falls back to the placeholder.
+and an empty selection falls back to the placeholder; the trigger
+joins each selected item's label node with `", "` (caller styles
+preserved, so the joined text stays readable in both themes),
+falling back to the raw value per unmatched entry.
 
 #### `SelectRoot` (state owner)
 
