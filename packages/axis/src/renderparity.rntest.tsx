@@ -16,6 +16,7 @@ import {
   MeterIndicator,
   MeterRoot,
   MeterTrack,
+  MeterValue,
   NumberField,
   OtpField,
   Progress,
@@ -188,21 +189,34 @@ describe("render composition: display parts", () => {
     expect(style[0]).toMatchObject({ aspectRatio: 2 });
   });
 
-  it("Avatar function render observes the idle status", async () => {
+  it("AvatarImage function render observes loading status", async () => {
     await render(
       <AvatarRoot>
-        <AvatarFallback
+        <AvatarImage
+          testID="av-img"
+          source={{ uri: "https://example.com/a.png" }}
           render={(_props, state) => (
-            <Text testID="st">
-              {state.imageLoadingStatus === "idle" ? "idle" : "other"}
-            </Text>
+            <Text testID="st">{state.imageLoadingStatus}</Text>
           )}
-        >
-          <Text>AB</Text>
+        />
+        <AvatarFallback>
+          <Text>FB</Text>
         </AvatarFallback>
       </AvatarRoot>,
     );
-    expect(screen.getByText("idle")).toBeTruthy();
+    expect(screen.getByText("loading")).toBeTruthy();
+  });
+
+  it("MeterValue element render substitutes the host", async () => {
+    await render(
+      <MeterRoot value={70}>
+        <MeterTrack>
+          <MeterIndicator />
+        </MeterTrack>
+        <MeterValue render={<Text testID="sub">v</Text>} />
+      </MeterRoot>,
+    );
+    expect(screen.getByTestId("sub")).toBeTruthy();
   });
 
   it("Meter function style resolves against the clamped value", async () => {

@@ -1,12 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { type Image, Text, type View } from "react-native";
-import {
-  AvatarFallback,
-  AvatarImage,
-  AvatarRoot,
-  Progress,
-} from "./index";
+import { AvatarFallback, AvatarImage, AvatarRoot, Progress } from "./index";
 
 /**
  * Display primitives through the public entry: announced values,

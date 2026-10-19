@@ -41,7 +41,10 @@ describe("Meter on React Native", () => {
       </MeterRoot>,
     );
     const style = screen.getByTestId("m-fill").props.style;
-    const merged = Object.assign({}, ...(Array.isArray(style) ? style.flat(Infinity) : [style]));
+    const merged = Object.assign(
+      {},
+      ...(Array.isArray(style) ? style.flat(Infinity) : [style]),
+    );
     expect(merged.width).toBe("70%");
   });
 

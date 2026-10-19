@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
-import { Text, type Pressable } from "react-native";
+import { type Pressable, Text } from "react-native";
 import { CheckboxIndicator, CheckboxRoot } from "./index";
 
 /**

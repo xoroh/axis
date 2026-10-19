@@ -1,8 +1,14 @@
 import {
   AspectRatio,
-  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  AvatarRoot,
   Label,
-  Meter,
+  MeterIndicator,
+  MeterLabel,
+  MeterRoot,
+  MeterTrack,
+  MeterValue,
   Progress,
   Separator,
   Table,
@@ -24,9 +30,15 @@ export const DisplayDemo: Demo = {
   title: "Display",
   components: [
     "AspectRatio",
-    "Avatar",
+    "AvatarRoot",
+    "AvatarImage",
+    "AvatarFallback",
     "Label",
-    "Meter",
+    "MeterRoot",
+    "MeterTrack",
+    "MeterIndicator",
+    "MeterLabel",
+    "MeterValue",
     "Progress",
     "Separator",
     "Table",
@@ -79,20 +91,34 @@ export const DisplayDemo: Demo = {
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-            <Avatar
-              accessibilityLabel="Demo avatar"
-              source={{
-                uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
-              }}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                borderWidth: 2,
-                borderColor: theme.primary,
-                backgroundColor: theme.surfaceSubtle,
-              }}
-            />
+            <AvatarRoot>
+              <AvatarImage
+                accessibilityLabel="Demo avatar"
+                source={{
+                  uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
+                }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  borderWidth: 2,
+                  borderColor: theme.primary,
+                  backgroundColor: theme.surfaceSubtle,
+                }}
+              />
+              <AvatarFallback
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: theme.surfaceSubtle,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ fontSize: 16, color: theme.text }}>P</Text>
+              </AvatarFallback>
+            </AvatarRoot>
             <View>
               <Text
                 style={{ fontSize: 15, fontWeight: "600", color: theme.text }}
@@ -156,35 +182,49 @@ export const DisplayDemo: Demo = {
           </View>
 
           <View style={{ gap: 6 }}>
-            <View
-              style={{ flexDirection: "row", justifyContent: "space-between" }}
-            >
-              <Text style={{ fontSize: 13, color: theme.text }}>
-                Capacity Meter
-              </Text>
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: theme.accent }}
+            <MeterRoot accessibilityLabel="Demo meter" value={85}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
               >
-                85%
-              </Text>
-            </View>
-            <Meter
-              accessibilityLabel="Demo meter"
-              value={85}
-              style={{
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: theme.surfaceSubtle,
-                overflow: "hidden",
-                borderWidth: 1,
-                borderColor: theme.borderSubtle,
-              }}
-              fillStyle={{
-                height: "100%",
-                backgroundColor: theme.accent,
-                borderRadius: 4,
-              }}
-            />
+                <MeterLabel>
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    Capacity Meter
+                  </Text>
+                </MeterLabel>
+                <MeterValue>
+                  {(v: number) => (
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontWeight: "600",
+                        color: theme.accent,
+                      }}
+                    >{`${v}%`}</Text>
+                  )}
+                </MeterValue>
+              </View>
+              <MeterTrack
+                style={{
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: theme.surfaceSubtle,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: theme.borderSubtle,
+                }}
+              >
+                <MeterIndicator
+                  style={{
+                    height: "100%",
+                    backgroundColor: theme.accent,
+                    borderRadius: 4,
+                  }}
+                />
+              </MeterTrack>
+            </MeterRoot>
           </View>
         </View>
 

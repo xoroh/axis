@@ -226,8 +226,9 @@ type AccordionItemDisclosure = {
  * `AccordionRoot` to participate in disclosure; outside one the
  * trigger renders collapsed and inert and the panel never mounts.
  */
-const AccordionDisclosureContext =
-  createContext<AccordionDisclosure | null>(null);
+const AccordionDisclosureContext = createContext<AccordionDisclosure | null>(
+  null,
+);
 
 const AccordionItemDisclosureContext =
   createContext<AccordionItemDisclosure | null>(null);

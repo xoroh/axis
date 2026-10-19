@@ -105,7 +105,10 @@ describe("ToggleGroup on React Native", () => {
       </ToggleGroup>,
     );
     const flattened = screen.getByTestId("tg").props.style;
-    const merged = Object.assign({}, ...(Array.isArray(flattened) ? flattened : [flattened]));
+    const merged = Object.assign(
+      {},
+      ...(Array.isArray(flattened) ? flattened : [flattened]),
+    );
     expect(merged.flexDirection).toBe("column");
   });
 

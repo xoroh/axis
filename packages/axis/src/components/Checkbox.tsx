@@ -115,8 +115,9 @@ type CheckboxDisclosure = {
  * exported): the indicator must render inside a `CheckboxRoot` to
  * participate; outside one it never mounts.
  */
-const CheckboxDisclosureContext =
-  createContext<CheckboxDisclosure | null>(null);
+const CheckboxDisclosureContext = createContext<CheckboxDisclosure | null>(
+  null,
+);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)

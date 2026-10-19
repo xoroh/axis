@@ -1,7 +1,8 @@
 import {
-  Checkbox,
   CheckboxGroup,
   CheckboxGroupItem,
+  CheckboxIndicator,
+  CheckboxRoot,
   RadioGroup,
   RadioGroupItem,
   Toggle,
@@ -21,7 +22,8 @@ export const SelectionDemo: Demo = {
   slug: "selection",
   title: "Selection",
   components: [
-    "Checkbox",
+    "CheckboxRoot",
+    "CheckboxIndicator",
     "CheckboxGroup",
     "CheckboxGroupItem",
     "RadioGroup",
@@ -52,11 +54,11 @@ export const SelectionDemo: Demo = {
             Checkbox:
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Checkbox
+            <CheckboxRoot
               accessibilityLabel="Demo standalone checkbox"
               checked={checked}
               onCheckedChange={setChecked}
-              boxStyle={{
+              style={{
                 width: 22,
                 height: 22,
                 borderRadius: 6,
@@ -66,13 +68,16 @@ export const SelectionDemo: Demo = {
                 alignItems: "center",
                 justifyContent: "center",
               }}
-              checkmarkStyle={{
-                backgroundColor: theme.primaryFg,
-                width: 10,
-                height: 10,
-                borderRadius: 2,
-              }}
-            />
+            >
+              <CheckboxIndicator
+                style={{
+                  backgroundColor: theme.primaryFg,
+                  width: 10,
+                  height: 10,
+                  borderRadius: 2,
+                }}
+              />
+            </CheckboxRoot>
             <Text style={{ fontSize: 14, color: theme.text }}>
               {checked ? "Checked option" : "Unchecked option"}
             </Text>

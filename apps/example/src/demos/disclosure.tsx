@@ -1,6 +1,9 @@
 import {
-  Accordion,
+  AccordionHeader,
   AccordionItem,
+  AccordionPanel,
+  AccordionRoot,
+  AccordionTrigger,
   Collapsible,
   CollapsiblePanel,
   CollapsibleTrigger,
@@ -21,8 +24,11 @@ export const DisclosureDemo: Demo = {
   slug: "disclosure",
   title: "Disclosure",
   components: [
-    "Accordion",
+    "AccordionRoot",
     "AccordionItem",
+    "AccordionHeader",
+    "AccordionTrigger",
+    "AccordionPanel",
     "Collapsible",
     "CollapsiblePanel",
     "CollapsibleTrigger",
@@ -152,7 +158,7 @@ export const DisclosureDemo: Demo = {
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
             Accordion:
           </Text>
-          <Accordion
+          <AccordionRoot
             accessibilityLabel="Demo accordion"
             style={{
               borderRadius: 8,
@@ -161,11 +167,10 @@ export const DisclosureDemo: Demo = {
               overflow: "hidden",
             }}
           >
-            <AccordionItem
-              value="a"
-              accessibilityLabel="General section"
-              header={
-                <View
+            <AccordionItem value="a">
+              <AccordionHeader>
+                <AccordionTrigger
+                  accessibilityLabel="General section"
                   style={{
                     padding: 12,
                     backgroundColor: theme.surfaceSubtle,
@@ -185,17 +190,18 @@ export const DisclosureDemo: Demo = {
                   <Text style={{ fontSize: 12, color: theme.textSubtle }}>
                     ▼
                   </Text>
+                </AccordionTrigger>
+              </AccordionHeader>
+              <AccordionPanel>
+                <View style={{ padding: 12, backgroundColor: theme.surface }}>
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    Accordion details rendered cleanly with smooth animated
+                    reveal.
+                  </Text>
                 </View>
-              }
-            >
-              <View style={{ padding: 12, backgroundColor: theme.surface }}>
-                <Text style={{ fontSize: 13, color: theme.text }}>
-                  Accordion details rendered cleanly with smooth animated
-                  reveal.
-                </Text>
-              </View>
+              </AccordionPanel>
             </AccordionItem>
-          </Accordion>
+          </AccordionRoot>
         </View>
 
         {/* Collapsible */}

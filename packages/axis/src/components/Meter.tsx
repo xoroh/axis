@@ -261,7 +261,12 @@ export function MeterIndicator({
   );
   if (substituted !== null) return substituted;
 
-  return <View testID={testID} style={[{ width: `${disclosure.percent}%` }, style]} />;
+  return (
+    <View
+      testID={testID}
+      style={[{ width: `${disclosure.percent}%` }, style]}
+    />
+  );
 }
 
 export function MeterLabel({

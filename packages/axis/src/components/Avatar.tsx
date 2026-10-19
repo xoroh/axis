@@ -330,7 +330,9 @@ export function AvatarFallback({
   // Outside a root there is no image to wait for: always show.
   const status = disclosure?.imageLoadingStatus ?? "idle";
   const show =
-    status === "idle" || status === "error" || (status === "loading" && delayElapsed);
+    status === "idle" ||
+    status === "error" ||
+    (status === "loading" && delayElapsed);
   if (!show) return null;
 
   const state: AvatarFallbackState = { imageLoadingStatus: status };
