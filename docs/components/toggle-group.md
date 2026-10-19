@@ -2,19 +2,28 @@
 
 Multi-press group: a `View` carrying the group role, with
 `ToggleGroupItem` pressables carrying the button role and
-pressed state. Activating a pressed item removes it (toggle
-semantics, per the selection-model rule). Structure, behavior,
-and accessibility only — every visual value (`style`) is
+pressed state. `multiple` (default `false`, the Base UI default)
+selects the cardinality: single-press replaces, multi-press
+toggles membership; activating a pressed item always removes it,
+per the selection-model rule. `orientation` (default
+`"horizontal"`) selects the container's `flexDirection` as a base
+the caller style overrides. Structure, behavior, and
+accessibility only — every visual value (`style`) is
 caller-provided. State follows the controlled + uncontrolled
 pattern throughout: `value` (plus `onValueChange`) for
 controlled use, `defaultValue` for uncontrolled. This is pressed
 semantics, not checked semantics: items announce
 `accessibilityState.selected`, never `checked` — a group of
-toggle buttons, not a group of checkboxes.
+toggle buttons, not a group of checkboxes. React Native maps no
+`pressed` state key (verified against the installed RN
+`ViewAccessibility` `AccessibilityState` union, which carries
+`selected` and `checked` but nothing pressed): `selected` is the
+Toggle-precedent mapping for toggle-pressed, while `checked`
+stays reserved for checkbox/radio/switch commitments.
 
 Source of truth: `ToggleGroupProps`, `ToggleGroupState`,
 `ToggleGroupItemProps`, `ToggleGroupItemState` in `@xoroh/axis`
-(`packages/axis/src/components/ToggleGroup.tsx:32-89`).
+(`packages/axis/src/components/ToggleGroup.tsx:41-117`).
 
 ### Install
 
@@ -56,6 +65,8 @@ render inside a `ToggleGroup` to participate in selection.
 | `value` | `readonly string[]` | no | — | Controlled pressed keys. Wins over `defaultValue` when defined. |
 | `defaultValue` | `readonly string[]` | no | `[]` | Uncontrolled initial pressed keys (nothing pressed). |
 | `onValueChange` | `(value: readonly string[]) => void` | no | — | Fires with the pressed keys on every committed toggle. |
+| `multiple` | `boolean` | no | `false` | When `false` only one item can be pressed: activating an unpressed item replaces the pressed one. When `true` multiple items can be pressed (Base UI parity). |
+| `orientation` | `"horizontal" \| "vertical"` | no | `"horizontal"` | Reading order of the grouped items. Applied structurally as the container `flexDirection` (`row` / `column`); the caller `style` merges over it and wins on conflict. |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no toggles, no callbacks. |
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
@@ -64,7 +75,7 @@ render inside a `ToggleGroup` to participate in selection.
 | `render` | `RenderProp<ToggleGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root group host element. |
 
-`ToggleGroupState`: `{ value: readonly string[]; disabled: boolean }` — currently pressed item keys, and whether the whole group is disabled.
+`ToggleGroupState`: `{ value: readonly string[]; disabled: boolean; multiple: boolean; orientation: "horizontal" | "vertical" }` — currently pressed item keys, whether the whole group is disabled, the cardinality mode, and the reading order.
 
 #### `ToggleGroupItem`
 
@@ -145,6 +156,27 @@ function LockedFormat() {
 }
 ```
 
+Multiple with vertical orientation (several items stay pressed;
+the container stacks them):
+
+```tsx
+import { Text } from "react-native";
+import { ToggleGroup, ToggleGroupItem } from "@xoroh/axis";
+
+function Toppings() {
+  return (
+    <ToggleGroup multiple orientation="vertical" accessibilityLabel="Toppings">
+      <ToggleGroupItem value="cheese">
+        <Text>Cheese</Text>
+      </ToggleGroupItem>
+      <ToggleGroupItem value="mushrooms">
+        <Text>Mushrooms</Text>
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+```
+
 ### Accessibility
 
 - The root is an accessibility element (`accessible`)
@@ -163,7 +195,7 @@ function LockedFormat() {
 Every part takes `render` (an element, cloned with the part
 props merged under its own, or a `(props, state)` function) and
 value-or-function `style` over its state object (`{ value,
-disabled }`, `{ pressed, disabled }`); `data-*` attributes are
+disabled, multiple, orientation }`, `{ pressed, disabled }`); `data-*` attributes are
 deliberately absent on native — state flows through those
 functions instead (contract §11, parity D1). Verified by the
 toggle-group RNTL suites (5 tests — `docs/COVERAGE.md`).

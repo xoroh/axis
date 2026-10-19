@@ -17,3 +17,8 @@ Each line is the migration for the removed/renamed export:
 - `Calendar` removed — use the `./models` `calendar` model (`buildCalendarGrid`, `resolveCalendarFocus`, `resolveCalendarSelection`, `isCalendarDateDisabled`, `parseCalendarDate`, locale/`firstDayOfWeek`/`dir` support); state stays with the consumer via `useControllableState`.
 - `TimePicker` removed — the `time` model stays, and `TimePickerValue`/`TimePickerFormat` stay exported from it.
 - `OtpField` capture input is now behavior-hidden but focusable (invisible 1×1); override with the new `inputStyle` prop.
+- `Accordion` + `AccordionItem` (monoliths) removed — use compound `AccordionRoot` + `AccordionItem` (value identity) + `AccordionHeader` + `AccordionTrigger` + `AccordionPanel`; `multiple` (default `false`), `orientation` (default `"vertical"`).
+- `Checkbox` (monolith) removed — use compound `CheckboxRoot` + `CheckboxIndicator`; `indeterminate` supported (`mixed` checked mapping).
+- `Avatar` (monolith) removed — use compound `AvatarRoot` + `AvatarImage` + `AvatarFallback`; loading status `idle | loading | loaded | error`, fallback `delay`.
+- `Meter` (monolith) removed — use compound `MeterRoot` + `MeterTrack` + `MeterIndicator` + `MeterLabel` + `MeterValue`; `value` is now required.
+- `ToggleGroup` gains `multiple` (default `false` — single-press now replaces instead of accumulating; pass `multiple` for the old behavior) and `orientation` (default `"horizontal"`); `ToggleGroupState` gains both fields.
