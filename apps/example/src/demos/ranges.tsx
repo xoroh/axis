@@ -321,7 +321,7 @@ export const RangesDemo: Demo = {
               </Text>
             </View>
             <View style={{ alignItems: "center", gap: 8, opacity: 0.7 }}>
-              <SliderRoot value={30} disabled>
+              <SliderRoot value={30} disabled orientation="vertical">
                 <SliderValue
                   testID="demo-disabled-value"
                   style={{ fontSize: 13, color: theme.text }}
