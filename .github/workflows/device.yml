@@ -132,6 +132,12 @@ jobs:
         run: |
           cd apps/example
           npx expo prebuild --platform android --non-interactive
+      - name: Install emulator system libraries
+        # The ubuntu-24.04 image lacks libpulse, which qemu links against
+        # even with -no-audio; without it the emulator never boots.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpulse0
       - name: Build, boot and screenshot on the emulator
         uses: reactivecircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
         with:
