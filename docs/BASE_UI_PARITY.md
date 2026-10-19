@@ -66,7 +66,7 @@ Popup, Title, Description, Close.
 |---|---|---|---|
 | `DialogRoot` | `Dialog.Root` | `open`, `defaultOpen`, `onOpenChange` identical; renders no element | `modal` accepted, `"trap-focus"` behaves as modal (D5); no `handle`, `triggerId`, `actionsRef`, `onOpenChangeComplete` (D7 and no-transition consequences of D9) |
 | `DialogTrigger` | `Dialog.Trigger` | button role, `disabled`, `render`, expanded state | `nativeButton`/`payload`/`id`/`handle` omitted (D7); `data-popup-open`/`data-disabled` → D1 (state flows through `render`/`style` fns) |
-| `DialogPortal` | `Dialog.Portal` | RN `Modal` host, `testID` (Axis addition) | D2, D3 |
+| `DialogPortal` | `Dialog.Portal` | `OverlayPortal` at `PortalHost`, `testID` (Axis addition) | D2, D3 |
 | `DialogBackdrop` | `Dialog.Backdrop` | scrim dismissal, `render`, function styles with `{open}` | `disablePointerDismissal` lives on Root (ours aggregates it there; monolith spells it `dismissable`); `data-open/closed` → D1; no transition attributes (D9) |
 | `DialogPopup` | `Dialog.Popup` | surface with dialog role, `render`, function styles | D4, D5, D9 |
 | `DialogTitle` | `Dialog.Title` | heading text (`header` role) | — |
@@ -135,8 +135,8 @@ Popup, Arrow, Title, Description, Close.
 |---|---|---|---|
 | `PopoverRoot` | `Popover.Root` | `open`, `defaultOpen`, `onOpenChange`, `onDismiss` identical; renders no element | `modal` **defaults `false`** (popovers are non-modal overlays — inverse of Dialog/Menu); non-modal renders in-box with no scrim, trigger toggles |
 | `PopoverTrigger` | `Popover.Trigger` | tap toggle, button role, `disabled`, `render`, expanded state, anchor registration | No hover (D8); `data-popup-open`/`data-disabled` → D1 |
-| `PopoverPortal` | `Popover.Portal` | RN `Modal` host when modal, in-box otherwise | D2 (no `container`) |
-| `PopoverBackdrop` | `Popover.Backdrop` | scrim dismissal **modal-only** (without a Modal host a full-fill scrim would trap app touches with no dismissal path) | `data-open/closed` → D1; no transition attributes (D9) |
+| `PopoverPortal` | `Popover.Portal` | `OverlayPortal` at `PortalHost` when modal, in-box otherwise | D2 (no `container`) |
+| `PopoverBackdrop` | `Popover.Backdrop` | scrim dismissal **modal-only** (without an overlay host a full-fill scrim would trap app touches with no dismissal path) | `data-open/closed` → D1; no transition attributes (D9) |
 | `PopoverPositioner` | `Popover.Positioner` | `side`, `align`, `sideOffset`, `alignOffset` against the measured trigger anchor | No `Arrow` coupling (arrow geometry is caller style) |
 | `PopoverPopup` | `Popover.Popup` | content region, `render`, function styles, `ref` | **No role claim** — RN defines no popover role (verified against RN 0.87 `ViewAccessibility`); labelled region instead (honest silence) |
 | `PopoverTitle` | `Popover.Title` | heading text (`header` role) | — |
