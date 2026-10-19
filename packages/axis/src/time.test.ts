@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  addTimeMinutes,
+  formatTimeParts,
   formatTimeValue,
   minutesForStep,
   normalizeTimeValue,
@@ -128,5 +130,79 @@ describe("12-hour is presentation, not state", () => {
     const shown = formatTimeValue(state, "12h");
     expect(toTwentyFourHour(shown.hours, shown.period)).toBe(state.hours);
     expect(normalizeTimeValue(state).minutes).toBe(30);
+  });
+});
+
+describe("formatTimeParts", () => {
+  it("zero-pads 24-hour parts with no period", async () => {
+    expect(formatTimeParts({ hours: 7, minutes: 5 })).toEqual({
+      hours: "07",
+      minutes: "05",
+      period: null,
+    });
+  });
+
+  it("renders 12-hour parts with the locale day period", async () => {
+    expect(formatTimeParts({ hours: 15, minutes: 5 }, "12h", "en-US")).toEqual({
+      hours: "3",
+      minutes: "05",
+      period: "PM",
+    });
+    expect(
+      formatTimeParts({ hours: 0, minutes: 0 }, "12h", "en-US").period,
+    ).toBe("AM");
+  });
+
+  it("localizes the day period", async () => {
+    const { period } = formatTimeParts(
+      { hours: 15, minutes: 0 },
+      "12h",
+      "de-DE",
+    );
+    expect(typeof period).toBe("string");
+    expect((period as string).length).toBeGreaterThan(0);
+  });
+});
+
+describe("addTimeMinutes", () => {
+  it("steps forward and backward", async () => {
+    expect(addTimeMinutes({ hours: 3, minutes: 30 }, 15)).toEqual({
+      hours: 3,
+      minutes: 45,
+    });
+    expect(addTimeMinutes({ hours: 3, minutes: 30 }, -45)).toEqual({
+      hours: 2,
+      minutes: 45,
+    });
+  });
+
+  it("wraps past midnight in both directions", async () => {
+    expect(addTimeMinutes({ hours: 23, minutes: 50 }, 30)).toEqual({
+      hours: 0,
+      minutes: 20,
+    });
+    expect(addTimeMinutes({ hours: 0, minutes: 10 }, -30)).toEqual({
+      hours: 23,
+      minutes: 40,
+    });
+  });
+
+  it("snaps down onto the step grid", async () => {
+    // 3:50 snaps to 3:45, +10 lands on 3:55, snapped back to 3:45.
+    expect(addTimeMinutes({ hours: 3, minutes: 50 }, 10, 15)).toEqual({
+      hours: 3,
+      minutes: 45,
+    });
+  });
+
+  it("ignores garbage deltas and steps", async () => {
+    expect(addTimeMinutes({ hours: 3, minutes: 30 }, Number.NaN)).toEqual({
+      hours: 3,
+      minutes: 30,
+    });
+    expect(addTimeMinutes({ hours: 3, minutes: 30 }, 10, 0)).toEqual({
+      hours: 3,
+      minutes: 40,
+    });
   });
 });

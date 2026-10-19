@@ -7,8 +7,10 @@ import {
   parseCalendarDate,
   parseCalendarMonth,
   resolveCalendarFocus,
+  resolveCalendarMonthNames,
   resolveCalendarSelection,
   resolveCalendarWeekdayNames,
+  resolveLocaleFirstDay,
   shiftCalendarMonth,
   toCalendarDate,
   toCalendarMonth,
@@ -228,5 +230,144 @@ describe("calendar weekday names", () => {
     const monday = resolveCalendarWeekdayNames("en-US", 1);
     expect(monday[0]).toBe(names[1]);
     expect(monday[6]).toBe(names[0]);
+  });
+});
+
+describe("calendar locale names", () => {
+  it("names twelve months in calendar order", async () => {
+    const long = resolveCalendarMonthNames("en-US", "long");
+    expect(long).toHaveLength(12);
+    expect(long[0]).toBe("January");
+    expect(long[11]).toBe("December");
+    expect(resolveCalendarMonthNames("en-US", "short")[0]).toBe("Jan");
+  });
+
+  it("localizes month names", async () => {
+    expect(resolveCalendarMonthNames("de-DE")[0]).toBe("Januar");
+  });
+
+  it("resolves the locale week start", async () => {
+    expect(resolveLocaleFirstDay("en-US")).toBe(0);
+    expect(resolveLocaleFirstDay("de-DE")).toBe(1);
+  });
+
+  it("prefers live weekInfo when the runtime provides it", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      const withWeekInfo = (firstDay: number) =>
+        class {
+          constructor(public tag: string) {}
+          getWeekInfo() {
+            return { firstDay };
+          }
+        };
+      (Intl as unknown as Record<string, unknown>).Locale = withWeekInfo(6);
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(6);
+      (Intl as unknown as Record<string, unknown>).Locale = withWeekInfo(1);
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(1);
+      // weekInfo as a data property (no getWeekInfo method).
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        weekInfo = { firstDay: 7 };
+        constructor(public tag: string) {}
+      };
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(0);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
+  it("falls back to the region table without weekInfo", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      // No Intl.Locale at all: plain BCP-47 parse drives the table.
+      (Intl as unknown as Record<string, unknown>).Locale = undefined;
+      expect(resolveLocaleFirstDay("en-US")).toBe(0);
+      expect(resolveLocaleFirstDay("en")).toBe(0);
+      expect(resolveLocaleFirstDay("en-GB")).toBe(1);
+      expect(resolveLocaleFirstDay("de-DE")).toBe(1);
+      expect(resolveLocaleFirstDay("ar-EG")).toBe(6);
+      expect(resolveLocaleFirstDay("ar")).toBe(6);
+      expect(resolveLocaleFirstDay("fa-IR")).toBe(6);
+      expect(resolveLocaleFirstDay("dv-MV")).toBe(5);
+      expect(resolveLocaleFirstDay("fr")).toBe(1);
+      expect(resolveLocaleFirstDay("zh-Hant-TW")).toBe(0);
+      expect(resolveLocaleFirstDay("not-a-locale!!")).toBe(1);
+      // -u-fw- wins over every other lookup, even without Intl.
+      expect(resolveLocaleFirstDay("en-GB-u-fw-sun")).toBe(0);
+      expect(resolveLocaleFirstDay("de-u-fw-sun")).toBe(0);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
+  it("uses maximize() for the region when weekInfo is absent", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      // maximize() without getWeekInfo: region drives the table.
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        constructor(public tag: string) {}
+        maximize() {
+          return { region: "EG" };
+        }
+      };
+      expect(resolveLocaleFirstDay("ar")).toBe(6);
+      // maximize() throwing falls through to the subtag parse.
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        constructor(public tag: string) {}
+        maximize(): never {
+          throw new Error("no maximize");
+        }
+      };
+      expect(resolveLocaleFirstDay("ar-EG")).toBe(6);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
+  it("builds a Monday-first grid from the locale default", async () => {
+    const firstDay = resolveLocaleFirstDay("de-DE");
+    const { weeks, weekdayNames } = buildCalendarGrid("2026-03", {
+      firstDayOfWeek: firstDay,
+    });
+    expect(weekdayNames).toHaveLength(7);
+    expect(weeks.flat().filter(Boolean)).toHaveLength(31);
+  });
+});
+
+describe("calendar cross-month focus", () => {
+  it("moves arrows across month ends", async () => {
+    expect(resolveCalendarFocus("2026-01-31", "ArrowRight")).toBe("2026-02-01");
+    expect(resolveCalendarFocus("2026-03-01", "ArrowLeft")).toBe("2026-02-28");
+    expect(resolveCalendarFocus("2026-01-30", "ArrowDown")).toBe("2026-02-06");
+    expect(resolveCalendarFocus("2026-03-02", "ArrowUp")).toBe("2026-02-23");
+  });
+
+  it("moves arrows across year ends", async () => {
+    expect(resolveCalendarFocus("2025-12-31", "ArrowRight")).toBe("2026-01-01");
+    expect(resolveCalendarFocus("2026-01-01", "ArrowLeft")).toBe("2025-12-31");
+  });
+
+  it("holds the correct days across a DST weekend", async () => {
+    // US DST 2026 starts Sunday March 8: UTC date math has no DST, so
+    // Saturday -> Sunday -> Monday resolve exactly.
+    expect(resolveCalendarFocus("2026-03-07", "ArrowRight")).toBe("2026-03-08");
+    expect(resolveCalendarFocus("2026-03-09", "ArrowLeft")).toBe("2026-03-08");
+    expect(resolveCalendarFocus("2026-03-08", "ArrowDown")).toBe("2026-03-15");
+  });
+
+  it("keeps Home and End grid-local", async () => {
+    // April 2026 starts Wednesday: Home on the 2nd clamps to the 1st.
+    expect(resolveCalendarFocus("2026-04-02", "Home")).toBe("2026-04-01");
+    expect(resolveCalendarFocus("2026-04-30", "End")).toBe("2026-04-30");
+  });
+
+  it("marks range cells even when disabled", async () => {
+    const { weeks } = buildCalendarGrid("2026-03", {
+      range: { start: "2026-03-04", end: "2026-03-06" },
+      isDateDisabled: (iso) => iso === "2026-03-05",
+    });
+    const at = (iso: string) => weeks.flat().find((c) => c?.iso === iso);
+    expect(at("2026-03-05")?.disabled).toBe(true);
+    expect(at("2026-03-05")?.range).toBe("inside");
   });
 });
