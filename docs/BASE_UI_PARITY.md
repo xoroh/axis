@@ -10,6 +10,11 @@ mature RN libraries serve as implementation references for native
 behavior, accessibility, gestures, and portals only: no dependency,
 no wholesale copying.
 
+rn-primitives reference: 1bebe66b12e7ddd3c313226e0bc2ee02b6e78ab4 (2026-08-08, upstream `main` HEAD at review time).
+Overlays behaviour review (2026-10-19): Dialog, AlertDialog,
+Popover, Tooltip, Portal, Overlay, Toast compared file-by-file
+against that SHA; every remaining difference is a D-rule below.
+
 Systematic deviations (recorded once here, not per component —
 see contract §11):
 
