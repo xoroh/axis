@@ -190,7 +190,9 @@ export const ListSelectDemo: Demo = {
         <Select
           accessibilityLabel="Demo select"
           value={sort}
-          onValueChange={setSort}
+          onValueChange={(next) => {
+            if (!Array.isArray(next)) setSort(next);
+          }}
           placeholder={<Text style={placeholderStyle}>Sort by</Text>}
           style={rowStyle}
           listStyle={listStyle}
