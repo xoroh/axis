@@ -12,7 +12,7 @@
   "author": "Xoroh",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xoroh/axis.git",
+    "url": "git+https://github.com/xoroh/axis.git",
     "directory": "packages/axis"
   },
   "homepage": "https://github.com/xoroh/axis",
