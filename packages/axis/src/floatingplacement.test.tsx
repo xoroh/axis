@@ -9,6 +9,8 @@ import {
   type MeasurableRef,
   useFloatingPlacement,
 } from "./components/useFloatingPlacement";
+import { Tooltip } from "./index";
+import type { Placement } from "./positioning";
 
 /**
  * Placement resolving through the hook with an injectable anchor node.
@@ -17,10 +19,11 @@ import {
  * the node directly: a web element shape (a rect with no `measure`,
  * the way React Native Web host refs behave where `measure` never
  * delivers) and the native shape (a synchronous `measure` callback).
- * `react-native` is mocked to just the viewport hook because the
- * module under test must never load the real native runtime here —
- * and because native proof files (`*.rntest.tsx`) may only import
- * the public entry, this unit lives in vitest instead.
+ * `react-native` is mocked to just the viewport hook plus string host
+ * stubs because the modules under test must never load the real
+ * native runtime here — and because native proof files
+ * (`*.rntest.tsx`) may only import the public entry, this unit lives
+ * in vitest instead.
  */
 
 vi.mock("react-native", () => ({
@@ -30,6 +33,12 @@ vi.mock("react-native", () => ({
     scale: 2,
     fontScale: 1,
   }),
+  StyleSheet: { create: (styles: unknown) => styles },
+  // String hosts: props and refs pass straight through to the test
+  // renderer, which attaches `createNodeMock` results as ref nodes.
+  View: "div",
+  Pressable: "div",
+  Text: "span",
 }));
 
 const CONTENT_SIZE = { width: 100, height: 40 };
@@ -140,5 +149,57 @@ describe("useFloatingPlacement anchor shapes", () => {
     const floating = resolve({ node: webNode(), active: false });
     expect(floating.measured).toBe(false);
     expect(floating.style.opacity).toBe(0);
+  });
+});
+
+describe("Tooltip monolith placement default", () => {
+  // Mid-screen anchor: neither side overflows, so the preferred side
+  // stands and the two candidates land 80 apart.
+  const anchorNode = {
+    getBoundingClientRect: () => ({
+      left: 10,
+      top: 600,
+      width: 100,
+      height: 40,
+    }),
+  };
+
+  function openTip(placement?: Placement): Record<string, unknown> {
+    let root: ReturnType<typeof create> | undefined;
+    act(() => {
+      root = create(
+        <Tooltip open placement={placement} content="Hint">
+          Anchor
+        </Tooltip>,
+        {
+          createNodeMock: () => anchorNode,
+        },
+      );
+    });
+    // React 19 moved the query API onto the test instance.
+    const tree = root?.root;
+    act(() => {
+      const tip = tree?.findByProps({ accessibilityRole: "tooltip" });
+      tip?.props.onLayout({
+        nativeEvent: { layout: { width: 100, height: 40 } },
+      });
+    });
+    const style = tree?.findByProps({ accessibilityRole: "tooltip" }).props
+      .style;
+    root?.unmount();
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    return flat as Record<string, unknown>;
+  }
+
+  it("prefers the documented top side by default", () => {
+    // `placement` omitted: the tip hangs above the anchor (600 − 40).
+    // Before the `?? "top"` fix the hook fell back to `"bottom"`.
+    expect(openTip()).toMatchObject({ left: 10, top: 560 });
+  });
+
+  it("still honors an explicit placement", () => {
+    expect(openTip("bottom")).toMatchObject({ left: 10, top: 640 });
   });
 });

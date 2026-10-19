@@ -170,3 +170,31 @@ Lead decision: accept vitest coverage for `useFloatingPlacement`
 (status quo, no API change) or promote the hook to the barrel for an
 RNTL proof. After that: align the example/axis React Native copies,
 then the standing device/a11y pass.
+
+## Addendum — lead follow-ups (same PR, same scope)
+
+1. **Tooltip monolith placement default.** `TooltipProps` documented
+   `placement` default `"top"`, but the monolith call site passed the
+   bare prop into `useFloatingPlacement`, whose own fallback is
+   `"bottom"` — so the concise API opened below the anchor while the
+   compound `TooltipPositioner` (already `side ?? "top"`) opened
+   above it. Fixed at the monolith call site (`placement ?? "top"`);
+   the compound needed no change. Covered by two new vitest cases in
+   `floatingplacement.test.tsx` rendering the public `Tooltip` with
+   string hosts and a `createNodeMock` web-shape anchor: default
+   resolves to `{left: 10, top: 560}` (above the mid-screen anchor),
+   explicit `"bottom"` to `{left: 10, top: 640}`. Fail-before shown
+   by restoring the pre-fix call site (default case fails, explicit
+   case passes). The eight `overlays-tooltip-*.png` evidence shots
+   were re-captured: the monolith tip now sits above its anchor.
+2. **Stale overlay-root comments in `Tooltip.tsx`.** The "when the
+   overlay root lands, tips can host there instead" note predates the
+   #60 landing; rewritten to state the decided position (the shared
+   root landed for modal surfaces, Tooltip deliberately stays off
+   it). Only occurrence; no other "lands"/"seam" references existed.
+3. **`void modal;` in `Dialog.tsx`.** Dead line removed; `modal` was
+   already consumed by the `OverlayRoot` prop below it. Typecheck
+   confirms no unused-variable fallout.
+4. Gates re-ran after the follow-ups: both typechecks, lint, vitest
+   (28 files / 261 tests), jest (56 suites / 456 tests), boundary,
+   demos, build — all green; CI `validate` green on the PR.

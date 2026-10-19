@@ -407,7 +407,6 @@ export function DialogRoot({
   modal = true,
   children,
 }: DialogRootProps): React.JSX.Element {
-  void modal;
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,

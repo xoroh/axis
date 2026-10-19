@@ -132,7 +132,10 @@ export function Tooltip({
 
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
-    placement,
+    // Documented default `"top"` lives here, not in the hook: the
+    // hook's own fallback (`"bottom"`) serves families whose docs
+    // promise it.
+    placement: placement ?? "top",
     active: visible ?? false,
   });
 
@@ -194,9 +197,10 @@ export function Tooltip({
 /* timing (delays run from the long-press commit — hover has no touch  */
 /* equivalent). Omitted Base UI pieces are documented deviations, not  */
 /* oversights: no `Modal` portal host (a non-modal hint must never     */
-/* trap touches; the tip paints in-box like the monolith — when the    */
-/* overlay root lands, tips can host there instead; positioning stays  */
-/* separable from the host either way), no hover or keyboard           */
+/* trap touches; the tip paints in-box like the monolith — the shared  */
+/* overlay root has landed for modal surfaces, and Tooltip deliberately */
+/* stays off it; positioning stays separable from the host either way), */
+/* no hover or keyboard                                                */
 /* traversal (D8), no animation states (D9), and no `data-*`           */
 /* attributes (D1). Dismissal is a second long-press or the            */
 /* so there is no Backdrop part.                                        */
