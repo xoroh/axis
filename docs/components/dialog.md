@@ -73,9 +73,8 @@ painting at the app's `PortalHost` — the surface escapes
 clipped parents without an RN `Modal` of its own (one root
 presents every layer: Android back, stacking, focus, and scroll
 lock belong to the `OverlayRoot` above). `modal` defaults to
-`true` on the compound root (`"trap-focus"` behaves as modal —
-focus containment still needs the `focusTrap` RN adaptation);
-the monolith is always modal. `disablePointerDismissal`
+`true` on the compound root (`"trap-focus"` behaves as modal).
+`modal` is always on for the monolith. `disablePointerDismissal`
 (default `false`; the monolith spells it `dismissable`,
 default `true`) flows into `dismissable` and every dismiss
 branch (`outsidePointer`, `systemBack`, `escape`); `onDismiss`
@@ -83,6 +82,36 @@ fires on scrim (or request-close) dismissal before
 `onOpenChange(false)`. No family part takes `useModal` itself —
 the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
 `Overlay` compositions (see `docs/components/overlay.md`).
+
+### Focus
+
+SR focus moves into the surface on open and restores to the
+trigger or `finalFocus` on close. The default initial target is
+the first focusable element (the caller-marked `Close`, else
+the first stop, else `Title`), else the popup itself; on web
+the first tabbable element in the popup wins unless a target is
+marked. Set `initialFocus` (element, ref, function of the open
+interaction, or `false`) on the root or popup (popup wins), and
+`finalFocus` the same way. If the trigger unmounted, the web
+falls back to the nearest focusable ancestor while it is still
+connected (D11); on native nothing happens, never a throw.
+
+Modality: on iOS the popup claims
+`accessibilityViewIsModal` (top layer only — the scrim sibling
+hides from VoiceOver exactly like the trigger does); on
+Android the app root beside `PortalHost` takes
+`importantForAccessibility="no-hide-descendants"` while a modal
+is open (see `useModalActive`); on web the popup carries
+`aria-modal` and traps Tab. Dialog closes in the compound get
+an `initialFocus` marker prop for the default-target marking.
+
+### Reasons
+
+`onOpenChange(open, details)` carries `details.reason`:
+`trigger-press` (trigger toggle, either direction),
+`outside-press` (scrim/backdrop press), `escape-key` (Android
+hardware back, iOS VoiceOver scrub), `close-press` (Close
+press).
 
 ### Props
 
@@ -111,10 +140,12 @@ the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed open or dismissal. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state on every committed open or dismissal, with the reason. |
 | `onDismiss` | `() => void` | no | — | Fires on backdrop (or request-close) dismissal, before `onOpenChange(false)`. |
 | `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss (Base UI parity name for the monolith's `dismissable={false}`). |
-| `modal` | `boolean \| "trap-focus"` | no | `true` | Kept for Base UI parity. The surface always presents modally on native; `"trap-focus"` behaves as modal (focus containment still needs the `focusTrap` RN adaptation). |
+| `modal` | `boolean \| "trap-focus"` | no | `true` | The surface always presents modally on native; `"trap-focus"` behaves as modal. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the popup's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 
 `DialogRootState`: `{ open: boolean }` — the current open state.
@@ -161,11 +192,14 @@ plain host with no label and no handler — no fake affordance.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the surface. |
+| `role` | `"dialog" \| "alertdialog"` | no | `"dialog"` | Surface role; AlertDialog passes `"alertdialog"`. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the surface. |
 | `style` | `StateStyle<DialogPopupState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of popup state. |
 | `children` | `ReactNode` | no | — | Surface content. |
 | `render` | `RenderProp<DialogPopupState, SlotProps>` | no | — | Element or function substitution; role and label stay on the part. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the surface `View`. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the root's). Default: first focusable element (marked, stops), else Title, else the popup. |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 
 `DialogPopupState`: `{ open: boolean }`. Renders `null`
 outside a root and while closed.
@@ -198,6 +232,7 @@ outside a root and while closed.
 | `style` | `StateStyle<DialogCloseState, StyleProp<ViewStyle>>` | no | — | Close style: a value or a function of close state. |
 | `children` | `ReactNode` | no | — | Button content. |
 | `render` | `RenderProp<DialogCloseState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `initialFocus` | `boolean` | no | `false` | Mark this Close as the default initial focus target (how AlertDialog marks Cancel). |
 
 `DialogCloseState`: `{ disabled: boolean }`. Outside a root
 there is nothing to close: the button renders inert rather

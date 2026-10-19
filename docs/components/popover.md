@@ -93,6 +93,33 @@ this stack: scrim and box present through `Portal` at the app's
 `PortalHost` — above sibling content instead of inside the anchor
 wrapper — always non-modal by design.
 
+### Focus
+
+SR focus moves into the box on open and restores to the anchor
+on close — silent when the box carries no label. The default
+initial target is the first focusable element (marked, stops),
+else Title, else the box; on web the first tabbable element
+wins unless a target is marked. Set `initialFocus` (element,
+ref, function of the open interaction, or `false`) on the root
+or popup (popup wins), and `finalFocus` the same way. If the
+anchor unmounted, the web falls back to the nearest focusable
+ancestor while it is still connected (D11); on native nothing
+happens, never a throw.
+
+Modality: modal popovers claim iOS `accessibilityViewIsModal`
+(top layer only), Android app-root hiding, and web `aria-modal`
+plus the Tab trap. Non-modal popovers (the default) claim
+nothing — neither trap focus nor hide anything. Monoliths are
+always non-modal with the same move/restore.
+
+### Reasons
+
+`onOpenChange(open, details)` carries `details.reason`:
+`trigger-press` (tap toggle, either direction),
+`outside-press` (scrim/backdrop press), `escape-key` (Android
+hardware back, iOS VoiceOver scrub). Monolith and compound
+report the same reasons.
+
 ### Props
 
 #### `Popover` (concise inline API)
@@ -101,7 +128,7 @@ wrapper — always non-modal by design.
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismiss. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state on every committed toggle or dismiss, with the reason. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `placement` | `Placement` | no | `"bottom"` | Preferred side (the `resolveFloatingRect` fallback). Clamped into the viewport. |
 | `children` | `ReactNode` | yes | — | Anchor content the popover is attached to. Tap toggles. |
@@ -122,10 +149,12 @@ Dialog there is no `Modal` here: scrim and box present through
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed toggle or dismissal. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state on every committed toggle or dismissal, with the reason. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `disablePointerDismissal` | `boolean` | no | `false` | When `true`, backdrop press does not dismiss. |
 | `modal` | `boolean` | no | `false` | Whether the open popover presents modally (an overlay host with a scrim). Default `false` — popovers are non-modal overlays; the portal presents through `Portal` at the app's `PortalHost` and the trigger stays pressable. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the popup's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the anchor). |
 | `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Accepted for ref-spreading callers; the root renders no element. |
 
@@ -197,6 +226,8 @@ outside a root and while closed.
 | `children` | `ReactNode` | no | — | Popup content. |
 | `render` | `RenderProp<PopoverPopupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the content `View`. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the root's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the anchor). |
 
 `PopoverPopupState`: `{ open: boolean }`. Renders `null`
 outside a root and while closed.
@@ -229,6 +260,7 @@ outside a root and while closed.
 | `style` | `StateStyle<PopoverCloseState, StyleProp<ViewStyle>>` | no | — | Close style: a value or a function of close state. |
 | `children` | `ReactNode` | no | — | Button content. |
 | `render` | `RenderProp<PopoverCloseState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
+| `initialFocus` | `boolean` | no | `false` | Mark this Close as the default initial focus target. |
 
 `PopoverCloseState`: `{ disabled: boolean }`. Outside a root
 there is nothing to close: the button renders inert rather

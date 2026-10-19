@@ -1,20 +1,38 @@
 ## Drawer
 
-Edge-anchored panel with snap points and swipe dismissal (Base UI
-naming): closed renders `null`; open mounts the surface anchored to
-its `side` (`"left"` default, `"right"`, `"top"`, `"bottom"`), with
-a scrim layer filling the rest. Structure, behavior, and
-accessibility only — every visual value (`overlayStyle`,
-`surfaceStyle`) is caller-provided; cross-axis size (width for
-side drawers, height for top/bottom) especially is caller
-geometry. State follows the controlled + uncontrolled pattern
-throughout: `open` (plus `onOpenChange`) for visibility,
-`snapPoint` (plus `onSnapPointChange`) for the active snap value.
-A single-part API ships; the bottom-sheet `Sheet` folded into this
-family in ADR-012 — `side="bottom"` with `snapPoints` is the sheet.
+Edge-anchored panel with snap points and swipe dismissal.
+Compound anatomy per Base UI (Root, Trigger, Portal, Backdrop,
+Popup, Title, Description, Close) plus `DrawerHandle` — the
+visible grip carrying `dismiss`/`expand`/`collapse`
+accessibility actions (the screen-reader gesture parity for
+drag). State (open, snap, drag, extent) lives in `DrawerRoot`,
+which renders no element; measurement, scrim, surface, and
+actions compose below it. Closed renders `null`; open mounts the
+surface anchored to its `side` (`"left"` default, `"right"`,
+`"top"`, `"bottom"`), with a scrim layer filling the rest. The
+bottom-sheet `Sheet` folded into this family in ADR-012 —
+`side="bottom"` with `snapPoints` is the sheet.
 
-Source of truth: `DrawerProps`, `DrawerState`, `DrawerSnapPoint` in `@xoroh/axis`
-(`packages/axis/src/components/Drawer.tsx:93-164`).
+Structure, behavior, and accessibility only — every visual value
+is caller-provided; cross-axis size (width for side drawers,
+height for top/bottom) especially is caller geometry. State
+follows the controlled + uncontrolled pattern throughout: `open`
+(plus `onOpenChange`) for visibility, `snapPoint` (plus
+`onSnapPointChange`) for the active snap value.
+
+`snapPoints` are preset resting positions along the dismiss
+axis: numbers in (0, 1] are fractions of the measured container
+extent (width for `left`/`right`, height for `top`/`bottom`);
+numbers greater than 1 are dp; `'NNNpx'` strings are dp. Anything
+else resolves out; an empty resolution falls back to `[1]`
+(fully open).
+
+Source of truth: `DrawerRootProps`, `DrawerRootState`,
+`DrawerTriggerProps`, `DrawerPortalProps`,
+`DrawerBackdropProps`, `DrawerPopupProps`, `DrawerTitleProps`,
+`DrawerDescriptionProps`, `DrawerCloseProps`,
+`DrawerHandleProps`, `DrawerSide`, `DrawerSnapPoint` in
+`@xoroh/axis` (`packages/axis/src/components/Drawer.tsx`).
 
 ### Install
 
@@ -41,205 +59,224 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
-| `Drawer` | `Drawer.Root` | The whole API: edge-anchored surface + scrim at `PortalHost`, with Base UI-exact `snapPoints`, controlled `snapPoint` + `onSnapPointChange`, swipe-to-dismiss, and modal + non-modal. |
+| `DrawerRoot` | `Drawer.Root` | State owner (`open`/`snapPoint`/drag/extent); renders no element. |
+| `DrawerTrigger` | `Drawer.Trigger` | Button role, expanded state, tap toggles. |
+| `DrawerPortal` | `Drawer.Portal` | `OverlayPortal` host at `PortalHost` plus the measured full-bleed container. |
+| `DrawerBackdrop` | `Drawer.Backdrop` | Scrim dismissal (modal + dismissable); otherwise an inert host. |
+| `DrawerPopup` | `Drawer.Popup` | Edge-anchored surface with drag, translate, and dialog role. |
+| `DrawerTitle` | `Drawer.Title` | Heading text (`header` role). |
+| `DrawerDescription` | `Drawer.Description` | Descriptive text. |
+| `DrawerClose` | `Drawer.Close` | Button that closes the root. |
+| `DrawerHandle` | — (Axis addition) | Visible grip: button role, `dismiss`/`expand`/`collapse` accessibility actions, caller-styled. |
 
-There are no compound parts: no `Root`/`Trigger`/`Portal`/
-`Positioner` split. Side drawers (`left`/`right`) snap along the
-container width; top/bottom sheets snap along the height.
+Base UI ships no Handle part (its demos use a plain `div`);
+Axis adds one because a drag-only grip strands screen-reader
+users — the actions are gesture parity, not chrome.
 
 ### Overlay hosting
 
 The drawer presents through `OverlayRoot` + `OverlayPortal`
 painting at the app's `PortalHost` — the surface escapes
-clipped parents without an RN `Modal` of its own (one root
-presents every layer: Android back, stacking, focus, and scroll
-lock belong to the `OverlayRoot` above). `modal` (default
-`true`) forwards to the overlay root; `dismissable` (default
-`true`) flows into `dismissable` and every dismiss branch
-(`outsidePointer`, `systemBack`, `escape`); `onDismiss` fires on
-scrim, drag, or request-close dismissal before
-`onOpenChange(false)`. No family part takes `useModal` itself —
-the RN `Modal` host is an `OverlayRoot`-level opt-in for direct
-`Overlay` compositions (see `docs/components/overlay.md`).
+clipped parents without an RN `Modal` of its own. `modal`
+(default `true`) forwards to the overlay root; `dismissable`
+(default `true`) flows into `dismissable` and every dismiss
+branch (`outsidePointer`, `systemBack`, `escape`);
+`onDismiss` fires on scrim, drag, or request-close dismissal
+before `onOpenChange(false)`. Drag-away dismissal reports
+reason `none` (Base UI has no gesture-dismiss reason). A
+non-modal drawer keeps its scrim inert; Android back still
+dismisses when `dismissable` (it follows `dismissable` alone).
+
+### Focus
+
+SR focus moves into the popup on open. The default initial
+target is the popup container or Title (announced with its
+label — never a destructive action), or the caller-marked
+Close; on web the marked target wins, else Title, else the
+container (stops and the DOM tab order are skipped for
+drawers). `initialFocus` (element, ref, function of the open
+interaction, or `false`) may also be set on the root or popup,
+with the popup winning; `finalFocus` (or the trigger) takes
+focus back on close. If the trigger unmounted, the web falls
+back to the nearest focusable ancestor while it is still
+connected (D11); on native nothing happens, never a throw.
+
+Modality: on iOS the popup claims `accessibilityViewIsModal`
+(top layer only — non-modal drawers claim nothing); on Android
+the app root beside `PortalHost` takes
+`importantForAccessibility="no-hide-descendants"` while a modal
+is open (see `useModalActive`); on web the popup carries
+`aria-modal` and traps Tab.
+
+### Reasons
+
+`onOpenChange(open, details)` carries `details.reason`:
+`trigger-press` (trigger toggle, either direction),
+`outside-press` (scrim press), `escape-key` (Android back,
+iOS VoiceOver scrub), `close-press` (Close press or Handle
+dismiss action), `none` (drag-release dismissal — Base UI has
+no gesture-dismiss reason, and a drag is neither an outside
+press nor a close press). `onSnapPointChange(snapPoint)` fires
+on every committed settle.
 
 ### Props
 
-#### `Drawer` (single-part API)
+#### `DrawerRoot` (state owner)
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `open` | `boolean` | no | — | Controlled open state. Wins over `defaultOpen` when defined. |
 | `defaultOpen` | `boolean` | no | `false` | Uncontrolled initial open state. |
-| `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every committed dismiss. |
+| `onOpenChange` | `(open: boolean, details?: { reason }) => void` | no | — | Fires with the next open state on every committed open or dismissal, with the reason. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim, drag, or request-close dismissal, before `onOpenChange(false)`. |
-| `dismissable` | `boolean` | no | `true` | When `false`, scrim press and drag-away do nothing: the drawer can only close through the caller's own actions. |
-| `modal` | `boolean` | no | `true` | Modal presentation, forwarded to the overlay root. `false` keeps the scrim inert (no dismiss) regardless of `dismissable`. |
-| `side` | `"left" \| "right" \| "top" \| "bottom"` | no | `"left"` | Anchored edge. |
-| `snapPoints` | `Array<number \| string>` | no | `[1]` | Preset resting positions along the dismiss axis. Numbers in (0, 1] are fractions of the measured container extent; numbers greater than 1 are dp; `'NNNpx'` strings are dp. Sorted, deduped; garbage resolves out, empty falls back to `[1]`. |
-| `snapPoint` | `number \| string \| null` | no | — | Controlled active snap point value. Unknown values resolve to the nearest snap point. |
-| `defaultSnapPoint` | `number \| string \| null` | no | — | Uncontrolled initial snap point value. Default: the first snap point. |
-| `onSnapPointChange` | `(snapPoint: number \| string) => void` | no | — | Fires with the snap point value on every committed settle. |
-| `children` | `ReactNode` | no | — | Drawer content. |
+| `dismissable` | `boolean` | no | `true` | When `false`, scrim press and drag-away do nothing. |
+| `modal` | `boolean` | no | `true` | Modal presentation; `false` keeps the scrim inert. |
+| `side` | `"left" \| "right" \| "top" \| "bottom"` | no | `"left"` | Anchored edge (static). |
+| `snapPoints` | `DrawerSnapPoint[]` | no | `[1]` | Resting positions (fractions, dp, or px strings). |
+| `snapPoint` | `DrawerSnapPoint \| null` | no | — | Controlled active snap point value. |
+| `defaultSnapPoint` | `DrawerSnapPoint \| null` | no | first | Uncontrolled initial snap point value. |
+| `onSnapPointChange` | `(snapPoint: DrawerSnapPoint) => void` | no | — | Fires on every committed settle. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the popup's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
+| `children` | `ReactNode` | no | — | Trigger, Portal, and shared content. Renders no element itself. |
+
+`DrawerRootState`: `{ open, side, snapPoint }`.
+
+#### `DrawerTrigger`
+
+Same shape as `DialogTrigger`: `disabled`, `accessibilityLabel`,
+`testID`, value-or-function `style` over `{ open, disabled }`,
+`children`, `render`.
+
+#### `DrawerPortal`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `children` | `ReactNode` | no | — | Portal content (Backdrop + Popup composed by the caller). |
+| `testID` | `string` | no | — | Test identifier; the measured container carries `<testID>-container`. |
+
+#### `DrawerBackdrop`
+
+`testID`, value-or-function `style` over `{ open }`, `render`.
+Dismisses with `outside-press` when modal and dismissable;
+otherwise an inert host.
+
+#### `DrawerPopup` (surface)
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the drawer surface. |
-| `testID` | `string` | no | — | Test identifier; the surface carries it, the scrim carries `<testID>-scrim`, the container carries `<testID>-container`, the portal carries `<testID>-portal`. |
-| `overlayStyle` | `StyleProp<ViewStyle>` | no | — | Scrim layer style, caller-provided. |
-| `surfaceStyle` | `StateStyle<DrawerState, StyleProp<ViewStyle>>` | no | — | Drawer surface (box) style: a value or a function of drawer state (cross-axis size lives here). |
-| `render` | `RenderProp<DrawerState, SlotProps>` | no | — | Element or function substitution for the drawer surface; the overlay host, scrim, drag, and snap wiring stay on the part. |
+| `testID` | `string` | no | — | Test identifier; the container carries `<testID>-container`, the scrim `<testID>-scrim` when set on the portal/backdrop. |
+| `style` | value or function of `{ open, side, snapPoint }` | no | — | Surface style, caller-provided (positioned absolute by the part). |
+| `children` | `ReactNode` | no | — | Surface content. |
+| `render` | element or function | no | — | Element or function substitution; role, modality, drag, and dismissal wiring stay on the part. |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the surface `View`. |
+| `initialFocus` | ref \| element \| function \| `false` | no | — | Explicit initial focus target (wins over the root's). |
+| `finalFocus` | ref \| element \| function \| `false` | no | — | Explicit restore target (wins over the trigger). |
 
-`DrawerState`: `{ open: boolean; side: DrawerSide; snapPoint:
-DrawerSnapPoint }` — whether the drawer is currently open, the
-anchored edge, and the active snap point value.
+#### `DrawerTitle` / `DrawerDescription`
 
-Closed renders `null`: no scrim, no surface, no host for
-assistive tech or tests to find.
+`testID`, `style` (Text), `children`, `render`. Title renders
+with the `header` role.
+
+#### `DrawerClose`
+
+`disabled`, `accessibilityLabel`, `testID`, value-or-function
+`style` over `{ disabled }`, `children`, `render`, plus
+`initialFocus?: boolean` — mark this Close as the default
+initial focus target.
+
+#### `DrawerHandle`
+
+| Prop | Type | Required | Default | Behavior |
+|---|---|---|---|---|
+| `testID` | `string` | no | — | Test identifier. |
+| `style` | value or function of `{ open, activeSnap, snapCount }` | no | — | Grip style, caller-provided. |
+| `children` | `ReactNode` | no | — | Handle content (usually none — the grip is caller style). |
+| `render` | element or function | no | — | Element or function substitution (Base UI parity). |
+
+Tap expands one snap; the `dismiss`, `expand`, and `collapse`
+accessibility actions dismiss or step the snap. At the floor
+snap, collapse dismisses when `dismissable` (otherwise it snaps
+back) — the same rule as drag-release.
 
 ### Examples
 
-Minimal navigation drawer, uncontrolled:
+Side drawer with snap points and a handle:
 
 ```tsx
 import { Text } from "react-native";
-import { Drawer } from "@xoroh/axis";
+import {
+  DrawerBackdrop,
+  DrawerClose,
+  DrawerDescription,
+  DrawerHandle,
+  DrawerPopup,
+  DrawerPortal,
+  DrawerRoot,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@xoroh/axis";
 
-function Navigation() {
+function SettingsDrawer() {
   return (
-    <Drawer defaultOpen accessibilityLabel="App navigation">
-      <Text>Home</Text>
-      <Text>Settings</Text>
-    </Drawer>
+    <DrawerRoot side="right" snapPoints={[0.5, 1]}>
+      <DrawerTrigger>
+        <Text>Open settings</Text>
+      </DrawerTrigger>
+      <DrawerPortal testID="settings">
+        <DrawerBackdrop testID="settings-scrim" />
+        <DrawerPopup
+          testID="settings-popup"
+          accessibilityLabel="Settings"
+        >
+          <DrawerHandle />
+          <DrawerTitle>Settings</DrawerTitle>
+          <DrawerDescription>
+            Move between sections of the app.
+          </DrawerDescription>
+          <DrawerClose>
+            <Text>Close</Text>
+          </DrawerClose>
+        </DrawerPopup>
+      </DrawerPortal>
+    </DrawerRoot>
   );
 }
 ```
 
-Controlled trailing drawer (parent owns the open state):
+Bottom sheet (the folded `Sheet`):
 
 ```tsx
-import { useState } from "react";
-import { Text } from "react-native";
-import { Button, Drawer } from "@xoroh/axis";
-
-function EndDrawer() {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <Button onPress={() => setOpen(true)} accessibilityLabel="Open filters">
-        <Text>Filters</Text>
-      </Button>
-      <Drawer
-        open={open}
-        onOpenChange={setOpen}
-        side="right"
-        accessibilityLabel="Filters"
-        surfaceStyle={{ width: 280 }}
-      >
-        <Text>Only unread</Text>
-      </Drawer>
-    </>
-  );
-}
-```
-
-Bottom sheet with snap points (the folded `Sheet` — `Sheet` was
-removed in ADR-012; migrate `<Sheet detents snapIndex
-onSnapIndexChange title … />` to `<Drawer side="bottom"
-snapPoints snapPoint onSnapPointChange … />` with the title in
-`children`):
-
-```tsx
-import { useState } from "react";
-import { Text } from "react-native";
-import { Drawer } from "@xoroh/axis";
-import type { DrawerSnapPoint } from "@xoroh/axis";
-
-function FilterSheet() {
-  const [open, setOpen] = useState(false);
-  const [point, setPoint] = useState<DrawerSnapPoint>(1);
-  return (
-    <Drawer
-      open={open}
-      onOpenChange={setOpen}
-      side="bottom"
-      snapPoints={[0.5, 1]}
-      snapPoint={point}
-      onSnapPointChange={setPoint}
-      accessibilityLabel="Filter settings"
-    >
-      <Text>Filter Settings</Text>
-      <Text>Choose which updates appear in your feed.</Text>
-    </Drawer>
-  );
-}
-```
-
-Non-dismissable drawer (scrim press does nothing — only the
-caller's action closes):
-
-```tsx
-import { useState } from "react";
-import { Text } from "react-native";
-import { Button, Drawer } from "@xoroh/axis";
-
-function LockedDrawer() {
-  const [open, setOpen] = useState(false);
-  return (
-    <Drawer
-      open={open}
-      onOpenChange={setOpen}
-      dismissable={false}
-      accessibilityLabel="Onboarding"
-    >
-      <Text>Step 2 of 3</Text>
-      <Button onPress={() => setOpen(false)} accessibilityLabel="Continue">
-        <Text>Continue</Text>
-      </Button>
-    </Drawer>
-  );
-}
+<DrawerRoot side="bottom" snapPoints={[0.5, 1]}>
+  {/* ...same parts: Trigger, Portal, Backdrop, Popup, Title,
+      Description, Handle, Close... */}
+</DrawerRoot>
 ```
 
 ### Accessibility
 
 - The surface is an accessibility element (`accessible`)
   carrying the `dialog` role, so the role reaches assistive
-  technology — a role on a non-element `View` would be invisible
-  to it.
-- The `modal` flag is deliberately omitted from
-  `accessibilityState`: React Native's `AccessibilityState` host
-  type has no `modal` key (checked against the RN 0.87
-  `ViewAccessibility` types), so it is left out rather than
-  smuggled past the typechecker (the Dialog precedent).
-- A drag along the dismiss axis follows the finger; release past
-  the dismiss distance (`max(64dp, 20% of the dismiss-axis
-  extent)`) or with dismiss-direction velocity dismisses when
-  `dismissable`, otherwise the drawer snaps to the nearest snap
-  point. The surface carries `expand`/`collapse` accessibility
-  actions with the same moves — gesture parity, not a gesture
-  requirement.
-- The dismissable modal scrim is a `Pressable` labelled
-  "Dismiss"; scrim press closes through `onDismiss` +
-  `onOpenChange(false)`. Android system back is wired to the same
-  dismiss path by the `Overlay` root and no-ops when not
-  `dismissable`. Any other scrim (non-dismissable, non-modal) is
-  a plain `View` with no label and no handler — no fake
-  affordance.
+  technology.
+- Drag has screen-reader parity: `DrawerHandle` exposes
+  `dismiss`/`expand`/`collapse` actions; a drag the SR user
+  cannot perform is never the only path.
+- The scrim is labelled `"Dismiss"` only when modal and
+  dismissable; otherwise a plain host with no handler.
 - Closed renders `null`: no scrim, no surface, for assistive
   tech or tests to find.
-- Explicitly deferred, each for a named reason: no animation
-  (the Dialog precedent — the surface mounts/unmounts
-  synchronously with state); no focus trap beyond the overlay
-  root's modal announcement and focus move/restore (containing
-  accessibility focus needs the `focusTrap` RN adaptation —
-  parity D5).
+- Focus: container-or-Title default (never destructive),
+  marked-Close override, trigger/`finalFocus` restore, D11
+  unmounted-trigger rule; modality per platform (see Focus
+  above).
 
 ### Composition
 
-`Drawer` takes `render` (an element, cloned with the surface
-props merged under its own, or a `(props, state)` function) and
-value-or-function `surfaceStyle` over its state object
-(`{ open, side, snapPoint }`); the overlay host, scrim, drag,
-and snap wiring stay on the part. `data-*` attributes are
-deliberately absent on native — state flows through those
-functions instead (contract §11, parity D1). Verified by the
-drawer RNTL suites (17 tests — `docs/COVERAGE.md`). Renders in
+Every part takes `render` (an element, cloned with the part
+props merged under its own, or a `(props, state)` function)
+and value-or-function `style` over its state object; `data-*`
+attributes are deliberately absent on native (contract §11,
+parity D1). Verified by the drawer RNTL suites and the web
+focus suites. Renders in
 `apps/example/src/demos/overlays.tsx`.
