@@ -20,6 +20,7 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
+import { useAccessibilityFocusRestore } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -142,6 +143,23 @@ export function Tooltip({
     active: visible ?? false,
   });
 
+  // The tip node for screen-reader focus move-in. Restores to the
+  // anchor wrapper on close (see below).
+  const tipRef = useRef<ElementRef<typeof View> | null>(null);
+  const setTipRef = useCallback((node: ElementRef<typeof View> | null) => {
+    tipRef.current = node;
+  }, []);
+
+  // Labelled tips move SR focus into the tip on open and restore it to
+  // the anchor on close (the upstream `Content`/`Trigger` pair);
+  // unlabelled tips stay silent. No containment (parity D5).
+  useAccessibilityFocusRestore({
+    open: visible ?? false,
+    enabled: accessibilityLabel !== undefined,
+    targetRef: tipRef,
+    restoreRef: anchorHostRef,
+  });
+
   const toggle = useCallback(() => {
     setVisible((previous) => !(previous ?? false));
   }, [setVisible]);
@@ -177,6 +195,10 @@ export function Tooltip({
             accessible
             accessibilityRole="tooltip"
             accessibilityLabel={accessibilityLabel}
+            // iOS VoiceOver scrub dismisses the open tip (the upstream
+            // `Content` precedent — no scrim involved).
+            onAccessibilityEscape={toggle}
+            ref={setTipRef}
             onLayout={floating.onContentLayout}
             style={[floating.style, tipStyle]}
           >

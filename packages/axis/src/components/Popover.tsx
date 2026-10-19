@@ -5,10 +5,12 @@ import {
   type Ref,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
 } from "react";
 import {
+  BackHandler,
   Pressable,
   type StyleProp,
   Text,
@@ -27,6 +29,7 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { Portal } from "./Portal";
+import { useAccessibilityFocusRestore } from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -177,6 +180,23 @@ export function Popover({
     active: isOpen ?? false,
   });
 
+  // The box node for screen-reader focus move-in. Restores to the
+  // anchor wrapper on close (see below).
+  const boxRef = useRef<ElementRef<typeof View> | null>(null);
+  const setBoxRef = useCallback((node: ElementRef<typeof View> | null) => {
+    boxRef.current = node;
+  }, []);
+
+  // Non-modal popovers move SR focus into the box on open and restore
+  // it to the anchor on close (the upstream `Content`/`Trigger` pair) —
+  // silent when the box carries no label. No containment (parity D5).
+  useAccessibilityFocusRestore({
+    open: isOpen ?? false,
+    enabled: accessibilityLabel !== undefined,
+    targetRef: boxRef,
+    restoreRef: anchorHostRef,
+  });
+
   const toggle = useCallback(() => {
     setOpen((previous) => !(previous ?? false));
   }, [setOpen]);
@@ -189,6 +209,21 @@ export function Popover({
     onDismiss?.();
     setOpen(false);
   }, [onDismiss, setOpen]);
+
+  // Android hardware back dismisses while open (the upstream `Content`
+  // precedent — but gated on open, unlike upstream's unconditional
+  // claim). No DOM lib, no DOM import: the check reads an optional
+  // `globalThis` shape (the `Overlay` boundary precedent).
+  const isWeb =
+    typeof (globalThis as { document?: unknown }).document !== "undefined";
+  useEffect(() => {
+    if (isWeb || !(isOpen ?? false)) return undefined;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      dismiss();
+      return true;
+    });
+    return () => sub.remove();
+  }, [isOpen, dismiss, isWeb]);
 
   return (
     <View ref={setAnchorRef} style={style}>
@@ -208,6 +243,10 @@ export function Popover({
             accessible
             accessibilityLabel={accessibilityLabel}
             testID={testID}
+            // iOS VoiceOver scrub dismisses (the upstream `Content`
+            // precedent); scrim press is the Android/talk path.
+            onAccessibilityEscape={dismiss}
+            ref={setBoxRef}
             onLayout={floating.onContentLayout}
             style={[floating.style, popoverStyle]}
           >
@@ -727,17 +766,38 @@ export function PopoverPopup({
   ref,
 }: PopoverPopupProps): React.ReactNode {
   const disclosure = useContext(PopoverDisclosureContext);
-
+  // Hooks before guards: the focus node ref must exist on every
+  // render, and the move/restore wiring below no-ops while closed.
+  const popupNodeRef = useRef<ElementRef<typeof View> | null>(null);
   const setPopupRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      popupNodeRef.current = node;
       assignPopupRef(ref, node);
     },
     [ref],
   );
 
+  const open = disclosure?.open ?? false;
+  // Move SR focus into the box on open, restore to the anchor on
+  // close (the upstream `Content`/`Trigger` pair) — silent when the
+  // box carries no label. No containment (parity D5).
+  useAccessibilityFocusRestore({
+    open,
+    enabled: accessibilityLabel !== undefined && disclosure !== null,
+    targetRef: popupNodeRef,
+    restoreRef: disclosure?.anchorHostRef ?? { current: null },
+  });
+
   if (!disclosure) return null;
   if (!disclosure.open) return null;
   const state: PopoverPopupState = { open: disclosure.open };
+
+  // iOS VoiceOver scrub dismisses (the upstream `Content`
+  // precedent). Guarded on `disablePointerDismissal` — a
+  // non-dismissable popover keeps ignoring it.
+  const handleAccessibilityEscape = !disclosure.disablePointerDismissal
+    ? disclosure.dismiss
+    : undefined;
 
   const substituted = resolveRender(
     render,
@@ -745,6 +805,7 @@ export function PopoverPopup({
       accessible: true,
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -759,6 +820,7 @@ export function PopoverPopup({
       accessible
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
       style={resolveStyle(style, state)}
     >
       {children}

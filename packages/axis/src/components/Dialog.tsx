@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
 } from "react";
 import {
   Pressable,
@@ -19,7 +20,7 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { OverlayPortal, OverlayRoot } from "./Overlay";
+import { OverlayPortal, OverlayRoot, useOverlayRefsMaybe } from "./Overlay";
 
 /**
  * Dialog — an unstyled modal dialog with scrim dismissal.
@@ -145,6 +146,11 @@ export function Dialog({
     onOpenChange,
   );
 
+  // The monolith's initial-focus target for `OverlayRoot`: the surface
+  // node below. Passed as `initialFocus` so the overlay moves SR focus
+  // into the dialog on open even though no `OverlayPopup` is involved.
+  const surfaceFocusRef = useRef<ElementRef<typeof View> | null>(null);
+
   // Always wired to the overlay root's system-back branch, and the scrim's press
   // handler when dismissable: closes through `onDismiss` first, then
   // reports `false`. Guards on `dismissable` so the non-dismissable
@@ -158,8 +164,15 @@ export function Dialog({
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
   // closing over render-scoped values besides it.
+  //
+  // The surface node ALSO feeds the overlay's initial-focus target:
+  // the monolith builds its surface inline (not through
+  // `OverlayPopup`), so without this bridge `OverlayRoot` would find
+  // an empty `popupRef` and the move-in/restore focus would silently
+  // no-op (the compound parts bridge their own nodes the same way).
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      surfaceFocusRef.current = node;
       assignRef(ref, node);
     },
     [ref],
@@ -191,6 +204,7 @@ export function Dialog({
       onDismiss={dismiss}
       modal
       dismissable={dismissable}
+      initialFocus={surfaceFocusRef}
       dismiss={{
         outsidePointer: dismissable,
         systemBack: dismissable,
@@ -321,6 +335,12 @@ export type DialogPopupState = {
 export type DialogPopupProps = {
   /** Accessible name source for the surface. */
   accessibilityLabel?: string;
+  /**
+   * Surface role. Default `"dialog"`; `AlertDialog` passes
+   * `"alertdialog"` (the upstream AlertDialog precedent — a blocking
+   * dialog announces as an alert dialog, not a plain dialog).
+   */
+  role?: "dialog" | "alertdialog";
   testID?: string;
   /** Value or function of popup state, caller-provided. */
   style?: StateStyle<DialogPopupState, StyleProp<ViewStyle>>;
@@ -474,11 +494,22 @@ export function DialogTrigger({
   const disclosure = useContext(DialogCompoundContext);
   const open = disclosure?.open ?? false;
   const state: DialogTriggerState = { open, disabled };
+  // Bridge the trigger node into the overlay: `OverlayRoot` restores
+  // SR focus here on close. Outside a root there is no overlay — the
+  // bridge is a no-op and the trigger stays inert (see below).
+  const overlayRefs = useOverlayRefsMaybe();
 
   const toggleTrigger = useCallback(() => {
     if (disabled) return;
     disclosure?.toggle();
   }, [disabled, disclosure]);
+
+  const setTriggerRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      if (overlayRefs) overlayRefs.triggerRef.current = node;
+    },
+    [overlayRefs],
+  );
 
   // Outside a root there is no dialog to open: render inert
   // (announced disabled, press is a no-op) rather than dropping the
@@ -495,6 +526,7 @@ export function DialogTrigger({
       onPress: toggleTrigger,
       style: resolveStyle(style, state),
       children,
+      ref: setTriggerRef,
     } satisfies SlotProps,
     state,
   );
@@ -502,6 +534,7 @@ export function DialogTrigger({
 
   return (
     <Pressable
+      ref={setTriggerRef}
       accessibilityRole="button"
       accessibilityState={{ expanded: open, disabled: disabled || inert }}
       accessibilityLabel={accessibilityLabel}
@@ -589,6 +622,7 @@ export function DialogBackdrop({
 
 export function DialogPopup({
   accessibilityLabel,
+  role = "dialog",
   testID,
   style,
   children,
@@ -596,26 +630,40 @@ export function DialogPopup({
   ref,
 }: DialogPopupProps): React.ReactNode {
   const disclosure = useContext(DialogCompoundContext);
+  // Bridge into the overlay's focus refs: the compound popup is the
+  // surface `OverlayRoot` moves SR focus into on open, and the trigger
+  // (bridged in `DialogTrigger`) is where it restores on close.
+  // Outside a root there is no overlay — the bridge is a no-op.
+  const overlayRefs = useOverlayRefsMaybe();
 
   const setPopupRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
+      if (overlayRefs) overlayRefs.popupRef.current = node;
       assignRef(ref, node);
     },
-    [ref],
+    [overlayRefs, ref],
   );
 
   if (!disclosure) return null;
   if (!disclosure.open) return null;
   const state: DialogPopupState = { open: disclosure.open };
 
+  // iOS VoiceOver scrub dismisses — the bound form of the `escape`
+  // branch. Guarded on `disablePointerDismissal` so a blocking
+  // `AlertDialog` keeps ignoring it (deliberate, recorded).
+  const handleAccessibilityEscape = !disclosure.disablePointerDismissal
+    ? disclosure.dismiss
+    : undefined;
+
   const substituted = resolveRender(
     render,
     {
       accessible: true,
-      role: "dialog",
-      accessibilityRole: "dialog",
+      role,
+      accessibilityRole: role,
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -628,10 +676,11 @@ export function DialogPopup({
     <View
       ref={setPopupRef}
       accessible
-      role="dialog"
-      accessibilityRole="dialog"
+      role={role}
+      accessibilityRole={role}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
       style={resolveStyle(style, state)}
     >
       {children}

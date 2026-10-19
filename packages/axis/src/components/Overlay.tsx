@@ -15,7 +15,6 @@ import {
 import {
   AccessibilityInfo,
   BackHandler,
-  findNodeHandle,
   Modal,
   Pressable,
   type StyleProp,
@@ -44,6 +43,7 @@ import {
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 import { Portal } from "./Portal";
+import { focusAccessibilityNode } from "./useAccessibilityFocus";
 
 /**
  * Overlay — the native overlay root on PortalHost (ADR 001/006/007,
@@ -139,6 +139,24 @@ export type OverlayContextValue = {
  * exporting them would invite consumer re-providers with no owner). */
 const OverlayContext = createContext<OverlayContextValue | null>(null);
 
+/**
+ * Stable focus-node refs, split from `OverlayContext` on purpose: the
+ * full context value changes identity whenever modality settles
+ * (registration, top change), which would re-render every part that
+ * only needs the ref objects (DialogTrigger's bridge) — one extra
+ * render per open on every trigger. This value is built once per root
+ * and never changes, so bridgers subscribe for free.
+ */
+export type OverlayRefs = {
+  id: OverlayId;
+  triggerRef: { current: ElementRef<typeof View> | null };
+  popupRef: { current: ElementRef<typeof View> | null };
+  initialFocusRef: { current: ElementRef<typeof View> | null };
+  finalFocusRef: { current: ElementRef<typeof View> | null };
+};
+
+const OverlayRefsContext = createContext<OverlayRefs | null>(null);
+
 const ScrollLockContext = createContext<boolean>(false);
 
 let activeModalCount = 0;
@@ -165,6 +183,18 @@ export function useOverlay(): OverlayContextValue {
     throw new Error("useOverlay must be used within an OverlayRoot");
   }
   return ctx;
+}
+
+/**
+ * Read the nearest overlay's stable focus refs, or `null` outside
+ * one. Internal (not barrel-exported): lets compound parts that must
+ * stay inert without a root (DialogTrigger, DialogPopup) bridge their
+ * node into the overlay's focus refs when a root IS present — with no
+ * re-render when modality settles, no public API change, and no throw
+ * on the inert path.
+ */
+export function useOverlayRefsMaybe(): OverlayRefs | null {
+  return useContext(OverlayRefsContext);
 }
 
 export type OverlayRootProps = {
@@ -386,6 +416,14 @@ export function OverlayRoot({
   const initialFocusRef = useRef<ElementRef<typeof View> | null>(null);
   const finalFocusRef = useRef<ElementRef<typeof View> | null>(null);
 
+  // Stable identity: every object above is a `useRef` (never
+  // re-created) and `id` never changes, so bridgers through
+  // `useOverlayRefsMaybe` never re-render when modality settles.
+  const refsValue = useMemo<OverlayRefs>(
+    () => ({ id, triggerRef, popupRef, initialFocusRef, finalFocusRef }),
+    [id, triggerRef, popupRef, initialFocusRef, finalFocusRef],
+  );
+
   // Resolve initial focus
   useEffect(() => {
     if (initialFocus) {
@@ -409,17 +447,17 @@ export function OverlayRoot({
   }, [finalFocus]);
 
   // Auto-focus on open
-  // Move accessibility focus into the surface. `AccessibilityInfo`
+  // Move accessibility focus into the surface. `focusAccessibilityNode`
   // is the RN-honest move (no DOM tab order exists here); the
   // duck-typed `focus()` call is for hosts that expose one (a caller
-  // can wire a ref to an imperative focus API).
-  const focusHost = useCallback((target: unknown): void => {
-    if (!target) return;
-    const maybeFocusable = target as { focus?: () => void };
-    if (typeof maybeFocusable.focus === "function") maybeFocusable.focus();
-    const tag = findNodeHandle(target as ElementRef<typeof View>);
-    if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
-  }, []);
+  // can wire a ref to an imperative focus API). The SR-tree focus is
+  // deferred ~50ms for mount reliability (the upstream rn-primitives
+  // finding — synchronous focus on a fresh mount is unreliable on
+  // both platforms); the effect cleanup cancels it on close/unmount.
+  const focusHost = useCallback(
+    (target: unknown): (() => void) => focusAccessibilityNode(target),
+    [],
+  );
 
   useEffect(() => {
     if (
@@ -427,17 +465,21 @@ export function OverlayRoot({
       (modal === true || modal === "trap-focus") &&
       trapFocus
     ) {
-      focusHost(initialFocusRef.current || popupRef.current);
+      return focusHost(initialFocusRef.current || popupRef.current);
     }
+    return undefined;
   }, [isOpen, modal, trapFocus, focusHost]);
 
   // Focus restore on close
   const wasOpenRef = useRef(isOpen ?? false);
   useEffect(() => {
     if (wasOpenRef.current && !(isOpen ?? false) && restoreFocus) {
-      focusHost(finalFocusRef.current || triggerRef.current);
+      const cancel = focusHost(finalFocusRef.current || triggerRef.current);
+      wasOpenRef.current = isOpen ?? false;
+      return cancel;
     }
     wasOpenRef.current = isOpen ?? false;
+    return undefined;
   }, [isOpen, restoreFocus, focusHost]);
 
   const contextValue = useMemo<OverlayContextValue>(
@@ -483,9 +525,11 @@ export function OverlayRoot({
 
   return (
     <OverlayContext.Provider value={contextValue}>
-      <ScrollLockContext.Provider value={modal === true && (isOpen ?? false)}>
-        {children}
-      </ScrollLockContext.Provider>
+      <OverlayRefsContext.Provider value={refsValue}>
+        <ScrollLockContext.Provider value={modal === true && (isOpen ?? false)}>
+          {children}
+        </ScrollLockContext.Provider>
+      </OverlayRefsContext.Provider>
     </OverlayContext.Provider>
   );
 }
@@ -503,6 +547,10 @@ export function OverlayPortal({
   children,
 }: OverlayPortalProps): React.JSX.Element | null {
   const overlay = useContext(OverlayContext);
+  // The stable refs travel beside the full context: portaled content
+  // renders at the host, outside this root's subtree, so both are
+  // re-provided explicitly below.
+  const overlayRefs = useOverlayRefsMaybe();
   if (!overlay?.present) return null;
 
   if (overlay.useModal) {
@@ -535,18 +583,20 @@ export function OverlayPortal({
   return (
     <Portal hostName={hostName}>
       <OverlayContext.Provider value={overlay}>
-        <View
-          testID={testID}
-          pointerEvents={overlay.isTop ? "auto" : "box-none"}
-          accessibilityElementsHidden={!overlay.isTop}
-          importantForAccessibility={
-            overlay.isTop ? "yes" : "no-hide-descendants"
-          }
-          accessibilityViewIsModal={accessibilityViewIsModal}
-          style={[FULL_FILL_STYLE, { zIndex }]}
-        >
-          {children}
-        </View>
+        <OverlayRefsContext.Provider value={overlayRefs}>
+          <View
+            testID={testID}
+            pointerEvents={overlay.isTop ? "auto" : "box-none"}
+            accessibilityElementsHidden={!overlay.isTop}
+            importantForAccessibility={
+              overlay.isTop ? "yes" : "no-hide-descendants"
+            }
+            accessibilityViewIsModal={accessibilityViewIsModal}
+            style={[FULL_FILL_STYLE, { zIndex }]}
+          >
+            {children}
+          </View>
+        </OverlayRefsContext.Provider>
       </OverlayContext.Provider>
     </Portal>
   );
@@ -665,6 +715,16 @@ export function OverlayPopup({
     isTop: overlay.isTop,
   };
 
+  // iOS VoiceOver scrub dismisses — the bound form of the `escape`
+  // branch (RN has no global key listener for the Escape key itself).
+  // Gated like the back-button path: only the top layer dismisses, and
+  // only when the surface armed the branch. The prop is iOS-only and
+  // a no-op elsewhere.
+  const canEscape =
+    overlay.isTop &&
+    shouldDismissOn("escape", overlay.open, overlay.dismissBranches);
+  const handleAccessibilityEscape = canEscape ? overlay.dismiss : undefined;
+
   const substituted = resolveRender(
     render,
     {
@@ -673,6 +733,7 @@ export function OverlayPopup({
       accessibilityRole: role,
       accessibilityLabel,
       testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
@@ -689,6 +750,7 @@ export function OverlayPopup({
       accessibilityRole={role}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
+      onAccessibilityEscape={handleAccessibilityEscape}
       style={resolveStyle(style, state)}
     >
       {children}

@@ -103,6 +103,7 @@ export function AlertDialog({
         <DialogBackdrop testID={testID ? `${testID}-scrim` : undefined} />
         <DialogPopup
           accessibilityLabel={accessibilityLabel}
+          role="alertdialog"
           testID={testID}
           style={resolveStyle(style, state)}
           render={render}
