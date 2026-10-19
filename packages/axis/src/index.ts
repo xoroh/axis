@@ -195,7 +195,6 @@ export { Field, type FieldProps, type FieldState } from "./components/Field";
 export { Fieldset, type FieldsetProps } from "./components/Fieldset";
 export { Input, type InputProps, type InputState } from "./components/Input";
 export { Label, type LabelProps } from "./components/Label";
-export { Loader, type LoaderProps } from "./components/Loader";
 export {
   Menu,
   MenuArrow,
@@ -359,11 +358,6 @@ export {
   type RadioGroupState,
 } from "./components/RadioGroup";
 export {
-  Search,
-  type SearchProps,
-  type SearchState,
-} from "./components/Search";
-export {
   Select,
   SelectArrow,
   type SelectArrowProps,
@@ -437,7 +431,6 @@ export {
   type TabsTriggerProps,
   type TabsTriggerState,
 } from "./components/Tabs";
-export { Text, type TextProps } from "./components/Text";
 export {
   Textarea,
   type TextareaProps,
@@ -500,11 +493,6 @@ export {
   type TooltipTriggerProps,
   type TooltipTriggerState,
 } from "./components/Tooltip";
-export {
-  Trigger,
-  type TriggerProps,
-  type TriggerState,
-} from "./components/Trigger";
 export {
   createDismissPolicy,
   type DismissPolicy,

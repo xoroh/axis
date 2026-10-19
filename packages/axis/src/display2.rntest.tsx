@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react-native";
 import { createRef, type ElementRef } from "react";
 import type { View } from "react-native";
-import { Loader, Meter } from "./index";
+import { Meter } from "./index";
 
 /**
  * Display batch through the public entry: announced values, silent
@@ -24,26 +24,6 @@ describe("Meter on React Native", () => {
     expect(screen.getByTestId("m").props.accessibilityValue).toMatchObject({
       now: 0,
     });
-  });
-});
-
-describe("Loader on React Native", () => {
-  it("announces busy with label and passes size", async () => {
-    await render(
-      <Loader testID="l" accessibilityLabel="Loading results" size="small" />,
-    );
-    expect(screen.getByLabelText("Loading results")).toBeTruthy();
-    expect(screen.getByTestId("l").props.accessibilityState).toMatchObject({
-      busy: true,
-    });
-  });
-});
-
-describe("Loader ref forwarding", () => {
-  it("forwards a ref to the host element", async () => {
-    const ref = createRef<ElementRef<typeof View>>();
-    await render(<Loader ref={ref} testID="l" />);
-    expect(ref.current).toBeTruthy();
   });
 });
 

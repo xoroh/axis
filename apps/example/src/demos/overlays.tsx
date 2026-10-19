@@ -23,7 +23,6 @@ import {
   TooltipProvider,
   TooltipRoot,
   TooltipTrigger,
-  Trigger,
   useToast,
 } from "@xoroh/axis";
 import { useState } from "react";
@@ -34,8 +33,8 @@ import type { Demo } from "./registry";
 /**
  * Overlays demo: blocking dialog, sheet, drawer, toast (single-shot
  * and queued), tooltip (monolith and compound), long-press menu,
- * shared overlay root primitives, standalone portal host, and
- * semantics-free trigger — all with clean caller styles.
+ * shared overlay root primitives and standalone portal host —
+ * all with clean caller styles.
  */
 export const OverlaysDemo: Demo = {
   slug: "overlays",
@@ -65,7 +64,6 @@ export const OverlaysDemo: Demo = {
     "TooltipRoot",
     "TooltipTrigger",
     "ContextMenu",
-    "Trigger",
   ],
   render: function OverlaysScreen() {
     const { theme } = useTheme();
@@ -109,7 +107,7 @@ export const OverlaysDemo: Demo = {
             </TooltipPortal>
           </TooltipRoot>
         </TooltipProvider>
-        {/* Trigger & ContextMenu */}
+        {/* ContextMenu */}
         <View
           style={{
             backgroundColor: theme.surface,
@@ -121,28 +119,9 @@ export const OverlaysDemo: Demo = {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
-            Interactive Triggers:
+            Context Menu:
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            <Trigger
-              accessibilityLabel="Demo custom trigger"
-              onPress={() => {}}
-              style={{
-                paddingVertical: 8,
-                paddingHorizontal: 14,
-                borderRadius: 6,
-                backgroundColor: theme.surfaceSubtle,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text
-                style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-              >
-                Custom Trigger
-              </Text>
-            </Trigger>
-
             <Button
               accessibilityLabel="Open context menu"
               onPress={() => setContextMenuOpen(true)}

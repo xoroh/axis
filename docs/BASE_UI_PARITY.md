@@ -41,7 +41,7 @@ model) or a function of `(props, state)` — per contract §11. Parts
 with interaction state take value-or-function `style`
 (`StateStyle<State, …>`) over the same state objects Base UI
 publishes for selectors; stateless parts (`Separator`, `Label`,
-`Text`, `Loader`, `AspectRatio`, `Fieldset`, `Table`/`Header`/`Cell`,
+`AspectRatio`, `Fieldset`, `Table`/`Header`/`Cell`,
 inner structural styles like `trackStyle`/`dayStyle`) keep a static
 `style` (the `DialogTitle` precedent — a function of empty state
 adds nothing). Each part exports its state type (`ButtonState`,
@@ -236,13 +236,12 @@ parity (`hostName` naming).
 
 ### Input / Textarea — Base UI change-event names
 
-`Input`/`Textarea` used the RN host name `onChangeText`; contract
-§6 reserves `onValueChange` for value controls, and `Search` already
-used it. Hard cut (ADR 011, nothing published): both now take
-`onValueChange`. The host `TextInput` still receives RN
-`onChangeText` — the rename is the public prop only. Internal
-consumers (`Search`, `Combobox`, `OtpField`, `Autocomplete`,
-`TimePicker`, `NumberField`) and suites updated in the same slice.
+`Input`/`Textarea` use `onValueChange` for the RN host
+`onChangeText` (contract §6 reserves `onValueChange` for value
+controls). Hard cut (ADR 011, nothing published): the public prop is
+`onValueChange`. Internal consumers (`Combobox`, `OtpField`,
+`Autocomplete`, `TimePicker`, `NumberField`) and suites updated in
+the same slice. (`Search` previously used it too; removed by ADR 012.)
 
 ### Remaining compound-anatomy gaps (composition aligned, anatomy pending)
 
@@ -260,13 +259,13 @@ named reason (not oversight):
 | Combobox / Autocomplete | no compound row parts (`Input`/`Clear`/`Row`/`Empty`/`Status`) | `collection` transfer has landed and is consumed (menu filter parts, select lookup, combobox filtering); wiring `Combobox`/`Autocomplete` rows onto it is pending |
 | Context Menu | monolith (no Trigger/Portal/Positioner/Popup/Item split) | Portal-host adoption for the positioning story; in-box precedent holds |
 | Field / Fieldset | no `Control`/`Description`/`Validity`/`Legend` parts | Validity is caller state (`error`); control wiring deferred until a consumer demonstrates the need |
-| Meter / Progress | no `Track`/`Indicator`/`Label`/`Value` parts | Fill is data-driven width under caller style; label/value are caller text |
+| Meter / Progress | no `Track`/`Indicator`/`Label`/`Value` parts | Fill is data-driven width under caller style; label/value are caller text. Indeterminate is Base UI exact: `value={null}` (busy announced, no value). |
 | Number Field | monolith (no `Group`/`Input`/`Increment`/`Decrement`/`ScrubArea`) | Composes Axis `Input` + `Button`; `ScrubArea` has no touch equivalent |
 | OTP Field | single part (no `Input` part split) | Single hidden entry fanning to cells is the native adaptation |
 | Slider | single part (no `Track`/`Thumb` parts) | Track/thumb are caller styles, not parts (Switch precedent) |
 | Tabs | no `Indicator` | Indicator geometry is caller style |
 | Dropdown Menu / Menubar / Navigation Menu | Axis cascade/bar APIs (not Base part names) | `DropdownMenu` IS the submenu pattern (parity record: mapped, not duplicated) |
-| Calendar / Time Picker / Sheet / Drawer | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred |
+| Calendar / Time Picker / Sheet | no Base UI counterpart (Aria/mobile patterns) | Composition added this pass; full picker parity (Aria DatePicker) deferred. Drawer HAS a Base UI counterpart (verified live 2026-10-19: `snapPoints`/`snapPoint`/`onSnapPointChange`, swipe, modal/non-modal) — Axis Drawer folds Sheet in per ADR 012. |
 | Form / Scroll Area / Preview Card | no Axis export | `na-native` per COVERAGE (Scroll Area, Preview Card); Form has no owner yet |
 
 ### AI chat — new surface (no Base UI counterpart)

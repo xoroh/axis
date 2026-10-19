@@ -21,7 +21,6 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Toggle Group | complete | pressed-state set, RNTL 5 |
 | Slider | complete | PanResponder drag + actions, RNTL 9 |
 | Button | complete | press/disabled/loading + busy, RNTL 7 |
-| Pressable/Trigger primitive | complete | semantics-free press container (caller asserts role); Button/Switch keep their semantics, RNTL 4 |
 | Field | complete | label/control/error row, RNTL 2 (in input suite) |
 | Fieldset | complete | legend group, RNTL 2 (in textarea suite) |
 | Label | complete | nativeID association, RNTL 2 |
@@ -29,7 +28,6 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Textarea | complete | multiline + auto-grow, RNTL 4 |
 | Number Field | complete | Input+Button composition, RNTL 7 |
 | OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
-| Search | complete | composed entry + clear/submit, RNTL 4 |
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |
 | Combobox | complete | filterable single-select via the shared `collection` match, RNTL 9 |
 | Select | complete | single-select dropdown + compound parts (value-label registry + `items` table), RNTL 24 |
@@ -54,14 +52,12 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Preview Card | na-native | hover-only pattern, no touch equivalent |
 | Progress (linear/circular) | complete | determinate/indeterminate + value, RNTL 3 |
 | Meter | complete | gauge readout, RNTL 2 |
-| Loader/Loading Indicator | complete | busy indicator, RNTL 1 |
 | Snackbar/Toast | complete | timed auto-dismiss + live region, RNTL 7; queued toasts via `ToastProvider` + `useToast` + `ToastViewport` (toast-queue suite) |
 | Portal/Portal host | complete | standalone `PortalHost` + `Portal` over the shared registry, RNTL 7 |
 | Avatar | complete | image + fallback, RNTL 3 (in display suite) |
 | Aspect Ratio | complete | ratio box, RNTL 3 |
 | Separator | complete | silent divider, RNTL 2 |
 | Table | complete | header/row/cell parts, RNTL 5 |
-| Text | complete | readable host, no type scale (caller style), RNTL 6 |
 
 ## Behavior models (traceability, not components)
 

@@ -2,10 +2,8 @@ import {
   Field,
   Fieldset,
   Input,
-  Label,
   NumberField,
   OtpField,
-  Search,
   Textarea,
 } from "@xoroh/axis";
 import { useState } from "react";
@@ -14,7 +12,7 @@ import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
 /**
- * Text entry demo: inputs, multiline, numeric, OTP, search, and
+ * Text entry demo: inputs, multiline, numeric, OTP, and
  * field wrappers with clean caller styles.
  */
 export const EntryDemo: Demo = {
@@ -25,7 +23,6 @@ export const EntryDemo: Demo = {
     "Textarea",
     "NumberField",
     "OtpField",
-    "Search",
     "Field",
     "Fieldset",
     "Label",
@@ -35,7 +32,6 @@ export const EntryDemo: Demo = {
     const [notes, setNotes] = useState("Pioneering computer programmer.");
     const [count, setCount] = useState<number | null>(42);
     const [code, setCode] = useState("1234");
-    const [query, setQuery] = useState("primitive");
     const { theme } = useTheme();
 
     const inputStyle = {
@@ -140,31 +136,6 @@ export const EntryDemo: Demo = {
               </View>
             </View>
           </Fieldset>
-        </View>
-
-        {/* Search */}
-        <View
-          style={{
-            backgroundColor: theme.surface,
-            padding: 18,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: theme.borderSubtle,
-            gap: 8,
-          }}
-        >
-          <Label
-            nativeID="search-label"
-            style={{ fontSize: 13, fontWeight: "600", color: theme.textSubtle }}
-          >
-            Search primitives
-          </Label>
-          <Search
-            accessibilityLabel="Demo search"
-            value={query}
-            onValueChange={setQuery}
-            style={inputStyle}
-          />
         </View>
       </View>
     );
