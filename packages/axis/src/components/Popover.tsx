@@ -26,10 +26,32 @@ import {
   type StateStyle,
 } from "../render";
 import type { SlotProps } from "../slot";
+import type {
+  OverlayOpenChangeDetails,
+  OverlayOpenChangeReason,
+} from "../dismissWiring";
+import { shouldDismissOn } from "../dismissWiring";
 import { useControllableState } from "../useControllableState";
-import { OverlayPortal, OverlayRoot } from "./Overlay";
+import {
+  OverlayPortal,
+  OverlayRoot,
+  useOverlayMaybe,
+  useOverlayRefsMaybe,
+} from "./Overlay";
 import { Portal } from "./Portal";
-import { useModalFocus } from "./useAccessibilityFocus";
+import {
+  createFocusScope,
+  type FocusInteraction,
+  type FocusScope,
+  FocusScopeProvider,
+  isWebEnvironment,
+  type OverlayFocusValue,
+  trapTabKey,
+  useFocusScopeMaybe,
+  useModalFocus,
+  useScopeStop,
+  useScopeTitle,
+} from "./useAccessibilityFocus";
 import { useFloatingPlacement } from "./useFloatingPlacement";
 
 /**
@@ -83,8 +105,8 @@ export type PopoverProps = {
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
   defaultOpen?: boolean;
-  /** Fires with the next open state on every committed toggle or dismiss. */
-  onOpenChange?: (open: boolean) => void;
+  /** Fires with the next open state on every committed toggle or dismiss, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
   /** Fires on scrim dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
@@ -187,39 +209,49 @@ export function Popover({
     boxRef.current = node;
   }, []);
 
+  // The monolith toggle is the trigger interaction for
+  // function-form focus targets (read by the focus hook on open).
+  const interactionRef = useRef<FocusInteraction>("programmatic");
+
   // Non-modal popovers move SR focus into the box on open and restore
   // it to the anchor on close (the upstream `Content`/`Trigger` pair) —
-  // silent when the box carries no label. No containment (parity D5).
+  // silent when the box carries no label. No containment.
   useModalFocus({
     open: isOpen ?? false,
     enabled: accessibilityLabel !== undefined,
     popupRef: boxRef,
     restoreRef: anchorHostRef,
+    interactionRef,
   });
 
   const toggle = useCallback(() => {
-    setOpen((previous) => !(previous ?? false));
+    interactionRef.current = "trigger-press";
+    setOpen((previous) => !(previous ?? false), {
+      reason: "trigger-press",
+    });
   }, [setOpen]);
 
   // Scrim path (the Dialog order): `onDismiss` first, then report
   // `false`. `useControllableState` drops the `onOpenChange` call when
   // the value is unchanged, so dismissing an already-closed popover
   // stays silent.
-  const dismiss = useCallback(() => {
-    onDismiss?.();
-    setOpen(false);
-  }, [onDismiss, setOpen]);
+  const dismiss = useCallback(
+    (reason: OverlayOpenChangeReason = "outside-press") => {
+      onDismiss?.();
+      setOpen(false, { reason });
+    },
+    [onDismiss, setOpen],
+  );
 
   // Android hardware back dismisses while open (the upstream `Content`
   // precedent — but gated on open, unlike upstream's unconditional
   // claim). No DOM lib, no DOM import: the check reads an optional
   // `globalThis` shape (the `Overlay` boundary precedent).
-  const isWeb =
-    typeof (globalThis as { document?: unknown }).document !== "undefined";
+  const isWeb = isWebEnvironment();
   useEffect(() => {
     if (isWeb || !(isOpen ?? false)) return undefined;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      dismiss();
+      dismiss("escape-key");
       return true;
     });
     return () => sub.remove();
@@ -233,7 +265,7 @@ export function Popover({
           <Pressable
             accessibilityLabel="Dismiss"
             testID={testID ? `${testID}-scrim` : undefined}
-            onPress={dismiss}
+            onPress={() => dismiss("outside-press")}
             style={SCRIM_STYLE}
           />
           <View
@@ -245,7 +277,7 @@ export function Popover({
             testID={testID}
             // iOS VoiceOver scrub dismisses (the upstream `Content`
             // precedent); scrim press is the Android/talk path.
-            onAccessibilityEscape={dismiss}
+            onAccessibilityEscape={() => dismiss("escape-key")}
             ref={setBoxRef}
             onLayout={floating.onContentLayout}
             style={[floating.style, popoverStyle]}
@@ -289,8 +321,8 @@ export type PopoverRootProps = {
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
   defaultOpen?: boolean;
-  /** Fires with the next open state on every committed toggle or dismissal. */
-  onOpenChange?: (open: boolean) => void;
+  /** Fires with the next open state on every committed toggle or dismissal, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
   /** Fires on scrim dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
@@ -305,6 +337,16 @@ export type PopoverRootProps = {
    * limitation as non-modal menus).
    */
   modal?: boolean;
+  /**
+   * Explicit initial focus target (wins over the popup's). See
+   * `OverlayRootProps.initialFocus` for the value shape.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
   /** Trigger, Portal, and shared content. Renders no element itself. */
   children?: ReactNode;
   /** Accepted for ref-spreading callers; the root renders no element. */
@@ -393,6 +435,18 @@ export type PopoverPopupProps = {
   render?: RenderProp<PopoverPopupState, SlotProps>;
   /** Forwarded to the content `View`. */
   ref?: Ref<ElementRef<typeof View>>;
+  /**
+   * Explicit initial focus target (wins over the root's). Element, ref,
+   * function of the open interaction, or `false` to keep focus where
+   * it is. Default: first focusable element in the popup (marked,
+   * stops), else Title, else the box.
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the anchor). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
 };
 
 export type PopoverTitleProps = {
@@ -432,6 +486,10 @@ export type PopoverCloseProps = {
   children?: ReactNode;
   /** Element or function substitution (Base UI parity). */
   render?: RenderProp<PopoverCloseState, SlotProps>;
+  /**
+   * Mark this Close as the default initial focus target. Default `false`.
+   */
+  initialFocus?: boolean;
 };
 
 export type PopoverArrowProps = {
@@ -457,7 +515,8 @@ type PopoverDisclosure = {
   open: boolean;
   toggle: () => void;
   close: () => void;
-  dismiss: () => void;
+  /** Dismiss with a reason (default `"outside-press"`). */
+  dismiss: (reason?: OverlayOpenChangeReason) => void;
   disablePointerDismissal: boolean;
   modal: boolean;
   anchorHostRef: { current: ElementRef<typeof View> | null };
@@ -498,6 +557,8 @@ export function PopoverRoot({
   onDismiss,
   disablePointerDismissal = false,
   modal = false,
+  initialFocus,
+  finalFocus,
   children,
   ref,
 }: PopoverRootProps): React.JSX.Element {
@@ -510,20 +571,25 @@ export function PopoverRoot({
   );
 
   const toggle = useCallback(() => {
-    setOpen((previous) => !(previous ?? false));
+    setOpen((previous) => !(previous ?? false), {
+      reason: "trigger-press",
+    });
   }, [setOpen]);
 
   const close = useCallback(() => {
-    setOpen(false);
+    setOpen(false, { reason: "close-press" });
   }, [setOpen]);
 
   // Backdrop path: `onDismiss` first, then report `false`.
   // Guarded on `disablePointerDismissal`.
-  const dismiss = useCallback(() => {
-    if (disablePointerDismissal) return;
-    onDismiss?.();
-    setOpen(false);
-  }, [disablePointerDismissal, onDismiss, setOpen]);
+  const dismiss = useCallback(
+    (reason: OverlayOpenChangeReason = "outside-press") => {
+      if (disablePointerDismissal) return;
+      onDismiss?.();
+      setOpen(false, { reason });
+    },
+    [disablePointerDismissal, onDismiss, setOpen],
+  );
 
   const anchorHostRef = useRef<ElementRef<typeof View> | null>(null);
   const setAnchorRef = useCallback((node: ElementRef<typeof View> | null) => {
@@ -559,6 +625,8 @@ export function PopoverRoot({
       onDismiss={onDismiss}
       modal={modal}
       dismissable={!disablePointerDismissal}
+      initialFocus={initialFocus}
+      finalFocus={finalFocus}
       dismiss={{
         outsidePointer: !disablePointerDismissal,
         systemBack: !disablePointerDismissal,
@@ -583,11 +651,15 @@ export function PopoverTrigger({
   const disclosure = useContext(PopoverDisclosureContext);
   const open = disclosure?.open ?? false;
   const state: PopoverTriggerState = { open, disabled };
+  // The trigger press is the open interaction for function-form focus
+  // targets. Outside a root there is no overlay — the write is a no-op.
+  const overlayRefs = useOverlayRefsMaybe();
 
   const toggleTrigger = useCallback(() => {
     if (disabled) return;
+    if (overlayRefs) overlayRefs.interaction.current = "trigger-press";
     disclosure?.toggle();
-  }, [disabled, disclosure]);
+  }, [disabled, disclosure, overlayRefs]);
 
   const setTriggerRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
@@ -677,12 +749,15 @@ export function PopoverBackdrop({
   const state: PopoverBackdropState = { open: disclosure.open };
 
   if (!disclosure.disablePointerDismissal) {
+    // Reason is explicit: the backdrop press is the outside-press
+    // dismiss path (never the raw press event).
+    const handlePress = () => disclosure.dismiss("outside-press");
     const substituted = resolveRender(
       render,
       {
         accessibilityLabel: "Dismiss",
         testID,
-        onPress: disclosure.dismiss,
+        onPress: handlePress,
         style: resolveStyle(style, state),
       } satisfies SlotProps,
       state,
@@ -692,7 +767,7 @@ export function PopoverBackdrop({
       <Pressable
         accessibilityLabel="Dismiss"
         testID={testID}
-        onPress={disclosure.dismiss}
+        onPress={handlePress}
         style={[SCRIM_STYLE, resolveStyle(style, state)]}
       />
     );
@@ -764,10 +839,14 @@ export function PopoverPopup({
   children,
   render,
   ref,
+  initialFocus,
+  finalFocus,
 }: PopoverPopupProps): React.ReactNode {
   const disclosure = useContext(PopoverDisclosureContext);
-  // Hooks before guards: the focus node ref must exist on every
-  // render, and the move/restore wiring below no-ops while closed.
+  const overlay = useOverlayMaybe();
+  const overlayRefs = useOverlayRefsMaybe();
+  // Hooks before guards: the focus node ref and scope must exist on
+  // every render, and the move/restore wiring below no-ops while closed.
   const popupNodeRef = useRef<ElementRef<typeof View> | null>(null);
   const setPopupRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
@@ -777,13 +856,23 @@ export function PopoverPopup({
     [ref],
   );
 
+  // One focus scope per popup: Title/Close parts register here so the
+  // default initial target resolves without a DOM query on native.
+  const focusScope = useMemo<FocusScope>(() => createFocusScope(), []);
+
   const open = disclosure?.open ?? false;
   // Move SR focus into the box on open, restore to the anchor on
   // close (the upstream `Content`/`Trigger` pair) — silent when the
-  // box carries no label. No containment (parity D5).
+  // box carries no label. Non-modal popovers claim nothing: neither
+  // trap focus nor hide anything. Default target: first focusable
+  // element (marked, stops), else Title, else the box.
   useModalFocus({
     open,
     enabled: accessibilityLabel !== undefined && disclosure !== null,
+    initialFocus: initialFocus ?? overlay?.initialFocus,
+    finalFocus: finalFocus ?? overlay?.finalFocus,
+    defaultTarget: focusScope.resolveDefault(true),
+    interactionRef: overlayRefs?.interaction,
     popupRef: popupNodeRef,
     restoreRef: disclosure?.anchorHostRef ?? { current: null },
   });
@@ -792,12 +881,24 @@ export function PopoverPopup({
   if (!disclosure.open) return null;
   const state: PopoverPopupState = { open: disclosure.open };
 
-  // iOS VoiceOver scrub dismisses (the upstream `Content`
-  // precedent). Guarded on `disablePointerDismissal` — a
-  // non-dismissable popover keeps ignoring it.
+  // iOS VoiceOver scrub dismisses (the upstream `Content` precedent),
+  // reported as `escape-key`. Guarded on `disablePointerDismissal`.
   const handleAccessibilityEscape = !disclosure.disablePointerDismissal
-    ? disclosure.dismiss
+    ? () => disclosure.dismiss("escape-key")
     : undefined;
+
+  // iOS modal claim on the popup (top layer only); non-modal popups
+  // claim nothing. On web the same modality is `aria-modal` plus the
+  // Tab trap below.
+  const modal = disclosure.modal;
+  const top = overlay?.isTop ?? true;
+  const modalActive = modal && top;
+  const web = isWebEnvironment();
+  const handleKeyDown =
+    web && modalActive
+      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
+          trapTabKey(popupNodeRef.current, event)
+      : undefined;
 
   const substituted = resolveRender(
     render,
@@ -806,25 +907,36 @@ export function PopoverPopup({
       accessibilityLabel,
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
+      accessibilityViewIsModal: modalActive,
+      ...(web && modalActive ? { "aria-modal": true } : null),
+      onKeyDown: handleKeyDown,
       style: resolveStyle(style, state),
       children,
       ref: setPopupRef,
     } satisfies SlotProps,
     state,
   );
-  if (substituted !== null) return substituted;
+  if (substituted !== null)
+    return (
+      <FocusScopeProvider scope={focusScope}>{substituted}</FocusScopeProvider>
+    );
 
   return (
-    <View
-      ref={setPopupRef}
-      accessible
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      onAccessibilityEscape={handleAccessibilityEscape}
-      style={resolveStyle(style, state)}
-    >
-      {children}
-    </View>
+    <FocusScopeProvider scope={focusScope}>
+      <View
+        ref={setPopupRef}
+        accessible
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        onAccessibilityEscape={handleAccessibilityEscape}
+        accessibilityViewIsModal={modalActive}
+        {...(web && modalActive ? { "aria-modal": true } : null)}
+        onKeyDown={handleKeyDown}
+        style={resolveStyle(style, state)}
+      >
+        {children}
+      </View>
+    </FocusScopeProvider>
   );
 }
 
@@ -834,14 +946,22 @@ export function PopoverTitle({
   children,
   render,
 }: PopoverTitleProps): React.ReactNode {
+  const scope = useFocusScopeMaybe();
+  const setTitleNode = useScopeTitle(scope);
+
   const substituted = resolveRender(
     render,
-    { testID, style, children } satisfies SlotProps,
+    { testID, style, children, ref: setTitleNode } satisfies SlotProps,
     {},
   );
   if (substituted !== null) return substituted;
   return (
-    <Text accessibilityRole="header" testID={testID} style={style}>
+    <Text
+      ref={setTitleNode}
+      accessibilityRole="header"
+      testID={testID}
+      style={style}
+    >
       {children}
     </Text>
   );
@@ -873,9 +993,12 @@ export function PopoverClose({
   style,
   children,
   render,
+  initialFocus = false,
 }: PopoverCloseProps): React.ReactNode {
   const disclosure = useContext(PopoverDisclosureContext);
   const state: PopoverCloseState = { disabled };
+  const scope = useFocusScopeMaybe();
+  const setCloseNode = useScopeStop(scope, initialFocus);
 
   const closePopover = useCallback(() => {
     if (disabled) return;
@@ -894,6 +1017,7 @@ export function PopoverClose({
       onPress: closePopover,
       style: resolveStyle(style, state),
       children,
+      ref: setCloseNode,
     } satisfies SlotProps,
     state,
   );
@@ -901,6 +1025,7 @@ export function PopoverClose({
 
   return (
     <Pressable
+      ref={setCloseNode}
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled || inert }}
       accessibilityLabel={accessibilityLabel}

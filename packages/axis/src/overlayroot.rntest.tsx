@@ -144,13 +144,17 @@ describe("OverlayRoot on React Native", () => {
     );
 
     // The trigger sits BEHIND an open modal layer, so it is hidden
-    // from assistive tech (`accessibilityViewIsModal` on the top
-    // layer) — querying it needs the hidden-element opt-in.
+    // from assistive tech (modality on the top popup) — querying it
+    // needs the hidden-element opt-in. The backdrop scrim is a sibling
+    // of the modal popup, so the same rule hides it on iOS (on Android
+    // the labelled scrim stays reachable — see overlay.md).
     expect(
       screen.getByTestId("ov-trigger", { includeHiddenElements: true }),
     ).toBeTruthy();
     expect(screen.getByTestId("ov-portal")).toBeTruthy();
-    expect(screen.getByTestId("ov-backdrop")).toBeTruthy();
+    expect(
+      screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+    ).toBeTruthy();
     expect(screen.getByTestId("ov-popup")).toBeTruthy();
     expect(screen.getByText("Content of ov")).toBeTruthy();
   });
@@ -205,7 +209,9 @@ describe("OverlayRoot on React Native", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByTestId("ov-backdrop"));
+      fireEvent.press(
+        screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+      );
     });
 
     expect(changes).toEqual([false]);
@@ -224,7 +230,9 @@ describe("OverlayRoot on React Native", () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getByTestId("ov-backdrop"));
+      fireEvent.press(
+        screen.getByTestId("ov-backdrop", { includeHiddenElements: true }),
+      );
     });
 
     expect(changes).toEqual([]);
