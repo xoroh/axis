@@ -36,6 +36,8 @@ import {
   trapTabKey,
   useFocusScopeMaybe,
   useModalFocus,
+  useScopeStop,
+  useScopeTitle,
 } from "./useAccessibilityFocus";
 import type {
   OverlayOpenChangeDetails,
@@ -834,20 +836,7 @@ export function DialogTitle({
   render,
 }: DialogTitleProps): React.ReactNode {
   const scope = useFocusScopeMaybe();
-  // Hooks first: the node ref must exist whether or not a scope (or
-  // popup) is present, so activation never reorders hook calls.
-  const unregisterRef = useRef<(() => void) | null>(null);
-  const setTitleNode = useCallback(
-    (node: ElementRef<typeof Text> | null) => {
-      unregisterRef.current?.();
-      unregisterRef.current = null;
-      if (node && scope) {
-        unregisterRef.current = scope.register(node, "title");
-      }
-    },
-    [scope],
-  );
-  useEffect(() => () => unregisterRef.current?.(), []);
+  const setTitleNode = useScopeTitle(scope);
 
   const substituted = resolveRender(
     render,
@@ -898,25 +887,9 @@ export function DialogClose({
   const disclosure = useContext(DialogCompoundContext);
   const state: DialogCloseState = { disabled };
   // Register as a focus stop — or as the marked initial target when
-  // the caller flags it (how AlertDialog marks Cancel). Registration
-  // is internal (ref callback + unmount cleanup); no public ref needed
-  // for the mark.
+  // the caller flags it (how AlertDialog marks Cancel).
   const scope = useFocusScopeMaybe();
-  const unregisterRef = useRef<(() => void) | null>(null);
-  const setCloseNode = useCallback(
-    (node: ElementRef<typeof View> | null) => {
-      unregisterRef.current?.();
-      unregisterRef.current = null;
-      if (node && scope) {
-        unregisterRef.current = scope.register(
-          node,
-          initialFocus ? "initial" : "stop",
-        );
-      }
-    },
-    [scope, initialFocus],
-  );
-  useEffect(() => () => unregisterRef.current?.(), []);
+  const setCloseNode = useScopeStop(scope, initialFocus);
 
   const closeDialog = useCallback(() => {
     if (disabled) return;

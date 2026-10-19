@@ -125,9 +125,23 @@ export {
   type AccordionTriggerState,
 } from "./components/Accordion";
 export {
-  AlertDialog,
-  type AlertDialogProps,
-  type AlertDialogState,
+  AlertDialogBackdrop,
+  type AlertDialogBackdropProps,
+  AlertDialogClose,
+  type AlertDialogCloseProps,
+  AlertDialogDescription,
+  type AlertDialogDescriptionProps,
+  AlertDialogPopup,
+  type AlertDialogPopupProps,
+  type AlertDialogPopupState,
+  AlertDialogPortal,
+  type AlertDialogPortalProps,
+  AlertDialogRoot,
+  type AlertDialogRootProps,
+  AlertDialogTitle,
+  type AlertDialogTitleProps,
+  AlertDialogTrigger,
+  type AlertDialogTriggerProps,
 } from "./components/AlertDialog";
 export { AspectRatio, type AspectRatioProps } from "./components/AspectRatio";
 export {
@@ -213,11 +227,32 @@ export {
   type DialogTriggerState,
 } from "./components/Dialog";
 export {
-  Drawer,
-  type DrawerProps,
+  DrawerBackdrop,
+  type DrawerBackdropProps,
+  type DrawerBackdropState,
+  DrawerClose,
+  type DrawerCloseProps,
+  type DrawerCloseState,
+  DrawerDescription,
+  type DrawerDescriptionProps,
+  DrawerHandle,
+  type DrawerHandleProps,
+  type DrawerHandleState,
+  DrawerPopup,
+  type DrawerPopupProps,
+  type DrawerPopupState,
+  DrawerPortal,
+  type DrawerPortalProps,
+  DrawerRoot,
+  type DrawerRootProps,
+  type DrawerRootState,
   type DrawerSide,
   type DrawerSnapPoint,
-  type DrawerState,
+  DrawerTitle,
+  type DrawerTitleProps,
+  DrawerTrigger,
+  type DrawerTriggerProps,
+  type DrawerTriggerState,
 } from "./components/Drawer";
 export {
   DropdownMenu,
@@ -373,6 +408,7 @@ export {
   OverlayTrigger,
   type OverlayTriggerProps,
   type OverlayTriggerState,
+  useModalActive,
   useOverlay,
   useScrollLock,
 } from "./components/Overlay";
@@ -562,6 +598,8 @@ export {
   type DismissSource,
   type DismissWiringOptions,
   dismissBranchesFor,
+  type OverlayOpenChangeDetails,
+  type OverlayOpenChangeReason,
   shouldDismissOn,
 } from "./dismissWiring";
 export {
@@ -571,6 +609,10 @@ export {
   resolveAutofocus,
   type TrapMove,
 } from "./focusTrap";
+export type {
+  FocusInteraction,
+  OverlayFocusValue,
+} from "./components/useAccessibilityFocus";
 export {
   clampNumberValue,
   formatNumberValue,

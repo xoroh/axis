@@ -3,12 +3,13 @@ import {
   type ElementRef,
   type JSX,
   type ReactNode,
+  useCallback,
   useContext,
   useEffect,
   useRef,
   type RefObject,
 } from "react";
-import { AccessibilityInfo, findNodeHandle, type View } from "react-native";
+import { AccessibilityInfo, findNodeHandle, type Text, type View } from "react-native";
 
 /**
  * Screen-reader + DOM focus wiring for overlay surfaces (internal —
@@ -284,6 +285,59 @@ export function FocusScopeProvider({
       {children}
     </FocusScopeContext.Provider>
   );
+}
+
+/**
+ * Title registration for popup parts. Returns a ref callback that
+ * registers the node as the scope's title (the default-target
+ * fallback) and unregisters on unmount or node change. Shared by
+ * DialogTitle, DrawerTitle, PopoverTitle, … — one implementation so
+ * the fallback resolves identically in every family.
+ */
+export function useScopeTitle(
+  scope: FocusScope | null,
+): (node: ElementRef<Text> | null) => void {
+  const unregisterRef = useRef<(() => void) | null>(null);
+  const setNode = useCallback(
+    (node: ElementRef<Text> | null) => {
+      unregisterRef.current?.();
+      unregisterRef.current = null;
+      if (node && scope) {
+        unregisterRef.current = scope.register(node, "title");
+      }
+    },
+    [scope],
+  );
+  useEffect(() => () => unregisterRef.current?.(), []);
+  return setNode;
+}
+
+/**
+ * Focus-stop registration for closer/handle parts. `initial` marks
+ * the node as the default initial target (how AlertDialog marks
+ * Cancel). Shared by DialogClose, AlertDialogClose, PopoverClose,
+ * DrawerClose, … — one implementation, identical resolution.
+ */
+export function useScopeStop(
+  scope: FocusScope | null,
+  initial: boolean,
+): (node: ElementRef<View> | null) => void {
+  const unregisterRef = useRef<(() => void) | null>(null);
+  const setNode = useCallback(
+    (node: ElementRef<View> | null) => {
+      unregisterRef.current?.();
+      unregisterRef.current = null;
+      if (node && scope) {
+        unregisterRef.current = scope.register(
+          node,
+          initial ? "initial" : "stop",
+        );
+      }
+    },
+    [scope, initial],
+  );
+  useEffect(() => () => unregisterRef.current?.(), []);
+  return setNode;
 }
 
 /* ------------------------------------------------------------------ */

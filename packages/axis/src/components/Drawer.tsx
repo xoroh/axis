@@ -1,93 +1,84 @@
 import {
+  createContext,
   type ElementRef,
   type ReactNode,
   type Ref,
   useCallback,
+  useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   PanResponder,
   Pressable,
   type StyleProp,
+  Text,
+  type TextStyle,
   View,
   type ViewStyle,
 } from "react-native";
+import type {
+  OverlayOpenChangeDetails,
+  OverlayOpenChangeReason,
+} from "../dismissWiring";
+import { shouldDismissOn } from "../dismissWiring";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { OverlayPortal, OverlayRoot } from "./Overlay";
+import {
+  OverlayPortal,
+  OverlayRoot,
+  useOverlayMaybe,
+  useOverlayRefsMaybe,
+} from "./Overlay";
+import {
+  createFocusScope,
+  type FocusScope,
+  FocusScopeProvider,
+  isWebEnvironment,
+  type OverlayFocusValue,
+  trapTabKey,
+  useFocusScopeMaybe,
+  useModalFocus,
+  useScopeStop,
+  useScopeTitle,
+} from "./useAccessibilityFocus";
 
 /**
  * Drawer — an unstyled edge-anchored panel with snap points and swipe dismissal.
  *
- * Base UI naming (owner direction, verified live 2026-10-19): the
- * edge-anchored panel is a `Drawer`, and Base UI `Drawer` owns snap
- * points — so the bottom-sheet `Sheet` folds in here instead of
- * living beside it. `snapPoints` are preset resting positions along
- * the dismiss axis: numbers in (0, 1] are fractions of the measured
- * container extent (width for `left`/`right`, height for `top`/
- * `bottom`); numbers greater than 1 are dp; `'NNNpx'` strings are dp.
- * Anything else (`rem`, garbage) resolves out; an empty resolution
- * falls back to `[1]` (fully open). Nothing here throws on caller
- * input.
+ * Compound anatomy per Base UI (Root, Trigger, Portal, Backdrop,
+ * Popup, Title, Description, Close) plus `DrawerHandle` — the SR
+ * gesture parity the monolith proved: a button carrying
+ * `dismiss`/`expand`/`collapse` accessibility actions, caller-styled.
+ * State (open, snap, drag, extent) lives in `DrawerRoot`, which
+ * renders no element; measurement, scrim, surface, and actions compose
+ * below it.
  *
- * Structure only: the `Overlay` root painting at the app's
- * `PortalHost`, holding a scrim layer with the drawer surface
- * anchored to its `side` (default `"left"`). No default visuals —
- * every visual value (`overlayStyle`, `surfaceStyle`) is
- * caller-provided; cross-axis size (width for side drawers, height
- * for top/bottom) especially is caller geometry. State follows the
- * `useControllableState` pattern three times: `open` (+
- * `onOpenChange`) for visibility, `snapPoint` (+
- * `onSnapPointChange`) for the active snap value, `side` is static.
- * Presence is mount/unmount: closed renders `null`.
- *
- * The container is measured with the surface's own `onLayout` (last
- * measurement wins; before the first layout the drawer rests at its
- * snap rather than hiding — a hidden-until-measured drawer would read
- * as a mount failure).
+ * `snapPoints` are preset resting positions along the dismiss axis:
+ * numbers in (0, 1] are fractions of the measured container extent
+ * (width for `left`/`right`, height for `top`/`bottom`); numbers
+ * greater than 1 are dp; `'NNNpx'` strings are dp. Anything else
+ * resolves out; an empty resolution falls back to `[1]`.
  *
  * Drag (the `Sheet` PanResponder pattern, generalized): a drag on the
  * surface along the dismiss axis follows the finger (`drag` state);
  * on release a drag past the dismiss distance (`max(64dp, 20% of the
  * dismiss-axis extent)`) or with dismiss-direction velocity dismisses
- * when `dismissable` (otherwise it snaps back), and any other release
- * settles to the nearest snap point. Screen-reader users get the same
- * moves through `expand`/`collapse` accessibility actions — gesture
- * parity, not a gesture requirement.
+ * (reported as `none` — Base UI has no gesture-dismiss reason) when
+ * `dismissable`, otherwise it snaps back; any other release settles
+ * to the nearest snap point.
  *
- * Scrim and modality: when `dismissable` (default `true`) AND `modal`
- * (default `true`) the scrim is a `Pressable` labelled "Dismiss" and
- * scrim press closes via `onDismiss` + `onOpenChange(false)` (the
- * `Dialog` scrim precedent); otherwise it is a plain `View` with no
- * label and no handler. In particular a non-modal drawer (`modal`
- * `false`) keeps its scrim inert — dismiss through caller actions,
- * drag, or system back, which still follows `dismissable` alone.
- * `Modal.onRequestClose` is always wired to the same dismiss path
- * and no-ops when not `dismissable` (the `Overlay` root owns it).
+ * Focus: SR focus moves into the popup on open; the default initial
+ * target is the popup container or Title (announced with its label —
+ * never a destructive action), or the caller-marked Close. Restore
+ * goes to the trigger or `finalFocus`.
  *
- * Deferred, each for a named reason (not oversight):
- * - No animation: the surface tracks state synchronously (Dialog
- *   precedent). Spring/snap animation would need the `presence`
- *   model to keep the surface mounted through transitions; until a
- *   consumer needs it, that machinery buys zero observed behavior.
- * - No focus trap beyond the overlay root's modal announcement and
- *   focus move/restore (the `focusTrap` RN adaptation, parity D5).
- *
- * Accessibility notes: the surface is an accessibility element
- * (`accessible`) so the `dialog` role reaches assistive tech. The
- * `modal` flag is deliberately omitted from `accessibilityState`:
- * React Native's `AccessibilityState` host type has no `modal` key
- * (checked against the RN 0.87 `ViewAccessibility` types), so it is
- * left out rather than smuggled past the typechecker.
- *
- * Test ids: the surface carries `testID`; the scrim carries
- * `<testID>-scrim` and the measured container `<testID>-container`
- * when `testID` is given (the Accordion `-panel` precedent). The
- * container id exists so tests can drive measurement with a layout
- * event — snap math without a measured container is untestable.
+ * Test ids: the popup carries `testID`; the portal container carries
+ * `<testID>-container` and the backdrop `<testID>-scrim`.
  */
 
 export type DrawerSide = "left" | "right" | "top" | "bottom";
@@ -95,7 +86,7 @@ export type DrawerSide = "left" | "right" | "top" | "bottom";
 /** A snap point value: fraction of the container extent, dp, or px string. */
 export type DrawerSnapPoint = number | string;
 
-export type DrawerState = {
+export type DrawerRootState = {
   /** Whether the drawer is currently open. */
   open: boolean;
   /** Anchored edge. */
@@ -104,13 +95,13 @@ export type DrawerState = {
   snapPoint: DrawerSnapPoint;
 };
 
-export type DrawerProps = {
+export type DrawerRootProps = {
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
   defaultOpen?: boolean;
-  /** Fires with the next open state on every committed dismiss. */
-  onOpenChange?: (open: boolean) => void;
+  /** Fires with the next open state on every committed open or dismissal, with the reason. */
+  onOpenChange?: (open: boolean, details?: OverlayOpenChangeDetails) => void;
   /** Fires on scrim, drag, or request-close dismissal, before `onOpenChange(false)`. */
   onDismiss?: () => void;
   /**
@@ -128,10 +119,10 @@ export type DrawerProps = {
   side?: DrawerSide;
   /**
    * Preset resting positions along the dismiss axis. Default `[1]`
-   * (fully open — previous Drawer behavior). Numbers in (0, 1] are
-   * fractions of the measured container extent; numbers greater than 1
-   * are dp; `'NNNpx'` strings are dp. Sorted, deduped; garbage resolves
-   * out and an empty resolution falls back to `[1]`.
+   * (fully open). Numbers in (0, 1] are fractions of the measured
+   * container extent; numbers greater than 1 are dp; `'NNNpx'` strings
+   * are dp. Sorted, deduped; garbage resolves out and an empty
+   * resolution falls back to `[1]`.
    */
   snapPoints?: DrawerSnapPoint[];
   /**
@@ -143,24 +134,18 @@ export type DrawerProps = {
   defaultSnapPoint?: DrawerSnapPoint | null;
   /** Fires with the snap point value on every committed settle. */
   onSnapPointChange?: (snapPoint: DrawerSnapPoint) => void;
-  /** Drawer content. */
-  children?: ReactNode;
-  /** Accessible name source for the drawer surface. */
-  accessibilityLabel?: string;
-  testID?: string;
-  /** Scrim layer style, caller-provided. */
-  overlayStyle?: StyleProp<ViewStyle>;
-  /** Drawer surface (box) style: value or function of drawer state. */
-  surfaceStyle?: StateStyle<DrawerState, StyleProp<ViewStyle>>;
   /**
-   * Element or function substitution (Base UI parity) for the drawer
-   * surface: an element is cloned with the surface props merged under
-   * its own; a function receives `(props, state)`. The overlay host,
-   * scrim, drag, and snap wiring stay on the part.
+   * Explicit initial focus target (wins over the popup's). See
+   * `OverlayRootProps.initialFocus` for the value shape.
    */
-  render?: RenderProp<DrawerState, SlotProps>;
-  /** Forwarded to the surface `View`. */
-  ref?: Ref<ElementRef<typeof View>>;
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
+  /** Trigger, Portal, and shared content. Renders no element itself. */
+  children?: ReactNode;
 };
 
 /**
@@ -171,7 +156,7 @@ export type DrawerProps = {
  * this body is its first consumer.
  */
 function assignRef(
-  ref: DrawerProps["ref"],
+  ref: Ref<ElementRef<typeof View>> | undefined,
   value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
@@ -209,7 +194,33 @@ function dismissDistanceFor(extent: number): number {
   return Math.max(64, extent * 0.2);
 }
 
-export function Drawer({
+type DrawerDisclosure = {
+  open: boolean;
+  toggle: () => void;
+  close: () => void;
+  dismiss: (reason?: OverlayOpenChangeReason) => void;
+  modal: boolean;
+  dismissable: boolean;
+  side: DrawerSide;
+  horizontal: boolean;
+  snapPoint: DrawerSnapPoint;
+  activeSnap: number;
+  snapCount: number;
+  translate: number;
+  panHandlers: ReturnType<typeof PanResponder.create>["panHandlers"];
+  setExtent: (extent: number) => void;
+  commitSnapValue: (value: DrawerSnapPoint) => void;
+  expand: () => void;
+  collapse: () => void;
+};
+
+/**
+ * Shared open/snap state for the compound parts. Internal (not
+ * exported): parts must render inside a `DrawerRoot` to participate.
+ */
+const DrawerDisclosureContext = createContext<DrawerDisclosure | null>(null);
+
+export function DrawerRoot({
   open,
   defaultOpen = false,
   onOpenChange,
@@ -221,14 +232,10 @@ export function Drawer({
   snapPoint,
   defaultSnapPoint = null,
   onSnapPointChange,
+  initialFocus,
+  finalFocus,
   children,
-  accessibilityLabel,
-  testID,
-  overlayStyle,
-  surfaceStyle,
-  render,
-  ref,
-}: DrawerProps): React.ReactNode {
+}: DrawerRootProps): React.JSX.Element {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
     defaultOpen,
@@ -277,11 +284,6 @@ export function Drawer({
       : nearestIndexFor(snapValueOf(defaultSnapPoint) ?? Number.NaN),
     undefined,
   );
-  // A controlled value past the end (snapPoints shrank under it)
-  // clamps silently — the drawer rests at the nearest real snap.
-  // The hook types the value as possibly undefined; the default
-  // above guarantees 0, and the fallback satisfies the typechecker,
-  // not a runtime path.
   const activeSnap = Math.min(Math.max(0, rawSnap ?? 0), resolved.length - 1);
 
   const commitSnap = useCallback(
@@ -295,10 +297,27 @@ export function Drawer({
     [resolved, activeSnap, setRawSnap, onSnapPointChange],
   );
 
-  const dismiss = useCallback(() => {
+  const dragDismiss = useCallback(() => {
     onDismiss?.();
-    setOpen(false);
+    setOpen(false, { reason: "none" });
   }, [onDismiss, setOpen]);
+
+  const dismiss = useCallback(
+    (reason: OverlayOpenChangeReason = "outside-press") => {
+      if (!dismissable) return;
+      onDismiss?.();
+      setOpen(false, { reason });
+    },
+    [dismissable, onDismiss, setOpen],
+  );
+
+  const close = useCallback(() => {
+    setOpen(false, { reason: "close-press" });
+  }, [setOpen]);
+
+  const toggle = useCallback(() => {
+    setOpen((previous) => !(previous ?? false), { reason: "trigger-press" });
+  }, [setOpen]);
 
   const horizontal = side === "left" || side === "right";
   // Dismiss direction along the axis: left/top retreat negative,
@@ -306,8 +325,7 @@ export function Drawer({
   const sign = side === "left" || side === "top" ? -1 : 1;
 
   // Resting translation for a snap index: fractions of the measured
-  // extent, dp values as visible sizes. The index is always clamped
-  // before use, so the fallback never fires.
+  // extent, dp values as visible sizes.
   const offsetFor = useCallback(
     (index: number) => {
       const value = snapValueOf(resolved[index] ?? 1) ?? 1;
@@ -324,7 +342,7 @@ export function Drawer({
         dismissable &&
         (distance >= dismissDistanceFor(extent) || velocity > 0.75)
       ) {
-        dismiss();
+        dragDismiss();
         return;
       }
       // Nearest snap to the release point.
@@ -340,8 +358,8 @@ export function Drawer({
     [
       activeSnap,
       commitSnap,
-      dismiss,
       dismissable,
+      dragDismiss,
       extent,
       offsetFor,
       resolved.length,
@@ -392,128 +410,693 @@ export function Drawer({
     else commitSnap(activeSnap - 1);
   }, [activeSnap, commitSnap, dismiss, dismissable]);
 
-  if (!isOpen) return null;
-
-  const translate = offsetFor(activeSnap) + drag;
-  const transform = horizontal
-    ? [{ translateX: translate }]
-    : [{ translateY: translate }];
-  // Anchor edge: full-bleed on the cross axis, flush on the side.
-  const anchor: ViewStyle =
-    side === "left"
-      ? { left: 0, top: 0, bottom: 0 }
-      : side === "right"
-        ? { right: 0, top: 0, bottom: 0 }
-        : side === "top"
-          ? { top: 0, left: 0, right: 0 }
-          : { bottom: 0, left: 0, right: 0 };
-  const scrimLabel = modal && dismissable ? "Dismiss" : undefined;
-  const state: DrawerState = {
-    open: true,
-    side,
-    snapPoint: resolved[activeSnap] ?? 1,
-  };
-
-  function commitSnapValue(value: DrawerSnapPoint): void {
-    const numeric = snapValueOf(value);
-    commitSnap(numeric === undefined ? activeSnap : nearestIndexFor(numeric));
-  }
-
-  const onSurfaceAccessibilityAction = (event: {
-    nativeEvent: { actionName: string };
-  }) => {
-    if (event.nativeEvent.actionName === "expand") expand();
-    else if (event.nativeEvent.actionName === "collapse") collapse();
-  };
-
-  const substituted = resolveRender(
-    render,
-    {
-      accessible: true,
-      accessibilityRole: "dialog",
-      accessibilityLabel,
-      accessibilityActions: [
-        { name: "expand", label: "Expand drawer" },
-        { name: "collapse", label: "Collapse drawer" },
-      ],
-      onAccessibilityAction: onSurfaceAccessibilityAction,
-      testID,
-      style: [
-        { position: "absolute", ...anchor, transform },
-        resolveStyle(surfaceStyle, state),
-      ],
-      children,
-      onDismiss: dismiss,
-      onSnapPointChange: commitSnapValue,
-      ref,
-      ...responder.panHandlers,
-    } satisfies SlotProps,
-    state,
+  const commitSnapValue = useCallback(
+    (value: DrawerSnapPoint): void => {
+      const numeric = snapValueOf(value);
+      commitSnap(numeric === undefined ? activeSnap : nearestIndexFor(numeric));
+    },
+    [activeSnap, commitSnap, nearestIndexFor],
   );
 
-  const surface =
-    substituted !== null ? (
-      substituted
-    ) : (
-      <View
-        accessible
-        accessibilityRole="dialog"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityActions={[
-          { name: "expand", label: "Expand drawer" },
-          { name: "collapse", label: "Collapse drawer" },
-        ]}
-        onAccessibilityAction={onSurfaceAccessibilityAction}
-        testID={testID}
-        style={[
-          { position: "absolute", ...anchor, transform },
-          resolveStyle(surfaceStyle, state),
-        ]}
-        ref={(node) => assignRef(ref, node)}
-        {...responder.panHandlers}
-      >
-        {children}
-      </View>
-    );
+  const translate = offsetFor(activeSnap) + drag;
 
+  const disclosure = useMemo<DrawerDisclosure>(
+    () => ({
+      open: isOpen ?? false,
+      toggle,
+      close,
+      dismiss,
+      modal,
+      dismissable,
+      side,
+      horizontal,
+      snapPoint: resolved[activeSnap] ?? 1,
+      activeSnap,
+      snapCount: resolved.length,
+      translate,
+      panHandlers: responder.panHandlers,
+      setExtent,
+      commitSnapValue,
+      expand,
+      collapse,
+    }),
+    [
+      isOpen,
+      toggle,
+      close,
+      dismiss,
+      modal,
+      dismissable,
+      side,
+      horizontal,
+      resolved,
+      activeSnap,
+      translate,
+      responder,
+      commitSnapValue,
+      expand,
+      collapse,
+    ],
+  );
+
+  // The root owns state, never layout: no host element (Base UI parity).
   return (
     <OverlayRoot
       open={isOpen}
       onOpenChange={setOpen}
-      onDismiss={dismiss}
+      onDismiss={onDismiss}
       modal={modal}
       dismissable={dismissable}
+      initialFocus={initialFocus}
+      finalFocus={finalFocus}
       dismiss={{
         outsidePointer: dismissable,
         systemBack: dismissable,
         escape: dismissable,
       }}
     >
-      <OverlayPortal
-        testID={testID === undefined ? undefined : `${testID}-portal`}
-      >
+      <DrawerDisclosureContext.Provider value={disclosure}>
+        {children}
+      </DrawerDisclosureContext.Provider>
+    </OverlayRoot>
+  );
+}
+
+export type DrawerTriggerState = {
+  /** Whether the drawer is currently open. */
+  open: boolean;
+  /** Whether the trigger is currently disabled. */
+  disabled: boolean;
+};
+
+export type DrawerTriggerProps = {
+  /** Terminal: it never opens and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of trigger state, caller-provided. */
+  style?: StateStyle<DrawerTriggerState, StyleProp<ViewStyle>>;
+  /** Trigger content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity): an element is
+   * cloned with the part props merged under its own; a function
+   * receives `(props, state)`.
+   */
+  render?: RenderProp<DrawerTriggerState, SlotProps>;
+};
+
+export function DrawerTrigger({
+  disabled = false,
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  render,
+}: DrawerTriggerProps): React.ReactNode {
+  const disclosure = useContext(DrawerDisclosureContext);
+  const open = disclosure?.open ?? false;
+  const state: DrawerTriggerState = { open, disabled };
+  // Bridge the trigger node into the overlay: `OverlayRoot` restores
+  // SR focus here on close. Outside a root there is no overlay — the
+  // bridge is a no-op and the trigger stays inert (see below).
+  const overlayRefs = useOverlayRefsMaybe();
+
+  const toggleTrigger = useCallback(() => {
+    if (disabled) return;
+    // The trigger press is the open interaction for function-form
+    // focus targets (read by the popup's focus hook on open).
+    if (overlayRefs) overlayRefs.interaction.current = "trigger-press";
+    disclosure?.toggle();
+  }, [disabled, disclosure, overlayRefs]);
+
+  const setTriggerRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      if (overlayRefs) overlayRefs.triggerRef.current = node;
+    },
+    [overlayRefs],
+  );
+
+  // Outside a root there is no drawer to open: render inert
+  // (announced disabled, press is a no-op) rather than dropping the
+  // node silently (the `MenuItem` precedent).
+  const inert = disclosure === null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { expanded: open, disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: toggleTrigger,
+      style: resolveStyle(style, state),
+      children,
+      ref: setTriggerRef,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      ref={setTriggerRef}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: open, disabled: disabled || inert }}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      disabled={disabled || inert}
+      onPress={toggleTrigger}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+export type DrawerPortalProps = {
+  /** Portal content (Backdrop + Popup composed by the caller). */
+  children?: ReactNode;
+  testID?: string;
+};
+
+export function DrawerPortal({
+  children,
+  testID,
+}: DrawerPortalProps): React.JSX.Element | null {
+  const disclosure = useContext(DrawerDisclosureContext);
+  // Outside a root there is no open state to present: render nothing.
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+
+  // The measured container lives here (not in the popup): the snap
+  // math needs the full-bleed extent, and the container is the shared
+  // layout owner the scrim and surface both fill. The disclosure is
+  // re-provided inside the portal: portaled content renders at the
+  // host, outside this root's subtree, so without an explicit provider
+  // the parts below would read a null disclosure.
+  return (
+    <OverlayPortal>
+      <DrawerDisclosureContext.Provider value={disclosure}>
         <View
-          style={[{ flex: 1 }, overlayStyle]}
           testID={testID === undefined ? undefined : `${testID}-container`}
+          style={{ flex: 1 }}
           onLayout={(event) => {
             const { width, height } = event.nativeEvent.layout;
-            const next = horizontal ? width : height;
-            if (next > 0) setExtent(next);
+            const next = disclosure.horizontal ? width : height;
+            if (next > 0) disclosure.setExtent(next);
           }}
         >
-          {scrimLabel !== undefined ? (
-            <Pressable
-              accessibilityLabel={scrimLabel}
-              testID={testID === undefined ? undefined : `${testID}-scrim`}
-              onPress={dismiss}
-              style={{ flex: 1 }}
-            />
-          ) : (
-            <View style={{ flex: 1 }} />
-          )}
-          {surface}
+          <View testID={testID} style={{ flex: 1 }}>
+            {children}
+          </View>
         </View>
-      </OverlayPortal>
-    </OverlayRoot>
+      </DrawerDisclosureContext.Provider>
+    </OverlayPortal>
+  );
+}
+
+export type DrawerBackdropState = {
+  /** Whether the drawer is currently open. */
+  open: boolean;
+};
+
+export type DrawerBackdropProps = {
+  testID?: string;
+  /** Value or function of backdrop state, caller-provided. */
+  style?: StateStyle<DrawerBackdropState, StyleProp<ViewStyle>>;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * scrim host; dismissal wiring stays on the part.
+   */
+  render?: RenderProp<DrawerBackdropState, SlotProps>;
+};
+
+export function DrawerBackdrop({
+  testID,
+  style,
+  render,
+}: DrawerBackdropProps): React.ReactNode {
+  const disclosure = useContext(DrawerDisclosureContext);
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+  const state: DrawerBackdropState = { open: disclosure.open };
+
+  // Modal + dismissable: the labelled scrim dismisses (the Dialog
+  // precedent). Otherwise the scrim is a plain host with no label and
+  // no handler — no fake affordance — and a non-modal drawer keeps
+  // its scrim inert regardless.
+  if (disclosure.modal && disclosure.dismissable) {
+    const handlePress = () => disclosure.dismiss("outside-press");
+    const substituted = resolveRender(
+      render,
+      {
+        accessibilityLabel: "Dismiss",
+        testID,
+        onPress: handlePress,
+        style: [{ flex: 1 }, resolveStyle(style, state)],
+      } satisfies SlotProps,
+      state,
+    );
+    if (substituted !== null) return substituted;
+    return (
+      <Pressable
+        accessibilityLabel="Dismiss"
+        testID={testID}
+        onPress={handlePress}
+        style={[{ flex: 1 }, resolveStyle(style, state)]}
+      />
+    );
+  }
+
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style: [{ flex: 1 }, resolveStyle(style, state)],
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+  return <View testID={testID} style={[{ flex: 1 }, resolveStyle(style, state)]} />;
+}
+
+export type DrawerPopupState = {
+  /** Whether the drawer is currently open. */
+  open: boolean;
+  /** Anchored edge. */
+  side: DrawerSide;
+  /** Active snap point value. */
+  snapPoint: DrawerSnapPoint;
+};
+
+export type DrawerPopupProps = {
+  /** Accessible name source for the drawer surface. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of popup state, caller-provided. */
+  style?: StateStyle<DrawerPopupState, StyleProp<ViewStyle>>;
+  /** Surface content. */
+  children?: ReactNode;
+  /**
+   * Element or function substitution (Base UI parity). Replaces the
+   * surface host; role, modality, drag, and dismissal wiring stay on
+   * the part.
+   */
+  render?: RenderProp<DrawerPopupState, SlotProps>;
+  /** Forwarded to the surface `View`. */
+  ref?: Ref<ElementRef<typeof View>>;
+  /**
+   * Explicit initial focus target (wins over the root's). Element, ref,
+   * function of the open interaction, or `false` to keep focus where
+   * it is. Default: the popup container or Title (never a destructive
+   * action).
+   */
+  initialFocus?: OverlayFocusValue;
+  /**
+   * Explicit restore target (wins over the trigger). See
+   * `OverlayRootProps.finalFocus` for the value shape.
+   */
+  finalFocus?: OverlayFocusValue;
+};
+
+export function DrawerPopup({
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  render,
+  ref,
+  initialFocus,
+  finalFocus,
+}: DrawerPopupProps): React.ReactNode {
+  const disclosure = useContext(DrawerDisclosureContext);
+  // Bridges and hooks before guards (see DialogPopup).
+  const overlay = useOverlayMaybe();
+  const overlayRefs = useOverlayRefsMaybe();
+
+  const popupNodeRef = useRef<ElementRef<typeof View> | null>(null);
+  const setPopupRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      popupNodeRef.current = node;
+      if (overlayRefs) overlayRefs.popupRef.current = node;
+      assignRef(ref, node);
+    },
+    [overlayRefs, ref],
+  );
+
+  // One focus scope per popup: Title parts register here so the
+  // default initial target resolves without a DOM query on native.
+  // Stops are skipped for drawers — the default is the container or
+  // Title, announced with its label, never a destructive action
+  // (unless the caller marks one explicitly).
+  const focusScope = useMemo<FocusScope>(() => createFocusScope(), []);
+
+  const open = disclosure?.open ?? false;
+  const modal = disclosure?.modal ?? true;
+  useModalFocus({
+    open,
+    initialFocus: initialFocus ?? overlay?.initialFocus,
+    finalFocus: finalFocus ?? overlay?.finalFocus,
+    defaultTarget: focusScope.resolveDefault(false),
+    interactionRef: overlayRefs?.interaction,
+    popupRef: popupNodeRef,
+    restoreRef: overlayRefs?.triggerRef ?? { current: null },
+  });
+
+  if (!disclosure) return null;
+  if (!disclosure.open) return null;
+  const state: DrawerPopupState = {
+    open: disclosure.open,
+    side: disclosure.side,
+    snapPoint: disclosure.snapPoint,
+  };
+
+  // iOS VoiceOver scrub dismisses — the bound form of the `escape`
+  // branch, reported as `escape-key`. Guarded on `dismissable` like
+  // the platform back button.
+  const canEscape =
+    (overlay?.isTop ?? true) &&
+    (overlay
+      ? shouldDismissOn("escape", overlay.open, overlay.dismissBranches)
+      : disclosure.dismissable);
+  const handleAccessibilityEscape = canEscape
+    ? () => disclosure.dismiss("escape-key")
+    : undefined;
+
+  // iOS modal claim on the popup (top layer only). Non-modal popups
+  // claim nothing — neither trap focus nor hide anything. On web the
+  // same modality is `aria-modal` plus the Tab trap below.
+  const top = overlay?.isTop ?? true;
+  const modalActive = modal && top;
+  const web = isWebEnvironment();
+  const handleKeyDown =
+    web && modalActive
+      ? (event: { key?: unknown; shiftKey?: unknown; preventDefault?: unknown }) =>
+          trapTabKey(popupNodeRef.current, event)
+      : undefined;
+
+  // Anchor edge: full-bleed on the cross axis, flush on the side.
+  const anchor: ViewStyle =
+    disclosure.side === "left"
+      ? { left: 0, top: 0, bottom: 0 }
+      : disclosure.side === "right"
+        ? { right: 0, top: 0, bottom: 0 }
+        : disclosure.side === "top"
+          ? { top: 0, left: 0, right: 0 }
+          : { bottom: 0, left: 0, right: 0 };
+  const transform = disclosure.horizontal
+    ? [{ translateX: disclosure.translate }]
+    : [{ translateY: disclosure.translate }];
+
+  const substituted = resolveRender(
+    render,
+    {
+      accessible: true,
+      role: "dialog",
+      accessibilityRole: "dialog",
+      accessibilityLabel,
+      testID,
+      onAccessibilityEscape: handleAccessibilityEscape,
+      accessibilityViewIsModal: modalActive,
+      ...(web && modalActive ? { "aria-modal": true } : null),
+      onKeyDown: handleKeyDown,
+      style: [
+        { position: "absolute", ...anchor, transform },
+        resolveStyle(style, state),
+      ],
+      children,
+      ref: setPopupRef,
+      ...disclosure.panHandlers,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null)
+    return (
+      <FocusScopeProvider scope={focusScope}>{substituted}</FocusScopeProvider>
+    );
+
+  return (
+    <FocusScopeProvider scope={focusScope}>
+      <View
+        ref={setPopupRef}
+        accessible
+        role="dialog"
+        accessibilityRole="dialog"
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        onAccessibilityEscape={handleAccessibilityEscape}
+        accessibilityViewIsModal={modalActive}
+        {...(web && modalActive ? { "aria-modal": true } : null)}
+        onKeyDown={handleKeyDown}
+        style={[
+          { position: "absolute", ...anchor, transform },
+          resolveStyle(style, state),
+        ]}
+        {...disclosure.panHandlers}
+      >
+        {children}
+      </View>
+    </FocusScopeProvider>
+  );
+}
+
+export type DrawerTitleProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Heading content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function DrawerTitle({
+  testID,
+  style,
+  children,
+  render,
+}: DrawerTitleProps): React.ReactNode {
+  const scope = useFocusScopeMaybe();
+  const setTitleNode = useScopeTitle(scope);
+  const substituted = resolveRender(
+    render,
+    { testID, style, children, ref: setTitleNode } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <Text
+      ref={setTitleNode}
+      accessibilityRole="header"
+      testID={testID}
+      style={style}
+    >
+      {children}
+    </Text>
+  );
+}
+
+export type DrawerDescriptionProps = {
+  testID?: string;
+  /** Text style, caller-provided. */
+  style?: StyleProp<TextStyle>;
+  /** Description content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function DrawerDescription({
+  testID,
+  style,
+  children,
+  render,
+}: DrawerDescriptionProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    { testID, style, children } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+  return (
+    <Text testID={testID} style={style}>
+      {children}
+    </Text>
+  );
+}
+
+export type DrawerCloseState = {
+  /** Whether the button is currently disabled. */
+  disabled: boolean;
+};
+
+export type DrawerCloseProps = {
+  /** Terminal: it never closes and is announced as disabled. */
+  disabled?: boolean;
+  /** Accessible name source. */
+  accessibilityLabel?: string;
+  testID?: string;
+  /** Value or function of close state, caller-provided. */
+  style?: StateStyle<DrawerCloseState, StyleProp<ViewStyle>>;
+  /** Button content. */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<DrawerCloseState, SlotProps>;
+  /**
+   * Mark this Close as the default initial focus target. Default `false`.
+   */
+  initialFocus?: boolean;
+};
+
+export function DrawerClose({
+  disabled = false,
+  accessibilityLabel,
+  testID,
+  style,
+  children,
+  render,
+  initialFocus = false,
+}: DrawerCloseProps): React.ReactNode {
+  const disclosure = useContext(DrawerDisclosureContext);
+  const state: DrawerCloseState = { disabled };
+  const scope = useFocusScopeMaybe();
+  const setCloseNode = useScopeStop(scope, initialFocus);
+
+  const closeDrawer = useCallback(() => {
+    if (disabled) return;
+    disclosure?.close();
+  }, [disabled, disclosure]);
+
+  // Outside a root there is nothing to close: render inert rather
+  // than dropping the node silently.
+  const inert = disclosure === null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { disabled: disabled || inert },
+      accessibilityLabel,
+      testID,
+      disabled: disabled || inert,
+      onPress: closeDrawer,
+      style: resolveStyle(style, state),
+      children,
+      ref: setCloseNode,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      ref={setCloseNode}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: disabled || inert }}
+      accessibilityLabel={accessibilityLabel}
+      testID={testID}
+      disabled={disabled || inert}
+      onPress={closeDrawer}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+export type DrawerHandleState = {
+  /** Whether the drawer is currently open. */
+  open: boolean;
+  /** Index of the active snap point. */
+  activeSnap: number;
+  /** Number of configured snap points. */
+  snapCount: number;
+};
+
+export type DrawerHandleProps = {
+  testID?: string;
+  /** Value or function of handle state, caller-provided. */
+  style?: StateStyle<DrawerHandleState, StyleProp<ViewStyle>>;
+  /** Handle content (usually none — the grip is caller style). */
+  children?: ReactNode;
+  /** Element or function substitution (Base UI parity). */
+  render?: RenderProp<DrawerHandleState, SlotProps>;
+};
+
+/**
+ * DrawerHandle — the visible grip. A button (role) with `dismiss`,
+ * `expand`, and `collapse` accessibility actions: the screen-reader
+ * gesture parity for drag. Tap expands one snap; the actions dismiss
+ * or step the snap. Caller-styled (usually a short rounded bar).
+ */
+export function DrawerHandle({
+  testID,
+  style,
+  children,
+  render,
+}: DrawerHandleProps): React.ReactNode {
+  const disclosure = useContext(DrawerDisclosureContext);
+  const state: DrawerHandleState = {
+    open: disclosure?.open ?? false,
+    activeSnap: disclosure?.activeSnap ?? 0,
+    snapCount: disclosure?.snapCount ?? 0,
+  };
+
+  const onAccessibilityAction = useCallback(
+    (event: { nativeEvent: { actionName: string } }) => {
+      const name = event.nativeEvent.actionName;
+      if (name === "dismiss") disclosure?.dismiss("close-press");
+      else if (name === "expand") disclosure?.expand();
+      else if (name === "collapse") disclosure?.collapse();
+    },
+    [disclosure],
+  );
+
+  const pressHandle = useCallback(() => {
+    disclosure?.expand();
+  }, [disclosure]);
+
+  // Outside a root there is no drawer to drive: render inert rather
+  // than dropping the node silently.
+  const inert = disclosure === null;
+  const substituted = resolveRender(
+    render,
+    {
+      accessibilityRole: "button",
+      accessibilityState: { disabled: inert },
+      testID,
+      disabled: inert,
+      accessibilityActions: [
+        { name: "dismiss", label: "Dismiss drawer" },
+        { name: "expand", label: "Expand drawer" },
+        { name: "collapse", label: "Collapse drawer" },
+      ],
+      onAccessibilityAction,
+      onPress: pressHandle,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ disabled: inert }}
+      testID={testID}
+      disabled={inert}
+      accessibilityActions={[
+        { name: "dismiss", label: "Dismiss drawer" },
+        { name: "expand", label: "Expand drawer" },
+        { name: "collapse", label: "Collapse drawer" },
+      ]}
+      onAccessibilityAction={onAccessibilityAction}
+      onPress={pressHandle}
+      style={resolveStyle(style, state)}
+    >
+      {children}
+    </Pressable>
   );
 }
