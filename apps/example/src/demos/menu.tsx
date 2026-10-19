@@ -105,12 +105,12 @@ export const MenuDemo: Demo = {
       paddingHorizontal: 10,
       marginBottom: 4,
     };
-    // Monolith box: same surface, full row width (the monolith
-    // wrapper owns the anchor width, unlike the compound layer —
-    // `width` because `absolute` boxes ignore flex stretch).
+    // Monolith box: same surface; the hook matches the box to the
+    // trigger row width (`matchAnchorWidth`), so no `width` here —
+    // `width: 100%` would mean the viewport once the box portals to
+    // the app host.
     const inlineBoxStyle: MenuProps["style"] = {
       ...popupStyle,
-      width: "100%",
       minWidth: undefined,
     };
     const wideTriggerStyle: MenuTriggerProps["style"] = {

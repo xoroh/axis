@@ -55,12 +55,26 @@ function resolve(options: {
   active?: boolean;
   target?: unknown;
   reportSize?: boolean;
+  matchAnchorWidth?: boolean;
+  viewportPadding?: number;
 }): Resolved {
-  const { node, active = true, target, reportSize = true } = options;
+  const {
+    node,
+    active = true,
+    target,
+    reportSize = true,
+    matchAnchorWidth,
+    viewportPadding,
+  } = options;
   const anchorRef: MeasurableRef = { current: node };
   let latest: Resolved | undefined;
   function Probe(): null {
-    latest = useFloatingPlacement({ anchorRef, active });
+    latest = useFloatingPlacement({
+      anchorRef,
+      active,
+      matchAnchorWidth,
+      viewportPadding,
+    });
     return null;
   }
   let root: ReturnType<typeof create> | undefined;
@@ -154,6 +168,57 @@ describe("useFloatingPlacement anchor shapes", () => {
     const floating = resolve({ node: webNode(), active: false });
     expect(floating.measured).toBe(false);
     expect(floating.style.opacity).toBe(0);
+  });
+
+  it("matches the popup width to the anchor when asked", () => {
+    // Base UI anchor-width parity: the box takes the anchor's span
+    // instead of its content size, so a centered popup sits exactly
+    // over its trigger.
+    const floating = resolve({
+      node: {
+        getBoundingClientRect: () => ({
+          left: 10,
+          top: 600,
+          width: 100,
+          height: 40,
+        }),
+      },
+      matchAnchorWidth: true,
+      viewportPadding: 8,
+    });
+    expect(floating.style).toMatchObject({
+      left: 10,
+      top: 640,
+      width: 100,
+    });
+    expect(floating.measured).toBe(true);
+  });
+
+  it("clamps the matched width and origin into the padded viewport", () => {
+    // A wide anchor near the right edge: the box shrinks to the
+    // padded viewport and its origin clamps inside it.
+    const floating = resolve({
+      node: {
+        getBoundingClientRect: () => ({
+          left: 700,
+          top: 20,
+          width: 100,
+          height: 40,
+        }),
+      },
+      matchAnchorWidth: true,
+      viewportPadding: 8,
+    });
+    // Viewport is 750 wide: width stays 100, origin clamps to
+    // 750 - 100 - 8.
+    expect(floating.style).toMatchObject({ left: 642, top: 60, width: 100 });
+  });
+
+  it("leaves content-sized popups alone by default", () => {
+    // Without the opt-in the content size rules: no width override.
+    const floating = resolve({ node: webNode() });
+    expect(floating.style).toMatchObject({ left: 10, top: 60 });
+    expect("width" in (floating.style as Record<string, unknown>)).toBe(false);
   });
 });
 

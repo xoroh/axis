@@ -114,6 +114,19 @@ export function useFloatingPlacement(options: {
   offset?: number;
   align?: Align;
   alignOffset?: number;
+  /**
+   * Match the popup width to the anchor width (Base UI anchor-width
+   * parity for list-style popups): the effective content box becomes
+   * as wide as the anchor, so centering pins it to the trigger's
+   * edges instead of drifting mid-anchor. Off by default —
+   * content-sized popups (tips, menus, popovers) keep their size.
+   */
+  matchAnchorWidth?: boolean;
+  /**
+   * Viewport padding kept clear when clamping, in the same units as
+   * the rects. Default `0` (no padding).
+   */
+  viewportPadding?: number;
   active: boolean;
 }): {
   onContentLayout: (event: ContentLayoutEvent) => void;
@@ -127,6 +140,8 @@ export function useFloatingPlacement(options: {
     offset,
     align,
     alignOffset,
+    matchAnchorWidth = false,
+    viewportPadding = 0,
     active,
   } = options;
   const viewport = useWindowDimensions();
@@ -190,19 +205,27 @@ export function useFloatingPlacement(options: {
       side: placement,
     };
   }
-  const effectiveSide = resolveFloatingSide(anchor, size, {
+  // Anchor-matched width: clamp the anchor span into the padded
+  // viewport so the box never outgrows the screen it opens on.
+  const boxWidth = matchAnchorWidth
+    ? Math.max(0, Math.min(anchor.width, viewport.width - viewportPadding * 2))
+    : size.width;
+  const boxSize = { width: boxWidth, height: size.height };
+  const effectiveSide = resolveFloatingSide(anchor, boxSize, {
     placement,
     offset,
     align,
     alignOffset,
     viewport,
+    viewportPadding,
   });
-  const at = resolveFloatingRect(anchor, size, {
+  const at = resolveFloatingRect(anchor, boxSize, {
     placement: effectiveSide,
     offset,
     align,
     alignOffset,
     viewport,
+    viewportPadding,
   });
   return {
     onContentLayout,
@@ -210,6 +233,7 @@ export function useFloatingPlacement(options: {
       position: "absolute",
       left: at.x - origin.x,
       top: at.y - origin.y,
+      ...(matchAnchorWidth ? { width: boxWidth } : null),
     },
     measured: true,
     side: effectiveSide,

@@ -1,5 +1,6 @@
 import {
   Autocomplete,
+  type AutocompleteProps,
   Combobox,
   type ComboboxProps,
   Select,
@@ -104,6 +105,15 @@ export const ListSelectDemo: Demo = {
     };
     const listStyle: SelectProps["listStyle"] = {
       ...popupStyle,
+      // No width here: the hook matches the box to the trigger row
+      // (`matchAnchorWidth`); `width: 100%` would mean the viewport
+      // once the box portals to the app host.
+      minWidth: undefined,
+    };
+    // Autocomplete's list lays out in flow (never portals), so a
+    // full-width box is relative to its own row and stays correct.
+    const inlineListStyle: AutocompleteProps["listStyle"] = {
+      ...popupStyle,
       width: "100%",
       minWidth: undefined,
     };
@@ -117,6 +127,10 @@ export const ListSelectDemo: Demo = {
       fontSize: 14,
       color: theme.text,
     };
+    const placeholderStyle: TextStyle = {
+      fontSize: 14,
+      color: theme.textSubtle,
+    };
     return (
       <View style={{ gap: 16 }}>
         <Text style={headingStyle}>Inline Select:</Text>
@@ -124,7 +138,7 @@ export const ListSelectDemo: Demo = {
           accessibilityLabel="Demo select"
           value={sort}
           onValueChange={setSort}
-          placeholder="Sort by"
+          placeholder={<Text style={placeholderStyle}>Sort by</Text>}
           style={rowStyle}
           listStyle={listStyle}
         >
@@ -200,11 +214,8 @@ export const ListSelectDemo: Demo = {
           placeholder="Type a fruit"
           style={rowStyle}
           inputStyle={inputStyle}
-          listStyle={listStyle}
+          listStyle={inlineListStyle}
         />
-        <Text style={{ fontSize: 13, color: theme.textSubtle }}>
-          {sort}/{fruit}/{berry}
-        </Text>
       </View>
     );
   },

@@ -139,7 +139,7 @@ export type ComboboxProps = {
   style?: StateStyle<ComboboxState, StyleProp<ViewStyle>>;
   /** Popup (listbox) box style, caller-provided. */
   listStyle?: StyleProp<ViewStyle>;
-  /** Text-entry style, caller-provided. */
+  /** Text-entry style, caller-provided. Also styles the toggle label, which has no text of its own to read. */
   inputStyle?: StyleProp<TextStyle>;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -314,6 +314,10 @@ export function Combobox({
 
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
+    // List matches the trigger row width (Base UI anchor-width
+    // parity), keeping the viewport padding clear at the edges.
+    matchAnchorWidth: true,
+    viewportPadding: 8,
     active: isOpen ?? false,
   });
 
@@ -366,7 +370,7 @@ export function Combobox({
           disabled={disabled}
           onPress={toggle}
         >
-          <Text>{toggleLabel}</Text>
+          <Text style={inputStyle}>{toggleLabel}</Text>
         </Pressable>
       </View>
       {isOpen ? (

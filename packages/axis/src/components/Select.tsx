@@ -388,6 +388,10 @@ export function Select({
 
   const floating = useFloatingPlacement({
     anchorRef: anchorHostRef,
+    // List matches the trigger row width (Base UI anchor-width
+    // parity), keeping the viewport padding clear at the edges.
+    matchAnchorWidth: true,
+    viewportPadding: 8,
     active: isOpen ?? false,
   });
 
