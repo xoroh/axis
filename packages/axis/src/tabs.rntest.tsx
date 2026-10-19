@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import type { View } from "react-native";
+import { View } from "react-native";
 import { Tabs, TabsList, TabsPanel, TabsTrigger } from "./index";
 
 /**
@@ -199,8 +199,8 @@ describe("Tabs on React Native", () => {
     const panel = screen.getByTestId("panel-b", {
       includeHiddenElements: true,
     }).props;
-    expect(panel.accessibilityElementsHidden).toBe(true);
-    expect(panel.importantForAccessibility).toBe("no-hide-descendants");
+    expect(panel.accessibilityElementsHidden).toBeUndefined();
+    expect(panel.importantForAccessibility).toBeUndefined();
     expect(panel["aria-hidden"]).toBe(true);
     const flatHidden = Object.assign(
       {},
@@ -211,8 +211,8 @@ describe("Tabs on React Native", () => {
     expect(flatHidden.display).toBe("none");
     await press("tab-b");
     const shown = screen.getByTestId("panel-b").props;
-    expect(shown.accessibilityElementsHidden).toBe(false);
-    expect(shown.importantForAccessibility).toBe("auto");
+    expect(shown.accessibilityElementsHidden).toBeUndefined();
+    expect(shown.importantForAccessibility).toBeUndefined();
     expect(shown["aria-hidden"]).toBe(false);
   });
 
@@ -231,6 +231,40 @@ describe("Tabs on React Native", () => {
     expect(panel.props.style).not.toEqual(
       expect.arrayContaining([{ display: "none" }]),
     );
-    expect(panel.props.accessibilityElementsHidden).toBe(false);
+    expect(panel.props.accessibilityElementsHidden).toBeUndefined();
+  });
+
+  it("keepMounted render substitution stays hidden and unannounced while deselected", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="a">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" />
+        <TabsPanel
+          value="b"
+          keepMounted
+          render={<View testID="sub-panel-b" />}
+        />
+      </Tabs>,
+    );
+    // The substituted element carries the hidden contract: invisible
+    // and unannounced (queried inclusively), never announced by default.
+    expect(
+      screen.getByTestId("sub-panel-b", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("sub-panel-b")).toBeNull();
+    const sub = screen.getByTestId("sub-panel-b", {
+      includeHiddenElements: true,
+    }).props;
+    const flatSub = Object.assign(
+      {},
+      ...(Array.isArray(sub.style) ? sub.style.flat(Infinity) : [sub.style]),
+    );
+    expect(flatSub.display).toBe("none");
+    expect(sub["aria-hidden"]).toBe(true);
+    expect(sub.accessibilityElementsHidden).toBeUndefined();
+    expect(sub.importantForAccessibility).toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import { Text, type View } from "react-native";
+import { Text, View } from "react-native";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "./index";
 
 /**
@@ -181,9 +181,10 @@ describe("Collapsible on React Native", () => {
     const hidden = screen.getByTestId("panel", {
       includeHiddenElements: true,
     }).props;
-    expect(hidden.accessibilityElementsHidden).toBe(true);
-    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
     expect(hidden["aria-hidden"]).toBe(true);
+    // ADR-112 aria-only: no legacy hiding props on new code.
+    expect(hidden.accessibilityElementsHidden).toBeUndefined();
+    expect(hidden.importantForAccessibility).toBeUndefined();
     const flatHidden = Object.assign(
       {},
       ...(Array.isArray(hidden.style)
@@ -198,8 +199,8 @@ describe("Collapsible on React Native", () => {
     expect(screen.queryByText("Hidden details")).toBeNull();
     await press("trigger");
     const shown = screen.getByTestId("panel").props;
-    expect(shown.accessibilityElementsHidden).toBe(false);
-    expect(shown.importantForAccessibility).toBe("auto");
+    expect(shown.accessibilityElementsHidden).toBeUndefined();
+    expect(shown.importantForAccessibility).toBeUndefined();
     expect(shown["aria-hidden"]).toBe(false);
   });
 
@@ -218,6 +219,37 @@ describe("Collapsible on React Native", () => {
     expect(panel.props.style).not.toEqual(
       expect.arrayContaining([{ display: "none" }]),
     );
-    expect(panel.props.accessibilityElementsHidden).toBe(false);
+    expect(panel.props.accessibilityElementsHidden).toBeUndefined();
+    expect(panel.props["aria-hidden"]).toBe(false);
+  });
+
+  it("keepMounted render substitution stays hidden and unannounced while closed", async () => {
+    await render(
+      <Collapsible testID="cl">
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel keepMounted render={<View testID="sub-panel" />}>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    // The substituted element carries the hidden contract: invisible
+    // and unannounced (queried inclusively), never announced by default.
+    expect(
+      screen.getByTestId("sub-panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("sub-panel")).toBeNull();
+    const sub = screen.getByTestId("sub-panel", {
+      includeHiddenElements: true,
+    }).props;
+    const flatSub = Object.assign(
+      {},
+      ...(Array.isArray(sub.style) ? sub.style.flat(Infinity) : [sub.style]),
+    );
+    expect(flatSub.display).toBe("none");
+    expect(sub["aria-hidden"]).toBe(true);
+    expect(sub.accessibilityElementsHidden).toBeUndefined();
+    expect(sub.importantForAccessibility).toBeUndefined();
   });
 });
