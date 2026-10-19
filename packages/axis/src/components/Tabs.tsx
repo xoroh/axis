@@ -9,8 +9,8 @@ import {
 } from "react";
 import {
   Pressable,
-  StyleSheet,
   type StyleProp,
+  StyleSheet,
   View,
   type ViewStyle,
 } from "react-native";
