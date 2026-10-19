@@ -432,11 +432,6 @@ export {
   type TabsTriggerState,
 } from "./components/Tabs";
 export {
-  Textarea,
-  type TextareaProps,
-  type TextareaState,
-} from "./components/Textarea";
-export {
   TimePicker,
   type TimePickerProps,
   type TimePickerState,

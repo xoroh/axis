@@ -73,6 +73,91 @@ describe("Input on React Native", () => {
     await render(<Input testID="in" secureTextEntry />);
     expect(screen.getByTestId("in").props.secureTextEntry).toBe(true);
   });
+
+  it("multiline renders with 3-line default and reports typing", async () => {
+    const seen: string[] = [];
+    await render(
+      <Input
+        testID="in"
+        multiline
+        placeholder="Notes"
+        defaultValue=""
+        onValueChange={(t) => seen.push(t)}
+        style={{ fontSize: 14 }}
+      />,
+    );
+    expect(screen.getByPlaceholderText("Notes")).toBeTruthy();
+    expect(screen.getByTestId("in").props.multiline).toBe(true);
+    expect(screen.getByTestId("in").props.numberOfLines).toBe(3);
+    await act(async () => {
+      fireEvent.changeText(screen.getByTestId("in"), "line one\nline two");
+    });
+    expect(seen).toEqual(["line one\nline two"]);
+  });
+
+  it("single-line input passes no line hint", async () => {
+    await render(<Input testID="in" />);
+    expect(screen.getByTestId("in").props.multiline).toBe(false);
+    expect(screen.getByTestId("in").props.numberOfLines).toBeUndefined();
+  });
+
+  it("grows with content when autoGrow is set", async () => {
+    await render(<Input testID="in" multiline autoGrow />);
+    await act(async () => {
+      fireEvent(screen.getByTestId("in"), "contentSizeChange", {
+        nativeEvent: { contentSize: { width: 100, height: 64 } },
+      });
+    });
+    const style = screen.getByTestId("in").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ height: 64 });
+  });
+
+  it("autoGrow stays off without multiline", async () => {
+    await render(<Input testID="in" autoGrow style={{ fontSize: 14 }} />);
+    await act(async () => {
+      fireEvent(screen.getByTestId("in"), "contentSizeChange", {
+        nativeEvent: { contentSize: { width: 100, height: 64 } },
+      });
+    });
+    expect(screen.getByTestId("in").props.style).toMatchObject({
+      fontSize: 14,
+    });
+  });
+
+  it("minRows and maxRows clamp the grown height and report it", async () => {
+    const seen: number[] = [];
+    await render(
+      <Input
+        testID="in"
+        multiline
+        autoGrow
+        minRows={2}
+        maxRows={4}
+        onHeightChange={(h) => seen.push(h)}
+        style={{ fontSize: 16 }}
+      />,
+    );
+    await act(async () => {
+      fireEvent(screen.getByTestId("in"), "contentSizeChange", {
+        nativeEvent: { contentSize: { width: 100, height: 10 } },
+      });
+    });
+    await act(async () => {
+      fireEvent(screen.getByTestId("in"), "contentSizeChange", {
+        nativeEvent: { contentSize: { width: 100, height: 400 } },
+      });
+    });
+    // One row is the caller fontSize (16): floor 32, ceiling 64.
+    expect(seen).toEqual([32, 64]);
+    const style = screen.getByTestId("in").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ height: 64 });
+  });
 });
 
 describe("Field on React Native", () => {

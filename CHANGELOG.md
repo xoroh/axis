@@ -12,3 +12,4 @@ Each line is the migration for the removed/renamed export:
 - `Text` removed — use RN `Text` directly with caller styles.
 - `Trigger` removed — use `Button` for labelled actions, `Switch` for binary state, or RN `Pressable` for caller-owned semantics; `usePress`, `mergeSlotProps`, `SlotProps` stay exported.
 - `Progress` `indeterminate` boolean removed — pass `value={null}` (Base UI exact semantics).
+- `Textarea` removed — use `Input` with `multiline` (plus `autoGrow`, `minRows`/`maxRows`, `onHeightChange`); `<Textarea … />` migrates to `<Input multiline … />`.

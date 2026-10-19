@@ -234,14 +234,18 @@ parity (`hostName` naming).
 | `PortalHost` | `Portal` (host side) | named hosts (`name`), registry-ordered painting, `render` substitution | In-box painting — overlay presentation is each `OverlayRoot`'s own (RN `Modal` only via `useModal` opt-in); D2 (no `container`), D3 (no `keepMounted`) |
 | `Portal` | `Portal` (content side) | `hostName` matching, nearest-scope nesting, cleanup on unmount | No matching host renders inline (never silently dropped) |
 
-### Input / Textarea — Base UI change-event names
+### Input (multiline folded in — `Textarea` removed by ADR 012)
 
-`Input`/`Textarea` use `onValueChange` for the RN host
-`onChangeText` (contract §6 reserves `onValueChange` for value
-controls). Hard cut (ADR 011, nothing published): the public prop is
-`onValueChange`. Internal consumers (`Combobox`, `OtpField`,
-`Autocomplete`, `TimePicker`, `NumberField`) and suites updated in
-the same slice. (`Search` previously used it too; removed by ADR 012.)
+`Input` carries `multiline` (with `numberOfLines` defaulting to 3
+there), `autoGrow` (measured height under caller `style`),
+`minRows`/`maxRows` row clamps, and `onHeightChange`. Change events
+use the Base UI name `onValueChange` (contract §6 reserves it for
+value controls). Hard cut (ADR 011, nothing published): the public
+prop is `onValueChange`. The host `TextInput` still receives RN
+`onChangeText` — the rename is the public prop only. Internal
+consumers (`Combobox`, `OtpField`, `Autocomplete`,
+`TimePicker`, `NumberField`) and suites updated in the same slice.
+Migrate `<Textarea … />` to `<Input multiline … />`.
 
 ### Remaining compound-anatomy gaps (composition aligned, anatomy pending)
 

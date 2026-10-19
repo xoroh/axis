@@ -17,7 +17,6 @@ import {
   Separator,
   Slider,
   Switch,
-  Textarea,
   Toggle,
   Toolbar,
 } from "./index";
@@ -283,18 +282,16 @@ describe("render composition: entries", () => {
     expect(screen.getByText("Ada")).toBeTruthy();
   });
 
-  it("Textarea function style resolves against value state", async () => {
+  it("Input multiline function style resolves against value state", async () => {
     await render(
-      <Textarea
+      <Input
         testID="ta"
+        multiline
         defaultValue="hi"
         style={(s) => ({ opacity: s.value === "hi" ? 1 : 0 })}
       />,
     );
-    expect(screen.getByTestId("ta").props.style).toMatchObject([
-      { opacity: 1 },
-      null,
-    ]);
+    expect(screen.getByTestId("ta").props.style).toMatchObject({ opacity: 1 });
   });
 
   it("NumberField function render observes numeric state", async () => {
