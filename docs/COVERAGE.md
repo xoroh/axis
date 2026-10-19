@@ -25,8 +25,8 @@ Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 | Fieldset | complete | legend group (in fieldset suite), RNTL 3 |
 | Label | complete | nativeID association, RNTL 2 |
 | Input | complete | controlled/uncontrolled entry + multiline/autoGrow/rows, RNTL 10 |
-| Number Field | complete | Input+Button composition, RNTL 7 |
-| OTP Field | complete | segmented entry + auto-submit, RNTL 7 |
+| Number Field | complete | Input+Button composition, row layout, RNTL 9 |
+| OTP Field | complete | segmented entry + auto-submit, row layout, RNTL 10 |
 | Autocomplete | complete | filter-as-type + commit, RNTL 8 |
 | Combobox | complete | filterable single-select via the shared `collection` match, RNTL 9 |
 | Select | complete | single-select dropdown + compound parts (value-label registry + `items` table), RNTL 24 |

@@ -21,8 +21,9 @@ import { useControllableState } from "../useControllableState";
 /**
  * OtpField — segmented one-time-code entry with auto-advance.
  *
- * Structure only: a container `View` of `length` cells plus ONE hidden
- * host `TextInput` that captures entry, so auto-advance is implicit —
+ * Structure only: a container `View` laying `length` cells in a row
+ * (caller style wins on conflict) plus ONE hidden host `TextInput`
+ * that captures entry, so auto-advance is implicit —
  * every keystroke lands in the single input and fans out to the cells.
  * No per-cell inputs, no focus choreography, no masking beyond
  * `secureTextEntry`. State follows the `useControllableState` pattern:
@@ -203,7 +204,7 @@ export function OtpField({
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={resolveStyle(style, state)}
+      style={[{ flexDirection: "row" }, resolveStyle(style, state)]}
     >
       {Array.from({ length: safeLength }, (_, index) => {
         // Cells are positional and fixed-length: the index IS the stable

@@ -129,4 +129,19 @@ describe("OtpField on React Native", () => {
     await render(<OtpField testID="otp" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
+
+  it("lays cells in a row by default, caller-overridable", async () => {
+    const flat = () => {
+      const style = screen.getByTestId("otp").props.style;
+      return Array.isArray(style)
+        ? Object.assign({}, ...style.filter(Boolean))
+        : style;
+    };
+    const ui = await render(<OtpField testID="otp" />);
+    expect(flat()).toMatchObject({ flexDirection: "row" });
+    await ui.rerender(
+      <OtpField testID="otp" style={{ flexDirection: "column" }} />,
+    );
+    expect(flat()).toMatchObject({ flexDirection: "column" });
+  });
 });

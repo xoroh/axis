@@ -114,4 +114,24 @@ describe("NumberField on React Native", () => {
     await render(<NumberField testID="nf" ref={ref} />);
     expect(ref.current).not.toBeNull();
   });
+
+  it("lays steppers and entry in a centered row by default", async () => {
+    await render(<NumberField testID="nf" />);
+    const style = screen.getByTestId("nf").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ flexDirection: "row", alignItems: "center" });
+  });
+
+  it("caller style wins over the row default", async () => {
+    await render(
+      <NumberField testID="nf" style={{ flexDirection: "column" }} />,
+    );
+    const style = screen.getByTestId("nf").props.style;
+    const flat = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flat).toMatchObject({ flexDirection: "column" });
+  });
 });
