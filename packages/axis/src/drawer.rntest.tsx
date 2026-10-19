@@ -160,9 +160,11 @@ describe("Drawer on React Native", () => {
 
   it("renders an inert scrim when non-modal", async () => {
     await render(
-      <Drawer testID="drawer" defaultOpen modal={false}>
-        <RNText>Destinations</RNText>
-      </Drawer>,
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen modal={false}>
+          <RNText>Destinations</RNText>
+        </Drawer>
+      </PortalHost>,
     );
     expect(screen.queryByLabelText("Dismiss")).toBeNull();
     expect(screen.getByRole("dialog")).toBeTruthy();
@@ -203,19 +205,25 @@ describe("Drawer on React Native", () => {
 describe("Drawer snap points (folded Sheet)", () => {
   it("rests at the first snap point of the measured container", async () => {
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[0.5, 1]}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[0.5, 1]}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(400);
   });
 
   it("rests fully open by default with no snap points given", async () => {
-    await render(<Drawer testID="drawer" defaultOpen side="bottom" />);
+    await render(
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen side="bottom" />
+      </PortalHost>,
+    );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(0);
   });
@@ -223,14 +231,16 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("dismisses on a downward drag past the dismiss distance", async () => {
     const order: string[] = [];
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[0.5, 1]}
-        onDismiss={() => order.push("dismiss")}
-        onOpenChange={() => order.push("change")}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onDismiss={() => order.push("dismiss")}
+          onOpenChange={() => order.push("change")}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     await drag(0, 200);
@@ -241,13 +251,15 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("snaps back on a short drag and stays open", async () => {
     const seen: Array<number | string> = [];
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[0.5, 1]}
-        onSnapPointChange={(p) => seen.push(p)}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnapPointChange={(p) => seen.push(p)}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     await drag(0, 20);
@@ -261,13 +273,15 @@ describe("Drawer snap points (folded Sheet)", () => {
   it("settles to the nearest snap point on an upward drag", async () => {
     const seen: Array<number | string> = [];
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[0.5, 1]}
-        onSnapPointChange={(p) => seen.push(p)}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onSnapPointChange={(p) => seen.push(p)}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     await drag(0, -300);
@@ -279,14 +293,16 @@ describe("Drawer snap points (folded Sheet)", () => {
     const dismissed: boolean[] = [];
     const snaps: Array<number | string> = [];
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[0.5, 1]}
-        onDismiss={() => dismissed.push(true)}
-        onSnapPointChange={(p) => snaps.push(p)}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[0.5, 1]}
+          onDismiss={() => dismissed.push(true)}
+          onSnapPointChange={(p) => snaps.push(p)}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     const surface = screen.getByTestId("drawer");
@@ -326,7 +342,11 @@ describe("Drawer snap points (folded Sheet)", () => {
         />
       );
     }
-    await render(<Host />);
+    await render(
+      <PortalHost>
+        <Host />
+      </PortalHost>,
+    );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(400);
     const surface = screen.getByTestId("drawer");
@@ -340,12 +360,14 @@ describe("Drawer snap points (folded Sheet)", () => {
 
   it("resolves non-positive snap points to fully open without throwing", async () => {
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[Number.NaN, -1, 0]}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[Number.NaN, -1, 0]}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(0);
@@ -354,12 +376,14 @@ describe("Drawer snap points (folded Sheet)", () => {
 
   it("supports dp and px snap points as visible sizes", async () => {
     await render(
-      <Drawer
-        testID="drawer"
-        defaultOpen
-        side="bottom"
-        snapPoints={[200, "400px"]}
-      />,
+      <PortalHost>
+        <Drawer
+          testID="drawer"
+          defaultOpen
+          side="bottom"
+          snapPoints={[200, "400px"]}
+        />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     // First snap: 200dp visible of 800 → offset 600.
@@ -368,7 +392,9 @@ describe("Drawer snap points (folded Sheet)", () => {
 
   it("snaps a side drawer along the horizontal axis", async () => {
     await render(
-      <Drawer testID="drawer" defaultOpen side="left" snapPoints={[0.5, 1]} />,
+      <PortalHost>
+        <Drawer testID="drawer" defaultOpen side="left" snapPoints={[0.5, 1]} />
+      </PortalHost>,
     );
     await layoutContainer(400, 800);
     expect(translateOf("drawer")).toBe(-200);
