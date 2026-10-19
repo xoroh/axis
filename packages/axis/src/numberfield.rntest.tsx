@@ -115,23 +115,14 @@ describe("NumberField on React Native", () => {
     expect(ref.current).not.toBeNull();
   });
 
-  it("lays steppers and entry in a centered row by default", async () => {
-    await render(<NumberField testID="nf" />);
-    const style = screen.getByTestId("nf").props.style;
-    const flat = Array.isArray(style)
-      ? Object.assign({}, ...style.filter(Boolean))
-      : style;
-    expect(flat).toMatchObject({ flexDirection: "row", alignItems: "center" });
-  });
-
-  it("caller style wins over the row default", async () => {
+  it("caller container style reaches the surface", async () => {
     await render(
-      <NumberField testID="nf" style={{ flexDirection: "column" }} />,
+      <NumberField testID="nf" style={{ flexDirection: "column", gap: 4 }} />,
     );
     const style = screen.getByTestId("nf").props.style;
     const flat = Array.isArray(style)
       ? Object.assign({}, ...style.filter(Boolean))
       : style;
-    expect(flat).toMatchObject({ flexDirection: "column" });
+    expect(flat).toMatchObject({ flexDirection: "column", gap: 4 });
   });
 });

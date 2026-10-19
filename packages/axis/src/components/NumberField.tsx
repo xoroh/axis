@@ -18,9 +18,7 @@ import { Input } from "./Input";
  *
  * Structure only: an Axis `Input` for text entry flanked by two Axis
  * `Button` steppers — text entry and press handling are not reimplemented
- * here. The container lays the three in a row, vertically centered
- * (caller style wins on conflict, as with every Axis surface); without
- * the row the steppers do not flank anything. State is `number | null` via `useControllableState` (`null`
+ * here. State is `number | null` via `useControllableState` (`null`
  * means empty); the input shows `String(value)` or `""`. Typed text is
  * parsed with `parseFloat`, so `NaN` (empty or invalid entry) clears to
  * `null`. Steppers move from the current numeric value (`null` counts
@@ -199,10 +197,7 @@ export function NumberField({
       ref={setHostRef}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={[
-        { flexDirection: "row", alignItems: "center" },
-        resolveStyle(style, state),
-      ]}
+      style={resolveStyle(style, state)}
     >
       <Button
         accessibilityLabel="Decrement"
