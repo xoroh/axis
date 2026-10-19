@@ -1,4 +1,30 @@
-# Status report — 2026-10-19 03:20 CEST (Axis cleanup Lane B + consolidation)
+# Status report — 2026-10-19 03:40 CEST (Axis cleanup Lane B + consolidation)
+
+Supersedes the 02:50 CEST turn-15 note. Cleanup Lane B (owner
+priority 02:58/02:59 CEST): zero open PRs, only `main` on the
+remote, clean tree. All feature work was on hold during cleanup;
+docs batch 2 was triaged on content and MERGED. Full evidence:
+`.reports/axis-status-2026-10-19.md` (component-by-component
+parity, 37 Base UI components) and
+`.reports/2026-10-19-axis-cleanup.md` (triage table + verification
+output).
+
+## Done (on main 0638a61)
+- #58 web demo PR 1 + #61 styling pass (merged; Expo web demo runs,
+  open-state overlay evidence in).
+- #59 docs batch 1 (Tabs/Toast/Field, Base UI level — merged).
+- #63 docs batch 2 (Button/Dialog/Popover, Base UI level — merged;
+  triaged MERGE, screenshot commit dropped, shots stay out of main
+  per batch-1 precedent). 6 of ~46 docs now at Base UI level.
+- #57 parity (Select/Menu/Tooltip + collection/typeahead/flip —
+  merged). #60 overlay root (Dialog/Popover/Menu/Drawer onto
+  OverlayRoot — merged). #65 integration report (merged).
+- Verified post-#60: `Dialog*Props`/`Popover*Props` unchanged by
+  #60 (host-only migration) — #63 prop tables stand, no docs
+  follow-up needed.
+- Cleanup: ~38 stale remote branches deleted, 12 gone-remote locals
+  + review-58 + merged-PR locals deleted, old untracked shots
+  deleted, no stashes, no patch archive.
 
 Supersedes the 02:50 CEST turn-15 note. Cleanup Lane B (owner
 priority 02:58/02:59 CEST): zero open PRs, only `main` on the
@@ -20,16 +46,18 @@ output).
   + review-58 + merged-PR locals deleted, old untracked shots
   deleted, no stashes, no patch archive.
 
-## Open PRs (Lane A; release HOLD still stands)
-| PR | State / blocker |
+## Open PRs: NONE — all merged (release HOLD still stands)
+
+| PR | State |
 |---|---|
-| #57 parity Select/Combobox/Tooltip/Menu | Lane A merges. Review fixes pushed; needs CLEAN + validate SUCCESS. |
-| #60 overlay root | Lane A merges after #57 (Menu.tsx overlap). Was CI-red on demos; Lane A resolves. Migrates Dialog/Popover/Menu/Drawer onto OverlayRoot — prop tables in #63 describe pre-#60 API; expect a small docs follow-up if #60 changes `*Props`. |
+| #57 parity Select/Combobox/Tooltip/Menu | MERGED (c9aab56). |
+| #60 overlay root | MERGED (da1cde8) after #57, per plan. |
+| #59 docs batch 1, #63 docs batch 2, #65 integration | MERGED. |
+| #64 status (this PR) | Last to merge. |
 
 ## Remaining program (in order)
-1. Docs batch 2: DONE (#63 merged 2026-10-19). Caveat: #60 may
-   change Dialog/Popover `*Props` — re-check tables post-#60, one
-   small follow-up PR if needed.
+1. Docs batch 2: DONE (#63 merged 2026-10-19; post-#60 Props check
+   03:40 CEST — no changes, no follow-up needed).
 2. Parity leftovers (#57 open + after): Select `multiple`,
    `alignItemWithTrigger`, scroll arrows; Combobox/Autocomplete onto
    the new collection/typeahead models; compound parts for

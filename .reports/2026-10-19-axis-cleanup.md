@@ -16,8 +16,8 @@ merges LAST, after Lane A's #57/#60.
 |---|---|---|
 | `docs/axis-docs-batch1-select-tabs-toast-field` (PR #59) | MERGE (ae91995) | Batch 1 docs; updated from main, CLEAN + validate SUCCESS, squash-merged by lead. |
 | `docs/axis-docs-batch2-button-dialog-popover` (PR #63; supersedes closed #62) | MERGE (ea44c0f) | Batch 2 triaged solid on content (#59 structure, line-matched prop tables, gates green); screenshot commit dropped. CLEAN + validate SUCCESS, squash-merged. |
-| `feat/axis-parity-select-menu` (PR #57) | MERGE (Lane A) | Parity work; Lane A merges. Not touched by this lane. |
-| `feat/axis-overlay-root` (PR #60) | MERGE (Lane A) | Overlay root; Lane A merges after #57. Not touched by this lane. |
+| `feat/axis-parity-select-menu` (PR #57) | MERGE (Lane A — MERGED c9aab56) | Parity work; merged by Lane A after this lane's docs PRs. Untouched by this lane. |
+| `feat/axis-overlay-root` (PR #60) | MERGE (Lane A — MERGED da1cde8) | Overlay root; merged by Lane A after #57, per plan. Untouched by this lane. Post-merge Props check: `Dialog*Props`/`Popover*Props` unchanged (host-only migration) — #63 tables stand. |
 | `docs/axis-status-turn-15` (status PR) | MERGE (this PR, LAST) | Carries latest.md refresh + useful reports + this file. Merges only after #60. |
 
 ### Branches — DROP (remote + local deleted)
@@ -30,15 +30,19 @@ merges LAST, after Lane A's #57/#60.
 | `chore/axis-release-flow`, `feature/axis-batch-m` (locals) | Ancestors of origin/main. |
 | `feature/axis-menu-selectable` (local b700ace) | Contained in the deleted remote; PR #37 MERGED. |
 | `review-58` (local-only e48d1ef) | Byte-identical metro/bundle files to main — superseded by #58. |
-| `feat/axis-example-web`, `feat/axis-example-web-styling` | #58/#61 squash-merged; deleted at the very end after Lane A done and main checked out. |
+| `feat/axis-example-web`, `feat/axis-example-web-styling` | #58/#61 squash-merged; local styling branch deleted after main checkout moved to `main`; remotes deleted at the very end. |
 
 ### Worktrees
 | Item | Verdict | Reason |
 |---|---|---|
 | `axis-docs-batch1`, `axis-docs-batch2` | Removed | Branches merged; trees clean, nothing unpushed. |
 | `axis-vendor-clean` (detached 82c3179, untracked `vendor/axis-82c3179.tgz` 180K) | Removed | Stale regenerable tarball; nothing references the path. |
-| `axis-status-turn-15` | KEEP until end | Hosts this status PR. |
-| `/tmp/opencode/axis-overlay-root`, `xoroh-monorepo/axis-parity-select` | LEAVE | Lane A's (#60/#57). Untouched. |
+| `axis-status-turn-15` | KEEP until end, removed after its PR merges | Hosts this status PR (standing rule: 1 worktree per thread, removed when merged). |
+| `xoroh-monorepo/axis-overlay-root` (+ earlier `axis-parity-select`, `/tmp/opencode/*`) | Lane A's | Untouched by this lane; Lane A removes per standing rule. Verified clean + PRs merged before any removal here. |
+
+Note (owner 03:15 CEST): `refs/t3/orchestration-v2/*` checkpoint
+refs are records — kept, excluded from all pruning, and not counted
+against 'clean'.
 
 ### Stash / archive
 - `git stash list`: empty — nothing to triage.
