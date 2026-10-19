@@ -251,6 +251,72 @@ describe("calendar locale names", () => {
     expect(resolveLocaleFirstDay("de-DE")).toBe(1);
   });
 
+  it("prefers live weekInfo when the runtime provides it", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      const withWeekInfo = (firstDay: number) =>
+        class {
+          constructor(public tag: string) {}
+          getWeekInfo() {
+            return { firstDay };
+          }
+        };
+      (Intl as unknown as Record<string, unknown>).Locale = withWeekInfo(6);
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(6);
+      (Intl as unknown as Record<string, unknown>).Locale = withWeekInfo(1);
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(1);
+      // weekInfo as a data property (no getWeekInfo method).
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        weekInfo = { firstDay: 7 };
+        constructor(public tag: string) {}
+      };
+      expect(resolveLocaleFirstDay("xx-YY")).toBe(0);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
+  it("falls back to the region table without weekInfo", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      // No Intl.Locale at all: plain BCP-47 parse drives the table.
+      (Intl as unknown as Record<string, unknown>).Locale = undefined;
+      expect(resolveLocaleFirstDay("en-US")).toBe(0);
+      expect(resolveLocaleFirstDay("de-DE")).toBe(1);
+      expect(resolveLocaleFirstDay("ar-EG")).toBe(6);
+      expect(resolveLocaleFirstDay("dv-MV")).toBe(5);
+      expect(resolveLocaleFirstDay("fr")).toBe(1);
+      expect(resolveLocaleFirstDay("zh-Hant-TW")).toBe(0);
+      expect(resolveLocaleFirstDay("not-a-locale!!")).toBe(1);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
+  it("uses maximize() for the region when weekInfo is absent", async () => {
+    const RealLocale = Intl.Locale;
+    try {
+      // maximize() without getWeekInfo: region drives the table.
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        constructor(public tag: string) {}
+        maximize() {
+          return { region: "EG" };
+        }
+      };
+      expect(resolveLocaleFirstDay("ar")).toBe(6);
+      // maximize() throwing falls through to the subtag parse.
+      (Intl as unknown as Record<string, unknown>).Locale = class {
+        constructor(public tag: string) {}
+        maximize(): never {
+          throw new Error("no maximize");
+        }
+      };
+      expect(resolveLocaleFirstDay("ar-EG")).toBe(6);
+    } finally {
+      (Intl as unknown as Record<string, unknown>).Locale = RealLocale;
+    }
+  });
+
   it("builds a Monday-first grid from the locale default", async () => {
     const firstDay = resolveLocaleFirstDay("de-DE");
     const { weeks, weekdayNames } = buildCalendarGrid("2026-03", {

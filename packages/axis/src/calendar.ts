@@ -237,22 +237,46 @@ export function resolveCalendarMonthNames(
 }
 
 /**
- * Locale-aware week start (0 = Sunday … 6 = Saturday) via
- * `Intl.Locale` week info (`firstDay` numbers days 1 = Monday …
- * 7 = Sunday). Falls back to Sunday (0) when week info is unavailable —
- * never throws. The grid functions keep their explicit `firstDayOfWeek`
- * parameter; this helper supplies the locale default for it.
+ * Locale-aware week start (0 = Sunday … 6 = Saturday).
+ *
+ * Prefers live `Intl.Locale` week info — `getWeekInfo()` or the
+ * `weekInfo` property when either exists (`firstDay` numbers days
+ * 1 = Monday … 7 = Sunday). Otherwise falls back to an embedded
+ * region table (CLDR supplemental weekData, firstDay only):
+ * Saturday-start and Friday-start regions are listed; the listed
+ * Sunday-start regions return 0; every other or unknown region
+ * returns 1 (Monday, the CLDR `001` root default). The region resolves
+ * via `Intl.Locale.maximize()` when available, with a plain BCP-47
+ * subtag parse as the last resort. Never throws.
  */
 export function resolveLocaleFirstDay(
   locale: string = "en-US",
 ): FirstDayOfWeek {
+  const live = liveWeekInfoFirstDay(locale);
+  if (live !== undefined) return live;
+  return tableFirstDay(regionOfLocale(locale));
+}
+
+/** `firstDay` from live `Intl.Locale` week info, or `undefined`. */
+function liveWeekInfoFirstDay(locale: string): FirstDayOfWeek | undefined {
   try {
-    const loc = new Intl.Locale(locale) as Intl.Locale & {
-      getWeekInfo?: () => { firstDay?: unknown };
-    };
-    const info =
+    const Ctor = Intl.Locale as
+      | (new (
+          tag: string,
+        ) => {
+          getWeekInfo?: () => { firstDay?: unknown };
+          weekInfo?: { firstDay?: unknown };
+        })
+      | undefined;
+    if (typeof Ctor !== "function") return undefined;
+    const loc = new Ctor(locale);
+    const fromMethod =
       typeof loc.getWeekInfo === "function" ? loc.getWeekInfo() : undefined;
-    const firstDay = info?.firstDay;
+    const info = fromMethod ?? loc.weekInfo;
+    const firstDay =
+      info !== null && typeof info === "object"
+        ? (info as { firstDay?: unknown }).firstDay
+        : undefined;
     if (
       typeof firstDay === "number" &&
       Number.isInteger(firstDay) &&
@@ -261,10 +285,134 @@ export function resolveLocaleFirstDay(
     ) {
       return (((firstDay % 7) + 7) % 7) as FirstDayOfWeek;
     }
+    return undefined;
   } catch {
-    // Intl.Locale or week info unavailable — fall through to Sunday.
+    return undefined;
   }
-  return 0;
+}
+
+/** Saturday-start regions (CLDR weekData firstDay). */
+const SATURDAY_START = new Set([
+  "AF",
+  "BH",
+  "DJ",
+  "DZ",
+  "EG",
+  "IQ",
+  "IR",
+  "JO",
+  "KW",
+  "LY",
+  "OM",
+  "QA",
+  "SD",
+  "SY",
+]);
+
+/** Friday-start regions (CLDR weekData firstDay: Maldives only). */
+const FRIDAY_START = new Set(["MV"]);
+
+/** Sunday-start regions (CLDR weekData firstDay). */
+const SUNDAY_START = new Set([
+  "AG",
+  "AS",
+  "BD",
+  "BR",
+  "BS",
+  "BT",
+  "BW",
+  "BZ",
+  "CA",
+  "CO",
+  "DM",
+  "DO",
+  "ET",
+  "GT",
+  "GU",
+  "HK",
+  "HN",
+  "ID",
+  "IL",
+  "IN",
+  "IS",
+  "JM",
+  "JP",
+  "KE",
+  "KH",
+  "KR",
+  "LA",
+  "MH",
+  "MM",
+  "MO",
+  "MT",
+  "MX",
+  "MZ",
+  "NI",
+  "NP",
+  "PA",
+  "PE",
+  "PH",
+  "PK",
+  "PR",
+  "PT",
+  "PY",
+  "SA",
+  "SG",
+  "SV",
+  "TH",
+  "TT",
+  "TW",
+  "UM",
+  "US",
+  "VE",
+  "VI",
+  "WS",
+  "YE",
+  "ZA",
+  "ZW",
+]);
+
+function tableFirstDay(region: string | undefined): FirstDayOfWeek {
+  if (region !== undefined) {
+    if (SATURDAY_START.has(region)) return 6;
+    if (FRIDAY_START.has(region)) return 5;
+    if (SUNDAY_START.has(region)) return 0;
+  }
+  return 1;
+}
+
+/**
+ * Likely region for a locale tag: `Intl.Locale.maximize()` when
+ * available, else the first 2-letter or 3-digit BCP-47 subtag after
+ * the language (uppercased). `undefined` when none is found.
+ */
+function regionOfLocale(locale: string): string | undefined {
+  try {
+    const Ctor = Intl.Locale as
+      | (new (
+          tag: string,
+        ) => { maximize?: () => { region?: unknown } })
+      | undefined;
+    if (typeof Ctor === "function") {
+      const region = new Ctor(locale).maximize?.().region;
+      if (typeof region === "string" && region !== "") {
+        return region.toUpperCase();
+      }
+    }
+  } catch {
+    // Invalid tag or no maximize — fall through to the subtag parse.
+  }
+  const parts = String(locale).replace(/_/g, "-").split("-");
+  for (let i = 1; i < parts.length; i++) {
+    const part = parts[i];
+    if (
+      part !== undefined &&
+      (/^[A-Za-z]{2}$/.test(part) || /^[0-9]{3}$/.test(part))
+    ) {
+      return part.toUpperCase();
+    }
+  }
+  return undefined;
 }
 
 /**

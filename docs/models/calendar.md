@@ -33,7 +33,7 @@ DST transitions and month ends resolve exactly.
 | `isCalendarDateDisabled(iso, options?)` | function | Whole-grid `disabled`, outside `[minDate, maxDate]`, or rejected by `isDateDisabled`. Invalid bounds are ignored. |
 | `resolveCalendarWeekdayNames(locale?, firstDayOfWeek?)` | function | Seven short weekday names via `Intl`, rotated to `firstDayOfWeek` (English fallback when `Intl` is unavailable). |
 | `resolveCalendarMonthNames(locale?, style?)` | function | Twelve month names in calendar order (`"long"` default; `"short"`, `"narrow"`). Formatted at UTC noon mid-month. English fallback when `Intl` is unavailable. |
-| `resolveLocaleFirstDay(locale?)` | function | Locale-aware week start (0 = Sunday … 6 = Saturday) via `Intl.Locale` week info. Sunday (0) when week info is unavailable. |
+| `resolveLocaleFirstDay(locale?)` | function | Locale-aware week start (0 = Sunday … 6 = Saturday). Prefers live `Intl.Locale` week info (`getWeekInfo()` or the `weekInfo` property); otherwise an embedded CLDR region table (Saturday-start and Friday-start regions listed, listed Sunday-start regions → 0, everything else → Monday, the CLDR root default). Region via `Intl.Locale.maximize()` when available, else a BCP-47 subtag parse. Never throws. Runtimes without week info (older Hermes, minimal-ICU Node) still resolve correctly through the table. |
 | Types | — | `CalendarDateParts`, `CalendarMonthParts`, `CalendarCell`, `CalendarGrid`, `CalendarRange`, `CalendarRangePosition`, `CalendarKey`, `CalendarGridOptions`, `CalendarSelection`, `CalendarSelectionMode`, `CalendarDirection`, `FirstDayOfWeek`, `CalendarMonthNameStyle`. |
 
 `CalendarGridOptions`: `firstDayOfWeek?` (default `0`), `locale?`
