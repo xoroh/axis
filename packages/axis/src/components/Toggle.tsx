@@ -123,7 +123,10 @@ export function Toggle({
   const joined = group !== null && value !== undefined;
   const groupPressed =
     value !== undefined && (group?.pressedValues?.includes(value) ?? false);
-  const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
+  // A standalone toggle never inherits the group's terminal: only a
+  // joined toggle (with `value`) is disabled by the group.
+  const effectiveDisabled =
+    disabled || (joined && (group?.groupDisabled ?? false));
 
   const toggle = useCallback(() => {
     if (effectiveDisabled) return;

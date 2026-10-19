@@ -180,4 +180,25 @@ describe("ToggleGroup on React Native", () => {
       selected: true,
     });
   });
+
+  it("a standalone toggle in a disabled group stays enabled", async () => {
+    let calls = 0;
+    await render(
+      <ToggleGroup testID="tg" disabled>
+        <Toggle value="a" testID="joined" />
+        <Toggle testID="solo" onPressedChange={() => (calls += 1)} />
+      </ToggleGroup>,
+    );
+    expect(
+      screen.getByTestId("joined").props.accessibilityState,
+    ).toMatchObject({ disabled: true });
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject(
+      { disabled: false },
+    );
+    await press("solo");
+    expect(calls).toBe(1);
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject(
+      { selected: true },
+    );
+  });
 });
