@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import { Text, type View } from "react-native";
+import { Text, View } from "react-native";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "./index";
 
 /**
@@ -157,5 +157,99 @@ describe("Collapsible on React Native", () => {
       </Collapsible>,
     );
     expect(ref.current).not.toBeNull();
+  });
+
+  it("keepMounted keeps the closed panel mounted but hidden and unannounced", async () => {
+    await render(
+      <Collapsible testID="cl">
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel testID="panel" keepMounted>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    // Mounted but invisible and hidden from assistive tech on all three
+    // platforms, with closed state. (RNTL hides hidden-from-AT elements
+    // from queries by default — which is itself the proof — so the
+    // hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("panel")).toBeNull();
+    const hidden = screen.getByTestId("panel", {
+      includeHiddenElements: true,
+    }).props;
+    expect(hidden["aria-hidden"]).toBe(true);
+    // ADR-112 aria-only: no legacy hiding props on new code.
+    expect(hidden.accessibilityElementsHidden).toBeUndefined();
+    expect(hidden.importantForAccessibility).toBeUndefined();
+    const flatHidden = Object.assign(
+      {},
+      ...(Array.isArray(hidden.style)
+        ? hidden.style.flat(Infinity)
+        : [hidden.style]),
+    );
+    expect(flatHidden.display).toBe("none");
+    // Content stays mounted while hidden (query it inclusively).
+    expect(
+      screen.getByText("Hidden details", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByText("Hidden details")).toBeNull();
+    await press("trigger");
+    const shown = screen.getByTestId("panel").props;
+    expect(shown.accessibilityElementsHidden).toBeUndefined();
+    expect(shown.importantForAccessibility).toBeUndefined();
+    expect(shown["aria-hidden"]).toBe(false);
+  });
+
+  it("keepMounted panel becomes visible when opened", async () => {
+    await render(
+      <Collapsible testID="cl" defaultOpen>
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel testID="panel" keepMounted>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    const panel = screen.getByTestId("panel");
+    expect(panel.props.style).not.toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBeUndefined();
+    expect(panel.props["aria-hidden"]).toBe(false);
+  });
+
+  it("keepMounted render substitution stays hidden and unannounced while closed", async () => {
+    await render(
+      <Collapsible testID="cl">
+        <CollapsibleTrigger testID="trigger">
+          <Text>More options</Text>
+        </CollapsibleTrigger>
+        <CollapsiblePanel keepMounted render={<View testID="sub-panel" />}>
+          <Text>Hidden details</Text>
+        </CollapsiblePanel>
+      </Collapsible>,
+    );
+    // The substituted element carries the hidden contract: invisible
+    // and unannounced (queried inclusively), never announced by default.
+    expect(
+      screen.getByTestId("sub-panel", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("sub-panel")).toBeNull();
+    const sub = screen.getByTestId("sub-panel", {
+      includeHiddenElements: true,
+    }).props;
+    const flatSub = Object.assign(
+      {},
+      ...(Array.isArray(sub.style) ? sub.style.flat(Infinity) : [sub.style]),
+    );
+    expect(flatSub.display).toBe("none");
+    expect(sub["aria-hidden"]).toBe(true);
+    expect(sub.accessibilityElementsHidden).toBeUndefined();
+    expect(sub.importantForAccessibility).toBeUndefined();
   });
 });

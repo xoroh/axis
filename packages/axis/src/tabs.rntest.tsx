@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
-import type { View } from "react-native";
+import { View } from "react-native";
 import { Tabs, TabsList, TabsPanel, TabsTrigger } from "./index";
 
 /**
@@ -175,5 +175,96 @@ describe("Tabs on React Native", () => {
     await press("tab-a");
     expect(screen.getByTestId("panel-a")).toBeTruthy();
     expect(screen.queryByTestId("panel-b")).toBeNull();
+  });
+
+  it("keepMounted keeps the deselected panel mounted but hidden and unannounced", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="a">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" />
+        <TabsPanel value="b" testID="panel-b" keepMounted />
+      </Tabs>,
+    );
+    // Mounted but invisible and hidden from assistive tech on all three
+    // platforms while deselected. (RNTL hides hidden-from-AT elements
+    // from queries by default — which is itself the proof — so the
+    // hidden assertions query with `includeHiddenElements`.)
+    expect(
+      screen.getByTestId("panel-b", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("panel-b")).toBeNull();
+    const panel = screen.getByTestId("panel-b", {
+      includeHiddenElements: true,
+    }).props;
+    expect(panel.accessibilityElementsHidden).toBeUndefined();
+    expect(panel.importantForAccessibility).toBeUndefined();
+    expect(panel["aria-hidden"]).toBe(true);
+    const flatHidden = Object.assign(
+      {},
+      ...(Array.isArray(panel.style)
+        ? panel.style.flat(Infinity)
+        : [panel.style]),
+    );
+    expect(flatHidden.display).toBe("none");
+    await press("tab-b");
+    const shown = screen.getByTestId("panel-b").props;
+    expect(shown.accessibilityElementsHidden).toBeUndefined();
+    expect(shown.importantForAccessibility).toBeUndefined();
+    expect(shown["aria-hidden"]).toBe(false);
+  });
+
+  it("keepMounted panel becomes visible when selected", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="b">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" keepMounted />
+        <TabsPanel value="b" testID="panel-b" />
+      </Tabs>,
+    );
+    const panel = screen.getByTestId("panel-b");
+    expect(panel.props.style).not.toEqual(
+      expect.arrayContaining([{ display: "none" }]),
+    );
+    expect(panel.props.accessibilityElementsHidden).toBeUndefined();
+  });
+
+  it("keepMounted render substitution stays hidden and unannounced while deselected", async () => {
+    await render(
+      <Tabs testID="tabs" defaultValue="a">
+        <TabsList testID="list">
+          <TabsTrigger value="a" testID="tab-a" />
+          <TabsTrigger value="b" testID="tab-b" />
+        </TabsList>
+        <TabsPanel value="a" testID="panel-a" />
+        <TabsPanel
+          value="b"
+          keepMounted
+          render={<View testID="sub-panel-b" />}
+        />
+      </Tabs>,
+    );
+    // The substituted element carries the hidden contract: invisible
+    // and unannounced (queried inclusively), never announced by default.
+    expect(
+      screen.getByTestId("sub-panel-b", { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("sub-panel-b")).toBeNull();
+    const sub = screen.getByTestId("sub-panel-b", {
+      includeHiddenElements: true,
+    }).props;
+    const flatSub = Object.assign(
+      {},
+      ...(Array.isArray(sub.style) ? sub.style.flat(Infinity) : [sub.style]),
+    );
+    expect(flatSub.display).toBe("none");
+    expect(sub["aria-hidden"]).toBe(true);
+    expect(sub.accessibilityElementsHidden).toBeUndefined();
+    expect(sub.importantForAccessibility).toBeUndefined();
   });
 });

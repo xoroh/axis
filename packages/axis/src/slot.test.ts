@@ -47,6 +47,29 @@ describe("mergeSlotProps", () => {
     ).toEqual({ style: { color: "blue", padding: 0 } });
   });
 
+  it("flattens style arrays RN-order with the consumer winning per key", () => {
+    // Part arrays apply left to right (later wins); a consumer object
+    // then wins per key without resurrecting overridden part keys.
+    expect(
+      mergeSlotProps<{ style: unknown }>(
+        { style: [{ color: "red" }, { color: "green", display: "none" }] },
+        { style: { color: "blue" } },
+      ),
+    ).toEqual({ style: { color: "blue", display: "none" } });
+    // Nullish and nested entries contribute nothing.
+    expect(
+      mergeSlotProps<{ style: unknown }>(
+        { style: [{ padding: 4 }, null, [{ margin: 2 }, false]] },
+        { style: {} },
+      ),
+    ).toEqual({ style: { padding: 4, margin: 2 } });
+    // A consumer set without style leaves the part array untouched
+    // for the host to resolve natively.
+    expect(
+      mergeSlotProps<{ style: unknown }>({ style: [{ padding: 4 }, null] }, {}),
+    ).toEqual({ style: [{ padding: 4 }, null] });
+  });
+
   it("takes the consumer value unless it is undefined", () => {
     expect(
       mergeSlotProps({ label: "part", count: 1 }, { label: undefined }),

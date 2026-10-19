@@ -105,14 +105,26 @@ export type TabsPanelProps = {
   /** Panel value: this panel renders only while the group selection equals it. */
   value: string;
   testID?: string;
-  /** Panel view style. */
+  /** Panel view style (the panel mounts only while selected, unless `keepMounted`). */
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
   /**
+   * When `true`, the panel stays mounted while unselected: mounted but
+   * invisible (`display: "none"` merged after the caller style — the
+   * Base UI hidden-attribute equivalent) and hidden from assistive
+   * tech via `aria-hidden` alone (RN 0.87 resolves `aria-hidden` to
+   * `accessibilityElementsHidden`, and `true` additionally sets
+   * `importantForAccessibility="no-hide-descendants"` — View.js lines
+   * 71-76 — so descendants stay unannounced on iOS and Android;
+   * ADR-112 aria-only, no legacy hiding props).
+   * Default `false` (mounts only while selected).
+   */
+  keepMounted?: boolean;
+  /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
-   * receives `(props, state)`. The panel still mounts only while
-   * selected.
+   * receives `(props, state)`. Without `keepMounted` the panel still
+   * mounts only while selected.
    */
   render?: RenderProp<TabsState, SlotProps>;
 };
@@ -307,21 +319,36 @@ export function TabsPanel({
   testID,
   style,
   children,
+  keepMounted = false,
   render,
 }: TabsPanelProps): React.ReactNode {
   const group = useContext(TabsSelectionContext);
   // Conditional presence (structural): only the selected panel is in
-  // the tree. Unselected panels — including every panel outside a
-  // `Tabs` group — render nothing.
-  if (group?.selectedValue !== value) {
+  // the tree, unless `keepMounted` holds unselected panels mounted but
+  // hidden (unselected panels outside a `Tabs` group still render
+  // nothing unless `keepMounted` is set).
+  const selected = group?.selectedValue === value;
+  if (!selected && !keepMounted) {
     return null;
   }
-  const state: TabsState = { value: group.selectedValue };
+  const state: TabsState = { value: group?.selectedValue };
+  // A deselected keepMounted panel must not be visible: Base UI sets
+  // the `hidden` attribute, so the native equivalent is
+  // `display: "none"` merged AFTER the caller style (state-driven
+  // visibility, not a default style).
+  const closedStyle = selected ? null : { display: "none" as const };
   const substituted = resolveRender(
     render,
     {
       testID,
-      style,
+      // The hidden contract rides the substitution props too, as the same
+      // array the default host renders (mergeSlotProps flattens RN
+      // arrays, later entries winning): a `render` panel receives the
+      // deselected `display: "none"` and `aria-hidden`, staying
+      // invisible and unannounced. Consumer props still win per key
+      // through mergeSlotProps (consumer-last).
+      style: [style, closedStyle],
+      "aria-hidden": !selected,
       children,
     } satisfies SlotProps,
     state,
@@ -329,7 +356,15 @@ export function TabsPanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View testID={testID} style={style}>
+    <View
+      testID={testID}
+      style={[style, closedStyle]}
+      // `aria-hidden` alone hides descendants on iOS and Android
+      // (resolved to accessibilityElementsHidden +
+      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // aria-only — no legacy hiding props.
+      aria-hidden={!selected}
+    >
       {children}
     </View>
   );
