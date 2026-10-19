@@ -1,26 +1,25 @@
 ## Menubar
 
-Menu-command bar: a row of `MenubarMenu` commands, each opening
-a dropdown panel; exactly one panel is open at a time. This is
-composition, not a second menu implementation: each
-`MenubarMenu` IS a `DropdownMenuRoot` (same trigger/item/sub
-parts, same dismissal stack, same scrim), controlled by the
-root's open value. It differs from `NavigationMenuRoot` in what
+Menu-command bar: a row of `MenuRoot` commands (each with a
+`value`), each opening a menu panel; exactly one panel is open
+at a time. This is composition, not a second menu
+implementation: each joined `MenuRoot` (same trigger/item/sub
+parts, same dismissal stack, same scrim) is controlled by the
+bar's open value. It differs from `NavigationMenuRoot` in what
 opens: menu-command panels (`menuitem` content,
 cascade-capable) rather than navigation panels. The desktop-bar
 pattern adapts to touch by press (no hover): pressing another
-menu's trigger while one is open switches panels, because each
-menu's scrim fills only its own container — never the whole
-bar. The open menu follows the controlled + uncontrolled
-pattern (`openValue`/`defaultOpenValue`/`onOpenValueChange`,
-`null` closed): the open panel is application state, like
-`NavigationMenuRoot`.
+menu's trigger while one is open switches panels. The open menu
+follows the controlled + uncontrolled pattern
+(`openValue`/`defaultOpenValue`/`onOpenValueChange`, `null`
+closed): the open panel is application state, like
+`NavigationMenuRoot`. Menus paint through their own
+`MenuPortal` parts (non-modal, so the bar stays visible while a
+panel is open); add a `MenuBackdrop` for scrim dismissal.
 
-Source of truth: `MenubarProps`, `MenubarState`,
-`MenubarMenuProps` in `@xoroh/axis`
-(`packages/axis/src/components/Menubar.tsx:41-83`); panel
-parts from `DropdownMenuRootProps` in `@xoroh/axis`
-(`packages/axis/src/components/DropdownMenu.tsx:81-104`).
+Source of truth: `MenubarProps`, `MenubarState` in `@xoroh/axis`
+(`packages/axis/src/components/Menubar.tsx`); menus are
+`MenuRoot` (see `menu.md`) with a `value`.
 
 ### Install
 
@@ -48,11 +47,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
 | `Menubar` | `Menubar.Root` | State owner (`openValue`/`defaultOpenValue`/`onOpenValueChange`); bar row container with the `menubar` role. |
-| `MenubarMenu` | `Menubar.Menu` (composition) | Controlled `DropdownMenuRoot` bound to the root's open value (`value` identifies it). Trigger/item/sub parts come from `DropdownMenuRoot` (see `docs/components/dropdown-menu.md`). |
+| `MenuRoot` (with `value`) | `Menubar.Menu` (composition) | Menu joining the bar; open from the bar's open value, open changes reported back (single-open coordination, switching, leaf-close). |
 
-Outside a `Menubar` a `MenubarMenu` renders nothing rather
-than an uncoordinated dropdown — there is no coordinated open
-state to bind.
+A `MenuRoot` without `value` inside a bar stays standalone —
+give each menu a `value` to join.
 
 ### Props
 
@@ -66,22 +64,20 @@ state to bind.
 | `accessibilityLabel` | `string` | no | — | Accessible name source for the menu bar. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the bar container. |
 | `style` | `StateStyle<MenubarState, StyleProp<ViewStyle>>` | no | — | Bar container style: a value or a function of menubar state (row layout is default). |
-| `children` | `ReactNode` | no | — | `MenubarMenu` elements. |
+| `children` | `ReactNode` | no | — | `MenuRoot` elements (each with a `value`). |
 | `render` | `RenderProp<MenubarState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the bar container `View`. |
 
 `MenubarState`: `{ openValue: string | null }` — currently
 open menu value (`null` closed).
 
-#### `MenubarMenu`
+#### Menus: `MenuRoot`
 
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `value` | `string` | yes | — | Menu value identifying this trigger/panel pair. |
-| `children` | `ReactNode` | no | — | Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements. |
-| `testID` | `string` | no | — | Test identifier, forwarded to the menu container. |
-| `style` | `StyleProp<ViewStyle>` | no | — | Menu content box style, caller-provided. |
-| `render` | `RenderProp<DropdownMenuRootState, SlotProps>` | no | — | Element or function substitution, forwarded to the menu's content box (see `DropdownMenuRootProps.render`). |
+Bar menus are the `MenuRoot` part (see `menu.md`): `value`
+(required to join — open derives from the bar's open value and
+open changes report back), `modal` (use `false` so the bar stays
+visible while a panel is open), plus the standalone props
+(`defaultOpen` ignored when joined: the bar owns open state).
 
 ### Examples
 
@@ -90,28 +86,46 @@ File bar with two menus, uncontrolled:
 ```tsx
 import { Text } from "react-native";
 import {
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Menubar,
-  MenubarMenu,
+  MenuBackdrop,
+  MenuItem,
+  MenuPopup,
+  MenuPortal,
+  MenuPositioner,
+  MenuRoot,
+  MenuTrigger,
 } from "@xoroh/axis";
 
 function FileBar() {
   return (
     <Menubar accessibilityLabel="File commands">
-      <MenubarMenu value="file">
-        <DropdownMenuTrigger accessibilityLabel="File">
+      <MenuRoot value="file" modal={false}>
+        <MenuTrigger accessibilityLabel="File">
           <Text>File</Text>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="new">New</DropdownMenuItem>
-        <DropdownMenuItem value="open">Open</DropdownMenuItem>
-      </MenubarMenu>
-      <MenubarMenu value="edit">
-        <DropdownMenuTrigger accessibilityLabel="Edit">
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuBackdrop />
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuItem value="new">New</MenuItem>
+              <MenuItem value="open">Open</MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
+      <MenuRoot value="edit" modal={false}>
+        <MenuTrigger accessibilityLabel="Edit">
           <Text>Edit</Text>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="undo">Undo</DropdownMenuItem>
-      </MenubarMenu>
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuBackdrop />
+          <MenuPositioner>
+            <MenuPopup>
+              <MenuItem value="undo">Undo</MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
     </Menubar>
   );
 }
@@ -122,12 +136,7 @@ Controlled (parent owns which menu is open):
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import {
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  Menubar,
-  MenubarMenu,
-} from "@xoroh/axis";
+import { Menubar, MenuItem, MenuPopup, MenuRoot, MenuTrigger } from "@xoroh/axis";
 
 function ControlledBar() {
   const [openValue, setOpenValue] = useState<string | null>(null);
@@ -137,12 +146,14 @@ function ControlledBar() {
       onOpenValueChange={setOpenValue}
       accessibilityLabel="File commands"
     >
-      <MenubarMenu value="file">
-        <DropdownMenuTrigger accessibilityLabel="File">
+      <MenuRoot value="file" modal={false}>
+        <MenuTrigger accessibilityLabel="File">
           <Text>File</Text>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="new">New</DropdownMenuItem>
-      </MenubarMenu>
+        </MenuTrigger>
+        <MenuPopup>
+          <MenuItem value="new">New</MenuItem>
+        </MenuPopup>
+      </MenuRoot>
     </Menubar>
   );
 }
@@ -152,11 +163,11 @@ function ControlledBar() {
 
 - The bar is an accessibility element (`accessible`)
   carrying the `menubar` role and the caller's label.
-- Each open menu is a `DropdownMenuRoot`: same trigger/item/sub
+- Each open menu is a joined `MenuRoot`: same trigger/item/sub
   parts, same `menu`/`menuitem` roles, same "Dismiss menu"
-  scrim — see `docs/components/dropdown-menu.md`.
+  scrim — see `docs/components/menu.md`.
 - Pressing another menu's trigger while one is open switches
-  panels (each scrim fills only its own container).
+  panels (single-open coordination).
 - Explicitly deferred, each for a named reason: no animation
   (the `Menu` rationale); no hover or keyboard traversal (no
   touch equivalent; `roving`/`collection` unadopted for menus);
@@ -165,8 +176,7 @@ function ControlledBar() {
 ### Composition
 
 Every part takes `render` and value-or-function `style` over
-its state object (`{ openValue }`; menu content-box style via
-`DropdownMenuRootState`); `data-*` attributes are deliberately
+its state object (`{ openValue }`); `data-*` attributes are deliberately
 absent on native — state flows through those functions instead
 (contract §11, parity D1). Verified by the menubar RNTL suites
 (9 tests — `docs/COVERAGE.md`). Renders in

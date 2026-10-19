@@ -332,6 +332,11 @@ export function TabsPanel({
     return null;
   }
   const state: TabsRootState = { value: group?.selectedValue };
+  // A deselected keepMounted panel must not be visible: Base UI sets
+  // the `hidden` attribute, so the native equivalent is
+  // `display: "none"` merged AFTER the caller style (state-driven
+  // visibility, not a default style).
+  const closedStyle = selected ? null : { display: "none" as const };
   const substituted = resolveRender(
     render,
     {

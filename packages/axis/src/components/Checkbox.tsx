@@ -11,6 +11,7 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
+import { CheckboxGroupSelectionContext } from "./CheckboxGroup";
 
 /**
  * CheckboxRoot — an unstyled binary selection control (with its
@@ -34,7 +35,10 @@ import { useControllableState } from "../useControllableState";
  * indeterminate; the caller styles the difference through the
  * indicator's `indeterminate` state. Toggling reports through
  * `onCheckedChange`; `indeterminate` itself is caller-owned state
- * (the caller clears it when committing a choice).
+ * (the caller clears it when committing a choice). Inside a
+ * `CheckboxGroup`, a `CheckboxRoot` with `value` joins the group
+ * (checked from membership, activation toggles membership);
+ * without `value` it stays standalone.
  */
 
 export type CheckboxRootState = {
@@ -66,6 +70,16 @@ export type CheckboxIndicatorState = {
 };
 
 export type CheckboxRootProps = {
+  /**
+   * Group key: when rendered inside a `CheckboxGroup`, the box joins
+   * the group under this value — checked derives from group
+   * membership and activation toggles membership (multi-select
+   * toggle semantics). Without `value` (or outside a group) the box
+   * behaves standalone. `checked`/`defaultChecked` are ignored for
+   * a joined box: the group owns the state (the `Toggle`
+   * group-joining precedent).
+   */
+  value?: string;
   /** Controlled state. Wins over `defaultChecked` when defined. */
   checked?: boolean;
   /** Uncontrolled initial state. Default `false`. */
@@ -177,6 +191,7 @@ function assignRef(
 }
 
 export function CheckboxRoot({
+  value,
   checked,
   defaultChecked = false,
   onCheckedChange,
@@ -197,10 +212,35 @@ export function CheckboxRoot({
     onCheckedChange,
   );
 
+  // Group joining (the `Toggle` precedent): a `value` inside a
+  // `CheckboxGroup` makes the group own checked state. Standalone
+  // behavior — no group above, or no `value` — is unchanged. A
+  // standalone box never inherits the group's disabled flag.
+  const group = useContext(CheckboxGroupSelectionContext);
+  const joined = group !== null && value !== undefined;
+  const groupChecked =
+    value !== undefined && (group?.selectedValues?.includes(value) ?? false);
+  const effectiveDisabled =
+    disabled || (joined && (group?.groupDisabled ?? false));
+
   const toggle = useCallback(() => {
-    if (disabled || readOnly) return;
+    if (effectiveDisabled || readOnly) return;
+    if (joined && group && value !== undefined) {
+      onCheckedChange?.(!groupChecked);
+      group.toggle(value);
+      return;
+    }
     setChecked((previous) => !(previous ?? false));
-  }, [disabled, readOnly, setChecked]);
+  }, [
+    effectiveDisabled,
+    readOnly,
+    joined,
+    group,
+    value,
+    groupChecked,
+    onCheckedChange,
+    setChecked,
+  ]);
 
   // Stable identity so the host element is not detached and re-attached
   // on every render — the ref callback reads through `ref`, never
@@ -213,9 +253,9 @@ export function CheckboxRoot({
   );
 
   const state: CheckboxRootState = {
-    checked: isChecked ?? false,
-    disabled,
-    indeterminate,
+    checked: joined ? groupChecked : (isChecked ?? false),
+    disabled: effectiveDisabled,
+    indeterminate: joined ? false : indeterminate,
     readOnly,
   };
   const substituted = resolveRender(
@@ -223,13 +263,13 @@ export function CheckboxRoot({
     {
       accessibilityRole: "checkbox",
       accessibilityState: {
-        checked: indeterminate ? "mixed" : (isChecked ?? false),
-        disabled,
+        checked: state.indeterminate ? "mixed" : state.checked,
+        disabled: effectiveDisabled,
       },
       accessibilityLabel,
       accessibilityLabelledBy,
       testID,
-      disabled,
+      disabled: effectiveDisabled,
       onPress: toggle,
       style: resolveStyle(style, state),
       children,
@@ -244,21 +284,21 @@ export function CheckboxRoot({
       ref={setHostRef}
       accessibilityRole="checkbox"
       accessibilityState={{
-        checked: indeterminate ? "mixed" : (isChecked ?? false),
-        disabled,
+        checked: state.indeterminate ? "mixed" : state.checked,
+        disabled: effectiveDisabled,
       }}
       accessibilityLabel={accessibilityLabel}
       accessibilityLabelledBy={accessibilityLabelledBy}
       testID={testID}
-      disabled={disabled}
+      disabled={effectiveDisabled}
       onPress={toggle}
       style={resolveStyle(style, state)}
     >
       <CheckboxDisclosureContext.Provider
         value={{
-          checked: isChecked ?? false,
-          disabled,
-          indeterminate,
+          checked: state.checked,
+          disabled: effectiveDisabled,
+          indeterminate: state.indeterminate,
           readOnly,
         }}
       >

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef, useState } from "react";
 import type { View } from "react-native";
-import { CheckboxGroup, CheckboxGroupItem } from "./index";
+import { CheckboxGroup, CheckboxRoot } from "./index";
 
 /**
  * CheckboxGroup behavior through the public entry. Every assertion renders
@@ -10,7 +10,7 @@ import { CheckboxGroup, CheckboxGroupItem } from "./index";
  * terminality (group-wide and per-item), and ref forwarding are
  * observed, not assumed.
  *
- * Items render via the `CheckboxGroupItem` named export.
+ * Items are `CheckboxRoot` boxes with `value` (group joining).
  */
 
 async function press(testID: string) {
@@ -23,8 +23,8 @@ describe("CheckboxGroup on React Native", () => {
   it("renders a group with unchecked checkbox items", async () => {
     await render(
       <CheckboxGroup testID="cg" accessibilityLabel="Toppings">
-        <CheckboxGroupItem value="a" testID="a" accessibilityLabel="A" />
-        <CheckboxGroupItem value="b" testID="b" accessibilityLabel="B" />
+        <CheckboxRoot value="a" testID="a" accessibilityLabel="A" />
+        <CheckboxRoot value="b" testID="b" accessibilityLabel="B" />
       </CheckboxGroup>,
     );
     expect(screen.getByRole("group")).toBeTruthy();
@@ -44,8 +44,8 @@ describe("CheckboxGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <CheckboxGroup testID="cg" onValueChange={(v) => seen.push(v)}>
-        <CheckboxGroupItem value="a" testID="a" />
-        <CheckboxGroupItem value="b" testID="b" />
+        <CheckboxRoot value="a" testID="a" />
+        <CheckboxRoot value="b" testID="b" />
       </CheckboxGroup>,
     );
     await press("a");
@@ -62,8 +62,8 @@ describe("CheckboxGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <CheckboxGroup testID="cg" onValueChange={(v) => seen.push(v)}>
-        <CheckboxGroupItem value="a" testID="a" />
-        <CheckboxGroupItem value="b" testID="b" />
+        <CheckboxRoot value="a" testID="a" />
+        <CheckboxRoot value="b" testID="b" />
       </CheckboxGroup>,
     );
     await press("a");
@@ -88,8 +88,8 @@ describe("CheckboxGroup on React Native", () => {
       const [value, setValue] = useState<readonly string[]>(["a"]);
       return (
         <CheckboxGroup testID="cg" value={value} onValueChange={setValue}>
-          <CheckboxGroupItem value="a" testID="a" />
-          <CheckboxGroupItem value="b" testID="b" />
+          <CheckboxRoot value="a" testID="a" />
+          <CheckboxRoot value="b" testID="b" />
         </CheckboxGroup>
       );
     }
@@ -110,8 +110,8 @@ describe("CheckboxGroup on React Native", () => {
     let calls = 0;
     await render(
       <CheckboxGroup testID="cg" disabled onValueChange={() => (calls += 1)}>
-        <CheckboxGroupItem value="a" testID="a" />
-        <CheckboxGroupItem value="b" testID="b" />
+        <CheckboxRoot value="a" testID="a" />
+        <CheckboxRoot value="b" testID="b" />
       </CheckboxGroup>,
     );
     await press("a");
@@ -131,8 +131,8 @@ describe("CheckboxGroup on React Native", () => {
     const seen: (readonly string[])[] = [];
     await render(
       <CheckboxGroup testID="cg" onValueChange={(v) => seen.push(v)}>
-        <CheckboxGroupItem value="a" testID="a" disabled />
-        <CheckboxGroupItem value="b" testID="b" />
+        <CheckboxRoot value="a" testID="a" disabled />
+        <CheckboxRoot value="b" testID="b" />
       </CheckboxGroup>,
     );
     await press("a");
@@ -156,9 +156,64 @@ describe("CheckboxGroup on React Native", () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
       <CheckboxGroup testID="cg" ref={ref}>
-        <CheckboxGroupItem value="a" testID="a" />
+        <CheckboxRoot value="a" testID="a" />
       </CheckboxGroup>,
     );
     expect(ref.current).not.toBeNull();
+  });
+
+  it("joined boxes report through onCheckedChange with next membership", async () => {
+    const seen: boolean[] = [];
+    await render(
+      <CheckboxGroup testID="cg">
+        <CheckboxRoot
+          value="a"
+          testID="a"
+          onCheckedChange={(v) => seen.push(v)}
+        />
+      </CheckboxGroup>,
+    );
+    await press("a");
+    expect(seen).toEqual([true]);
+    expect(screen.getByTestId("a").props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+  });
+
+  it("a standalone CheckboxRoot inside a group ignores group state", async () => {
+    await render(
+      <CheckboxGroup testID="cg" defaultValue={["a"]}>
+        <CheckboxRoot value="a" testID="joined" />
+        <CheckboxRoot testID="solo" defaultChecked />
+      </CheckboxGroup>,
+    );
+    // Joined follows membership; standalone follows its own defaultChecked.
+    expect(screen.getByTestId("joined").props.accessibilityState).toMatchObject(
+      { checked: true },
+    );
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
+      checked: true,
+    });
+    await press("solo");
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
+      checked: false,
+    });
+    expect(screen.getByTestId("joined").props.accessibilityState).toMatchObject(
+      { checked: true },
+    );
+  });
+
+  it("a standalone CheckboxRoot in a disabled group stays enabled", async () => {
+    let calls = 0;
+    await render(
+      <CheckboxGroup testID="cg" disabled>
+        <CheckboxRoot testID="solo" onCheckedChange={() => (calls += 1)} />
+      </CheckboxGroup>,
+    );
+    await press("solo");
+    expect(calls).toBe(1);
+    expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
+      disabled: false,
+    });
   });
 });

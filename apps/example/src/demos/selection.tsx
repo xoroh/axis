@@ -1,6 +1,5 @@
 import {
   CheckboxGroup,
-  CheckboxGroupItem,
   CheckboxIndicator,
   CheckboxRoot,
   RadioGroup,
@@ -25,7 +24,6 @@ export const SelectionDemo: Demo = {
     "CheckboxRoot",
     "CheckboxIndicator",
     "CheckboxGroup",
-    "CheckboxGroupItem",
     "RadioGroup",
     "RadioIndicator",
     "RadioRoot",
@@ -176,7 +174,7 @@ export const SelectionDemo: Demo = {
                 ["b", "Option Beta"],
               ] as Array<[string, string]>
             ).map(([itemValue, label]) => (
-              <CheckboxGroupItem
+              <CheckboxRoot
                 key={itemValue}
                 value={itemValue}
                 render={(props, state) => {

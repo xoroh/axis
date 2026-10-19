@@ -52,6 +52,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "./DropdownMenu";
+import { MenubarDisclosureContext } from "./Menubar";
 import { OverlayPortal, OverlayRoot } from "./Overlay";
 import { Portal } from "./Portal";
 import { useFloatingPlacement } from "./useFloatingPlacement";
@@ -537,6 +538,16 @@ export type MenuRootState = {
 };
 
 export type MenuRootProps = {
+  /**
+   * Bar key: when rendered inside a `Menubar`, the menu joins the
+   * bar under this value — open derives from the bar's open value
+   * (`openValue === value`) and open changes report back to the bar
+   * (single-open coordination, switching, leaf-close). Without
+   * `value` (or outside a bar) the menu behaves standalone.
+   * `open`/`defaultOpen` are ignored for a joined menu: the bar
+   * owns the state (the `Toggle` group-joining precedent).
+   */
+  value?: string;
   /** Controlled open state. Wins over `defaultOpen` when defined. */
   open?: boolean;
   /** Uncontrolled initial open state. Default `false`. */
@@ -679,6 +690,7 @@ function assignPopupRef(
 }
 
 export function MenuRoot({
+  value,
   open,
   defaultOpen = false,
   onOpenChange,
@@ -695,10 +707,23 @@ export function MenuRoot({
   // to attach it to (Base UI parity — documented, not dropped
   // silently: an unused ref would be the silent version of this).
   void ref;
+  // Bar joining (the `Toggle` precedent): a `value` inside a
+  // `Menubar` makes the bar own open state. Standalone behavior — no
+  // bar above, or no `value` — is unchanged.
+  const bar = useContext(MenubarDisclosureContext);
+  const joined = bar !== null && value !== undefined;
+  const resolvedOpen = joined ? bar.openValue === value : open;
+  const reportOpen = useCallback(
+    (next: boolean) => {
+      onOpenChange?.(next);
+      if (joined && bar && value !== undefined) bar.report(value, next);
+    },
+    [onOpenChange, joined, bar, value],
+  );
   const [isOpen, setOpen] = useControllableState<boolean>(
-    open,
+    resolvedOpen,
     defaultOpen,
-    onOpenChange,
+    reportOpen,
   );
 
   const toggle = useCallback(() => {

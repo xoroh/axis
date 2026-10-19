@@ -1,8 +1,9 @@
 import {
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Menubar,
-  MenubarMenu,
+  MenuItem,
+  MenuPopup,
+  MenuRoot,
+  MenuTrigger,
   NavigationMenuItem,
   NavigationMenuPanel,
   NavigationMenuRoot,
@@ -25,7 +26,10 @@ export const BarsDemo: Demo = {
     "NavigationMenuRoot",
     "NavigationMenuTrigger",
     "Menubar",
-    "MenubarMenu",
+    "MenuItem",
+    "MenuPopup",
+    "MenuRoot",
+    "MenuTrigger",
   ],
   render: function BarsScreen() {
     const { theme } = useTheme();
@@ -110,8 +114,8 @@ export const BarsDemo: Demo = {
               borderColor: theme.borderSubtle,
             }}
           >
-            <MenubarMenu value="file">
-              <DropdownMenuTrigger
+            <MenuRoot value="file" modal={false}>
+              <MenuTrigger
                 accessibilityLabel="File trigger"
                 style={{
                   paddingVertical: 6,
@@ -124,16 +128,18 @@ export const BarsDemo: Demo = {
                 >
                   File
                 </Text>
-              </DropdownMenuTrigger>
-              <DropdownMenuItem
-                value="new"
-                style={{ paddingVertical: 6, paddingHorizontal: 10 }}
-              >
-                <Text style={{ fontSize: 13, color: theme.text }}>
-                  New Window
-                </Text>
-              </DropdownMenuItem>
-            </MenubarMenu>
+              </MenuTrigger>
+              <MenuPopup>
+                <MenuItem
+                  value="new"
+                  style={{ paddingVertical: 6, paddingHorizontal: 10 }}
+                >
+                  <Text style={{ fontSize: 13, color: theme.text }}>
+                    New Window
+                  </Text>
+                </MenuItem>
+              </MenuPopup>
+            </MenuRoot>
           </Menubar>
         </View>
       </View>

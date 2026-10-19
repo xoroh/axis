@@ -4,7 +4,6 @@ import {
   type ReactNode,
   type Ref,
   useCallback,
-  useContext,
   useMemo,
 } from "react";
 import { type StyleProp, View, type ViewStyle } from "react-native";
@@ -12,17 +11,16 @@ import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
-import { DropdownMenuRoot, type DropdownMenuRootState } from "./DropdownMenu";
 
 /**
  * Menubar — an unstyled menu-command bar.
  *
- * A row of `MenubarMenu` commands, each opening a dropdown panel;
- * exactly one panel is open at a time. This is composition, not a
- * second menu implementation: each `MenubarMenu` IS a
- * `DropdownMenuRoot` (same trigger/item/sub parts, same dismissal
- * stack, same scrim), controlled by the root's open value. It
- * differs from `NavigationMenuRoot` in what opens: menu-command panels
+ * A row of `MenuRoot` commands (each with a `value`), each opening
+ * a menu panel; exactly one panel is open at a time. This is
+ * composition, not a second menu implementation: each joined
+ * `MenuRoot` (same trigger/item/sub parts, same dismissal stack,
+ * same scrim) is controlled by the bar's open value. It differs
+ * from `NavigationMenuRoot` in what opens: menu-command panels
  * (`menuitem` content, cascade-capable) rather than navigation
  * panels. The desktop-bar pattern adapts to touch by press (no
  * hover): pressing another menu's trigger while one is open
@@ -55,7 +53,7 @@ export type MenubarProps = {
   testID?: string;
   /** Bar container style: value or function of menubar state (row layout is default). */
   style?: StateStyle<MenubarState, StyleProp<ViewStyle>>;
-  /** `MenubarMenu` elements. */
+  /** `MenuRoot` elements (each with a `value` to join the bar). */
   children?: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -67,21 +65,6 @@ export type MenubarProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-export type MenubarMenuProps = {
-  /** Menu value identifying this trigger/panel pair (required). */
-  value: string;
-  /** Trigger content plus `DropdownMenuItem`/`DropdownMenuSub` elements. */
-  children?: ReactNode;
-  testID?: string;
-  /** Menu content box style, caller-provided. */
-  style?: StyleProp<ViewStyle>;
-  /**
-   * Element or function substitution, forwarded to the menu's
-   * content box (see `DropdownMenuProps.render`).
-   */
-  render?: RenderProp<DropdownMenuRootState, SlotProps>;
-};
-
 type MenubarDisclosure = {
   /** Currently open menu value (`null` closed). */
   openValue: string | null;
@@ -90,9 +73,14 @@ type MenubarDisclosure = {
 };
 
 /**
- * Shared open-menu state. Internal (not exported).
+ * Shared open-menu state for the bar's menus. Exported for `MenuRoot`
+ * menu-joining only — not part of the public barrel: `MenuRoot`
+ * menus with `value` must render inside a `Menubar` to join; outside
+ * one they behave standalone.
  */
-const MenubarDisclosureContext = createContext<MenubarDisclosure | null>(null);
+export const MenubarDisclosureContext = createContext<MenubarDisclosure | null>(
+  null,
+);
 
 /**
  * Assign one value to every ref in the list. Inline here (not imported)
@@ -117,31 +105,6 @@ function assignRef(
       // rather than failing the render over it.
     }
   }
-}
-
-export function MenubarMenu({
-  value,
-  children,
-  testID,
-  style,
-  render,
-}: MenubarMenuProps): React.ReactNode {
-  const disclosure = useContext(MenubarDisclosureContext);
-  // Outside a menubar there is no coordinated open state: render
-  // nothing rather than an uncoordinated dropdown.
-  if (!disclosure) return null;
-
-  return (
-    <DropdownMenuRoot
-      open={disclosure.openValue === value}
-      onOpenChange={(open) => disclosure.report(value, open)}
-      testID={testID}
-      style={style}
-      render={render}
-    >
-      {children}
-    </DropdownMenuRoot>
-  );
 }
 
 export function Menubar({

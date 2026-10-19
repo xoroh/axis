@@ -2,13 +2,17 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import { Text as RNText, type View } from "react-native";
 import {
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
+  MenuBackdrop,
   Menubar,
-  MenubarMenu,
+  MenuItem,
+  MenuPopup,
+  MenuPortal,
+  MenuPositioner,
+  MenuRoot,
+  MenuSubmenuContent,
+  MenuSubmenuRoot,
+  MenuSubmenuTrigger,
+  MenuTrigger,
   PortalHost,
 } from "./index";
 
@@ -16,10 +20,10 @@ import {
  * Menubar behavior through the public entry. Bar rendering with the
  * menubar role, single-open coordination across menus, switching,
  * leaf selection closing everything, scrim dismissal, controlled
- * following, orphan menus rendering nothing, and ref forwarding —
+ * following, standalone menus outside a bar, and ref forwarding —
  * observed in the RN runtime. Panel behavior itself (cascade,
- * scrim, items) is `DropdownMenuRoot`'s tested contract, composed here,
- * not re-proven.
+ * scrim, items) is `MenuRoot`'s tested contract, composed here, not
+ * re-proven.
  */
 
 async function pressLabel(label: string) {
@@ -31,32 +35,46 @@ async function pressLabel(label: string) {
 function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
   return (
     <Menubar testID="bar" onOpenValueChange={onOpen}>
-      <MenubarMenu value="file" testID="file-menu">
-        <DropdownMenuTrigger accessibilityLabel="File trigger">
+      <MenuRoot modal={false} value="file">
+        <MenuTrigger accessibilityLabel="File trigger">
           <RNText>File</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="new">
-          <RNText>New</RNText>
-        </DropdownMenuItem>
-        <DropdownMenuSub value="recent">
-          <DropdownMenuSubTrigger accessibilityLabel="Recent submenu">
-            <RNText>Recent</RNText>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent testID="recent-panel">
-            <DropdownMenuItem value="doc">
-              <RNText>Document</RNText>
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </MenubarMenu>
-      <MenubarMenu value="edit" testID="edit-menu">
-        <DropdownMenuTrigger accessibilityLabel="Edit trigger">
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuBackdrop />
+          <MenuPositioner>
+            <MenuPopup testID="file-menu">
+              <MenuItem value="new">
+                <RNText>New</RNText>
+              </MenuItem>
+              <MenuSubmenuRoot value="recent">
+                <MenuSubmenuTrigger accessibilityLabel="Recent submenu">
+                  <RNText>Recent</RNText>
+                </MenuSubmenuTrigger>
+                <MenuSubmenuContent testID="recent-panel">
+                  <MenuItem value="doc">
+                    <RNText>Document</RNText>
+                  </MenuItem>
+                </MenuSubmenuContent>
+              </MenuSubmenuRoot>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
+      <MenuRoot modal={false} value="edit">
+        <MenuTrigger accessibilityLabel="Edit trigger">
           <RNText>Edit</RNText>
-        </DropdownMenuTrigger>
-        <DropdownMenuItem value="undo">
-          <RNText>Undo</RNText>
-        </DropdownMenuItem>
-      </MenubarMenu>
+        </MenuTrigger>
+        <MenuPortal>
+          <MenuBackdrop />
+          <MenuPositioner>
+            <MenuPopup testID="edit-menu">
+              <MenuItem value="undo">
+                <RNText>Undo</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuPositioner>
+        </MenuPortal>
+      </MenuRoot>
     </Menubar>
   );
 }
@@ -141,22 +159,34 @@ describe("Menubar on React Native", () => {
     await render(
       <PortalHost>
         <Menubar testID="bar" openValue="edit">
-          <MenubarMenu value="file" testID="file-menu">
-            <DropdownMenuTrigger accessibilityLabel="File trigger">
+          <MenuRoot modal={false} value="file">
+            <MenuTrigger accessibilityLabel="File trigger">
               <RNText>File</RNText>
-            </DropdownMenuTrigger>
-            <DropdownMenuItem value="new">
-              <RNText>New</RNText>
-            </DropdownMenuItem>
-          </MenubarMenu>
-          <MenubarMenu value="edit" testID="edit-menu">
-            <DropdownMenuTrigger accessibilityLabel="Edit trigger">
+            </MenuTrigger>
+            <MenuPortal>
+              <MenuPositioner>
+                <MenuPopup testID="file-menu">
+                  <MenuItem value="new">
+                    <RNText>New</RNText>
+                  </MenuItem>
+                </MenuPopup>
+              </MenuPositioner>
+            </MenuPortal>
+          </MenuRoot>
+          <MenuRoot modal={false} value="edit">
+            <MenuTrigger accessibilityLabel="Edit trigger">
               <RNText>Edit</RNText>
-            </DropdownMenuTrigger>
-            <DropdownMenuItem value="undo">
-              <RNText>Undo</RNText>
-            </DropdownMenuItem>
-          </MenubarMenu>
+            </MenuTrigger>
+            <MenuPortal>
+              <MenuPositioner>
+                <MenuPopup testID="edit-menu">
+                  <MenuItem value="undo">
+                    <RNText>Undo</RNText>
+                  </MenuItem>
+                </MenuPopup>
+              </MenuPositioner>
+            </MenuPortal>
+          </MenuRoot>
         </Menubar>
       </PortalHost>,
     );
@@ -164,21 +194,25 @@ describe("Menubar on React Native", () => {
     expect(screen.getByTestId("edit-menu")).toBeTruthy();
   });
 
-  it("renders nothing for menus outside a bar", async () => {
+  it("a menu with a value but no bar behaves standalone", async () => {
     await render(
       <PortalHost>
-        <MenubarMenu value="orphan" testID="orphan">
-          <DropdownMenuTrigger accessibilityLabel="Orphan trigger">
+        <MenuRoot modal={false} value="orphan">
+          <MenuTrigger accessibilityLabel="Orphan trigger">
             <RNText>Orphan</RNText>
-          </DropdownMenuTrigger>
-          <DropdownMenuItem value="x">
-            <RNText>X</RNText>
-          </DropdownMenuItem>
-        </MenubarMenu>
+          </MenuTrigger>
+          <MenuPopup testID="orphan">
+            <MenuItem value="x">
+              <RNText>X</RNText>
+            </MenuItem>
+          </MenuPopup>
+        </MenuRoot>
       </PortalHost>,
     );
-    expect(screen.queryByLabelText("Orphan trigger")).toBeNull();
+    expect(screen.getByLabelText("Orphan trigger")).toBeTruthy();
     expect(screen.queryByTestId("orphan")).toBeNull();
+    await pressLabel("Orphan trigger");
+    expect(screen.getByTestId("orphan")).toBeTruthy();
   });
 
   it("forwards a ref to the bar container", async () => {
@@ -186,14 +220,16 @@ describe("Menubar on React Native", () => {
     await render(
       <PortalHost>
         <Menubar ref={ref}>
-          <MenubarMenu value="file">
-            <DropdownMenuTrigger accessibilityLabel="File trigger">
+          <MenuRoot modal={false} value="file">
+            <MenuTrigger accessibilityLabel="File trigger">
               <RNText>File</RNText>
-            </DropdownMenuTrigger>
-            <DropdownMenuItem value="new">
-              <RNText>New</RNText>
-            </DropdownMenuItem>
-          </MenubarMenu>
+            </MenuTrigger>
+            <MenuPopup>
+              <MenuItem value="new">
+                <RNText>New</RNText>
+              </MenuItem>
+            </MenuPopup>
+          </MenuRoot>
         </Menubar>
       </PortalHost>,
     );

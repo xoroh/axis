@@ -4,10 +4,9 @@ import {
   type ReactNode,
   type Ref,
   useCallback,
-  useContext,
   useMemo,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import { type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -17,26 +16,20 @@ import { useControllableState } from "../useControllableState";
  * CheckboxGroup — an unstyled multi-select group.
  *
  * Structure only: a `View` carrying the group role, with
- * `CheckboxGroupItem` pressables carrying the checkbox role and checked
- * state. No default visuals — every visual value (`style`) is
- * caller-provided. State follows the `useControllableState` pattern:
- * `value` (+ `onValueChange`) for controlled use, `defaultValue` for
- * uncontrolled. Selection is multi-select with toggle semantics:
- * activating a selected item removes it, per the selection-model rule
- * (unlike `RadioGroup`, which never deselects on re-activation).
+ * `CheckboxRoot` items (each with a `value`) carrying the checkbox
+ * role and checked state. No default visuals — every visual value
+ * (`style`) is caller-provided. State follows the
+ * `useControllableState` pattern: `value` (+ `onValueChange`) for
+ * controlled use, `defaultValue` for uncontrolled. Selection is
+ * multi-select with toggle semantics: activating a selected item
+ * removes it, per the selection-model rule (unlike `RadioGroup`,
+ * which never deselects on re-activation).
  */
 
 export type CheckboxGroupState = {
   /** Currently selected item values. */
   value: readonly string[];
   /** Whether the whole group is disabled. */
-  disabled: boolean;
-};
-
-export type CheckboxGroupItemState = {
-  /** Whether this item is currently checked. */
-  checked: boolean;
-  /** Whether this item is currently disabled. */
   disabled: boolean;
 };
 
@@ -54,7 +47,7 @@ export type CheckboxGroupProps = {
   testID?: string;
   /** Root group view style: value or function of group state. */
   style?: StateStyle<CheckboxGroupState, StyleProp<ViewStyle>>;
-  /** The group's items (`CheckboxGroupItem`). */
+  /** The group's items (`CheckboxRoot` with `value`). */
   children: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -66,25 +59,6 @@ export type CheckboxGroupProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-export type CheckboxGroupItemProps = {
-  /** Selection value contributed to (or removed from) the group when this item is activated. */
-  value: string;
-  /** Terminal for this item only: it never toggles and is announced as disabled. Siblings are unaffected. */
-  disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  testID?: string;
-  /** Item pressable style: value or function of item state. */
-  style?: StateStyle<CheckboxGroupItemState, StyleProp<ViewStyle>>;
-  children?: ReactNode;
-  /**
-   * Element or function substitution (Base UI parity): an element is
-   * cloned with the part props merged under its own; a function
-   * receives `(props, state)`.
-   */
-  render?: RenderProp<CheckboxGroupItemState, SlotProps>;
-};
-
 type CheckboxGroupSelection = {
   selectedValues: readonly string[] | undefined;
   groupDisabled: boolean;
@@ -92,11 +66,12 @@ type CheckboxGroupSelection = {
 };
 
 /**
- * Shared selection state for the group's items. Internal to this module
- * (not exported): items must render inside a `CheckboxGroup` to
- * participate in selection; outside one they render unchecked and inert.
+ * Shared selection state for the group's items. Exported for
+ * `CheckboxRoot` group-joining only — not part of the public barrel:
+ * `CheckboxRoot` boxes with `value` must render inside a
+ * `CheckboxGroup` to join; outside one they behave standalone.
  */
-const CheckboxGroupSelectionContext =
+export const CheckboxGroupSelectionContext =
   createContext<CheckboxGroupSelection | null>(null);
 
 /**
@@ -203,59 +178,6 @@ function CheckboxGroupRoot({
         {children}
       </CheckboxGroupSelectionContext.Provider>
     </View>
-  );
-}
-
-export function CheckboxGroupItem({
-  value,
-  disabled = false,
-  accessibilityLabel,
-  testID,
-  style,
-  children,
-  render,
-}: CheckboxGroupItemProps): React.ReactNode {
-  const group = useContext(CheckboxGroupSelectionContext);
-  const effectiveDisabled = disabled || (group?.groupDisabled ?? false);
-  const checked = group?.selectedValues?.includes(value) ?? false;
-
-  const toggleItem = useCallback(() => {
-    if (effectiveDisabled) return;
-    group?.toggle(value);
-  }, [effectiveDisabled, group, value]);
-
-  const state: CheckboxGroupItemState = {
-    checked,
-    disabled: effectiveDisabled,
-  };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "checkbox",
-      accessibilityState: { checked, disabled: effectiveDisabled },
-      accessibilityLabel,
-      testID,
-      disabled: effectiveDisabled,
-      onPress: toggleItem,
-      style: resolveStyle(style, state),
-      children,
-    } satisfies SlotProps,
-    state,
-  );
-  if (substituted !== null) return substituted;
-
-  return (
-    <Pressable
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked, disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
-      testID={testID}
-      disabled={effectiveDisabled}
-      onPress={toggleItem}
-      style={resolveStyle(style, state)}
-    >
-      {children}
-    </Pressable>
   );
 }
 

@@ -1,8 +1,8 @@
 ## Checkbox Group
 
 Multi-select group: a `View` carrying the group role, with
-`CheckboxGroupItem` pressables carrying the checkbox role and
-checked state. Activating a selected item removes it (toggle
+`CheckboxRoot` items (each with a `value`) carrying the checkbox
+role and checked state. Activating a selected item removes it (toggle
 semantics, per the selection-model rule — unlike `RadioGroup`,
 which never deselects on re-activation). Structure, behavior,
 and accessibility only — every visual value (`style`) is
@@ -10,10 +10,10 @@ caller-provided. State follows the controlled + uncontrolled
 pattern throughout: `value` (plus `onValueChange`) for
 controlled use, `defaultValue` for uncontrolled.
 
-Source of truth: `CheckboxGroupProps`, `CheckboxGroupState`,
-`CheckboxGroupItemProps`, `CheckboxGroupItemState` in
+Source of truth: `CheckboxGroupProps`, `CheckboxGroupState` in
 `@xoroh/axis`
-(`packages/axis/src/components/CheckboxGroup.tsx:29-86`).
+(`packages/axis/src/components/CheckboxGroup.tsx:29-67`); items
+are `CheckboxRoot` (see `checkbox.md`) with a `value`.
 
 ### Install
 
@@ -41,10 +41,10 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Axis part | Base UI part | Role |
 | --- | --- | --- |
 | `CheckboxGroup` | — | State owner (`value`/`defaultValue`/`onValueChange`, terminal `disabled`); group role. No Base UI counterpart (Base UI composes groups from `Checkbox.Root`; Axis owns the multi-select domain). |
-| `CheckboxGroupItem` | — | Checkbox row (`value` required); checkbox role with checked state. Indicator is caller style, not a part (the `Checkbox` precedent). |
+| `CheckboxRoot` (with `value`) | — | Checkbox row joining the group; checkbox role with checked state from membership. |
 
-Outside a group, items render unchecked and inert — they must
-render inside a `CheckboxGroup` to participate in selection.
+A `CheckboxRoot` without `value` inside a group stays standalone
+— give each item a `value` to join.
 
 ### Props
 
@@ -59,25 +59,23 @@ render inside a `CheckboxGroup` to participate in selection.
 | `accessibilityLabel` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<CheckboxGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
-| `children` | `ReactNode` | yes | — | The group's items (`CheckboxGroupItem`). |
+| `children` | `ReactNode` | yes | — | The group's items (`CheckboxRoot` with `value`). |
 | `render` | `RenderProp<CheckboxGroupState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 | `ref` | `Ref<ElementRef<typeof View>>` | no | — | Forwarded to the root group host element. |
 
 `CheckboxGroupState`: `{ value: readonly string[]; disabled: boolean }` — currently selected item values, and whether the whole group is disabled.
 
-#### `CheckboxGroupItem`
+#### Items: `CheckboxRoot`
 
-| Prop | Type | Required | Default | Behavior |
-|---|---|---|---|---|
-| `value` | `string` | yes | — | Selection value contributed to (or removed from) the group when this item is activated. |
-| `disabled` | `boolean` | no | `false` | Terminal for this item only: it never toggles and is announced as disabled. Siblings are unaffected. Combines with root `disabled` (either disables). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `testID` | `string` | no | — | Test identifier. |
-| `style` | `StateStyle<CheckboxGroupItemState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
-| `children` | `ReactNode` | no | — | Item content (label + caller-styled check mark). |
-| `render` | `RenderProp<CheckboxGroupItemState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
-
-`CheckboxGroupItemState`: `{ checked: boolean; disabled: boolean }` — whether this item is currently checked, and whether it is currently disabled.
+Group items are the `CheckboxRoot` part (see `checkbox.md`):
+`value` (required to join — checked derives from group membership
+and activation toggles membership), `disabled` (terminal for the
+item, OR'ed with the group's when joined), `indeterminate`
+(ignored when joined — membership is binary), plus the standalone
+`checked`/`defaultChecked`/`onCheckedChange`/`readOnly` props
+(ignored when joined: the group owns state).
+`CheckboxRootState` is `{ checked: boolean; disabled: boolean;
+indeterminate: boolean; readOnly: boolean }`.
 
 ### Examples
 
@@ -86,17 +84,17 @@ it):
 
 ```tsx
 import { Text } from "react-native";
-import { CheckboxGroup, CheckboxGroupItem } from "@xoroh/axis";
+import { CheckboxGroup, CheckboxRoot } from "@xoroh/axis";
 
 function Toppings() {
   return (
     <CheckboxGroup accessibilityLabel="Toppings">
-      <CheckboxGroupItem value="cheese">
+      <CheckboxRoot value="cheese">
         <Text>Cheese</Text>
-      </CheckboxGroupItem>
-      <CheckboxGroupItem value="mushrooms">
+      </CheckboxRoot>
+      <CheckboxRoot value="mushrooms">
         <Text>Mushrooms</Text>
-      </CheckboxGroupItem>
+      </CheckboxRoot>
     </CheckboxGroup>
   );
 }
@@ -107,7 +105,7 @@ Controlled with function style over item state:
 ```tsx
 import { useState } from "react";
 import { Text } from "react-native";
-import { CheckboxGroup, CheckboxGroupItem } from "@xoroh/axis";
+import { CheckboxGroup, CheckboxRoot } from "@xoroh/axis";
 
 function ControlledToppings() {
   const [value, setValue] = useState<readonly string[]>([]);
@@ -117,12 +115,12 @@ function ControlledToppings() {
       onValueChange={setValue}
       accessibilityLabel="Toppings"
     >
-      <CheckboxGroupItem
+      <CheckboxRoot
         value="cheese"
         style={(state) => ({ opacity: state.checked ? 1 : 0.5 })}
       >
         <Text>Cheese</Text>
-      </CheckboxGroupItem>
+      </CheckboxRoot>
     </CheckboxGroup>
   );
 }

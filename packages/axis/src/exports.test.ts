@@ -93,6 +93,11 @@ const renames: Array<[string, string | null]> = [
   ["ToggleGroupItem", "Toggle"],
   ["ToggleGroupItemProps", "Toggle"],
   ["ToggleGroupItemState", "Toggle"],
+  ["CheckboxGroupItem", "CheckboxRoot"],
+  ["CheckboxGroupItemProps", "CheckboxRoot"],
+  ["CheckboxGroupItemState", "CheckboxRoot"],
+  ["MenubarMenu", "Menubar"],
+  ["MenubarMenuProps", "Menubar"],
   ["CheckboxState", "CheckboxRootState"],
 ];
 

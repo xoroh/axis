@@ -10,7 +10,7 @@ import {
   AlertDialog,
   Autocomplete,
   CheckboxGroup,
-  CheckboxGroupItem,
+  CheckboxRoot,
   CollapsiblePanel,
   CollapsibleRoot,
   CollapsibleTrigger,
@@ -24,7 +24,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   Menubar,
-  MenubarMenu,
+  MenuRoot,
+  MenuTrigger,
   NavigationMenuItem,
   NavigationMenuPanel,
   NavigationMenuRoot,
@@ -64,11 +65,11 @@ async function press(testID: string) {
 }
 
 describe("render composition: groups", () => {
-  it("CheckboxGroupItem element render preserves toggle", async () => {
+  it("joined CheckboxRoot element render preserves toggle", async () => {
     const seen: string[][] = [];
     await render(
       <CheckboxGroup onValueChange={(v) => seen.push([...v])}>
-        <CheckboxGroupItem
+        <CheckboxRoot
           value="a"
           accessibilityLabel="A"
           render={<Pressable testID="sub" />}
@@ -86,7 +87,7 @@ describe("render composition: groups", () => {
         defaultValue={["a"]}
         style={(s) => ({ opacity: s.value.includes("a") ? 1 : 0 })}
       >
-        <CheckboxGroupItem value="a" accessibilityLabel="A" />
+        <CheckboxRoot value="a" accessibilityLabel="A" />
       </CheckboxGroup>,
     );
     expect(screen.getByTestId("g").props.style).toMatchObject({ opacity: 1 });
@@ -408,11 +409,11 @@ describe("render composition: bars and structure", () => {
           <Text testID="st">{String(state.openValue)}</Text>
         )}
       >
-        <MenubarMenu value="file">
-          <DropdownMenuTrigger accessibilityLabel="File">
+        <MenuRoot value="file">
+          <MenuTrigger accessibilityLabel="File">
             <Text>File</Text>
-          </DropdownMenuTrigger>
-        </MenubarMenu>
+          </MenuTrigger>
+        </MenuRoot>
       </Menubar>,
     );
     expect(screen.getByText("file")).toBeTruthy();

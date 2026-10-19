@@ -162,9 +162,6 @@ export {
 } from "./components/Checkbox";
 export {
   CheckboxGroup,
-  CheckboxGroupItem,
-  type CheckboxGroupItemProps,
-  type CheckboxGroupItemState,
   type CheckboxGroupProps,
   type CheckboxGroupState,
 } from "./components/CheckboxGroup";
@@ -315,8 +312,6 @@ export {
 } from "./components/Menu";
 export {
   Menubar,
-  MenubarMenu,
-  type MenubarMenuProps,
   type MenubarProps,
   type MenubarState,
 } from "./components/Menubar";
