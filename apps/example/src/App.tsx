@@ -1,23 +1,45 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { DEMOS } from "./demos/registry";
+import { ThemeProvider, ThemeToggle, useTheme } from "./theme";
 
-/**
- * Example app shell: a demo list, a viewer with a back affordance,
- * and nothing else. Navigation is `useState` by design — no
- * navigation library, no extra dependencies to rot.
- */
-export function App(): React.JSX.Element {
+function AppShell(): React.JSX.Element {
   const [active, setActive] = useState<string | null>(null);
   const demo = DEMOS.find((d) => d.slug === active);
   const DemoScreen = demo?.render;
+  const { theme } = useTheme();
 
   return (
-    <View style={{ flex: 1, paddingTop: 64 }}>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
+      <View
+        style={{
+          paddingTop: 54,
+          paddingHorizontal: 20,
+          paddingBottom: 14,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.borderSubtle,
+          backgroundColor: theme.surface,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Text style={{ fontSize: 18, fontWeight: "700", color: theme.text }}>
+          {demo ? demo.title : `Axis examples (${DEMOS.length})`}
+        </Text>
+        <ThemeToggle />
+      </View>
+
       {demo === undefined || DemoScreen === undefined ? (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 4 }}>
-          <Text style={{ fontSize: 22, marginBottom: 12 }}>
-            Axis examples ({DEMOS.length})
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 8 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: theme.textSubtle,
+              marginBottom: 12,
+            }}
+          >
+            Select a component family to inspect styled interactive web demos.
           </Text>
           {DEMOS.map((d) => (
             <Pressable
@@ -25,9 +47,26 @@ export function App(): React.JSX.Element {
               accessibilityRole="button"
               accessibilityLabel={`Open ${d.title} demo`}
               onPress={() => setActive(d.slug)}
-              style={{ paddingVertical: 12 }}
+              style={({ pressed }) => ({
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                borderRadius: 10,
+                backgroundColor: pressed ? theme.surfaceSubtle : theme.surface,
+                borderWidth: 1,
+                borderColor: theme.borderSubtle,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              })}
             >
-              <Text style={{ fontSize: 17 }}>{d.title}</Text>
+              <Text
+                style={{ fontSize: 16, fontWeight: "600", color: theme.text }}
+              >
+                {d.title}
+              </Text>
+              <Text style={{ fontSize: 13, color: theme.textSubtle }}>
+                {d.components.length} components →
+              </Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -37,15 +76,43 @@ export function App(): React.JSX.Element {
             accessibilityRole="button"
             accessibilityLabel="Back to demo list"
             onPress={() => setActive(null)}
-            style={{ padding: 16 }}
+            style={({ pressed }) => ({
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              backgroundColor: pressed ? theme.surfaceSubtle : "transparent",
+              flexDirection: "row",
+              alignItems: "center",
+            })}
           >
-            <Text>← {demo.title}</Text>
+            <Text
+              style={{
+                color: theme.primary,
+                fontSize: 15,
+                fontWeight: "600",
+              }}
+            >
+              ← Back to demos
+            </Text>
           </Pressable>
-          <ScrollView contentContainerStyle={{ padding: 16 }}>
+          <ScrollView
+            contentContainerStyle={{
+              padding: 20,
+              paddingBottom: 60,
+              backgroundColor: theme.bg,
+            }}
+          >
             <DemoScreen key={demo.slug} />
           </ScrollView>
         </View>
       )}
     </View>
+  );
+}
+
+export function App(): React.JSX.Element {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
   );
 }
