@@ -37,6 +37,8 @@ jobs:
           restore-keys: bun-macos-
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - name: Build package
+        run: bun run --filter @xoroh/axis build
       - name: Create and boot a simulator
         # Fully dynamic: no hardcoded device or runtime names, so the job
         # survives Xcode image upgrades on macos-latest.
@@ -128,6 +130,8 @@ jobs:
           restore-keys: bun-linux-
       - name: Install dependencies
         run: bun install --frozen-lockfile
+      - name: Build package
+        run: bun run --filter @xoroh/axis build
       - name: Expo prebuild (Android)
         run: |
           cd apps/example
@@ -163,7 +167,7 @@ jobs:
             adb shell pidof org.xoroh.axis.example
             adb exec-out screencap -p > "$GITHUB_WORKSPACE/device-shots/home-android.png"
             ls -la "$GITHUB_WORKSPACE/device-shots/"
-            for _ in $(seq 1 12); do adb shell uiautomator dump /sdcard/axis-ui.xml > /dev/null && adb pull /sdcard/axis-ui.xml "$RUNNER_TEMP/axis-ui.xml" > /dev/null && grep -o "Axis examples" "$RUNNER_TEMP/axis-ui.xml" && exit 0; sleep 5; done; exit 1
+            for _ in $(seq 1 12); do adb shell uiautomator dump /sdcard/axis-ui.xml > /dev/null && adb pull /sdcard/axis-ui.xml "$RUNNER_TEMP/axis-ui.xml" > /dev/null && grep -o "Axis examples" "$RUNNER_TEMP/axis-ui.xml" && exit 0; sleep 5; done; cat "$GITHUB_WORKSPACE/metro-android.log" 2>/dev/null || true; exit 1
       - name: Upload home-screen screenshot
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
