@@ -1,6 +1,6 @@
 {
   "name": "@xoroh/axis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Unstyled, accessible UI components and native interaction primitives for React Native.",
   "keywords": [
     "react-native",
