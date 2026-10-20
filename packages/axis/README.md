@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
 For Node.js environments or tests outside React Native view trees:
 
 ```ts
-import { createDialogMachine, normalizeTimeValue } from "@xoroh/axis/models";
+import { createToastQueue, normalizeTimeValue } from "@xoroh/axis/models";
 ```
 
 ## Components

@@ -2,7 +2,11 @@
 
 ## Supported versions
 
-Axis has not published a release yet. Until the first release, security reports should target the current `main` branch.
+| Version | Supported |
+| --- | --- |
+| 0.1.x | ✅ |
+
+Older versions: Security reports about pre-release development (before 0.1.0) target the current `main` branch.
 
 ## Reporting a vulnerability
 

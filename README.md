@@ -1,5 +1,9 @@
 # Axis
 
+[![npm version](https://img.shields.io/npm/v/@xoroh/axis)](https://www.npmjs.com/package/@xoroh/axis)
+[![npm downloads](https://img.shields.io/npm/dm/@xoroh/axis)](https://www.npmjs.com/package/@xoroh/axis)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Unstyled, accessible UI components and native interaction primitives for React Native.
 
 Axis provides composable state models, hooks, and unstyled rendered components with complete control over styling, native accessibility, and predictable interaction flows.

@@ -1,6 +1,8 @@
 # Contributing to Axis
 
-Axis is an early-stage open-source project. Contributions are welcome; for a substantial change, please open an issue first so the scope can be discussed.
+Axis is an open-source project. Contributions are welcome; for a
+substantial change, please open an issue first so the scope can be
+discussed.
 
 ## Development setup
 
@@ -15,10 +17,12 @@ bun install
 Run the relevant tests before opening a pull request:
 
 ```sh
-bun test
+bun run lint
+bun run test:all
 ```
 
-Add new applications under `apps/` and reusable workspaces under `packages/`. Each workspace should have a unique package name and its own tests and documentation where appropriate.
+Behavior changes should come with RNTL/RTL tests and a paragraph in the
+matching `docs/components/<component>.md`.
 
 ## Pull requests
 
@@ -26,22 +30,16 @@ Add new applications under `apps/` and reusable workspaces under `packages/`. Ea
 - Keep each change focused and explain the problem it solves.
 - Add or update tests and documentation when behavior changes.
 - Do not include secrets, credentials, or private user data.
-- Use a clear, conventional commit message (for example, `feat: add ...` or `fix: ...`).
+- Use a clear, conventional commit message (for example, `feat: add ...`
+  or `fix: ...`).
 
-## Re-vendoring for Kern consumers
+## Release notes
 
-Kern consumes Axis pre-publish through a committed vendored
-tarball (`vendor/axis/axis-<sha>.tgz`, `file:` spec with lockfile
-pin). To reproduce that tarball from any clean checkout:
+User-facing changes get a changeset: add a `.changeset/<name>.md`
+(`"@xoroh/axis": "patch" | "minor" | "major"`) describing the change.
+Versions are cut and published only through the release pipeline
+(`docs/RELEASING.md`).
 
-```sh
-node scripts/pack-vendor.mjs --out <dir>  # prints <dir>/axis-<sha>.tgz + sha512
-```
-
-The script builds fresh, packs with `npm pack` (release-equivalent),
-and refuses dirty trees unless `--allow-dirty` is passed for
-scratch builds. It performs no version bump and no publish.
-Copy the printed tarball into Kern's `vendor/axis/` and
-re-install there to re-pin.
-
-By submitting a contribution, you agree that it may be distributed under the repository's MIT License. Please preserve existing copyright and license notices.
+By submitting a contribution, you agree that it may be distributed
+under the repository's MIT License. Please preserve existing copyright
+and license notices.

@@ -4,17 +4,22 @@
   "description": "Unstyled, accessible UI components and native interaction primitives for React Native.",
   "keywords": [
     "react-native",
+    "reactjs",
+    "react-native-web",
     "primitives",
     "unstyled",
+    "unstyled-components",
     "headless",
     "accessibility",
     "a11y",
+    "aria",
     "ui-components",
     "components",
-    "react-native-web",
-    "design-system",
+    "mobile",
+    "ios",
+    "android",
     "cross-platform",
-    "universal",
+    "design-system",
     "base-ui",
     "radix-ui"
   ],
@@ -25,7 +30,7 @@
     "url": "git+https://github.com/xoroh/axis.git",
     "directory": "packages/axis"
   },
-  "homepage": "https://axis.xoroh.org",
+  "homepage": "https://github.com/xoroh/axis#readme",
   "bugs": "https://github.com/xoroh/axis/issues",
   "engines": {
     "node": ">=20.19"
