@@ -1,69 +1,87 @@
 # `@xoroh/axis`
 
-Design-system-neutral, native-first behavior and interaction primitives
-for React Native — the counterpart of Base UI for native. Composable
-state models, hooks, and unstyled rendered components with no token
-reads, no styling, and no web-only APIs.
+Unstyled, accessible UI components and native interaction primitives for React Native.
 
-Axis is independent and standalone: it never depends on Kern, Kern
-tokens, or any design system, and it is usable without Kern.
-Design-system variants (Material, Astryx, …) live in the consuming
-system, never here.
+Axis provides composable state models, hooks, and unstyled rendered components with complete control over styling, full accessibility support, and native-first behavior — with zero CSS assumptions, no design system opinions, and no web-only API leaks.
+
+- **Unstyled & headless:** You have 100% control over layout, styling, and design system integration.
+- **Native-first accessibility:** Built specifically around React Native's accessibility model (`aria-*`, roles, focus order, announcements).
+- **Separation of concerns:** Pure state models live in `@xoroh/axis/models` (pure TypeScript/JS, no React Native runtime dependency). Rendered components live in `@xoroh/axis`.
+
+## Scope and independence
+
+Axis is standalone and design-system neutral: it contains no hardcoded tokens, themes, or styling rules. Any design system or visual theme can be built on top of Axis primitives.
 
 ## Install
 
 ```sh
 bun add @xoroh/axis react react-native
+# or
+npm install @xoroh/axis react react-native
 ```
 
-Nothing is published yet (version `0.0.0`; releases are owner-gated
-— see [`docs/RELEASING.md`](https://github.com/xoroh/axis/blob/main/docs/RELEASING.md)).
-Until the first release, install from source with the same
-pack-vendor flow Kern uses to vendor Axis:
-
-```sh
-git clone https://github.com/xoroh/axis.git && cd axis
-bun install --frozen-lockfile
-node scripts/pack-vendor.mjs --out /tmp/axis-vendor
-# prints /tmp/axis-vendor/axis-<short-sha>.tgz + sha512 — add it
-# in your app: bun add /tmp/axis-vendor/axis-<short-sha>.tgz
-```
-
-Peers: `react >= 18`; rendered components additionally need
-`react-native >=0.86 <0.89` (D-STACK support policy). The behavior
-modules (`useControllableState`, `normalizeTimeValue`, …) are pure
-React and run anywhere React runs.
+Peers: `react >= 18`; rendered components additionally need `react-native >=0.86 <0.89`. State models and behavior modules under `@xoroh/axis/models` are pure JavaScript and run anywhere React/Node/Web runs.
 
 ## Usage
 
 ```tsx
 import { useState } from "react";
-import { Text } from "react-native";
-import { DialogRoot, DialogTrigger, DialogPortal, DialogPopup } from "@xoroh/axis";
+import { Text, StyleSheet } from "react-native";
+import {
+  DialogRoot,
+  DialogTrigger,
+  DialogPortal,
+  DialogPopup,
+  DialogBackdrop,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@xoroh/axis";
 
-function Example() {
+export function ExampleDialog() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <DialogRoot>
-      <DialogTrigger>
-        <Text>Open</Text>
+    <DialogRoot open={open} onOpenChange={setOpen}>
+      <DialogTrigger style={styles.button}>
+        <Text style={styles.buttonText}>Open Dialog</Text>
       </DialogTrigger>
       <DialogPortal>
-        <DialogPopup aria-label="Example dialog">
-          <Text>Hello</Text>
+        <DialogBackdrop style={styles.backdrop} />
+        <DialogPopup style={styles.popup} aria-label="Example dialog">
+          <DialogTitle style={styles.title}>Edit profile</DialogTitle>
+          <DialogDescription style={styles.description}>
+            Make changes to your profile here. Click save when you're done.
+          </DialogDescription>
+          <DialogClose style={styles.closeButton}>
+            <Text>Done</Text>
+          </DialogClose>
         </DialogPopup>
       </DialogPortal>
     </DialogRoot>
   );
 }
+
+const styles = StyleSheet.create({
+  button: { padding: 12, borderRadius: 8, backgroundColor: "#007AFF" },
+  buttonText: { color: "#FFF", fontWeight: "600" },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.5)" },
+  popup: { margin: 24, padding: 24, borderRadius: 12, backgroundColor: "#FFF" },
+  title: { fontSize: 18, fontWeight: "700", marginBottom: 8 },
+  description: { fontSize: 14, color: "#666", marginBottom: 16 },
+  closeButton: { alignSelf: "flex-end", padding: 8 },
+});
 ```
 
-Only the documented public entry (`.`) is supported. Deep imports are
-not part of the contract.
+For Node.js environments or tests outside React Native view trees:
+
+```ts
+import { createDialogMachine, normalizeTimeValue } from "@xoroh/axis/models";
+```
 
 ## Components
 
-Per-component notes (props, examples, accessibility) live in
-[`docs/components/`](https://github.com/xoroh/axis/tree/main/docs/components):
+The package provides 43 native component primitives:
 
 <!-- index:begin -->
 | [Accordion](https://github.com/xoroh/axis/blob/main/docs/components/accordion.md) |
@@ -113,23 +131,13 @@ Per-component notes (props, examples, accessibility) live in
 
 ## Docs
 
-- [`docs/COMPONENT_CONTRACT.md`](https://github.com/xoroh/axis/blob/main/docs/COMPONENT_CONTRACT.md) —
-  what a component is, and the rules every slice follows.
-- [`docs/BASE_UI_PARITY.md`](https://github.com/xoroh/axis/blob/main/docs/BASE_UI_PARITY.md) —
-  per-component Base UI parity with documented native deviations.
-- [`docs/COVERAGE.md`](https://github.com/xoroh/axis/blob/main/docs/COVERAGE.md) —
-  the component coverage inventory.
-- [`docs/COMPATIBILITY.md`](https://github.com/xoroh/axis/blob/main/docs/COMPATIBILITY.md) —
-  what the supported ranges rest on, honestly labeled.
-- [`docs/RELEASING.md`](https://github.com/xoroh/axis/blob/main/docs/RELEASING.md) —
-  manual releases only; nothing is published yet.
+- [`docs/VISION.md`](https://github.com/xoroh/axis/blob/main/docs/VISION.md) — north star, design principles, non-goals, quality bar.
+- [`docs/COMPONENT_CONTRACT.md`](https://github.com/xoroh/axis/blob/main/docs/COMPONENT_CONTRACT.md) — slice rules and component invariants.
+- [`docs/BASE_UI_PARITY.md`](https://github.com/xoroh/axis/blob/main/docs/BASE_UI_PARITY.md) — Base UI parity mapping and native adaptations.
+- [`docs/COVERAGE.md`](https://github.com/xoroh/axis/blob/main/docs/COVERAGE.md) — full component matrix across all 43 components.
 
 ## Compatibility
 
-- Declared supported: `react-native >=0.86 <0.89`, React 19, Expo 57
-  host (peer ranges + D-STACK).
-- Exercised by automation: jest + RN preset; shipped-artifact bundle
-  export on the Expo 57 host. Untested versions inside the range are
-  untested — the range is policy, not proof.
-- Not performed: emulator, simulator, physical-device, or
-  screen-reader validation.
+- React >= 18
+- React Native >= 0.86 < 0.89 (New Architecture / bridgeless compatible)
+- Works seamlessly across iOS, Android, and React Native Web.

@@ -1,12 +1,22 @@
 {
   "name": "@xoroh/axis",
   "version": "0.1.0",
-  "description": "Design-system-neutral, native-first behavior and interaction primitives for React Native.",
+  "description": "Unstyled, accessible UI components and native interaction primitives for React Native.",
   "keywords": [
     "react-native",
     "primitives",
+    "unstyled",
+    "headless",
     "accessibility",
-    "unstyled"
+    "a11y",
+    "ui-components",
+    "components",
+    "react-native-web",
+    "design-system",
+    "cross-platform",
+    "universal",
+    "base-ui",
+    "radix-ui"
   ],
   "license": "MIT",
   "author": "Xoroh",
@@ -15,7 +25,7 @@
     "url": "git+https://github.com/xoroh/axis.git",
     "directory": "packages/axis"
   },
-  "homepage": "https://github.com/xoroh/axis",
+  "homepage": "https://axis.xoroh.org",
   "bugs": "https://github.com/xoroh/axis/issues",
   "engines": {
     "node": ">=20.19"

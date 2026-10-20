@@ -22,16 +22,10 @@ Source of truth: `DropdownMenuRootProps`, `DropdownMenuRootState`,
 
 ### Install
 
-`@xoroh/axis` is not on npm yet (version `0.0.0`; releases are
-owner-gated — `docs/RELEASING.md`). Install from source with the
-repo's pack-vendor script, the same flow Kern uses to vendor Axis:
-
 ```sh
-git clone https://github.com/xoroh/axis.git
-cd axis
-bun install --frozen-lockfile
-node scripts/pack-vendor.mjs --out /tmp/axis-vendor
-# prints /tmp/axis-vendor/axis-<short-sha>.tgz + sha512
+bun add @xoroh/axis react react-native
+# or
+npm install @xoroh/axis react react-native
 ```
 
 Then add the printed tarball to your app (peers `react >= 18`,
