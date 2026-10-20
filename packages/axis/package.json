@@ -30,7 +30,7 @@
     "url": "git+https://github.com/xoroh/axis.git",
     "directory": "packages/axis"
   },
-  "homepage": "https://github.com/xoroh/axis#readme",
+  "homepage": "https://axis.xoroh.org",
   "bugs": "https://github.com/xoroh/axis/issues",
   "engines": {
     "node": ">=20.19"
