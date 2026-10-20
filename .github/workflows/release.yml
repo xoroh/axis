@@ -107,5 +107,9 @@ jobs:
           commit-message: "chore: version packages"
           pr-title: "chore: version packages"
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Tags and GitHub releases follow the axis-v<version> convention
+          # (docs/RELEASING.md steps 6-7); the action adds none of its own.
+          push-git-tags: false
+          create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
