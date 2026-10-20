@@ -370,6 +370,7 @@ export type ToastCloseState = {
 
 export type ToastCloseProps = {
   disabled?: boolean;
+  onPress?: () => void;
   "aria-label"?: string;
   "aria-labelledby"?: string;
   testID?: string;
@@ -381,6 +382,7 @@ export type ToastCloseProps = {
 
 export function ToastClose({
   disabled = false,
+  onPress,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   testID,
@@ -394,8 +396,9 @@ export function ToastClose({
 
   const handlePress = useCallback(() => {
     if (disabled) return;
+    onPress?.();
     ctx?.dismiss();
-  }, [disabled, ctx]);
+  }, [disabled, onPress, ctx]);
 
   const substituted = resolveRender(
     render,

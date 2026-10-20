@@ -8,11 +8,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
+  ContextMenuArrow,
   ContextMenuBackdrop,
+  ContextMenuGroup,
+  ContextMenuGroupLabel,
+  ContextMenuItem,
   ContextMenuPopup,
   ContextMenuPortal,
   ContextMenuPositioner,
   ContextMenuRoot,
+  ContextMenuSeparator,
   ContextMenuTrigger,
   DrawerBackdrop,
   DrawerClose,
@@ -31,8 +36,20 @@ import {
   OverlayTrigger,
   Portal,
   PortalHost,
+  PreviewCardArrow,
+  PreviewCardBackdrop,
+  PreviewCardPopup,
+  PreviewCardPortal,
+  PreviewCardPositioner,
+  PreviewCardRoot,
+  PreviewCardTrigger,
+  ToastAction,
+  ToastClose,
+  ToastDescription,
+  ToastPortal,
   ToastProvider,
   ToastRoot,
+  ToastTitle,
   ToastViewport,
   TooltipArrow,
   TooltipPopup,
@@ -44,7 +61,7 @@ import {
   useToast,
 } from "@xoroh/axis";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTheme } from "../theme";
 import type { Demo } from "./registry";
 
@@ -93,7 +110,29 @@ export const OverlaysDemo: Demo = {
     "TooltipProvider",
     "TooltipRoot",
     "TooltipTrigger",
+    "ContextMenuArrow",
+    "ContextMenuBackdrop",
+    "ContextMenuGroup",
+    "ContextMenuGroupLabel",
+    "ContextMenuItem",
+    "ContextMenuPopup",
+    "ContextMenuPortal",
+    "ContextMenuPositioner",
     "ContextMenuRoot",
+    "ContextMenuSeparator",
+    "ContextMenuTrigger",
+    "PreviewCardArrow",
+    "PreviewCardBackdrop",
+    "PreviewCardPopup",
+    "PreviewCardPortal",
+    "PreviewCardPositioner",
+    "PreviewCardRoot",
+    "PreviewCardTrigger",
+    "ToastAction",
+    "ToastClose",
+    "ToastDescription",
+    "ToastPortal",
+    "ToastTitle",
   ],
   render: function OverlaysScreen() {
     const { theme } = useTheme();
@@ -242,15 +281,47 @@ export const OverlaysDemo: Demo = {
                       padding: 8,
                     }}
                   >
-                    <Text style={{ fontSize: 13, color: theme.text }}>
-                      Context Menu Options
-                    </Text>
-                    <Pressable
-                      role="button"
-                      aria-label="Close context menu"
-                      onPress={() => setContextMenuOpen(false)}
+                    <ContextMenuArrow />
+                    <ContextMenuGroup>
+                      <ContextMenuGroupLabel>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: theme.textSubtle,
+                            fontWeight: "600",
+                          }}
+                        >
+                          OPTIONS
+                        </Text>
+                      </ContextMenuGroupLabel>
+                      <ContextMenuItem
+                        onSelect={() => setContextMenuOpen(false)}
+                        style={{ paddingVertical: 4 }}
+                      >
+                        <Text style={{ fontSize: 13, color: theme.text }}>
+                          Rename
+                        </Text>
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        onSelect={() => setContextMenuOpen(false)}
+                        style={{ paddingVertical: 4 }}
+                      >
+                        <Text style={{ fontSize: 13, color: theme.text }}>
+                          Delete
+                        </Text>
+                      </ContextMenuItem>
+                    </ContextMenuGroup>
+                    <ContextMenuSeparator
                       style={{
-                        marginTop: 8,
+                        height: 1,
+                        backgroundColor: theme.border,
+                        marginVertical: 4,
+                      }}
+                    />
+                    <ContextMenuItem
+                      aria-label="Close context menu"
+                      onSelect={() => setContextMenuOpen(false)}
+                      style={{
                         paddingVertical: 6,
                         paddingHorizontal: 10,
                         borderRadius: 6,
@@ -266,7 +337,7 @@ export const OverlaysDemo: Demo = {
                       >
                         Close menu
                       </Text>
-                    </Pressable>
+                    </ContextMenuItem>
                   </ContextMenuPopup>
                 </ContextMenuPositioner>
               </ContextMenuPortal>
@@ -290,42 +361,154 @@ export const OverlaysDemo: Demo = {
           </Text>
 
           {toastVisible && (
-            <ToastRoot
-              aria-label="Demo toast"
-              defaultOpen={true}
-              style={{
-                paddingVertical: 10,
-                paddingHorizontal: 16,
-                borderRadius: 8,
-                backgroundColor: theme.primary,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Text
+            <ToastPortal>
+              <ToastRoot
+                aria-label="Demo toast"
+                defaultOpen={true}
                 style={{
-                  color: theme.primaryFg,
-                  fontSize: 13,
-                  fontWeight: "600",
+                  paddingVertical: 10,
+                  paddingHorizontal: 16,
+                  borderRadius: 8,
+                  backgroundColor: theme.primary,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                ✓ Profile changes saved successfully
-              </Text>
-              <Button
-                aria-label="Dismiss toast"
-                onPress={() => setToastVisible(false)}
-                style={{ paddingLeft: 12 }}
-              >
-                <Text style={{ color: theme.primaryFg, fontSize: 12 }}>✕</Text>
-              </Button>
-            </ToastRoot>
+                <View>
+                  <ToastTitle
+                    style={{
+                      color: theme.primaryFg,
+                      fontSize: 13,
+                      fontWeight: "700",
+                    }}
+                  >
+                    Changes saved
+                  </ToastTitle>
+                  <ToastDescription
+                    style={{
+                      color: theme.primaryFg,
+                      fontSize: 12,
+                    }}
+                  >
+                    ✓ Profile changes saved successfully
+                  </ToastDescription>
+                </View>
+                <View
+                  style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+                >
+                  <ToastAction
+                    aria-label="Undo save"
+                    onPress={() => setToastVisible(false)}
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 4,
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: theme.primaryFg,
+                        fontSize: 12,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Undo
+                    </Text>
+                  </ToastAction>
+                  <ToastClose
+                    aria-label="Dismiss toast"
+                    onPress={() => setToastVisible(false)}
+                    style={{ paddingLeft: 6 }}
+                  >
+                    <Text style={{ color: theme.primaryFg, fontSize: 12 }}>
+                      ✕
+                    </Text>
+                  </ToastClose>
+                </View>
+              </ToastRoot>
+            </ToastPortal>
           )}
 
           <ToastProvider>
             <QueueDemoButton />
             <ToastViewport style={{ paddingVertical: 4 }} />
           </ToastProvider>
+        </View>
+
+        {/* Preview Card */}
+        <View
+          style={{
+            backgroundColor: theme.surface,
+            padding: 18,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.borderSubtle,
+            gap: 12,
+          }}
+        >
+          <Text style={{ fontSize: 15, fontWeight: "600", color: theme.text }}>
+            Preview Card:
+          </Text>
+          <PreviewCardRoot>
+            <PreviewCardTrigger>
+              <View
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 6,
+                  backgroundColor: theme.surfaceSubtle,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  alignSelf: "flex-start",
+                }}
+              >
+                <Text
+                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
+                >
+                  Hover / Tap for Destination Preview
+                </Text>
+              </View>
+            </PreviewCardTrigger>
+            <PreviewCardPortal>
+              <PreviewCardBackdrop />
+              <PreviewCardPositioner side="bottom" sideOffset={6}>
+                <PreviewCardPopup
+                  aria-label="Destination preview card"
+                  style={{
+                    minWidth: 200,
+                    backgroundColor: theme.surface,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    padding: 12,
+                  }}
+                >
+                  <PreviewCardArrow />
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: theme.text,
+                    }}
+                  >
+                    @xoroh/axis
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSubtle,
+                      marginTop: 4,
+                    }}
+                  >
+                    Unstyled accessible UI component primitives for React
+                    Native.
+                  </Text>
+                </PreviewCardPopup>
+              </PreviewCardPositioner>
+            </PreviewCardPortal>
+          </PreviewCardRoot>
         </View>
 
         {/* Bottom sheet (DrawerRoot), side DrawerRoot & AlertDialogRoot */}
