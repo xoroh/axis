@@ -3,12 +3,11 @@ name: Release
 # Publishing is owner-authorized only. This workflow NEVER runs on
 # push: it starts solely from a manual dispatch, and even then it
 # stops unless ALL of these hold:
-#   - the `npm-publish` environment approves (human approver +
-#     isolated write token),
+#   - the `npm-publish` environment approves (human approver),
 #   - the `RELEASE_CHANGESSETS` repository variable is 'true'
 #     (the release HOLD switch — absent/false by default).
-# Until the first release is authorized, every run exits before
-# touching the registry. See docs/RELEASING.md.
+# Releases use npm Trusted Publishing (OIDC tokenless exchange)
+# with Sigstore provenance attestation. See docs/RELEASING.md.
 
 on:
   workflow_dispatch:
@@ -71,16 +70,10 @@ jobs:
   release:
     needs: verify
     # Triple gate: manual dispatch (workflow-level) + this var (the
-    # HOLD switch) + the environment below (human approval, write
-    # token isolated to this job). Keep all three; each one alone is
-    # a mistake away from an unauthorized publish.
-    # Provenance does NOT come from an env var here: `changeset
-    # publish` passes only --access/--tag to `npm publish` (verified
-    # in @changesets/cli dist/getPublishPlan.mjs), so the attestation
-    # comes from publishConfig.provenance in packages/axis/package.json
-    # plus the id-token:write permission below (Sigstore signing).
-    # Auth is token-based (NPM_TOKEN secret), NOT OIDC trusted
-    # publishing — that switch is owner-authorized and not set up here.
+    # HOLD switch) + the environment below (human approval).
+    # Provenance and publishing auth use npm Trusted Publishing via OIDC:
+    # `id-token: write` enables GitHub to issue the OIDC token which
+    # npm CLI exchanges for a short-lived publication token.
     if: ${{ vars.RELEASE_CHANGESSETS == 'true' }}
     environment: npm-publish
     runs-on: ubuntu-latest
@@ -116,5 +109,3 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

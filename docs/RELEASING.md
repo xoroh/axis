@@ -15,8 +15,7 @@ variable below never substitute for it.
 It NEVER runs on push or PR — `workflow_dispatch` only — and even a
 manual run exits before touching the registry unless ALL hold:
 
-1. The `npm-publish` GitHub environment approves (human approver,
-   write token isolated to the `release` job).
+1. The `npm-publish` GitHub environment approves (human approver).
 2. The `RELEASE_CHANGESSETS` repository variable is `'true'`
    (the HOLD switch; absent/false by default).
 
@@ -25,23 +24,22 @@ package gates — install, lint, typecheck, vitest, jest, boundary (+ its
 mutation suite), readme, readme-examples, build, publint/attw — so a
 manual dispatch can never publish a red tree. The `release` job needs
 `contents: write` + `pull-requests: write` (the changesets version-PR
-flow) and `id-token: write` (Sigstore signing for provenance).
+flow) and `id-token: write` (Sigstore signing for provenance and OIDC token exchange).
 
-## Auth: token-based today, OIDC not set up
+## Auth: npm Trusted Publishing (OIDC tokenless)
 
-- **Current state:** registry auth uses the `NPM_TOKEN` secret
-  (`NODE_AUTH_TOKEN` mirrors it for `setup-node`'s registry-url
-  `.npmrc`). Provenance does NOT come from an env var — `changeset
-  publish` passes only `--access`/`--tag` to `npm publish` (verified
-  in `@changesets/cli`), so the attestation comes from
-  `publishConfig.provenance: true` in `packages/axis/package.json`
-  plus the job's `id-token: write` permission.
-- **Not set up (owner-authorized, do not configure in this lane):**
-  OIDC trusted publishing (no stored token). Switching to it is a
-  Faroeq decision; until then the token + `publishConfig.provenance`
-  combination above is the working setup.
-- The workflow pins every action to a commit SHA (no floating tags)
-  and `bun 1.3.8` (matching the root `packageManager`).
+- **Setup:** Uses npm Trusted Publishing via OpenID Connect (OIDC).
+  GitHub Actions requests a short-lived publication token from npmjs.com
+  using `id-token: write`. No static long-lived `NPM_TOKEN` secret is required.
+- **Initial Bootstrap:** Because npm configures Trusted Publishing per package
+  and requires the package to exist on npmjs.com before exposing the configuration UI,
+  the first release (`0.1.0`) is published once manually (e.g. from the terminal with
+  standard authentication and `--provenance=false`).
+- **Post-Bootstrap Security:**
+  1. Go to `npmjs.com/package/@xoroh/axis` → Settings → Trusted publishing.
+  2. Add GitHub Actions (`xoroh` / `axis` / `release.yml` / `npm-publish`).
+  3. In Settings → Publishing access, select "Require two-factor authentication and disallow tokens".
+  4. From that point forward, all releases publish tokenlessly via GitHub Actions with cryptographic Sigstore provenance.
 
 ## Release checklist (run in order, all green or stop)
 
