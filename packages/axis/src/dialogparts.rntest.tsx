@@ -192,10 +192,7 @@ describe("Dialog compound parts on React Native", () => {
         <DialogRoot onOpenChange={(v) => seen.push(v)}>
           <DialogTrigger
             render={
-              <Pressable
-                testID="custom-trigger"
-                aria-label="Custom open"
-              />
+              <Pressable testID="custom-trigger" aria-label="Custom open" />
             }
           />
           <DialogPortal>
@@ -275,7 +272,9 @@ describe("Dialog compound parts on React Native", () => {
       </PortalHost>,
     );
     await pressLabel("Orphan");
-    expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject({ disabled: true });
+    expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject(
+      { disabled: true },
+    );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

@@ -6,12 +6,7 @@ import {
   useCallback,
   useContext,
 } from "react";
-import {
-  Pressable,
-  type StyleProp,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -225,7 +220,9 @@ export function CheckboxRoot({
     "aria-checked": state.indeterminate ? ("mixed" as const) : state.checked,
     "aria-disabled": effectiveDisabled,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled: effectiveDisabled,
     onPress: toggle,
@@ -244,7 +241,9 @@ export function CheckboxRoot({
       aria-checked={state.indeterminate ? "mixed" : state.checked}
       aria-disabled={effectiveDisabled}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggle}
@@ -295,11 +294,7 @@ export function CheckboxIndicator({
   if (substituted !== null) return substituted;
 
   return (
-    <View
-      testID={testID}
-      style={style}
-      aria-hidden={!shown}
-    >
+    <View testID={testID} style={style} aria-hidden={!shown}>
       {children}
     </View>
   );

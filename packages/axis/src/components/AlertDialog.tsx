@@ -206,7 +206,9 @@ export function AlertDialogPopup({
   return (
     <DialogPopup
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       role="alertdialog"
       testID={testID}
       style={style}

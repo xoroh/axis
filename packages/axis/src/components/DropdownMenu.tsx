@@ -278,7 +278,9 @@ export function DropdownMenuTrigger({
       "aria-expanded": expanded,
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: toggleTrigger,
@@ -295,7 +297,9 @@ export function DropdownMenuTrigger({
       aria-expanded={expanded}
       aria-disabled={disabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled}
       onPress={toggleTrigger}
@@ -335,7 +339,9 @@ export function DropdownMenuItem({
         role: "menuitem",
         "aria-disabled": true,
         ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+        ...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, inertState),
@@ -349,7 +355,9 @@ export function DropdownMenuItem({
         role="menuitem"
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, inertState)}
@@ -369,7 +377,9 @@ export function DropdownMenuItem({
       role: "menuitem",
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -385,7 +395,9 @@ export function DropdownMenuItem({
       role="menuitem"
       aria-disabled={disabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -432,7 +444,9 @@ export function DropdownMenuSubTrigger({
       "aria-expanded": expanded,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: openTrigger,
@@ -449,7 +463,9 @@ export function DropdownMenuSubTrigger({
       aria-expanded={expanded}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}

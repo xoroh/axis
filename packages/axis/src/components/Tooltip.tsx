@@ -395,7 +395,9 @@ export function TooltipTrigger({
     render,
     {
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: effectiveDisabled || inert,
       delayLongPress,
@@ -411,7 +413,9 @@ export function TooltipTrigger({
     <Pressable
       ref={setTriggerRef}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled || inert}
       delayLongPress={delayLongPress}
@@ -556,7 +560,9 @@ export function TooltipPopup({
   const web = isWebEnvironment();
   useModalFocus({
     open,
-    enabled: (ariaLabel !== undefined || ariaLabelledBy !== undefined) && root !== null,
+    enabled:
+      (ariaLabel !== undefined || ariaLabelledBy !== undefined) &&
+      root !== null,
     popupRef: tipNodeRef,
     restoreRef: root?.anchorHostRef ?? { current: null },
     sharedState: root?.focusState,
@@ -573,7 +579,9 @@ export function TooltipPopup({
       accessible: true,
       role: "tooltip",
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       ...webTabIndexProps(web),
@@ -591,7 +599,9 @@ export function TooltipPopup({
       accessible
       role="tooltip"
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       onAccessibilityEscape={handleAccessibilityEscape}
       {...webTabIndexProps(web)}

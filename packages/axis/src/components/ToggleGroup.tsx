@@ -152,7 +152,11 @@ export function ToggleGroup({
   );
 
   const pressed = useMemo<ToggleGroupPressed>(
-    () => ({ pressedValues: pressedValues ?? [], groupDisabled: disabled, toggle }),
+    () => ({
+      pressedValues: pressedValues ?? [],
+      groupDisabled: disabled,
+      toggle,
+    }),
     [pressedValues, disabled, toggle],
   );
 
@@ -171,7 +175,9 @@ export function ToggleGroup({
     role: "group" as const,
     "aria-orientation": orientation,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     style: [baseDirection, resolveStyle(style, state)],
     children,
@@ -188,7 +194,9 @@ export function ToggleGroup({
       role="group"
       aria-orientation={orientation}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={[baseDirection, resolveStyle(style, state)]}
     >

@@ -172,10 +172,7 @@ export const MenuDemo: Demo = {
           </MenuPortal>
         </MenuRoot>
         <MenuRoot modal={false}>
-          <MenuTrigger
-            aria-label="Open inline"
-            style={wideTriggerStyle}
-          >
+          <MenuTrigger aria-label="Open inline" style={wideTriggerStyle}>
             <Text style={labelStyle}>Inline</Text>
           </MenuTrigger>
           <MenuPortal>
@@ -187,10 +184,7 @@ export const MenuDemo: Demo = {
           </MenuPortal>
         </MenuRoot>
         <MenuRoot>
-          <MenuTrigger
-            aria-label="Open filterable menu"
-            style={triggerStyle}
-          >
+          <MenuTrigger aria-label="Open filterable menu" style={triggerStyle}>
             <Text style={labelStyle}>Filterable</Text>
           </MenuTrigger>
           <MenuPortal>

@@ -223,7 +223,9 @@ export function NavigationMenuTrigger({
       "aria-expanded": expanded,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: openTrigger,
@@ -240,7 +242,9 @@ export function NavigationMenuTrigger({
       aria-expanded={expanded}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}

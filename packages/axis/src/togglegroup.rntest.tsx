@@ -203,7 +203,7 @@ describe("ToggleGroup on React Native", () => {
   });
 
   it("delivers ADR-112 aria props to group slot render without legacy twins", async () => {
-    let capturedProps: any;
+    let capturedProps: Record<string, unknown> = {};
     await render(
       <ToggleGroup
         testID="tg-slot"

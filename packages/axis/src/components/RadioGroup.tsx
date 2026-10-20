@@ -7,12 +7,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import {
-  Pressable,
-  type StyleProp,
-  View,
-  type ViewStyle,
-} from "react-native";
+import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -241,7 +236,9 @@ export function RadioGroupRoot({
     accessible: true,
     role: "radiogroup" as const,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     style: resolveStyle(style, state),
     children,
@@ -257,7 +254,9 @@ export function RadioGroupRoot({
       accessible
       role="radiogroup"
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >
@@ -300,7 +299,9 @@ export function RadioRoot({
     "aria-checked": checked,
     "aria-disabled": effectiveDisabled,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled: effectiveDisabled,
     onPress: selectItem,
@@ -329,7 +330,9 @@ export function RadioRoot({
       aria-checked={checked}
       aria-disabled={effectiveDisabled}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={selectItem}
@@ -377,11 +380,7 @@ export function RadioIndicator({
   if (substituted !== null) return substituted;
 
   return (
-    <View
-      testID={testID}
-      style={style}
-      aria-hidden={!checked}
-    >
+    <View testID={testID} style={style} aria-hidden={!checked}>
       {children}
     </View>
   );

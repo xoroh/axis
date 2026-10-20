@@ -38,10 +38,7 @@ function Blocking({
     <AlertDialogRoot defaultOpen={defaultOpen} onOpenChange={onOpen}>
       <AlertDialogPortal>
         <AlertDialogBackdrop testID={`${testID}-scrim`} />
-        <AlertDialogPopup
-          testID={testID}
-          aria-label="Discard confirmation"
-        >
+        <AlertDialogPopup testID={testID} aria-label="Discard confirmation">
           <AlertDialogTitle>Discard changes?</AlertDialogTitle>
           <AlertDialogDescription>
             Unsaved work will be lost.
@@ -236,11 +233,7 @@ describe("AlertDialog compound parts on React Native", () => {
         <AlertDialogRoot defaultOpen>
           <AlertDialogPortal>
             <AlertDialogBackdrop testID="ad-scrim" />
-            <AlertDialogPopup
-              testID="ad"
-              aria-label="Confirm"
-              ref={ref}
-            >
+            <AlertDialogPopup testID="ad" aria-label="Confirm" ref={ref}>
               <AlertDialogTitle>Confirm</AlertDialogTitle>
             </AlertDialogPopup>
           </AlertDialogPortal>

@@ -63,9 +63,7 @@ describe("FieldRoot", () => {
     await render(<Entry testID="in" />);
     const labelId = screen.getByText("Full name").props.nativeID;
     expect(typeof labelId).toBe("string");
-    expect(screen.getByTestId("in").props["aria-labelledby"]).toBe(
-      labelId,
-    );
+    expect(screen.getByTestId("in").props["aria-labelledby"]).toBe(labelId);
   });
 
   it("reports typed values and validates on submit-mode change", async () => {

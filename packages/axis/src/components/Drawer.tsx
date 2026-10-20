@@ -551,7 +551,9 @@ export function DrawerTrigger({
       "aria-expanded": open,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -570,7 +572,9 @@ export function DrawerTrigger({
       aria-expanded={open}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -834,7 +838,9 @@ export function DrawerPopup({
       accessible: true,
       role: "dialog",
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
@@ -863,7 +869,9 @@ export function DrawerPopup({
         accessible
         role="dialog"
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         onAccessibilityEscape={handleAccessibilityEscape}
         accessibilityViewIsModal={modalActive}
@@ -1009,7 +1017,9 @@ export function DrawerClose({
       role: "button",
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: closeDrawer,
@@ -1027,7 +1037,9 @@ export function DrawerClose({
       role="button"
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={closeDrawer}

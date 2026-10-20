@@ -113,7 +113,9 @@ export function Button({
     "aria-disabled": disabled,
     "aria-busy": busy,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled,
     onPress: handlePress,
@@ -132,7 +134,9 @@ export function Button({
       aria-disabled={disabled}
       aria-busy={busy}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled}
       onPress={handlePress}

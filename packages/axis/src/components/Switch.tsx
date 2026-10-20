@@ -54,8 +54,9 @@ export type SwitchDisclosure = {
   readOnly: boolean;
 };
 
-export const SwitchDisclosureContext =
-  createContext<SwitchDisclosure | null>(null);
+export const SwitchDisclosureContext = createContext<SwitchDisclosure | null>(
+  null,
+);
 
 export type SwitchRootProps = {
   /** Controlled state. Wins over `defaultChecked` when defined. */
@@ -175,7 +176,9 @@ export function SwitchRoot({
     "aria-disabled": disabled,
     "aria-valuetext": valueText,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled,
     onPress: toggle,
@@ -201,7 +204,9 @@ export function SwitchRoot({
         aria-disabled={disabled}
         aria-valuetext={valueText}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled={disabled}
         onPress={toggle}

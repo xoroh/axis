@@ -11,9 +11,7 @@ import { AvatarFallback, AvatarImage, AvatarRoot, ProgressRoot } from "./index";
 
 describe("ProgressRoot on React Native", () => {
   it("announces role and clamped value", async () => {
-    await render(
-      <ProgressRoot testID="pg" value={42} aria-label="Loading" />,
-    );
+    await render(<ProgressRoot testID="pg" value={42} aria-label="Loading" />);
     expect(screen.getByRole("progressbar")).toBeTruthy();
     const props = screen.getByTestId("pg").props;
     expect(props["aria-valuemin"]).toBe(0);

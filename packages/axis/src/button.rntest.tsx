@@ -34,7 +34,9 @@ describe("Button on React Native", () => {
   it("press fires onPress once", async () => {
     let calls = 0;
     await render(
-      <Button testID="btn" onPress={() => (calls += 1)}><Text>Save</Text></Button>,
+      <Button testID="btn" onPress={() => (calls += 1)}>
+        <Text>Save</Text>
+      </Button>,
     );
     await press("btn");
     expect(calls).toBe(1);
@@ -91,7 +93,7 @@ describe("Button on React Native", () => {
   });
 
   it("aria-label query works and slot receives ADR-112 aria props", async () => {
-    let capturedProps: any;
+    let capturedProps: Record<string, unknown> = {};
     await render(
       <Button
         testID="btn"

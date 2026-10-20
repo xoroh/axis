@@ -57,10 +57,7 @@ function OverlayExample({
       </OverlayTrigger>
       <OverlayPortal testID={`${testPrefix}-portal`}>
         <OverlayBackdrop testID={`${testPrefix}-backdrop`} />
-        <OverlayPopup
-          testID={`${testPrefix}-popup`}
-          aria-label={testPrefix}
-        >
+        <OverlayPopup testID={`${testPrefix}-popup`} aria-label={testPrefix}>
           <Text>Content of {testPrefix}</Text>
           <OverlayClose testID={`${testPrefix}-close`}>
             <Text>Close {testPrefix}</Text>

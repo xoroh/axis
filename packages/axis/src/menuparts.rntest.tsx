@@ -207,10 +207,7 @@ describe("Menu compound parts on React Native", () => {
         <MenuRoot onOpenChange={(v) => seen.push(v)}>
           <MenuTrigger
             render={
-              <Pressable
-                testID="custom-trigger"
-                aria-label="Custom open"
-              />
+              <Pressable testID="custom-trigger" aria-label="Custom open" />
             }
           />
           <MenuPortal>
@@ -301,10 +298,7 @@ describe("Menu compound parts on React Native", () => {
   it("renders parts inert outside a root", async () => {
     await render(
       <PortalHost>
-        <MenuTrigger
-          aria-label="Orphan trigger"
-          testID="orphan-trigger"
-        >
+        <MenuTrigger aria-label="Orphan trigger" testID="orphan-trigger">
           <RNText>Orphan</RNText>
         </MenuTrigger>
         <MenuItem value="orphan" testID="orphan-item">

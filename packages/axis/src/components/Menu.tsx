@@ -339,7 +339,9 @@ export function MenuTrigger({
       "aria-expanded": open,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -357,7 +359,9 @@ export function MenuTrigger({
       aria-expanded={open}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -450,7 +454,9 @@ export function MenuItem({
         role: "menuitem",
         "aria-disabled": true,
         ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+        ...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, { disabled: true, highlighted: false }),
@@ -464,7 +470,9 @@ export function MenuItem({
         role="menuitem"
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, { disabled: true, highlighted: false })}
@@ -488,7 +496,9 @@ export function MenuItem({
       role: "menuitem",
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -506,7 +516,9 @@ export function MenuItem({
       role="menuitem"
       aria-disabled={disabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -1300,7 +1312,9 @@ export function MenuLinkItem({
         role: "link",
         "aria-disabled": true,
         ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+        ...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, { disabled: true, highlighted: false }),
@@ -1314,7 +1328,9 @@ export function MenuLinkItem({
         role="link"
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, { disabled: true, highlighted: false })}
@@ -1337,7 +1353,9 @@ export function MenuLinkItem({
       role: "link",
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -1355,7 +1373,9 @@ export function MenuLinkItem({
       role="link"
       aria-disabled={disabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -1577,7 +1597,9 @@ export function MenuCheckboxItem({
         "aria-checked": false,
         "aria-disabled": true,
         ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+        ...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, {
@@ -1596,7 +1618,9 @@ export function MenuCheckboxItem({
         aria-checked={false}
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, {
@@ -1624,7 +1648,9 @@ export function MenuCheckboxItem({
       "aria-checked": active,
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: toggleChecked,
@@ -1644,7 +1670,9 @@ export function MenuCheckboxItem({
         aria-checked={active}
         aria-disabled={disabled || undefined}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled={disabled}
         onPress={toggleChecked}
@@ -1760,7 +1788,9 @@ export function MenuRadioItem({
         "aria-selected": false,
         "aria-disabled": true,
         ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+        ...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, {
@@ -1779,7 +1809,9 @@ export function MenuRadioItem({
         aria-selected={false}
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, {
@@ -1807,7 +1839,9 @@ export function MenuRadioItem({
       "aria-selected": selected,
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled,
       onPress: selectOption,
@@ -1827,7 +1861,9 @@ export function MenuRadioItem({
         aria-selected={selected}
         aria-disabled={disabled || undefined}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled={disabled}
         onPress={selectOption}
@@ -1983,7 +2019,9 @@ export function MenuInput({
       onChangeText={filter.setQuery}
       placeholder={placeholder}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       editable={!disabled}
       style={style}
@@ -2022,7 +2060,9 @@ export function MenuClear({
       role: "button",
       "aria-disabled": effectiveDisabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: effectiveDisabled,
       onPress: clearQuery,
@@ -2038,7 +2078,9 @@ export function MenuClear({
       role="button"
       aria-disabled={effectiveDisabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={clearQuery}
@@ -2172,7 +2214,9 @@ export function MenuSubmenuTrigger({
         }
         disabled={disabled}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         render={render as RenderProp<{ open: boolean }, SlotProps>}
       >
         {children}
@@ -2189,7 +2233,9 @@ export function MenuSubmenuTrigger({
       "aria-expanded": expanded,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleSub,
@@ -2206,7 +2252,9 @@ export function MenuSubmenuTrigger({
       aria-expanded={expanded}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleSub}

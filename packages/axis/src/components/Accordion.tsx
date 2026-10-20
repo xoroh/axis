@@ -370,7 +370,9 @@ export function AccordionRoot({
     render,
     {
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: [baseDirection, resolveStyle(style, state)],
       children,
@@ -384,7 +386,9 @@ export function AccordionRoot({
     <View
       ref={setHostRef}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={[baseDirection, resolveStyle(style, state)]}
     >
@@ -505,7 +509,9 @@ export function AccordionTrigger({
       "aria-expanded": expanded,
       "aria-disabled": effectiveDisabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: effectiveDisabled,
       onPress: toggleTrigger,
@@ -522,7 +528,9 @@ export function AccordionTrigger({
       aria-expanded={expanded}
       aria-disabled={effectiveDisabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleTrigger}
@@ -561,11 +569,7 @@ export function AccordionPanel({
   if (substituted !== null) return substituted;
 
   return (
-    <View
-      testID={testID}
-      style={[style, closedStyle]}
-      aria-hidden={!open}
-    >
+    <View testID={testID} style={[style, closedStyle]} aria-hidden={!open}>
       {children}
     </View>
   );

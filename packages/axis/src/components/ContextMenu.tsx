@@ -142,7 +142,9 @@ export function ContextMenuRoot({
       content,
       menuStyle,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       children,
       ref: setAnchorRef,
     } satisfies SlotProps,
@@ -171,7 +173,9 @@ export function ContextMenuRoot({
             accessible
             role="menu"
             {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-            {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+            {...(ariaLabelledBy !== undefined
+              ? { "aria-labelledby": ariaLabelledBy }
+              : {})}
             onLayout={floating.onContentLayout}
             style={[floating.style, menuStyle]}
           >

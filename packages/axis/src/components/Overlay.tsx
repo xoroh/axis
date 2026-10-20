@@ -816,7 +816,9 @@ export function OverlayPopup({
       accessible: true,
       role,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
@@ -837,7 +839,9 @@ export function OverlayPopup({
       accessible
       role={role}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       onAccessibilityEscape={handleAccessibilityEscape}
       accessibilityViewIsModal={modalActive}
@@ -906,7 +910,9 @@ export function OverlayTrigger({
       "aria-expanded": open,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: handlePress,
@@ -925,7 +931,9 @@ export function OverlayTrigger({
       aria-expanded={open}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={handlePress}
@@ -974,7 +982,9 @@ export function OverlayClose({
       role: "button",
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: handlePress,
@@ -990,7 +1000,9 @@ export function OverlayClose({
       role="button"
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={handlePress}

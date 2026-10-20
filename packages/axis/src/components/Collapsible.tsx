@@ -258,7 +258,9 @@ export function CollapsibleTrigger({
       "aria-expanded": expanded,
       "aria-disabled": effectiveDisabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: effectiveDisabled,
       onPress: toggleTrigger,
@@ -275,7 +277,9 @@ export function CollapsibleTrigger({
       aria-expanded={expanded}
       aria-disabled={effectiveDisabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleTrigger}

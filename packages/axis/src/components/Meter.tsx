@@ -200,7 +200,9 @@ export function MeterRoot({
       "aria-valuemax": max,
       "aria-valuenow": clamped,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: resolveStyle(style, state),
       children,
@@ -219,7 +221,9 @@ export function MeterRoot({
       aria-valuemax={max}
       aria-valuenow={clamped}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >

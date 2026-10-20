@@ -250,7 +250,9 @@ export function ProgressRoot({
       "aria-valuemax": indeterminate ? undefined : max,
       "aria-valuenow": indeterminate ? undefined : clamped,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: resolveStyle(style, state),
       ref: setHostRef,
@@ -279,7 +281,9 @@ export function ProgressRoot({
         aria-valuemax={indeterminate ? undefined : max}
         aria-valuenow={indeterminate ? undefined : clamped}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         style={resolveStyle(style, state)}
       >

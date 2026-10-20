@@ -297,7 +297,9 @@ export function ToolbarRoot({
       role: "toolbar",
       "aria-disabled": disabled || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: [baseDirection, resolveStyle(style, state)],
       children,
@@ -320,7 +322,9 @@ export function ToolbarRoot({
         role="toolbar"
         aria-disabled={disabled || undefined}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         style={[baseDirection, resolveStyle(style, state)]}
       >

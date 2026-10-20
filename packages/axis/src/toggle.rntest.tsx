@@ -105,7 +105,7 @@ describe("Toggle on React Native", () => {
   });
 
   it("delivers ADR-112 aria props to slot render without legacy twins", async () => {
-    let capturedProps: any;
+    let capturedProps: Record<string, unknown> = {};
     await render(
       <Toggle
         testID="tg-slot"

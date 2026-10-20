@@ -119,11 +119,7 @@ describe("render composition: groups", () => {
     const seen: string[][] = [];
     await render(
       <ToggleGroup onValueChange={(v) => seen.push([...v])}>
-        <Toggle
-          value="a"
-          aria-label="A"
-          render={<Pressable testID="sub" />}
-        />
+        <Toggle value="a" aria-label="A" render={<Pressable testID="sub" />} />
       </ToggleGroup>,
     );
     await press("sub");

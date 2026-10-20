@@ -175,7 +175,9 @@ export function ToastRoot({
       role: "status",
       "aria-live": "polite",
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: resolveStyle(style, state),
       onDismiss: dismiss,
@@ -194,7 +196,9 @@ export function ToastRoot({
       role="status"
       aria-live="polite"
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >

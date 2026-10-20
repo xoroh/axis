@@ -434,7 +434,8 @@ export function NumberFieldGroup({
   render,
   ref,
 }: NumberFieldGroupProps): React.ReactNode {
-  const { state, min, max, stepBy, commitStep } = useNumberField("NumberFieldGroup");
+  const { state, min, max, stepBy, commitStep } =
+    useNumberField("NumberFieldGroup");
 
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
@@ -538,7 +539,9 @@ export function NumberFieldInput({
       placeholder,
       editable: !state.disabled && !state.readOnly,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: resolvedStyle,
       ref: setHostRef,
@@ -555,7 +558,9 @@ export function NumberFieldInput({
       placeholder={placeholder}
       editable={!state.disabled && !state.readOnly}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={resolvedStyle}
       ref={setHostRef}
@@ -672,7 +677,9 @@ function StepperButton({
       role: "button",
       "aria-disabled": terminal,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: terminal,
       onPress: terminal ? undefined : onPress,
@@ -692,7 +699,9 @@ function StepperButton({
       role="button"
       aria-disabled={terminal}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={terminal}
       onPress={onPress}

@@ -206,7 +206,9 @@ export function Input({
     onContentSizeChange: grow ? handleContentSizeChange : undefined,
     onHeightChange,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     style: resolvedStyle,
     ref: setHostRef,
@@ -230,7 +232,9 @@ export function Input({
       numberOfLines={lines}
       onContentSizeChange={grow ? handleContentSizeChange : undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={
         grow

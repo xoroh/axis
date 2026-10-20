@@ -172,9 +172,7 @@ describe("Toolbar parts on React Native", () => {
       </ToolbarRoot>,
     );
     expect(screen.getByText("G")).toBeTruthy();
-    expect(
-      screen.getByTestId("tb-group").props["aria-disabled"],
-    ).toBe(true);
+    expect(screen.getByTestId("tb-group").props["aria-disabled"]).toBe(true);
   });
 
   it("input commits value changes", async () => {

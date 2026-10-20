@@ -483,7 +483,9 @@ export function PopoverTrigger({
       "aria-expanded": open,
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -501,7 +503,9 @@ export function PopoverTrigger({
       aria-expanded={open}
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -680,7 +684,9 @@ export function PopoverPopup({
   // element (marked, stops), else Title, else the box.
   useModalFocus({
     open,
-    enabled: (ariaLabel !== undefined || ariaLabelledBy !== undefined) && disclosure !== null,
+    enabled:
+      (ariaLabel !== undefined || ariaLabelledBy !== undefined) &&
+      disclosure !== null,
     initialFocus: initialFocus ?? overlay?.initialFocus,
     finalFocus: finalFocus ?? overlay?.finalFocus,
     scope: focusScope,
@@ -721,7 +727,9 @@ export function PopoverPopup({
     {
       accessible: true,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
@@ -745,7 +753,9 @@ export function PopoverPopup({
         ref={setPopupRef}
         accessible
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         onAccessibilityEscape={handleAccessibilityEscape}
         accessibilityViewIsModal={modalActive}
@@ -841,7 +851,9 @@ export function PopoverClose({
       role: "button",
       "aria-disabled": disabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: disabled || inert,
       onPress: closePopover,
@@ -859,7 +871,9 @@ export function PopoverClose({
       role="button"
       aria-disabled={disabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={closePopover}

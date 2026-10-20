@@ -287,7 +287,9 @@ export function SelectItem({
     "aria-selected": selected,
     "aria-disabled": effectiveDisabled || undefined,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled: effectiveDisabled,
     onPress: chooseItem,
@@ -324,7 +326,9 @@ export function SelectItem({
         aria-selected={false}
         aria-disabled={true}
         {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, inertState)}
@@ -341,7 +345,9 @@ export function SelectItem({
       aria-selected={selected}
       aria-disabled={effectiveDisabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={chooseItem}
@@ -938,9 +944,11 @@ export function SelectTrigger({
     {
       role: "combobox",
       "aria-expanded": open,
-      "aria-disabled": (effectiveDisabled || inert) || undefined,
+      "aria-disabled": effectiveDisabled || inert || undefined,
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       disabled: effectiveDisabled || inert,
       onPress: toggleTrigger,
@@ -956,9 +964,11 @@ export function SelectTrigger({
       ref={setTriggerRef}
       role="combobox"
       aria-expanded={open}
-      aria-disabled={(effectiveDisabled || inert) || undefined}
+      aria-disabled={effectiveDisabled || inert || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled || inert}
       onPress={toggleTrigger}

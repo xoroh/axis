@@ -170,7 +170,9 @@ export function OTPFieldRoot({
   const state: OTPFieldRootState = { value: current, disabled };
   const hostProps = {
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     style: resolveStyle(style, state),
     cellStyle,
@@ -188,7 +190,9 @@ export function OTPFieldRoot({
     <View
       ref={setHostRef}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >

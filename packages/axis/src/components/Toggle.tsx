@@ -159,7 +159,9 @@ export function Toggle({
     "aria-selected": state.pressed,
     "aria-disabled": effectiveDisabled,
     ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    ...(ariaLabelledBy !== undefined
+      ? { "aria-labelledby": ariaLabelledBy }
+      : {}),
     testID,
     disabled: effectiveDisabled,
     onPress: toggle,
@@ -179,7 +181,9 @@ export function Toggle({
       aria-selected={state.pressed}
       aria-disabled={effectiveDisabled}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggle}

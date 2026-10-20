@@ -123,10 +123,7 @@ describe("Popover compound parts on React Native", () => {
           <PopoverPortal>
             <PopoverBackdrop testID="popover-backdrop" />
             <PopoverPositioner>
-              <PopoverPopup
-                testID="popover-popup"
-                aria-label="Example"
-              />
+              <PopoverPopup testID="popover-popup" aria-label="Example" />
             </PopoverPositioner>
           </PopoverPortal>
         </PopoverRoot>
@@ -141,18 +138,12 @@ describe("Popover compound parts on React Native", () => {
         <PopoverRoot onOpenChange={(v) => seen.push(v)}>
           <PopoverTrigger
             render={
-              <Pressable
-                testID="custom-trigger"
-                aria-label="Custom open"
-              />
+              <Pressable testID="custom-trigger" aria-label="Custom open" />
             }
           />
           <PopoverPortal>
             <PopoverPositioner>
-              <PopoverPopup
-                testID="popover-popup"
-                aria-label="Example"
-              />
+              <PopoverPopup testID="popover-popup" aria-label="Example" />
             </PopoverPositioner>
           </PopoverPortal>
         </PopoverRoot>
@@ -176,10 +167,7 @@ describe("Popover compound parts on React Native", () => {
           />
           <PopoverPortal>
             <PopoverPositioner>
-              <PopoverPopup
-                testID="popover-popup"
-                aria-label="Example"
-              />
+              <PopoverPopup testID="popover-popup" aria-label="Example" />
             </PopoverPositioner>
           </PopoverPortal>
         </PopoverRoot>
@@ -220,10 +208,7 @@ describe("Popover compound parts on React Native", () => {
         <PopoverRoot open={false}>
           <PopoverPortal>
             <PopoverPositioner>
-              <PopoverPopup
-                testID="popover-popup"
-                aria-label="Example"
-              />
+              <PopoverPopup testID="popover-popup" aria-label="Example" />
             </PopoverPositioner>
           </PopoverPortal>
         </PopoverRoot>
@@ -235,10 +220,7 @@ describe("Popover compound parts on React Native", () => {
   it("renders parts inert outside a root", async () => {
     await render(
       <PortalHost>
-        <PopoverTrigger
-          aria-label="Orphan trigger"
-          testID="orphan-trigger"
-        >
+        <PopoverTrigger aria-label="Orphan trigger" testID="orphan-trigger">
           <RNText>Orphan</RNText>
         </PopoverTrigger>
         <PopoverClose aria-label="Orphan close" testID="orphan-close">

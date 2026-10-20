@@ -154,7 +154,9 @@ export function Menubar({
       accessible: true,
       role: "menubar",
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
-      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
       testID,
       style: [{ flexDirection: "row" }, resolveStyle(style, state)],
       children,
@@ -170,7 +172,9 @@ export function Menubar({
       accessible
       role="menubar"
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
-      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
       testID={testID}
       style={[{ flexDirection: "row" }, resolveStyle(style, state)]}
     >

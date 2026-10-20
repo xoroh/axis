@@ -222,10 +222,7 @@ export const ListSelectDemo: Demo = {
             { value: "name", label: "Name" },
           ]}
         >
-          <SelectTrigger
-            aria-label="Demo compound select"
-            style={triggerStyle}
-          >
+          <SelectTrigger aria-label="Demo compound select" style={triggerStyle}>
             <SelectValue placeholder="Sort by" style={axisLabelStyle} />
           </SelectTrigger>
           <SelectPortal>

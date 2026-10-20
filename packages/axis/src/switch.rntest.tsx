@@ -173,7 +173,7 @@ describe("SwitchRoot on React Native", () => {
   });
 
   it("delivers ADR-112 aria props to slot render and defaults aria-valuetext", async () => {
-    let capturedProps: any;
+    let capturedProps: Record<string, unknown> = {};
     await render(
       <SwitchRoot
         testID="sw-slot"
