@@ -1,6 +1,7 @@
 import {
   createContext,
   type ElementRef,
+  isValidElement,
   type ReactNode,
   type Ref,
   useCallback,
@@ -14,6 +15,7 @@ import {
   Pressable,
   type StyleProp,
   Text,
+  type TextStyle,
   View,
   type ViewStyle,
 } from "react-native";
@@ -22,24 +24,23 @@ import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { createToastQueue, type ToastQueue } from "../toastQueue";
 import { useControllableState } from "../useControllableState";
+import { Portal } from "./Portal";
 
 /**
- * ToastRoot — a transient notification with timed auto-dismiss.
+ * Toast — transient notification compound family (Base UI parity).
  *
- * Structure only: a `View` carrying the message content with an optional
- * `Pressable` action, announced politely to screen readers. No default
- * visuals — every visual value (`style`) is caller-provided. State
- * follows the `useControllableState` pattern: `open` (+ `onOpenChange`)
- * for controlled use, `defaultOpen` for uncontrolled. No animation;
- * presence is binary (renders `null` when closed).
+ * Anatomy:
+ * - ToastProvider: owns the shared toast queue and toast manager
+ * - ToastViewport: landmark container painting queued toasts
+ * - ToastPortal: optional portal presentation container
+ * - ToastRoot: single notification surface with timed auto-dismiss
+ * - ToastTitle: notification header / title text
+ * - ToastDescription: notification message body text
+ * - ToastAction: interactive action button (e.g. "Undo")
+ * - ToastClose: dismiss button
  *
- * ADR-112 aria-only: the root carries `role="status"` and `aria-live="polite"`
- * so the message is announced on appearance. Never emit legacy RN a11y props.
- *
- * Refs: none. The toast exposes no host handle — parents show and hide
- * it through `open`/`defaultOpen`/`onOpenChange`, and the action button
- * is an internal `Pressable`, so there is no element for a caller to
- * drive imperatively. This omission is intentional, not a gap.
+ * ADR-112 aria-only: the root carries role="status" and aria-live="polite".
+ * Zero legacy accessibility* props emitted.
  */
 
 export type ToastRootState = {
@@ -47,58 +48,46 @@ export type ToastRootState = {
   open: boolean;
 };
 
+export type ToastRootContextValue = {
+  open: boolean;
+  dismiss: () => void;
+};
+
+const ToastRootContext = createContext<ToastRootContextValue | null>(null);
+
+export function useToastRootContext(): ToastRootContextValue | null {
+  return useContext(ToastRootContext);
+}
+
 export type ToastRootProps = {
-  /** Controlled visibility. Wins over `defaultOpen` when defined. */
+  /** Controlled visibility. Wins over defaultOpen when defined. */
   open?: boolean;
-  /** Uncontrolled initial visibility. Default `false`. */
+  /** Uncontrolled initial visibility. Default false. */
   defaultOpen?: boolean;
   /** Fires with the next visibility on every committed open/close. */
   onOpenChange?: (open: boolean) => void;
   /**
-   * Auto-dismiss delay in milliseconds. Default `4000`. A value of `0`
-   * or less disables auto-dismiss — the toast stays open until the
-   * parent closes it or the action fires.
+   * Auto-dismiss delay in milliseconds. Default 4000. A value of 0
+   * or less disables auto-dismiss.
    */
   duration?: number;
-  /** Message content. */
-  children?: ReactNode;
-  /**
-   * Action button label. The action button renders only when this is
-   * provided — no label, no action button.
-   */
-  actionLabel?: string;
-  /**
-   * Fires when the action button is pressed. The toast dismisses as
-   * part of the same press.
-   */
-  onAction?: () => void;
+  /** Fires before closing when dismissed. */
+  onDismiss?: () => void;
   /** Accessible name source for the toast surface (ADR-112). */
   "aria-label"?: string;
   "aria-labelledby"?: string;
   testID?: string;
   /** Root view style: value or function of toast state. */
   style?: StateStyle<ToastRootState, StyleProp<ViewStyle>>;
-  /**
-   * Element or function substitution (Base UI parity): an element is
-   * cloned with the part props merged under its own; a function
-   * receives `(props, state)`.
-   */
+  /** Element or function substitution (Base UI parity). */
   render?: RenderProp<ToastRootState, SlotProps>;
-  /** Forwarded to the toast surface `View`. */
+  /** Forwarded to the toast surface View. */
   ref?: Ref<ElementRef<typeof View>>;
+  /** Children compound parts or content. */
+  children?: ReactNode;
 };
 
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
-function assignRef(
-  ref: ToastRootProps["ref"],
-  value: ElementRef<typeof View> | null,
-): void {
+function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   if (typeof ref === "function") {
     ref(value);
     return;
@@ -107,8 +96,7 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // Frozen ref object cannot take write
     }
   }
 }
@@ -118,15 +106,14 @@ export function ToastRoot({
   defaultOpen = false,
   onOpenChange,
   duration = 4000,
-  children,
-  actionLabel,
-  onAction,
+  onDismiss,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
   ref,
+  children,
 }: ToastRootProps): React.ReactNode {
   const [isOpen, setOpen] = useControllableState<boolean>(
     open,
@@ -135,30 +122,19 @@ export function ToastRoot({
   );
 
   const dismiss = useCallback(() => {
+    onDismiss?.();
     setOpen(false);
-  }, [setOpen]);
+  }, [onDismiss, setOpen]);
 
-  // Timed auto-dismiss while open. The timer is cleared on close,
-  // on `duration` change, and on unmount; `duration <= 0` arms no
-  // timer at all. State updates land inside `act` under test because
-  // the suite awaits them through RNTL's async queries.
+  // Timed auto-dismiss: real setTimeout; 0 or less disables.
   useEffect(() => {
-    if (!isOpen) return undefined;
-    if (duration <= 0) return undefined;
-    const timer = setTimeout(dismiss, duration);
-    return () => {
-      clearTimeout(timer);
-    };
+    if (!isOpen || duration <= 0) return;
+    const timer = setTimeout(() => {
+      dismiss();
+    }, duration);
+    return () => clearTimeout(timer);
   }, [isOpen, duration, dismiss]);
 
-  const handleAction = useCallback(() => {
-    onAction?.();
-    setOpen(false);
-  }, [onAction, setOpen]);
-
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
       assignRef(ref, node);
@@ -167,11 +143,25 @@ export function ToastRoot({
   );
 
   if (!isOpen) return null;
-
   const state: ToastRootState = { open: true };
+
+  const contextValue: ToastRootContextValue = {
+    open: true,
+    dismiss,
+  };
+
+  const renderedChildren =
+    typeof children === "string" || typeof children === "number" ? (
+      <Text>{children}</Text>
+    ) : (
+      children
+    );
+
   const substituted = resolveRender(
     render,
     {
+      ref: setHostRef,
+      accessible: true,
       role: "status",
       "aria-live": "polite",
       ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
@@ -180,60 +170,301 @@ export function ToastRoot({
         : {}),
       testID,
       style: resolveStyle(style, state),
-      onDismiss: dismiss,
-      onAction: actionLabel ? handleAction : undefined,
-      actionLabel,
+      children: renderedChildren,
+    } satisfies SlotProps,
+    state,
+  );
+
+  if (substituted !== null) {
+    return (
+      <ToastRootContext.Provider value={contextValue}>
+        {substituted}
+      </ToastRootContext.Provider>
+    );
+  }
+
+  return (
+    <ToastRootContext.Provider value={contextValue}>
+      <View
+        ref={setHostRef}
+        accessible
+        role="status"
+        aria-live="polite"
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined
+          ? { "aria-labelledby": ariaLabelledBy }
+          : {})}
+        testID={testID}
+        style={resolveStyle(style, state)}
+      >
+        {renderedChildren}
+      </View>
+    </ToastRootContext.Provider>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ToastTitle                                                         */
+/* ------------------------------------------------------------------ */
+
+export type ToastTitleProps = {
+  testID?: string;
+  style?: StyleProp<TextStyle>;
+  children?: ReactNode;
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function ToastTitle({
+  testID,
+  style,
+  children,
+  render,
+}: ToastTitleProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    {
+      role: "heading",
+      testID,
+      style,
       children,
-      ref: setHostRef,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Text role="heading" testID={testID} style={style}>
+      {children}
+    </Text>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ToastDescription                                                   */
+/* ------------------------------------------------------------------ */
+
+export type ToastDescriptionProps = {
+  testID?: string;
+  style?: StyleProp<TextStyle>;
+  children?: ReactNode;
+  render?: RenderProp<Record<string, never>, SlotProps>;
+};
+
+export function ToastDescription({
+  testID,
+  style,
+  children,
+  render,
+}: ToastDescriptionProps): React.ReactNode {
+  const substituted = resolveRender(
+    render,
+    {
+      testID,
+      style,
+      children,
+    } satisfies SlotProps,
+    {},
+  );
+  if (substituted !== null) return substituted;
+
+  return (
+    <Text testID={testID} style={style}>
+      {children}
+    </Text>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ToastAction                                                        */
+/* ------------------------------------------------------------------ */
+
+export type ToastActionState = {
+  disabled: boolean;
+};
+
+export type ToastActionProps = {
+  disabled?: boolean;
+  onPress?: () => void;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  testID?: string;
+  style?: StateStyle<ToastActionState, StyleProp<ViewStyle>>;
+  children?: ReactNode;
+  render?: RenderProp<ToastActionState, SlotProps>;
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export function ToastAction({
+  disabled = false,
+  onPress,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  testID,
+  style,
+  children,
+  render,
+  ref,
+}: ToastActionProps): React.ReactNode {
+  const ctx = useContext(ToastRootContext);
+  const state: ToastActionState = { disabled };
+
+  const handlePress = useCallback(() => {
+    if (disabled) return;
+    onPress?.();
+    ctx?.dismiss();
+  }, [disabled, onPress, ctx]);
+
+  const substituted = resolveRender(
+    render,
+    {
+      ref,
+      role: "button",
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
+      testID,
+      disabled,
+      onPress: handlePress,
+      style: resolveStyle(style, state),
+      children,
     } satisfies SlotProps,
     state,
   );
   if (substituted !== null) return substituted;
 
+  const renderedChildren =
+    typeof children === "string" || typeof children === "number" ? (
+      <Text>{children}</Text>
+    ) : (
+      children
+    );
+
   return (
-    <View
-      ref={setHostRef}
-      role="status"
-      aria-live="polite"
+    <Pressable
+      ref={ref}
+      role="button"
+      aria-disabled={disabled || undefined}
       {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
       {...(ariaLabelledBy !== undefined
         ? { "aria-labelledby": ariaLabelledBy }
         : {})}
       testID={testID}
+      disabled={disabled}
+      onPress={handlePress}
       style={resolveStyle(style, state)}
     >
-      <Text>{children}</Text>
-      {actionLabel ? (
-        <Pressable
-          role="button"
-          aria-label={actionLabel}
-          onPress={handleAction}
-        >
-          <Text>{actionLabel}</Text>
-        </Pressable>
-      ) : null}
-    </View>
+      {renderedChildren}
+    </Pressable>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Queued toasts (Base UI Provider + Viewport parity)                   */
-/*                                                                      */
-/* The single-shot `ToastRoot` above covers one notification. An app        */
-/* needs a queue: several toasts alive at once, added from anywhere,    */
-/* dismissed individually or all at once, painted in queue order.      */
-/* `ToastProvider` owns a `createToastQueue` (the shared model) plus    */
-/* the caller payloads per id; `useToast` adds/dismisses/clears from    */
-/* anywhere under the provider (the Base UI `toast.add()` object API);  */
-/* `ToastViewport` paints one single-shot `ToastRoot` per queued id.        */
-/*                                                                      */
-/* Base UI mapping (documented, not silent): the provider owns the      */
-/* queue; each queued `ToastRoot` IS the `Root`; `children` composes the    */
-/* `Title`/`Description` text (caller `Text`); `actionLabel`/`onAction` */
-/* IS the `Action`; timed auto-dismiss IS the `Close`. There is no      */
-/* separate `Title`/`Description`/`Close` part: on native the message    */
-/* is caller text in a live region, and dismissal is time or action.    */
-/* Do not conflate with M3 Snackbar — Kern owns that separately.       */
+/* ToastClose                                                         */
+/* ------------------------------------------------------------------ */
+
+export type ToastCloseState = {
+  disabled: boolean;
+};
+
+export type ToastCloseProps = {
+  disabled?: boolean;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  testID?: string;
+  style?: StateStyle<ToastCloseState, StyleProp<ViewStyle>>;
+  children?: ReactNode;
+  render?: RenderProp<ToastCloseState, SlotProps>;
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
+export function ToastClose({
+  disabled = false,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  testID,
+  style,
+  children,
+  render,
+  ref,
+}: ToastCloseProps): React.ReactNode {
+  const ctx = useContext(ToastRootContext);
+  const state: ToastCloseState = { disabled };
+
+  const handlePress = useCallback(() => {
+    if (disabled) return;
+    ctx?.dismiss();
+  }, [disabled, ctx]);
+
+  const substituted = resolveRender(
+    render,
+    {
+      ref,
+      role: "button",
+      "aria-label": ariaLabel ?? "Close",
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {}),
+      testID,
+      disabled,
+      onPress: handlePress,
+      style: resolveStyle(style, state),
+      children,
+    } satisfies SlotProps,
+    state,
+  );
+  if (substituted !== null) return substituted;
+
+  const renderedChildren =
+    typeof children === "string" || typeof children === "number" ? (
+      <Text>{children}</Text>
+    ) : (
+      children
+    );
+
+  return (
+    <Pressable
+      ref={ref}
+      role="button"
+      aria-label={ariaLabel ?? "Close"}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabelledBy !== undefined
+        ? { "aria-labelledby": ariaLabelledBy }
+        : {})}
+      testID={testID}
+      disabled={disabled}
+      onPress={handlePress}
+      style={resolveStyle(style, state)}
+    >
+      {renderedChildren}
+    </Pressable>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ToastPortal                                                        */
+/* ------------------------------------------------------------------ */
+
+export type ToastPortalProps = {
+  children?: ReactNode;
+  testID?: string;
+};
+
+export function ToastPortal({
+  children,
+  testID,
+}: ToastPortalProps): React.JSX.Element {
+  return (
+    <Portal>
+      <View testID={testID}>{children}</View>
+    </Portal>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Queued toasts (Base UI Provider + Viewport parity)                 */
 /* ------------------------------------------------------------------ */
 
 export type ToastOptions = {
@@ -247,7 +478,7 @@ export type ToastOptions = {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   /**
-   * Auto-dismiss delay in milliseconds. Default `4000`; `0` or less
+   * Auto-dismiss delay in milliseconds. Default 4000; 0 or less
    * disables auto-dismiss.
    */
   duration?: number;
@@ -273,7 +504,7 @@ const ToastProviderContext = createContext<ToastProviderValue | null>(null);
 export function ToastProvider({
   children,
 }: {
-  /** App content; toasts paint wherever `ToastViewport` sits. */
+  /** App content; toasts paint wherever ToastViewport sits. */
   children?: ReactNode;
 }): React.JSX.Element {
   const queue = useMemo(() => createToastQueue(), []);
@@ -309,7 +540,6 @@ export function ToastProvider({
     [queue, manager],
   );
 
-  // The provider owns state, never layout: no host element (Base UI parity).
   return (
     <ToastProviderContext.Provider value={value}>
       {children}
@@ -317,11 +547,6 @@ export function ToastProvider({
   );
 }
 
-/**
- * The `toast.add()` object API (Base UI parity): add, dismiss, and
- * clear queued toasts from anywhere under a `ToastProvider`. Throws
- * outside one — a manager with no queue would silently drop toasts.
- */
 export function useToast(): ToastManager {
   const provider = useContext(ToastProviderContext);
   if (!provider) {
@@ -344,33 +569,11 @@ export type ToastViewportProps = {
    * but unpainted. Default: no limit.
    */
   limit?: number;
-  /**
-   * Element or function substitution (Base UI parity) for the
-   * viewport container. Queued toasts travel in the props as
-   * `children`.
-   */
+  /** Element or function substitution (Base UI parity). */
   render?: RenderProp<ToastViewportState, SlotProps>;
-  /** Forwarded to the viewport container `View`. */
+  /** Forwarded to the viewport container View. */
   ref?: Ref<ElementRef<typeof View>>;
 };
-
-function assignViewportRef(
-  ref: ToastViewportProps["ref"],
-  value: ElementRef<typeof View> | null,
-): void {
-  if (typeof ref === "function") {
-    ref(value);
-    return;
-  }
-  if (ref && typeof ref === "object" && "current" in ref) {
-    try {
-      (ref as { current: unknown }).current = value;
-    } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
-    }
-  }
-}
 
 export function ToastViewport({
   testID,
@@ -380,8 +583,6 @@ export function ToastViewport({
   ref,
 }: ToastViewportProps): React.ReactNode {
   const provider = useContext(ToastProviderContext);
-  // Outside a provider there is no queue to paint: render nothing
-  // rather than an unbacked container (the `MenuItem` precedent).
   if (!provider) return null;
 
   return (
@@ -421,7 +622,7 @@ function ToastViewportInner({
 
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
-      assignViewportRef(ref, node);
+      assignRef(ref, node);
     },
     [ref],
   );
@@ -439,12 +640,23 @@ function ToastViewportInner({
           if (!next) onItemOpenChange(id);
         }}
         duration={payload.duration}
-        actionLabel={payload.actionLabel}
-        onAction={payload.onAction}
         aria-label={payload["aria-label"]}
+        aria-labelledby={payload["aria-labelledby"]}
         testID={testID ? `${testID}-${id}` : undefined}
       >
-        {payload.message}
+        {isValidElement(payload.message) ? (
+          payload.message
+        ) : (
+          <ToastDescription>{payload.message}</ToastDescription>
+        )}
+        {payload.actionLabel ? (
+          <ToastAction
+            onPress={payload.onAction}
+            aria-label={payload.actionLabel}
+          >
+            <Text>{payload.actionLabel}</Text>
+          </ToastAction>
+        ) : null}
       </ToastRoot>
     );
   });

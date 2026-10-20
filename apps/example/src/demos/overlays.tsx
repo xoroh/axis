@@ -8,7 +8,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
+  ContextMenuBackdrop,
+  ContextMenuPopup,
+  ContextMenuPortal,
+  ContextMenuPositioner,
   ContextMenuRoot,
+  ContextMenuTrigger,
   DrawerBackdrop,
   DrawerClose,
   DrawerDescription,
@@ -200,69 +205,71 @@ export const OverlaysDemo: Demo = {
             <ContextMenuRoot
               open={contextMenuOpen}
               onOpenChange={setContextMenuOpen}
-              content={
+            >
+              <ContextMenuTrigger>
                 <View
                   style={{
-                    padding: 8,
-                    backgroundColor: theme.surface,
+                    paddingVertical: 8,
+                    paddingHorizontal: 14,
                     borderRadius: 6,
+                    backgroundColor: theme.surfaceSubtle,
                     borderWidth: 1,
                     borderColor: theme.border,
                   }}
                 >
-                  <Text style={{ fontSize: 13, color: theme.text }}>
-                    Context Menu Options
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    aria-label="Close context menu"
-                    onPress={() => setContextMenuOpen(false)}
+                  <Text
                     style={{
-                      marginTop: 8,
-                      paddingVertical: 6,
-                      paddingHorizontal: 10,
-                      borderRadius: 6,
-                      backgroundColor: theme.surfaceSubtle,
+                      fontSize: 13,
+                      fontWeight: "600",
+                      color: theme.text,
                     }}
                   >
-                    <Text
+                    Context Menu (Long Press)
+                  </Text>
+                </View>
+              </ContextMenuTrigger>
+              <ContextMenuPortal>
+                <ContextMenuBackdrop />
+                <ContextMenuPositioner side="bottom" sideOffset={4}>
+                  <ContextMenuPopup
+                    aria-label="Demo context menu"
+                    style={{
+                      minWidth: 180,
+                      backgroundColor: theme.surface,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                      padding: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, color: theme.text }}>
+                      Context Menu Options
+                    </Text>
+                    <Pressable
+                      role="button"
+                      aria-label="Close context menu"
+                      onPress={() => setContextMenuOpen(false)}
                       style={{
-                        fontSize: 12,
-                        color: theme.text,
-                        fontWeight: "600",
+                        marginTop: 8,
+                        paddingVertical: 6,
+                        paddingHorizontal: 10,
+                        borderRadius: 6,
+                        backgroundColor: theme.surfaceSubtle,
                       }}
                     >
-                      Close menu
-                    </Text>
-                  </Pressable>
-                </View>
-              }
-              aria-label="Demo context menu"
-              menuStyle={{
-                minWidth: 180,
-                backgroundColor: theme.surface,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: theme.border,
-                boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
-              }}
-            >
-              <View
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 6,
-                  backgroundColor: theme.surfaceSubtle,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 13, fontWeight: "600", color: theme.text }}
-                >
-                  Context Menu
-                </Text>
-              </View>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: theme.text,
+                          fontWeight: "600",
+                        }}
+                      >
+                        Close menu
+                      </Text>
+                    </Pressable>
+                  </ContextMenuPopup>
+                </ContextMenuPositioner>
+              </ContextMenuPortal>
             </ContextMenuRoot>
           </View>
         </View>

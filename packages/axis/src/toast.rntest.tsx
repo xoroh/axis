@@ -6,11 +6,17 @@ import {
 } from "@testing-library/react-native";
 import { act, createRef, type ElementRef } from "react";
 import type { View } from "react-native";
-import { ToastRoot } from "./index";
+import {
+  ToastAction,
+  ToastClose,
+  ToastDescription,
+  ToastRoot,
+  ToastTitle,
+} from "./index";
 
 /**
- * ToastRoot behavior through the public entry. Every assertion renders the
- * real component in the RN runtime and interacts through RN events —
+ * ToastRoot and compound behavior through the public entry. Every assertion
+ * renders the real component in the RN runtime and interacts through RN events —
  * presence, live-region announcement, timed auto-dismiss, and the
  * dismissing action are observed, not assumed. Timers are real with
  * short durations (≤150ms waits); nothing sleeps over 500ms.
@@ -22,11 +28,11 @@ async function pressAction() {
   });
 }
 
-describe("ToastRoot on React Native", () => {
+describe("Toast compound on React Native", () => {
   it("renders null when closed", async () => {
     await render(
       <ToastRoot testID="toast" aria-label="Saved">
-        Saved
+        <ToastTitle>Saved</ToastTitle>
       </ToastRoot>,
     );
     expect(screen.queryByTestId("toast")).toBeNull();
@@ -36,10 +42,12 @@ describe("ToastRoot on React Native", () => {
   it("shows content with a polite live region when open", async () => {
     await render(
       <ToastRoot testID="toast" defaultOpen aria-label="Saved">
-        Saved
+        <ToastTitle>Saved</ToastTitle>
+        <ToastDescription>Project settings updated.</ToastDescription>
       </ToastRoot>,
     );
     expect(screen.getByText("Saved")).toBeTruthy();
+    expect(screen.getByText("Project settings updated.")).toBeTruthy();
     expect(screen.getByLabelText("Saved")).toBeTruthy();
     expect(screen.getByTestId("toast").props["aria-live"]).toBe("polite");
   });
@@ -53,7 +61,7 @@ describe("ToastRoot on React Native", () => {
         duration={50}
         onOpenChange={(next) => seen.push(next)}
       >
-        Saved
+        <ToastDescription>Saved</ToastDescription>
       </ToastRoot>,
     );
     expect(screen.getByTestId("toast")).toBeTruthy();
@@ -70,7 +78,7 @@ describe("ToastRoot on React Native", () => {
         duration={0}
         onOpenChange={(next) => seen.push(next)}
       >
-        Saved
+        <ToastDescription>Saved</ToastDescription>
       </ToastRoot>,
     );
     await act(async () => {
@@ -87,11 +95,12 @@ describe("ToastRoot on React Native", () => {
       <ToastRoot
         testID="toast"
         defaultOpen
-        actionLabel="Undo"
-        onAction={() => (actions += 1)}
         onOpenChange={(next) => seen.push(next)}
       >
-        Saved
+        <ToastDescription>Saved</ToastDescription>
+        <ToastAction aria-label="Undo" onPress={() => (actions += 1)}>
+          Undo
+        </ToastAction>
       </ToastRoot>,
     );
     expect(screen.getByLabelText("Undo")).toBeTruthy();
@@ -101,20 +110,30 @@ describe("ToastRoot on React Native", () => {
     expect(screen.queryByTestId("toast")).toBeNull();
   });
 
-  it("renders no action button without actionLabel", async () => {
+  it("close button dismisses the toast", async () => {
+    const seen: boolean[] = [];
     await render(
-      <ToastRoot testID="toast" defaultOpen onAction={() => {}}>
-        Saved
+      <ToastRoot
+        testID="toast"
+        defaultOpen
+        onOpenChange={(next) => seen.push(next)}
+      >
+        <ToastDescription>Saved</ToastDescription>
+        <ToastClose aria-label="Dismiss">✕</ToastClose>
       </ToastRoot>,
     );
-    expect(screen.getByText("Saved")).toBeTruthy();
-    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByLabelText("Dismiss")).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText("Dismiss"));
+    });
+    expect(seen).toEqual([false]);
+    expect(screen.queryByTestId("toast")).toBeNull();
   });
 
   it("accepts caller styles without imposing any", async () => {
     await render(
       <ToastRoot testID="toast" defaultOpen style={{ opacity: 0.5 }}>
-        Saved
+        <ToastDescription>Saved</ToastDescription>
       </ToastRoot>,
     );
     expect(screen.getByTestId("toast").props.style).toMatchObject({

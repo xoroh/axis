@@ -95,6 +95,7 @@ Per-component notes (props, examples, accessibility) live in
 | [Overlay](https://github.com/xoroh/axis/blob/main/docs/components/overlay.md) |
 | [Popover](https://github.com/xoroh/axis/blob/main/docs/components/popover.md) |
 | [Portal](https://github.com/xoroh/axis/blob/main/docs/components/portal.md) |
+| [Preview Card](https://github.com/xoroh/axis/blob/main/docs/components/preview-card.md) |
 | [Progress](https://github.com/xoroh/axis/blob/main/docs/components/progress.md) |
 | [Radio Group](https://github.com/xoroh/axis/blob/main/docs/components/radio-group.md) |
 | [Select](https://github.com/xoroh/axis/blob/main/docs/components/select.md) |

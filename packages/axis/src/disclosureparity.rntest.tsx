@@ -20,6 +20,7 @@ import {
   CollapsibleTrigger,
   Combobox,
   ContextMenuRoot,
+  ContextMenuTrigger,
   DrawerBackdrop,
   DrawerPopup,
   DrawerPortal,
@@ -273,16 +274,16 @@ describe("render composition: overlays", () => {
     expect(screen.queryByText("Body")).toBeNull();
   });
 
-  it("ContextMenuRoot function render observes open state", async () => {
+  it("ContextMenuTrigger function render observes open state", async () => {
     await render(
-      <ContextMenuRoot
-        defaultOpen
-        content={<Text>Menu</Text>}
-        render={(_props, state) => (
-          <Text testID="st">{state.open ? "open" : "shut"}</Text>
-        )}
-      >
-        <Text>Anchor</Text>
+      <ContextMenuRoot defaultOpen>
+        <ContextMenuTrigger
+          render={(_props, state) => (
+            <Text testID="st">{state.open ? "open" : "shut"}</Text>
+          )}
+        >
+          <Text>Anchor</Text>
+        </ContextMenuTrigger>
       </ContextMenuRoot>,
     );
     expect(screen.getByText("open")).toBeTruthy();

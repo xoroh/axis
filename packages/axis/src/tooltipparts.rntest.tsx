@@ -2,7 +2,7 @@ import {
   render,
   screen,
   userEvent,
-  waitForElementToBeRemoved,
+  waitFor,
 } from "@testing-library/react-native";
 import { act } from "react";
 import { Text } from "react-native";
@@ -212,7 +212,7 @@ describe("Tooltip compound parts on React Native", () => {
     expect(await screen.findByRole("tooltip")).toBeTruthy();
     expect(seen).toEqual([true]);
     await userEvent.longPress(screen.getByTestId("g-trigger"));
-    await waitForElementToBeRemoved(() => screen.queryByRole("tooltip"));
+    await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
     expect(seen).toEqual([true, false]);
   });
 
