@@ -40,10 +40,10 @@ DST transitions and month ends resolve exactly.
 (default `"en-US"`), `minDate?`, `maxDate?`, `isDateDisabled?`,
 `disabled?` (default `false`), `selected?`, `range?`.
 
-## Usage: a Kern-level DatePicker driving the model
+## Usage: a host design system's DatePicker driving the model
 
 The model owns the math; the design system owns state, styling, and
-the host. A Kern `DatePicker` keeps the selected value and the
+the host. A host `DatePicker` keeps the selected value and the
 visible month in `useControllableState`, derives the grid, and maps
 taps and keys back into state:
 

@@ -83,7 +83,7 @@ export const BarsDemo: Demo = {
                 }}
               >
                 <Text style={{ fontSize: 13, color: theme.text }}>
-                  Axis Components • Kern System • Documentation
+                  Axis Components • Examples • Documentation
                 </Text>
               </NavigationMenuPanel>
             </NavigationMenuItem>

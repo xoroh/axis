@@ -1,45 +1,45 @@
 # Releasing `@xoroh/axis`
 
-Release HOLD: **nothing here ships until Faroeq explicitly authorizes
-the first release** (the 0.1.0 that ships alongside Kern 0.1.0, per
-`docs/decisions/005-ship-with-kern-0-1-0.md`). Preparing, dry-running,
-and documenting the flow perform no publish, no version bump, and no
-tag. The `.team` release-hold list (npm publish · version bumps · tags
-or releases · deploys · DNS · secrets · paid models) needs Faroeq's own
-yes; the `npm-publish` environment approver and the `RELEASE_CHANGESSETS`
-variable below never substitute for it.
+Axis shipped its first public release (0.1.0) through this pipeline on
+2026-10-20. Every future version goes through the same one publish
+path — releases never run on push, never run from a local terminal
+with the production config, and never publish an unverified tree.
 
 ## The one publish path
 
 `.github/workflows/release.yml` is the only authorized publish path.
 It NEVER runs on push or PR — `workflow_dispatch` only — and even a
-manual run exits before touching the registry unless ALL hold:
+manual run exits before touching the registry unless ALL gates hold:
 
 1. The `npm-publish` GitHub environment approves (human approver).
 2. The `RELEASE_CHANGESSETS` repository variable is `'true'`
-   (the HOLD switch; absent/false by default).
+   (the release switch; absent/false by default).
 
 The `verify` job (read-only `contents: read` permission) mirrors CI's
 package gates — install, lint, typecheck, vitest, jest, boundary (+ its
 mutation suite), readme, readme-examples, build, publint/attw — so a
 manual dispatch can never publish a red tree. The `release` job needs
 `contents: write` + `pull-requests: write` (the changesets version-PR
-flow) and `id-token: write` (Sigstore signing for provenance and OIDC token exchange).
+flow) and `id-token: write` (Sigstore signing for provenance and OIDC
+token exchange).
 
 ## Auth: npm Trusted Publishing (OIDC tokenless)
 
 - **Setup:** Uses npm Trusted Publishing via OpenID Connect (OIDC).
-  GitHub Actions requests a short-lived publication token from npmjs.com
-  using `id-token: write`. No static long-lived `NPM_TOKEN` secret is required.
-- **Initial Bootstrap:** Because npm configures Trusted Publishing per package
-  and requires the package to exist on npmjs.com before exposing the configuration UI,
-  the first release (`0.1.0`) is published once manually (e.g. from the terminal with
-  standard authentication and `--provenance=false`).
-- **Post-Bootstrap Security:**
-  1. Go to `npmjs.com/package/@xoroh/axis` → Settings → Trusted publishing.
-  2. Add GitHub Actions (`xoroh` / `axis` / `release.yml` / `npm-publish`).
-  3. In Settings → Publishing access, select "Require two-factor authentication and disallow tokens".
-  4. From that point forward, all releases publish tokenlessly via GitHub Actions with cryptographic Sigstore provenance.
+  GitHub Actions requests a short-lived publication token from
+  npmjs.com using `id-token: write`. No static long-lived `NPM_TOKEN`
+  secret is required or used.
+- **Bootstrap:** 0.1.0 was published once manually (npm requires the
+  package to exist before its Trusted Publisher settings UI appears).
+- **Ongoing configuration (verify after any npm-side change):**
+  1. Go to `npmjs.com/package/@xoroh/axis` → Settings → Trusted
+     publishing.
+  2. Confirm the GitHub Actions publisher (`xoroh` / `axis` /
+     `release.yml` / `npm-publish`).
+  3. In Settings → Publishing access, select "Require two-factor
+     authentication and disallow tokens".
+  4. From that point forward, all releases publish tokenlessly via
+     GitHub Actions with cryptographic Sigstore provenance.
 
 ## Release checklist (run in order, all green or stop)
 
@@ -61,27 +61,26 @@ Pre-flight (local, from a clean tree on `main`):
    `npm publish --dry-run` (expect `+ @xoroh/axis@<version>` with
    `public access`, tag `latest`).
 
-Bump + CHANGELOG cut (only after Faroeq's yes):
+Version + CHANGELOG cut:
 
-4. `bun run changeset version` on a release branch: consumes
-   `.changeset/*.md` into `CHANGELOG.md` and bumps
-   `packages/axis/package.json`. Review the diff — the hand-written
-   `## Unreleased` migration notes fold into the new
-   `## <version>` section (first release: `## 0.1.0`).
-5. Commit as `chore: version packages`, or let the release workflow's
-   `changesets/action` open the version PR and merge it green.
+4. Add a `.changeset/<name>.md` (patch/minor/major per change) on the
+   contributing PR; changesets accumulate on `main`.
+5. Trigger the `Release` workflow manually from `main` with the
+   environment approval and the switch set:
+   - with pending changesets, `changesets/action` opens a
+     `chore: version packages` PR (VERSION + CHANGELOG under
+     `packages/axis`) — review it and merge green;
+   - on the next dispatch after the version PR merges, changesets
+     publishes with `--access public` (from `publishConfig.access`)
+     and provenance (from `publishConfig.provenance` +
+     `id-token: write`).
 
-Tag + publish:
+Tag + GitHub release:
 
 6. Tag the release commit: `git tag axis-v<version>` (annotated;
-   push the tag). No GitHub Release needed for the first publish —
-   npm + tag is the record (add one later only if Faroeq asks).
-7. Trigger the `Release` workflow manually from `main` (or the
-   tagged commit), with the environment approval and the HOLD switch
-   set. It runs `changeset publish`, which publishes with
-   `--access public` (from the changesets `access: public` config
-   and `publishConfig.access`) and provenance (from
-   `publishConfig.provenance` + `id-token: write`).
+   push the tag).
+7. Cut a GitHub Release from the tag with the version's CHANGELOG
+   section as the notes.
 
 Verify on npm (anyone, no auth needed):
 
@@ -91,39 +90,32 @@ Verify on npm (anyone, no auth needed):
 9. Install from the registry in a scratch project and import both
    entries: `import '@xoroh/axis'` (RN host) and
    `import '@xoroh/axis/models'` (must load under plain node —
-   RN-free by the boundary gate).
+   RN-free by the boundary gate). Repeat under npm, pnpm, yarn, and
+   bun.
 
-Kern bump + rollback:
+## Rollback
 
-10. Kern cuts over per its roadmap (vendored tarball pre-publish,
-    semver after): bump Kern's pin to the published version and run
-    Kern's gates.
-11. Rollback is **deprecate, never unpublish**: if the release is bad,
-    `npm deprecate @xoroh/axis@<version> "<reason, use X instead>"`
-    and publish a fixed version forward. Unpublishing breaks every
-    consumer install and (past 72h / with dependents) is blocked by
-    npm policy.
+Rollback is **deprecate, never unpublish**: if the release is bad,
+`npm deprecate @xoroh/axis@<version> "<reason, use X instead>"`
+and publish a fixed version forward. Unpublishing breaks every
+consumer install and (past 72h / with dependents) is blocked by
+npm policy.
 
 ## Final pre-release sweep: no internal files ship
 
 The repo holds only files users and contributors need (source, tests,
 user docs, README, LICENSE, CONTRIBUTING, SECURITY, SUPPORT,
 CHANGELOG, CI/release config, `.github` templates). Reports, audits,
-plans, roadmaps, archives, agent notes, and scratch live in
-`.team/reports/axis` / `.team/plans/axis`, outside git. Before any
-bump, prove both halves:
+plans, roadmaps, archives, agent notes, and scratch live outside git.
+Before any bump, prove both halves:
 
 1. **Nothing internal is tracked.** From a clean tree:
-   `git ls-files | grep -E '^(\.reports/|docs/IDEAS\.md)'` must print
-   nothing (reports/audits/screenshots live under `.team/`, and
-   `docs/IDEAS.md` planning has moved to `.team/plans/axis`). The
-   per-file KEEP/MOVE/DELETE inventory lives in the release-prep
-   report under `.team/reports/axis/` until Faroeq signs it off and
-   the cleanup PR lands.
+   `git ls-files | grep -E '^\.(reports|team|changeset-[a-z]+\.md)'`
+   must print nothing.
 2. **Nothing internal is packed.** From `packages/axis`:
    `npm pack --dry-run` must list exactly the allowlist below —
    `package.json`, `LICENSE`, `README.md`, and `dist/` build output
-   only. No tests, no `.reports`, no demos, no source maps, no `src`:
+   only. No tests, no demos, no source maps, no `src`:
 
    ```text
    package/package.json
@@ -139,6 +131,3 @@ bump, prove both halves:
    package/dist/models.d.ts
    package/dist/chunk-<content-hash>.js   # tsup shared chunk; name varies
    ```
-
-   (12 files total. `dist/` filenames other than the shared chunk are
-   fixed by the `tsup` invocation in `packages/axis/package.json`.)

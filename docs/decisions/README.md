@@ -4,7 +4,7 @@
 
 Status: current. Date: 2026-10-16.
 
-- Vision: [`../VISION.md`](../VISION.md). Component rules: [`../COMPONENT_CONTRACT.md`](../COMPONENT_CONTRACT.md). Parity: [`../BASE_UI_PARITY.md`](../BASE_UI_PARITY.md). Coverage: [`../COVERAGE.md`](../COVERAGE.md). Cross-repo plan: Kern [`kern-axis-migration-and-roadmap.md`](https://github.com/xoroh/kern/blob/main/docs/architecture/kern-axis-migration-and-roadmap.md).
+- Vision: [`../VISION.md`](../VISION.md). Component rules: [`../COMPONENT_CONTRACT.md`](../COMPONENT_CONTRACT.md). Parity: [`../BASE_UI_PARITY.md`](../BASE_UI_PARITY.md). Coverage: [`../COVERAGE.md`](../COVERAGE.md).
 - Each file has context, decision, rationale, status, date.
 
 | ADR | Decision |
@@ -13,7 +13,7 @@ Status: current. Date: 2026-10-16.
 | [002](002-drawer-primary-name.md) | Drawer as the name (no alias) |
 | [003](003-example-app-not-playground.md) | One runnable example app instead of a playground |
 | [004](004-short-readme-plus-docs.md) | Short README plus docs |
-| [005](005-ship-with-kern-0-1-0.md) | Ships as `@xoroh/axis` alongside Kern 0.1.0 |
+| [005](005-first-release.md) | First release of `@xoroh/axis` (release discipline) |
 | [006](006-scope-primitives-only.md) | Scope is primitives only; 21 design-pattern components leave Axis |
 | [007](007-one-package-two-zones.md) | One package: universal models zone (+ `./models`) and native-only components zone |
 | [008](008-no-web-components.md) | No web components (Base UI is the web layer) |

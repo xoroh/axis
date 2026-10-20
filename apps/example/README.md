@@ -17,9 +17,9 @@ Open in Expo Go, an emulator, or `expo start --web` (web needs
 
 ## Conventions
 
-- Plain caller styles only (layout + readability). No tokens, no
-  design system, no Kern dependencies — demos prove the unstyled
-  contract, and this repo must not grow Kern coupling.
+- Plain caller styles only (layout + readability). No tokens and no
+  design system — demos prove the unstyled contract, and this package
+  must not grow design-system coupling.
 - One file per demo in `src/demos/`, registered in
   `src/demos/registry.ts` with the barrel exports it demonstrates.
 - Navigation is `useState` by design (no navigation library).

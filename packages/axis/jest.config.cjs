@@ -5,7 +5,7 @@ const reactNativeDir = path.dirname(
   require.resolve("react-native/package.json"),
 );
 
-// Mirrors xoroh/kern's kern-native runner: the RN preset, `*.rntest.*`
+// The package's React Native runner: the RN preset, `*.rntest.*`
 // matching (vitest owns `*.test.*` under jsdom), and a cold-cache-sized
 // timeout. Axis has no SVG or theme side effects, so no mocks or setup
 // beyond the preset + act environment.

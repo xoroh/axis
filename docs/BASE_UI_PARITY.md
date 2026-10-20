@@ -312,9 +312,9 @@ Popup, Arrow.
 | `TooltipArrow` | `Tooltip.Arrow` | — | caller-positioned marker | Geometry is caller style |
 
 
-### P1 asks from `.reports/kern-needs-from-axis.md`
+### P1 asks from the first-consumer audit
 
-Four Kern P1 asks touch these families. All four are now implemented, wired, and verified with tests:
+Four consumer P1 asks touch these families. All four are now implemented, wired, and verified with tests:
 
 | Ask | State | Resolution & Verification |
 |---|---|---|
@@ -487,7 +487,7 @@ named reason (not oversight):
 
 Base UI ships no chat primitives, so there is nothing to mirror:
 the contract in `docs/AI_CHAT_MODELS.md` IS the cross-platform
-agreement (ADR 010). Kern web mirrors these prop names.
+agreement (ADR 010). Host web apps mirror these prop names.
 
 | Axis model | Web: Base UI equiv. | Native: Axis (unstyled behavior) | Deviations |
 |---|---|---|---|
@@ -501,17 +501,17 @@ agreement (ADR 010). Kern web mirrors these prop names.
 | `chatSource` | none — new | `{href, title?}` + hygiene; nothing visual | — |
 | reasoning | `Collapsible` composition | reused as-is + `resolveReasoningOpen` auto-open helper | — |
 
-## Moved to Kern M3 (scope decision, ADR 006)
+## Moved out of scope (styled components, ADR 006)
 
-Unpublished, so these leave with no aliases and no deprecation
-window (ADR 011). Kern M3 owns the styled receivers; Axis keeps
+These leave with no aliases and no deprecation window (ADR 011).
+Consuming design systems own the styled receivers; Axis keeps
 the primitives underneath. `Button` (`loading`/busy announce,
 `render` composition) covers the
 icon/loading/link press cases — no separate components.
 
 | Axis export (removed) | Disposition |
 |---|---|
-| `Badge`, `Card`, `Carousel`, `Chip`, `EmptyState`, `Fab`, `ExtendedFab`, `Kbd`, `NavigationBar`, `NavigationRail`, `SettingsRow`, `Skeleton`, `SplitButton`, `TopAppBar`, `ButtonGroup`, `ListItem`, `Pagination` | Moved: Kern M3 owns the pattern; behavior donors port into M3 receivers consuming retained Axis primitives/hooks |
+| `Badge`, `Card`, `Carousel`, `Chip`, `EmptyState`, `Fab`, `ExtendedFab`, `Kbd`, `NavigationBar`, `NavigationRail`, `SettingsRow`, `Skeleton`, `SplitButton`, `TopAppBar`, `ButtonGroup`, `ListItem`, `Pagination` | Moved: downstream design systems own the pattern; behavior is rebuilt on the retained Axis primitives/hooks |
 | `IconButton` | Removed: `Button` + required `accessibilityLabel` covers it |
 | `LinkButton` | Removed: link-look is caller styling (Base UI forbids button-as-link); `Button`'s `render` composition covers element substitution where it exists (gap noted if absent) |
 | `LoadingButton` | Removed: `Button`'s `loading` (busy announce, React Aria `isPending` pattern) covers it — Base UI has no loading prop |

@@ -18,4 +18,4 @@ Proves Expo-host behavior with minimum surface; keeps docs neutral. Checked agai
 
 ## Status
 
-Accepted. Record: `apps/` layout in `README.md`; Kern roadmap Phase 2–3 (Expo 57 host proof).
+Accepted. Record: `apps/` layout in `README.md`; Expo-host proof lives in the example app.

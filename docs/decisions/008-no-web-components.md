@@ -6,7 +6,7 @@ Status: accepted. Date: 2026-10-16.
 
 ## Context
 
-Axis mirrors Base UI for native; owning web renderers would duplicate Base UI plus Kern web.
+Axis mirrors Base UI for native; owning web renderers would duplicate the job Base UI already owns on web.
 
 ## Decision
 
@@ -18,4 +18,4 @@ One foundation per platform, no parallel web stack to maintain. Checked against 
 
 ## Status
 
-Accepted. Web needs stay in `xoroh/kern` (`@xoroh/kern` on Base UI).
+Accepted. Web needs stay with Base UI or downstream design systems.

@@ -31,7 +31,7 @@ conditional — a time-picker does not inherit a Switch's contract.
   - (a) Where Base UI has `X.Root` with sibling parts, Axis exports
     `XRoot` plus `X<Part>` (Base UI `Tabs.List` becomes `TabsList`),
     and exports no bare `X` beside them: no monolith wrappers
-    (ADR 009; composites belong in Kern). `ContextMenu` is here:
+    (ADR 009; composites are out of scope). `ContextMenu` is here:
     Base UI has `ContextMenu.Root`.
   - (b) Where Base UI's component is bare, the Axis export is bare:
     `Button`, `Input`, `Toggle`, `ToggleGroup` (its items are
@@ -173,7 +173,7 @@ conditional — a time-picker does not inherit a Switch's contract.
   output, `publint`, `attw`): a component that breaks the published
   surface or its types fails the slice, even with green unit tests.
 - No physical-device run is claimed until it executes (D-DEVICE in
-  the Kern roadmap); emulator-independent suites are labeled as such.
+  device-lane roadmap); emulator-independent suites are labeled as such.
 
 ## 9. Documentation and examples
 
@@ -241,7 +241,7 @@ closely as React Native allows. Concretely, per component family:
 ## Non-goals of this contract
 
 - No styling system, theme, or token layer. No design-system
-  variants. No CLI/MCP surface (Kern tooling stays the AI surface).
+  variants. No CLI/MCP surface (AI tooling stays with consumers).
 - No `collection`/`mergeRefs` adoption by fiat — their transfer
   gates stand until a real consumer justifies them.
 - No second component until the first passes review against this

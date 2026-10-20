@@ -6,23 +6,21 @@ Status: accepted. Date: 2026-10-19.
 
 ## Context
 
-The Phase 1 scope audit (`.reports/2026-10-19-axis-scope-audit.md`, PR #77)
-counted 140 exported component symbols across 48 families and found the tree
-fully unstyled — but several families sit in neither Base UI nor rn-primitives.
-Faroeq (04:48 CEST) set two references and four verdicts; Faroeq signed off the
-resulting move table at 05:05 CEST with Kern Lead agreement.
+The Phase 1 scope audit (PR #77) counted 140 exported component symbols,
+across 48 families and found the tree fully unstyled — but several families sit
+in neither Base UI nor rn-primitives. The owner set two references and four
+verdicts and signed off the resulting move table.
 
 ## Scope of this record
 
-This ADR and the Phase 1 scope audit it builds on
-(`.reports/2026-10-19-axis-scope-audit.md`) are scope and inventory
+This ADR and the Phase 1 scope audit it builds on are scope and inventory
 checks: which families Axis keeps, and how their anatomy maps onto
 Base UI and rn-primitives (plus a grep-level unstyled check). They
 are **not** behaviour reviews — they do not verify runtime
 behaviour, gesture handling, measurement, focus/dismiss wiring,
 platform accessibility mapping, or keyboard handling. Behaviour
-review per family now lives in `docs/BASE_UI_PARITY.md` (Faroeq
-08:18 CEST go: rn-primitives behaviour review plus real-device
+review per family now lives in `docs/BASE_UI_PARITY.md` (rn-primitives
+behaviour review plus real-device
 testing are release-ready scope).
 
 ## Decision
@@ -35,25 +33,26 @@ rn-primitives "Unstyled on purpose … zero styles"):
 - **rn-primitives** (`https://rnprimitives.com/`, 27 core + Portal/Slot/Hooks/Types/Utils)
 
 Rule: anything in Base UI **or** rn-primitives may stay **if it ships unstyled**.
-Anything else stays only with a behavior-only reason that Kern cannot own
-(KEEP-RN). Styled, composite, or reason-less families move to Kern
-(MOVE-KERN). Nothing is deleted outright — moves land in Kern design systems.
+Anything else stays only with a behavior-only reason Axis can own
+(KEEP-RN). Styled, composite, or reason-less families move out
+(MOVE-OUT). Nothing is deleted outright — moves land in consuming
+design systems.
 
 Verdicts:
 
 - **KEEP-PARITY** — in Base UI and/or rn-primitives (named per family).
 - **KEEP-RN** — outside both, with a one-line behavior-only reason.
 - **STRIP** — stays, with listed styles/content to strip.
-- **MOVE-KERN** — Kern owns it, built on named Axis primitives.
+- **MOVE-OUT** — a consuming design system owns it, built on named Axis primitives.
 
-## Agreed table (signed off 05:05 CEST)
+## Agreed table
 
 | Family | Verdict | What Axis provides |
 |---|---|---|
 | Overlay | KEEP-RN | No change (shared modality/dismissal/scroll-lock root). |
-| Search | MOVE-KERN | Removed. Kern rebuilds on Axis `Input` + `Field` + `Button`. |
-| Loader | MOVE-KERN | Removed. `Progress` gains Base UI-exact indeterminate (`value={null}`); the `indeterminate` boolean is cut. |
-| Text | MOVE-KERN | Export/docs/demo removed. Internals already use RN `Text` directly (verified: zero internal Axis-`Text` imports). |
+| Search | MOVE-OUT | Removed. Downstream rebuilds on Axis `Input` + `Field` + `Button`. |
+| Loader | MOVE-OUT | Removed. `Progress` gains Base UI-exact indeterminate (`value={null}`); the `indeterminate` boolean is cut. |
+| Text | MOVE-OUT | Export/docs/demo removed. Internals already use RN `Text` directly (verified: zero internal Axis-`Text` imports). |
 | Trigger | drop export | Export/docs/demo removed. Verified zero internal imports, so pure removal (no internalization). `usePress`, `mergeSlotProps`, `SlotProps` stay exported. |
 | Textarea | fold into Input | `Input` gains `multiline`, `autoGrow`, `minRows`/`maxRows`, `onHeightChange`. Textarea export/docs/demo removed; input docs/demo updated. |
 | Sheet | fold into Drawer | Base UI exact names: `snapPoints`, controlled `snapPoint` + `onSnapPointChange` (NOT `activeSnapPoint`), swipe-to-dismiss with `dismissable`, modal + non-modal. |
@@ -76,17 +75,18 @@ Verdicts:
 - **Search / Loader / Text / Trigger / Textarea / Calendar / TimePicker: CONFIRMED
   in neither reference** (absent from all fetched Base UI navs and the rn-primitives
   core/shared lists). Moves/folds proceed per the table above.
-- **Kern impact: none.** Kern imports zero Axis components (models/hooks only,
-  re-verified 2026-10-19); `kern-axis-adopt` does not exist.
+- **Downstream impact: none.** No consumer imports Axis components directly
+  (models/hooks only, re-verified 2026-10-19).
 
 ## Consequences
 
 - `docs/BASE_UI_PARITY.md`, `docs/COVERAGE.md`, the package README index
-  (`check:readme`), and `docs/IDEAS.md` are updated with each move.
+  (`check:readme`) are updated with each move.
 - CHANGELOG `Unreleased` carries one migration line per removed/renamed export.
   This is a deliberate, scoped exception to the "stays empty" convention: with
   breaking pre-1.0 cuts landing, the migration record must be readable where
-  consumers look. No version bump, publish, or tag (release hold stands).
+  consumers look. Versions and publishes go through the release pipeline
+  (`docs/RELEASING.md`).
 - If a later family turns out to be in neither reference, it returns through
   KEEP-RN (with reason) or MOVE — recorded here, not silently kept.
 

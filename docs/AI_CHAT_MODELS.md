@@ -2,19 +2,19 @@
 
 Status: current. Date: 2026-10-16. Placement: ADR
 [010](decisions/010-ai-chat-models.md) — behavior in Axis, styling in
-Kern. Research: `.reports/research-ai-chat-ui.md`.
+host design systems.
 
 AI chat state that is identical on every renderer lives here as
 platform-neutral behavior models (`@xoroh/axis` and
 `@xoroh/axis/models` — no `react-native` in the transitive closure,
 boundary-gated). Styled chat parts (`MessageBubble`, `PromptInput`,
-`ToolCard`, `BranchPicker`, …) and composed screens (`chat-screen`
-block) live in Kern design systems and consume these models.
+`ToolCard`, `BranchPicker`, …) and composed screens live in host
+design systems and consume these models.
 
 Base UI has **no chat primitives**, so this family introduces new
 API surface on both platforms. There is nothing to mirror and
 therefore no parity table: the contract below IS the cross-platform
-agreement, and Kern web mirrors these prop names.
+agreement, and host web apps mirror these prop names.
 
 ## Shared status vocabulary (`chatStatus`)
 
@@ -78,7 +78,7 @@ falls back to plain language (`You`, `Assistant`, `System`,
 calls, attachments) rather than a placeholder. `isUserMessage`
 marks the reader's own turns (end-aligned bubble side). Message
 PARTS (text/image/reasoning/tool-call trees) and markdown
-rendering stay transport- and Kern-owned: this model names the
+rendering stay transport- and app-owned: this model names the
 turn, never its payload.
 
 ## Tool call (`toolCall`)
@@ -117,7 +117,7 @@ per-file writes would close over the same pre-pick list and keep
 only the last file) / `update` (the app marks transfer progress)
 / `remove` / `clear`, controlled or uncontrolled. Picking,
 drag-drop, paste, and the async transfer are platform code the app
-owns; chips, previews, and progress bars are Kern composition.
+owns; chips, previews, and progress bars are host composition.
 
 ## Prompt input (`promptInput`)
 
@@ -170,7 +170,7 @@ hygiene — trim, drop empty hrefs, first-wins dedupe by `href`
 (the earliest citation keeps its position and title). The label
 prefers the title, else the href — never empty, so a screen
 reader never meets a silent chip. Fetching, opening, previewing,
-chips, and cards are app and Kern code.
+chips, and cards are app and host code.
 
 ## Reasoning (reuses `Collapsible` — no new primitive)
 
@@ -182,7 +182,7 @@ A reasoning block is a disclosure unit, which is exactly what
 to own a single conditional. The only chat-specific behavior is
 WHEN it opens: `resolveReasoningOpen(open, status)` auto-opens
 while `streaming` and follows the caller's `open` once settled
-(`undefined` reads closed, the `Collapsible` default). Kern wires
+(`undefined` reads closed, the `Collapsible` default). A host wires
 `open={resolveReasoningOpen(callerOpen, status)}` with the toggle
 feeding back through `onOpenChange`.
 
@@ -191,12 +191,12 @@ feeding back through `onOpenChange`.
 - Streaming transport (app brings its AI SDK / AG-UI / channel
   client).
 - Markdown and code rendering (renderer/highlighter dependencies
-  would break the token-free boundary) — Kern `MarkdownText` /
+  would break the token-free boundary) — host `MarkdownText` /
   `CodeBlock` with a `render`-slot and plain-text fallback.
 - Virtualization (caller-measured `FlatList` work, contract §4).
 - Keyboard avoidance and safe-area (caller composition; the
   prompt-input doc records the pattern, no Axis API).
-- Full chat screens (contract non-goal) — Kern `chat-screen`
-  block composes these models per design system.
+- Full chat screens (contract non-goal) — hosts compose these
+  models per design system.
 - Voice/dictation and threads/history (no platform-neutral model
-  yet; Kern-only or deferred per the research open questions).
+  yet; host-owned or deferred per the open questions).

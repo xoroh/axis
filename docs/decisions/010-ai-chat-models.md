@@ -10,12 +10,12 @@ AI chat UI needs a home: unstyled conversation behavior versus styled chat compo
 
 ## Decision
 
-AI chat behavior models (thread/composer/message/tool flows as neutral state models with native bindings) live in Axis. Styled chat parts and blocks live in Kern design systems.
+AI chat behavior models (thread/composer/message/tool flows as neutral state models with native bindings) live in Axis. Styled chat parts and blocks live in host design systems.
 
 ## Rationale
 
-Behavior in Axis, styling in Kern — the same split as every other family. Checked against VISION principle 5.
+Behavior in Axis, styling in hosts — the same split as every other family. Checked against VISION principle 5.
 
 ## Status
 
-Accepted. No models built yet; placement only. Styled side: Kern `docs/decisions/019-ai-chat-in-kern.md`.
+Accepted. Models built (status, stick-to-bottom, message, tool call, attachments, prompt input, branch, source; see `docs/AI_CHAT_MODELS.md`). Styled side is per-design-system composition, out of Axis scope.

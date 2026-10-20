@@ -7,7 +7,7 @@ native equivalent, reason given) · `deferred` (concrete blocker given).
 Behavior models are listed for traceability; they are not components.
 Sources: RNP catalogue (`roninoss/rn-primitives`), Base UI catalogue
 (composition/API reference only — no web implementation code), and
-`packages/kern-native` consumer needs.
+host design-system consumer needs.
 
 ## Rendered components
 
@@ -84,5 +84,5 @@ forwarding) — both present with unit tests.
   tests + docs + boundary-clean review. Never mark by export alone.
 - `na-native` and `deferred` rows require a reason and a re-review
   trigger. Deferral is not abandonment.
-- Kern keeps its own M3 implementations regardless of this table;
-  nothing here replaces a design-system component.
+- Design systems keep their own styled implementations regardless of
+  this table; nothing here replaces a design-system component.

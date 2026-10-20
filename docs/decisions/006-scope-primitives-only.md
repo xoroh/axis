@@ -10,11 +10,11 @@ Axis coverage grew past behavior primitives into design patterns, which belong i
 
 ## Decision
 
-Axis holds base behavior primitives only. 21 design-pattern components leave Axis for Kern design systems; the list lives in `.reports/research-scope-axis-vs-kern.md`.
+Axis holds base behavior primitives only. 21 design-pattern components leave Axis for consuming design systems; the list is recorded in `docs/BASE_UI_PARITY.md` (moved-out-scope section).
 
 ## Rationale
 
-Keeps Axis neutral and composable; patterns get styling, tokens, and system ownership in Kern. Checked against VISION principle 5.
+Keeps Axis neutral and composable; patterns get styling, tokens, and system ownership in the consuming design system. Checked against VISION principle 5.
 
 ## Status
 
