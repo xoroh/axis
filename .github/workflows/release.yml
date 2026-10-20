@@ -99,6 +99,19 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      # Publishing uses npm Trusted Publishing (OIDC tokenless exchange):
+      # - npm >= 11.5.1 supports the OIDC exchange; the runner's bundled
+      #   npm is older, so install a current npm first.
+      # - Write a token-less npmrc. The npm-publish environment may inject
+      #   NODE_AUTH_TOKEN plus its own userconfig below, so both are
+      #   explicitly overridden for this step: with no token in play, npm
+      #   (running under id-token: write inside GitHub Actions) exchanges
+      #   the workflow OIDC token for a short-lived publish token.
+      - name: Prepare publish auth (npm trusted publishing)
+        run: |
+          npm install -g npm@latest
+          printf 'registry=https://registry.npmjs.org/\n' > "${{ runner.temp }}/oidc.npmrc"
+
       - name: Create release PR or publish
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2
         with:
@@ -113,3 +126,6 @@ jobs:
           create-github-releases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Override any ambient npm auth: OIDC only (see above).
+          NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/oidc.npmrc
+          NODE_AUTH_TOKEN: ""
