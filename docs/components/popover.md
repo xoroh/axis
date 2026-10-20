@@ -137,7 +137,7 @@ report the same reasons.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never toggles and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<PopoverTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger (anchor) content. |
@@ -192,7 +192,7 @@ outside a root and while closed.
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the popover region (no role — see Accessibility). |
+| `"aria-label"` | `string` | no | — | Accessible name source for the popover region (no role — see Accessibility). |
 | `testID` | `string` | no | — | Test identifier, forwarded to the content `View`. |
 | `style` | `StateStyle<PopoverPopupState, StyleProp<ViewStyle>>` | no | — | Popup style: a value or a function of popup state. |
 | `children` | `ReactNode` | no | — | Popup content. |
@@ -227,7 +227,7 @@ outside a root and while closed.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never closes and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the close host. |
 | `style` | `StateStyle<PopoverCloseState, StyleProp<ViewStyle>>` | no | — | Close style: a value or a function of close state. |
 | `children` | `ReactNode` | no | — | Button content. |
@@ -263,7 +263,7 @@ import {
 function Info() {
   return (
     <PopoverRoot>
-      <PopoverTrigger accessibilityLabel="Saved details">
+      <PopoverTrigger aria-label="Saved details">
         <Text>Info</Text>
       </PopoverTrigger>
       <PopoverPositioner>
@@ -292,7 +292,7 @@ function Help() {
   const [open, setOpen] = useState(false);
   return (
     <PopoverRoot open={open} onOpenChange={setOpen}>
-      <PopoverTrigger accessibilityLabel="Help">
+      <PopoverTrigger aria-label="Help">
         <Text>Help</Text>
       </PopoverTrigger>
       <PopoverPositioner side="top">
@@ -323,17 +323,17 @@ import {
 function CompoundPopover() {
   return (
     <PopoverRoot modal>
-      <PopoverTrigger accessibilityLabel="Open profile popover">
+      <PopoverTrigger aria-label="Open profile popover">
         <Text>Profile</Text>
       </PopoverTrigger>
       <PopoverPortal>
         <PopoverPositioner side="bottom" align="start">
           <PopoverPopup
-            accessibilityLabel="Profile"
+            aria-label="Profile"
             style={{ padding: 12 }}
           >
             <PopoverTitle>Ada Lovelace</PopoverTitle>
-            <PopoverClose accessibilityLabel="Close profile">
+            <PopoverClose aria-label="Close profile">
               <Text>Close</Text>
             </PopoverClose>
           </PopoverPopup>

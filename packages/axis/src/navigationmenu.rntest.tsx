@@ -25,7 +25,7 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
   return (
     <NavigationMenuRoot testID="nav" onOpenValueChange={onOpen}>
       <NavigationMenuItem value="products">
-        <NavigationMenuTrigger accessibilityLabel="Products trigger">
+        <NavigationMenuTrigger aria-label="Products trigger">
           <RNText>Products</RNText>
         </NavigationMenuTrigger>
         <NavigationMenuPanel testID="products-panel">
@@ -33,7 +33,7 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
         </NavigationMenuPanel>
       </NavigationMenuItem>
       <NavigationMenuItem value="company">
-        <NavigationMenuTrigger accessibilityLabel="Company trigger">
+        <NavigationMenuTrigger aria-label="Company trigger">
           <RNText>Company</RNText>
         </NavigationMenuTrigger>
         <NavigationMenuPanel testID="company-panel">
@@ -85,7 +85,7 @@ describe("NavigationMenuRoot on React Native", () => {
         onOpenValueChange={(v) => seen.push(v)}
       >
         <NavigationMenuItem value="products">
-          <NavigationMenuTrigger accessibilityLabel="Products trigger">
+          <NavigationMenuTrigger aria-label="Products trigger">
             <RNText>Products</RNText>
           </NavigationMenuTrigger>
           <NavigationMenuPanel testID="products-panel">
@@ -105,7 +105,7 @@ describe("NavigationMenuRoot on React Native", () => {
     await render(
       <NavigationMenuRoot>
         <NavigationMenuItem value="products">
-          <NavigationMenuTrigger accessibilityLabel="Products" disabled>
+          <NavigationMenuTrigger aria-label="Products" disabled>
             <RNText>Products</RNText>
           </NavigationMenuTrigger>
           <NavigationMenuPanel testID="products-panel">
@@ -120,7 +120,7 @@ describe("NavigationMenuRoot on React Native", () => {
 
   it("renders triggers inert outside a menu", async () => {
     await render(
-      <NavigationMenuTrigger accessibilityLabel="Orphan" testID="orphan">
+      <NavigationMenuTrigger aria-label="Orphan" testID="orphan">
         <RNText>Orphan</RNText>
       </NavigationMenuTrigger>,
     );
@@ -132,7 +132,7 @@ describe("NavigationMenuRoot on React Native", () => {
   it("renders nothing for items outside a menu", async () => {
     await render(
       <NavigationMenuItem value="orphan">
-        <NavigationMenuTrigger accessibilityLabel="Orphan">
+        <NavigationMenuTrigger aria-label="Orphan">
           <RNText>Orphan</RNText>
         </NavigationMenuTrigger>
         <NavigationMenuPanel testID="orphan-panel">
@@ -148,7 +148,7 @@ describe("NavigationMenuRoot on React Native", () => {
     await render(
       <NavigationMenuRoot testID="nav" openValue="company">
         <NavigationMenuItem value="products">
-          <NavigationMenuTrigger accessibilityLabel="Products trigger">
+          <NavigationMenuTrigger aria-label="Products trigger">
             <RNText>Products</RNText>
           </NavigationMenuTrigger>
           <NavigationMenuPanel testID="products-panel">
@@ -156,7 +156,7 @@ describe("NavigationMenuRoot on React Native", () => {
           </NavigationMenuPanel>
         </NavigationMenuItem>
         <NavigationMenuItem value="company">
-          <NavigationMenuTrigger accessibilityLabel="Company trigger">
+          <NavigationMenuTrigger aria-label="Company trigger">
             <RNText>Company</RNText>
           </NavigationMenuTrigger>
           <NavigationMenuPanel testID="company-panel">
@@ -174,7 +174,7 @@ describe("NavigationMenuRoot on React Native", () => {
     await render(
       <NavigationMenuRoot ref={ref}>
         <NavigationMenuItem value="products">
-          <NavigationMenuTrigger accessibilityLabel="Products trigger">
+          <NavigationMenuTrigger aria-label="Products trigger">
             <RNText>Products</RNText>
           </NavigationMenuTrigger>
           <NavigationMenuPanel testID="products-panel">

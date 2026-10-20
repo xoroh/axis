@@ -88,7 +88,7 @@ export const DisplayDemo: Demo = {
             System Label
           </Label>
           <Text
-            accessibilityLabel="Demo text"
+            aria-label="Demo text"
             style={{ fontSize: 18, fontWeight: "700", color: theme.text }}
           >
             Axis Primitive Typography
@@ -111,7 +111,7 @@ export const DisplayDemo: Demo = {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
             <AvatarRoot>
               <AvatarImage
-                accessibilityLabel="Demo avatar"
+                aria-label="Demo avatar"
                 source={{
                   uri: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
                 }}
@@ -139,7 +139,7 @@ export const DisplayDemo: Demo = {
             </AvatarRoot>
             <AvatarRoot>
               <AvatarImage
-                accessibilityLabel="Demo broken avatar"
+                aria-label="Demo broken avatar"
                 source={{ uri: "https://example.com/missing.png" }}
                 style={{ width: 48, height: 48, borderRadius: 24 }}
               />
@@ -201,7 +201,7 @@ export const DisplayDemo: Demo = {
               </Text>
             </View>
             <ProgressRoot
-              accessibilityLabel="Demo progress"
+              aria-label="Demo progress"
               value={65}
               style={{
                 gap: 6,
@@ -248,7 +248,7 @@ export const DisplayDemo: Demo = {
           </View>
 
           <View style={{ gap: 6 }}>
-            <MeterRoot accessibilityLabel="Demo meter" value={85}>
+            <MeterRoot aria-label="Demo meter" value={85}>
               <View
                 style={{
                   flexDirection: "row",
@@ -348,7 +348,7 @@ export const DisplayDemo: Demo = {
             Toolbar & TableRoot
           </Text>
           <ToolbarRoot
-            accessibilityLabel="Demo toolbar"
+            aria-label="Demo toolbar"
             style={{
               flexDirection: "row",
               gap: 8,
@@ -406,7 +406,7 @@ export const DisplayDemo: Demo = {
           </ToolbarRoot>
 
           <TableRoot
-            accessibilityLabel="Demo table"
+            aria-label="Demo table"
             style={{
               borderRadius: 8,
               borderWidth: 1,

@@ -105,7 +105,7 @@ A pending show cancels when a dismiss lands first — no ghost tips.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: long-press never toggles and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the anchor. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the anchor. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `delayLongPress` | `number` | no | — | Long-press duration in milliseconds, forwarded to the host `Pressable`. Absent means the platform default. |
 | `style` | `StateStyle<TooltipTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
@@ -149,7 +149,7 @@ outside a root and while hidden.
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the tip. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the tip. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the tip `View`. |
 | `style` | `StateStyle<TooltipPopupState, StyleProp<ViewStyle>>` | no | — | Tip style: a value or a function of popup state. |
 | `children` | `ReactNode` | no | — | Tip content. |
@@ -185,7 +185,7 @@ import {
 function Hint() {
   return (
     <TooltipRoot>
-      <TooltipTrigger accessibilityLabel="Saved details">
+      <TooltipTrigger aria-label="Saved details">
         <Text>Info</Text>
       </TooltipTrigger>
       <TooltipPositioner>
@@ -214,7 +214,7 @@ function ControlledHint() {
   const [open, setOpen] = useState(false);
   return (
     <TooltipRoot open={open} onOpenChange={setOpen}>
-      <TooltipTrigger accessibilityLabel="Row help">
+      <TooltipTrigger aria-label="Row help">
         <Text>Help</Text>
       </TooltipTrigger>
       <TooltipPositioner side="top">
@@ -245,12 +245,12 @@ function CompoundHint() {
   return (
     <TooltipProvider delay={100}>
       <TooltipRoot>
-        <TooltipTrigger accessibilityLabel="More info">
+        <TooltipTrigger aria-label="More info">
           <Text>Info</Text>
         </TooltipTrigger>
         <TooltipPortal>
           <TooltipPositioner side="top">
-            <TooltipPopup accessibilityLabel="Details">
+            <TooltipPopup aria-label="Details">
               <Text>Details here</Text>
             </TooltipPopup>
           </TooltipPositioner>

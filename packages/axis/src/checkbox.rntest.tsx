@@ -21,7 +21,7 @@ async function press(testID: string) {
 describe("Checkbox on React Native", () => {
   it("renders unchecked with the checkbox role and no indicator", async () => {
     await render(
-      <CheckboxRoot testID="cb" accessibilityLabel="Accept terms">
+      <CheckboxRoot testID="cb" aria-label="Accept terms">
         <CheckboxIndicator testID="cb-mark" />
       </CheckboxRoot>,
     );
@@ -58,7 +58,7 @@ describe("Checkbox on React Native", () => {
 
   it("indeterminate announces mixed and mounts the indicator with state", async () => {
     await render(
-      <CheckboxRoot testID="cb" indeterminate accessibilityLabel="All items">
+      <CheckboxRoot testID="cb" indeterminate aria-label="All items">
         <CheckboxIndicator testID="cb-mark" />
       </CheckboxRoot>,
     );
@@ -96,7 +96,7 @@ describe("Checkbox on React Native", () => {
     await render(
       <CheckboxRoot
         testID="cb"
-        accessibilityLabel="Accept terms"
+        aria-label="Accept terms"
         readOnly
         onCheckedChange={(v) => seen.push(v)}
       >
@@ -133,17 +133,13 @@ describe("Checkbox on React Native", () => {
     const hidden = screen.getByTestId("cb-mark", {
       includeHiddenElements: true,
     }).props;
-    expect(hidden.accessibilityElementsHidden).toBe(true);
-    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
+    // ADR-112 aria-only: the indicator sets aria-hidden alone.
     expect(hidden["aria-hidden"]).toBe(true);
+    expect(hidden.accessibilityElementsHidden).toBeUndefined();
+    expect(hidden.importantForAccessibility).toBeUndefined();
     await press("cb");
     // Checked: visible and exposed again.
-    expect(
-      screen.getByTestId("cb-mark").props.accessibilityElementsHidden,
-    ).toBe(false);
-    expect(screen.getByTestId("cb-mark").props.importantForAccessibility).toBe(
-      "auto",
-    );
+    expect(screen.getByTestId("cb-mark").props["aria-hidden"]).toBe(false);
     expect(screen.getByTestId("cb-mark").props["aria-hidden"]).toBe(false);
   });
 

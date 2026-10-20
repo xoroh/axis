@@ -122,7 +122,7 @@ never fire — the dialog is blocking by construction.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | value or function of `{ open, disabled }` | no | — | Trigger style, caller-provided. |
 | `children` | `ReactNode` | no | — | Trigger content. |
@@ -147,7 +147,7 @@ never fire — the dialog is blocking by construction.
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the dialog surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the dialog surface. |
 | `testID` | `string` | no | — | Test identifier; the popup carries it, the backdrop carries `<testID>-scrim`. |
 | `style` | value or function of `{ open }` | no | — | Surface style, caller-provided. |
 | `children` | `ReactNode` | no | — | Surface content. |
@@ -172,7 +172,7 @@ never fire — the dialog is blocking by construction.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never closes and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | value or function of `{ disabled }` | no | — | Button style, caller-provided. |
 | `children` | `ReactNode` | no | — | Button content. |
@@ -202,7 +202,7 @@ function DeleteConfirm() {
         <AlertDialogBackdrop testID="delete-scrim" />
         <AlertDialogPopup
           testID="delete"
-          accessibilityLabel="Delete confirmation"
+          aria-label="Delete confirmation"
         >
           <AlertDialogTitle>Delete this item?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -242,7 +242,7 @@ function ControlledConfirm() {
       <AlertDialogPortal>
         <AlertDialogPopup
           testID="discard"
-          accessibilityLabel="Discard confirmation"
+          aria-label="Discard confirmation"
         >
           <AlertDialogTitle>Discard changes?</AlertDialogTitle>
           <AlertDialogClose initialFocus>

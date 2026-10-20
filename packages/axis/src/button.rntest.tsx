@@ -34,9 +34,7 @@ describe("Button on React Native", () => {
   it("press fires onPress once", async () => {
     let calls = 0;
     await render(
-      <Button testID="btn" onPress={() => (calls += 1)}>
-        <Text>Save</Text>
-      </Button>,
+      <Button testID="btn" onPress={() => (calls += 1)}><Text>Save</Text></Button>,
     );
     await press("btn");
     expect(calls).toBe(1);
@@ -92,9 +90,30 @@ describe("Button on React Native", () => {
     });
   });
 
-  it("accessibilityLabel query works", async () => {
+  it("aria-label query works and slot receives ADR-112 aria props", async () => {
+    let capturedProps: any;
     await render(
-      <Button testID="btn" accessibilityLabel="Save changes">
+      <Button
+        testID="btn"
+        aria-label="Save changes"
+        render={(props) => {
+          capturedProps = props;
+          return null;
+        }}
+      >
+        <Text>Save</Text>
+      </Button>,
+    );
+    expect(capturedProps.role).toBe("button");
+    expect(capturedProps["aria-label"]).toBe("Save changes");
+    expect(capturedProps["aria-disabled"]).toBe(false);
+    expect(capturedProps["aria-busy"]).toBe(false);
+    expect(capturedProps.accessibilityRole).toBeUndefined();
+    expect(capturedProps.accessibilityState).toBeUndefined();
+
+    // Default host rendering resolves getByLabelText via RN normalizer
+    await render(
+      <Button testID="btn-host" aria-label="Save changes">
         <Text>Save</Text>
       </Button>,
     );

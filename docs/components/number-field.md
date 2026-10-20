@@ -111,7 +111,7 @@ function Quantity() {
         <NumberFieldDecrement>
           <Text>-</Text>
         </NumberFieldDecrement>
-        <NumberFieldInput accessibilityLabel="Quantity" />
+        <NumberFieldInput aria-label="Quantity" />
         <NumberFieldIncrement>
           <Text>+</Text>
         </NumberFieldIncrement>
@@ -138,7 +138,7 @@ function Price() {
       locale="de-DE"
     >
       <NumberFieldGroup>
-        <NumberFieldInput accessibilityLabel="Price" />
+        <NumberFieldInput aria-label="Price" />
       </NumberFieldGroup>
     </NumberFieldRoot>
   );

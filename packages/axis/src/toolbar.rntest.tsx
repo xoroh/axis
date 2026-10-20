@@ -35,11 +35,11 @@ async function press(testID: string) {
 describe("ToolbarRoot on React Native", () => {
   it("renders children with the toolbar role", async () => {
     await render(
-      <ToolbarRoot testID="tb" accessibilityLabel="Formatting">
+      <ToolbarRoot testID="tb" aria-label="Formatting">
         <Text>Bold</Text>
       </ToolbarRoot>,
     );
-    expect(screen.getByTestId("tb").props.accessibilityRole).toBe("toolbar");
+    expect(screen.getByTestId("tb").props.role).toBe("toolbar");
     expect(screen.getByLabelText("Formatting")).toBeTruthy();
     expect(screen.getByText("Bold")).toBeTruthy();
   });
@@ -72,9 +72,7 @@ describe("ToolbarRoot on React Native", () => {
         </Pressable>
       </ToolbarRoot>,
     );
-    expect(screen.getByTestId("tb").props.accessibilityState).toMatchObject({
-      disabled: true,
-    });
+    expect(screen.getByTestId("tb").props["aria-disabled"]).toBe(true);
     expect(screen.getByTestId("tb").props.onPress).toBeUndefined();
     await press("inner");
     expect(calls).toEqual([1]);
@@ -160,7 +158,7 @@ describe("Toolbar parts on React Native", () => {
         </ToolbarLink>
       </ToolbarRoot>,
     );
-    expect(screen.getByTestId("tb-link").props.accessibilityRole).toBe("link");
+    expect(screen.getByTestId("tb-link").props.role).toBe("link");
     await press("tb-link");
     expect(calls).toBe(1);
   });
@@ -175,8 +173,8 @@ describe("Toolbar parts on React Native", () => {
     );
     expect(screen.getByText("G")).toBeTruthy();
     expect(
-      screen.getByTestId("tb-group").props.accessibilityState,
-    ).toMatchObject({ disabled: true });
+      screen.getByTestId("tb-group").props["aria-disabled"],
+    ).toBe(true);
   });
 
   it("input commits value changes", async () => {

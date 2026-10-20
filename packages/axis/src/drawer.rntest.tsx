@@ -156,7 +156,7 @@ function Shell({
       </DrawerTrigger>
       <DrawerPortal testID="drawer-portal">
         <DrawerBackdrop testID="drawer-scrim" />
-        <DrawerPopup testID="drawer" accessibilityLabel="App navigation">
+        <DrawerPopup testID="drawer" aria-label="App navigation">
           <DrawerHandle testID="drawer-handle" />
           <DrawerTitle>Navigation</DrawerTitle>
           <DrawerDescription>Destinations</DrawerDescription>
@@ -285,7 +285,7 @@ describe("Drawer compound parts on React Native", () => {
             <DrawerBackdrop testID="drawer-scrim" />
             <DrawerPopup
               testID="drawer"
-              accessibilityLabel="App navigation"
+              aria-label="App navigation"
               ref={(node) => {
                 if (node) {
                   (node as { focus?: () => void }).focus = focusSpy;

@@ -120,7 +120,7 @@ export const OverlaysDemo: Demo = {
           </Text>
           <TooltipRoot>
             <TooltipTrigger
-              accessibilityLabel="Demo tip anchor"
+              aria-label="Demo tip anchor"
               style={{ alignSelf: "flex-start" }}
             >
               <Text style={{ color: theme.text }}>Long-press me (tooltip)</Text>
@@ -128,7 +128,7 @@ export const OverlaysDemo: Demo = {
             <TooltipPortal>
               <TooltipPositioner side="top">
                 <TooltipPopup
-                  accessibilityLabel="Hint text"
+                  aria-label="Hint text"
                   style={{
                     backgroundColor: theme.surface,
                     borderRadius: 6,
@@ -148,7 +148,7 @@ export const OverlaysDemo: Demo = {
           <TooltipProvider delay={100}>
             <TooltipRoot>
               <TooltipTrigger
-                accessibilityLabel="Demo compound tip anchor"
+                aria-label="Demo compound tip anchor"
                 style={{ alignSelf: "flex-start" }}
               >
                 <Text style={{ fontSize: 13, color: theme.text }}>
@@ -158,7 +158,7 @@ export const OverlaysDemo: Demo = {
               <TooltipPortal>
                 <TooltipPositioner side="top">
                   <TooltipPopup
-                    accessibilityLabel="Compound hint"
+                    aria-label="Compound hint"
                     style={{
                       backgroundColor: theme.surface,
                       borderRadius: 6,
@@ -179,7 +179,7 @@ export const OverlaysDemo: Demo = {
           </TooltipProvider>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             <Button
-              accessibilityLabel="Open context menu"
+              aria-label="Open context menu"
               onPress={() => setContextMenuOpen(true)}
               style={{
                 paddingVertical: 8,
@@ -215,7 +215,7 @@ export const OverlaysDemo: Demo = {
                   </Text>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel="Close context menu"
+                    aria-label="Close context menu"
                     onPress={() => setContextMenuOpen(false)}
                     style={{
                       marginTop: 8,
@@ -237,7 +237,7 @@ export const OverlaysDemo: Demo = {
                   </Pressable>
                 </View>
               }
-              accessibilityLabel="Demo context menu"
+              aria-label="Demo context menu"
               menuStyle={{
                 minWidth: 180,
                 backgroundColor: theme.surface,
@@ -284,7 +284,7 @@ export const OverlaysDemo: Demo = {
 
           {toastVisible && (
             <ToastRoot
-              accessibilityLabel="Demo toast"
+              aria-label="Demo toast"
               defaultOpen={true}
               style={{
                 paddingVertical: 10,
@@ -306,7 +306,7 @@ export const OverlaysDemo: Demo = {
                 ✓ Profile changes saved successfully
               </Text>
               <Button
-                accessibilityLabel="Dismiss toast"
+                aria-label="Dismiss toast"
                 onPress={() => setToastVisible(false)}
                 style={{ paddingLeft: 12 }}
               >
@@ -343,7 +343,7 @@ export const OverlaysDemo: Demo = {
               onSnapPointChange={setSheetSnap}
             >
               <DrawerTrigger
-                accessibilityLabel="Open bottom sheet"
+                aria-label="Open bottom sheet"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 14,
@@ -363,7 +363,7 @@ export const OverlaysDemo: Demo = {
                 <DrawerBackdrop testID="demo-sheet-scrim" />
                 <DrawerPopup
                   testID="demo-sheet"
-                  accessibilityLabel="Demo filter settings"
+                  aria-label="Demo filter settings"
                   style={{
                     top: 0,
                     backgroundColor: theme.surface,
@@ -381,7 +381,7 @@ export const OverlaysDemo: Demo = {
                     Choose which updates appear in your activity feed.
                   </DrawerDescription>
                   <DrawerClose
-                    accessibilityLabel="Close filter sheet"
+                    aria-label="Close filter sheet"
                     style={{
                       alignSelf: "flex-end",
                       paddingVertical: 8,
@@ -406,7 +406,7 @@ export const OverlaysDemo: Demo = {
               onOpenChange={setDrawerOpen}
             >
               <DrawerTrigger
-                accessibilityLabel="Open Drawer"
+                aria-label="Open Drawer"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 14,
@@ -426,7 +426,7 @@ export const OverlaysDemo: Demo = {
                 <DrawerBackdrop testID="demo-drawer-scrim" />
                 <DrawerPopup
                   testID="demo-drawer"
-                  accessibilityLabel="Demo drawer"
+                  aria-label="Demo drawer"
                   style={{
                     width: 320,
                     maxWidth: "85%",
@@ -443,7 +443,7 @@ export const OverlaysDemo: Demo = {
                     Move between sections of the example app.
                   </DrawerDescription>
                   <DrawerClose
-                    accessibilityLabel="Close demo drawer"
+                    aria-label="Close demo drawer"
                     style={{
                       alignSelf: "flex-start",
                       paddingVertical: 8,
@@ -464,7 +464,7 @@ export const OverlaysDemo: Demo = {
 
             <AlertDialogRoot open={alertOpen} onOpenChange={setAlertOpen}>
               <AlertDialogTrigger
-                accessibilityLabel="Open Alert Dialog"
+                aria-label="Open Alert Dialog"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 14,
@@ -482,7 +482,7 @@ export const OverlaysDemo: Demo = {
                 <AlertDialogBackdrop testID="demo-alert-scrim" />
                 <AlertDialogPopup
                   testID="demo-alert"
-                  accessibilityLabel="Discard changes dialog"
+                  aria-label="Discard changes dialog"
                   style={{
                     position: "absolute",
                     top: "30%",
@@ -510,7 +510,7 @@ export const OverlaysDemo: Demo = {
                   </AlertDialogClose>
                   <AlertDialogClose testID="demo-alert-confirm">
                     <Button
-                      accessibilityLabel="Confirm discard"
+                      aria-label="Confirm discard"
                       onPress={() => setAlertOpen(false)}
                       style={{
                         paddingVertical: 6,
@@ -552,7 +552,7 @@ export const OverlaysDemo: Demo = {
           </Text>
           <OverlayRoot>
             <OverlayTrigger
-              accessibilityLabel="Open overlay root demo"
+              aria-label="Open overlay root demo"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 8,
@@ -572,7 +572,7 @@ export const OverlaysDemo: Demo = {
             <OverlayPortal testID="overlay-demo-portal">
               <OverlayBackdrop testID="overlay-demo-backdrop" />
               <OverlayPopup
-                accessibilityLabel="Overlay root demo"
+                aria-label="Overlay root demo"
                 testID="overlay-demo-popup"
                 style={{
                   position: "absolute",
@@ -603,7 +603,7 @@ export const OverlaysDemo: Demo = {
                   through the same root.
                 </Text>
                 <OverlayClose
-                  accessibilityLabel="Close overlay root demo"
+                  aria-label="Close overlay root demo"
                   style={{
                     alignSelf: "flex-end",
                     paddingVertical: 8,
@@ -678,7 +678,7 @@ function QueueDemoButton() {
 
   return (
     <Button
-      accessibilityLabel="Queue a toast"
+      aria-label="Queue a toast"
       onPress={() => {
         toast.add({ message: "Queued system notification" });
       }}

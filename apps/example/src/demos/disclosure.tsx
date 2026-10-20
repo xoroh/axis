@@ -68,7 +68,7 @@ export const DisclosureDemo: Demo = {
             >
               <TabsTrigger
                 value="a"
-                accessibilityLabel="Overview tab"
+                aria-label="Overview tab"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 16,
@@ -88,7 +88,7 @@ export const DisclosureDemo: Demo = {
               </TabsTrigger>
               <TabsTrigger
                 value="b"
-                accessibilityLabel="Settings tab"
+                aria-label="Settings tab"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 16,
@@ -159,7 +159,7 @@ export const DisclosureDemo: Demo = {
             Accordion:
           </Text>
           <AccordionRoot
-            accessibilityLabel="Demo accordion"
+            aria-label="Demo accordion"
             multiple
             defaultValue={["general"]}
             style={{
@@ -194,7 +194,7 @@ export const DisclosureDemo: Demo = {
               <AccordionItem key={itemValue} value={itemValue}>
                 <AccordionHeader>
                   <AccordionTrigger
-                    accessibilityLabel={label}
+                    aria-label={label}
                     render={(props, state) => {
                       const onPress =
                         typeof props.onPress === "function"
@@ -207,7 +207,7 @@ export const DisclosureDemo: Demo = {
                             expanded: state.open,
                             disabled: state.disabled,
                           }}
-                          accessibilityLabel={label}
+                          aria-label={label}
                           disabled={state.disabled}
                           onPress={onPress}
                           style={{
@@ -271,7 +271,7 @@ export const DisclosureDemo: Demo = {
           </Text>
           <CollapsibleRoot defaultOpen style={{ gap: 8 }}>
             <CollapsibleTrigger
-              accessibilityLabel="Toggle more details"
+              aria-label="Toggle more details"
               style={{
                 paddingVertical: 8,
                 paddingHorizontal: 12,

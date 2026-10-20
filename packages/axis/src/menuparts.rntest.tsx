@@ -43,7 +43,7 @@ import {
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
   return (
     <MenuRoot onOpenChange={onOpen}>
-      <MenuTrigger accessibilityLabel="Open menu">
+      <MenuTrigger aria-label="Open menu">
         <RNText>Open</RNText>
       </MenuTrigger>
       <MenuPortal>
@@ -209,7 +209,7 @@ describe("Menu compound parts on React Native", () => {
             render={
               <Pressable
                 testID="custom-trigger"
-                accessibilityLabel="Custom open"
+                aria-label="Custom open"
               />
             }
           />
@@ -302,7 +302,7 @@ describe("Menu compound parts on React Native", () => {
     await render(
       <PortalHost>
         <MenuTrigger
-          accessibilityLabel="Orphan trigger"
+          aria-label="Orphan trigger"
           testID="orphan-trigger"
         >
           <RNText>Orphan</RNText>
@@ -417,7 +417,7 @@ describe("Menu group, link, arrow, and non-modal parts", () => {
     await render(
       <PortalHost testID="host">
         <MenuRoot modal={false} onOpenChange={(v) => seen.push(v)}>
-          <MenuTrigger accessibilityLabel="Open menu">
+          <MenuTrigger aria-label="Open menu">
             <RNText>Open</RNText>
           </MenuTrigger>
           <MenuPortal>
@@ -737,7 +737,7 @@ describe("Menu checkbox and radio items", () => {
                 <MenuSubmenuRoot value="sub1">
                   <MenuSubmenuTrigger
                     testID="sub1-trigger"
-                    accessibilityLabel="Submenu 1"
+                    aria-label="Submenu 1"
                   >
                     <RNText>Submenu 1</RNText>
                   </MenuSubmenuTrigger>
@@ -748,7 +748,7 @@ describe("Menu checkbox and radio items", () => {
                     <MenuSubmenuRoot value="sub2">
                       <MenuSubmenuTrigger
                         testID="sub2-trigger"
-                        accessibilityLabel="Submenu 2"
+                        aria-label="Submenu 2"
                       >
                         <RNText>Submenu 2</RNText>
                       </MenuSubmenuTrigger>

@@ -25,7 +25,7 @@ async function pressAction() {
 describe("ToastRoot on React Native", () => {
   it("renders null when closed", async () => {
     await render(
-      <ToastRoot testID="toast" accessibilityLabel="Saved">
+      <ToastRoot testID="toast" aria-label="Saved">
         Saved
       </ToastRoot>,
     );
@@ -35,15 +35,13 @@ describe("ToastRoot on React Native", () => {
 
   it("shows content with a polite live region when open", async () => {
     await render(
-      <ToastRoot testID="toast" defaultOpen accessibilityLabel="Saved">
+      <ToastRoot testID="toast" defaultOpen aria-label="Saved">
         Saved
       </ToastRoot>,
     );
     expect(screen.getByText("Saved")).toBeTruthy();
     expect(screen.getByLabelText("Saved")).toBeTruthy();
-    expect(screen.getByTestId("toast").props.accessibilityLiveRegion).toBe(
-      "polite",
-    );
+    expect(screen.getByTestId("toast").props["aria-live"]).toBe("polite");
   });
 
   it("auto-dismisses after duration via onOpenChange(false)", async () => {
@@ -129,7 +127,7 @@ describe("ToastRoot ref forwarding", () => {
   it("forwards a ref to the host element", async () => {
     const ref = createRef<ElementRef<typeof View>>();
     await render(
-      <ToastRoot ref={ref} testID="t" defaultOpen accessibilityLabel="Saved" />,
+      <ToastRoot ref={ref} testID="t" defaultOpen aria-label="Saved" />,
     );
     expect(ref.current).toBeTruthy();
   });

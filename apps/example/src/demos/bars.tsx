@@ -59,7 +59,7 @@ export const BarsDemo: Demo = {
           >
             <NavigationMenuItem value="products">
               <NavigationMenuTrigger
-                accessibilityLabel="Products trigger"
+                aria-label="Products trigger"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 12,
@@ -116,7 +116,7 @@ export const BarsDemo: Demo = {
           >
             <MenuRoot value="file" modal={false}>
               <MenuTrigger
-                accessibilityLabel="File trigger"
+                aria-label="File trigger"
                 style={{
                   paddingVertical: 6,
                   paddingHorizontal: 12,

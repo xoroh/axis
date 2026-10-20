@@ -22,9 +22,9 @@ async function press(testID: string) {
 describe("CheckboxGroup on React Native", () => {
   it("renders a group with unchecked checkbox items", async () => {
     await render(
-      <CheckboxGroup testID="cg" accessibilityLabel="Toppings">
-        <CheckboxRoot value="a" testID="a" accessibilityLabel="A" />
-        <CheckboxRoot value="b" testID="b" accessibilityLabel="B" />
+      <CheckboxGroup testID="cg" aria-label="Toppings">
+        <CheckboxRoot value="a" testID="a" aria-label="A" />
+        <CheckboxRoot value="b" testID="b" aria-label="B" />
       </CheckboxGroup>,
     );
     expect(screen.getByRole("group")).toBeTruthy();

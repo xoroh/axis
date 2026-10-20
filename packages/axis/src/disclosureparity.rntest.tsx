@@ -78,7 +78,7 @@ describe("render composition: groups", () => {
       <CheckboxGroup onValueChange={(v) => seen.push([...v])}>
         <CheckboxRoot
           value="a"
-          accessibilityLabel="A"
+          aria-label="A"
           render={<Pressable testID="sub" />}
         />
       </CheckboxGroup>,
@@ -94,7 +94,7 @@ describe("render composition: groups", () => {
         defaultValue={["a"]}
         style={(s) => ({ opacity: s.value.includes("a") ? 1 : 0 })}
       >
-        <CheckboxRoot value="a" accessibilityLabel="A" />
+        <CheckboxRoot value="a" aria-label="A" />
       </CheckboxGroup>,
     );
     expect(screen.getByTestId("g").props.style).toMatchObject({ opacity: 1 });
@@ -105,7 +105,7 @@ describe("render composition: groups", () => {
       <RadioGroup defaultValue="a">
         <RadioRoot
           value="a"
-          accessibilityLabel="A"
+          aria-label="A"
           render={(_props, state) => (
             <Text testID="st">{state.checked ? "yes" : "no"}</Text>
           )}
@@ -121,7 +121,7 @@ describe("render composition: groups", () => {
       <ToggleGroup onValueChange={(v) => seen.push([...v])}>
         <Toggle
           value="a"
-          accessibilityLabel="A"
+          aria-label="A"
           render={<Pressable testID="sub" />}
         />
       </ToggleGroup>,
@@ -159,7 +159,7 @@ describe("render composition: disclosure", () => {
     await render(
       <CollapsibleRoot onOpenChange={(v) => seen.push(v)}>
         <CollapsibleTrigger
-          accessibilityLabel="More"
+          aria-label="More"
           render={<Pressable testID="sub" />}
         >
           <Text>More</Text>
@@ -180,7 +180,7 @@ describe("render composition: disclosure", () => {
         <TabsList>
           <TabsTrigger
             value="a"
-            accessibilityLabel="A"
+            aria-label="A"
             render={(_props, state) => (
               <Text testID="st">{state.selected ? "on" : "off"}</Text>
             )}
@@ -204,7 +204,7 @@ describe("render composition: lists", () => {
         <SelectRoot defaultOpen onValueChange={(v) => seen.push(v)}>
           <SelectItem
             value="a"
-            accessibilityLabel="A"
+            aria-label="A"
             render={<Pressable testID="sub" />}
           >
             <Text>Alpha</Text>
@@ -263,7 +263,7 @@ describe("render composition: overlays", () => {
             <AlertDialogBackdrop testID="ad-scrim" />
             <AlertDialogPopup
               testID="ad"
-              accessibilityLabel="Sure?"
+              aria-label="Sure?"
               render={<View testID="sub">{null}</View>}
             >
               <AlertDialogTitle>Sure?</AlertDialogTitle>
@@ -360,12 +360,12 @@ describe("render composition: overlays", () => {
       <PortalHost>
         <DropdownMenuRoot onOpenChange={(v) => seen.push(v)}>
           <DropdownMenuTrigger
-            accessibilityLabel="Open"
+            aria-label="Open"
             render={<Pressable testID="sub" />}
           >
             <Text>Open</Text>
           </DropdownMenuTrigger>
-          <DropdownMenuItem value="a" accessibilityLabel="A">
+          <DropdownMenuItem value="a" aria-label="A">
             <Text>Alpha</Text>
           </DropdownMenuItem>
         </DropdownMenuRoot>
@@ -380,12 +380,12 @@ describe("render composition: overlays", () => {
     await render(
       <PortalHost>
         <DropdownMenuRoot defaultOpen>
-          <DropdownMenuTrigger accessibilityLabel="Open">
+          <DropdownMenuTrigger aria-label="Open">
             <Text>Open</Text>
           </DropdownMenuTrigger>
           <DropdownMenuSub value="more">
             <DropdownMenuSubTrigger
-              accessibilityLabel="More"
+              aria-label="More"
               render={(props, state) => (
                 <Pressable
                   testID="subtrig"
@@ -398,7 +398,7 @@ describe("render composition: overlays", () => {
               <Text>More</Text>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent testID="subpanel">
-              <DropdownMenuItem value="a" accessibilityLabel="A">
+              <DropdownMenuItem value="a" aria-label="A">
                 <Text>Alpha</Text>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
@@ -422,7 +422,7 @@ describe("render composition: bars and structure", () => {
         )}
       >
         <MenuRoot value="file">
-          <MenuTrigger accessibilityLabel="File">
+          <MenuTrigger aria-label="File">
             <Text>File</Text>
           </MenuTrigger>
         </MenuRoot>
@@ -437,7 +437,7 @@ describe("render composition: bars and structure", () => {
       <NavigationMenuRoot onOpenValueChange={(v) => seen.push(v)}>
         <NavigationMenuItem value="docs">
           <NavigationMenuTrigger
-            accessibilityLabel="Docs"
+            aria-label="Docs"
             render={<Pressable testID="sub" />}
           >
             <Text>Docs</Text>

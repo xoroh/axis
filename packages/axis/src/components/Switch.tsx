@@ -13,60 +13,49 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * SwitchRoot — an unstyled on/off control with a thumb part.
+ * Switch — an unstyled binary toggle built on a disclosure pattern.
  *
- * Structure only: a `Pressable` row carrying the switch role and
- * state. No default visuals — every visual value (`style`) is
- * caller-provided; the track is caller composition (a plain `View`)
- * and the thumb is the `SwitchThumb` part, which reads root state
- * for function styles. State follows the
- * `useControllableState` pattern with Base UI names: `checked` (+
- * `onCheckedChange`) for controlled use, `defaultChecked` for
- * uncontrolled.
+ * Compound anatomy:
  *
- * One clean current API (owner no-compat rule): no aliases, no
- * warn-once shims. Nothing was published, so there is nobody to
- * migrate.
+ *   <SwitchRoot>
+ *     <SwitchThumb />
+ *   </SwitchRoot>
+ *
+ * Structure only: a `Pressable` host element with the `switch` role and
+ * state (`checked`, `disabled`), carrying a thumb `View` whose position
+ * and styling are caller-controlled via state-driven styles. No default
+ * track dimensions, thumb sizes, or colors are imposed — every visual
+ * value is caller-provided. State follows the `useControllableState`
+ * pattern: `checked` (+ `onCheckedChange`) for controlled use,
+ * `defaultChecked` for uncontrolled.
+ *
+ * ADR-112 aria-only: the root part sets accessibility state, role, and
+ * value ONLY through `aria-*` props and `role` (`role="switch"`,
+ * `aria-checked`, `aria-disabled`, `aria-valuetext`). Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
+ *
+ * Compound export (Base UI parity): `SwitchRoot` and `SwitchThumb` are
+ * exported standalone and as `Switch.Root` / `Switch.Thumb`.
  */
 
 export type SwitchRootState = {
-  /** Whether the switch is currently on. */
+  /** Current state of the switch. */
   checked: boolean;
-  /** Whether the switch is currently disabled. */
+  /** Whether the switch is disabled. */
   disabled: boolean;
-  /**
-   * Whether the switch is read-only. Default `false`. Focusable
-   * and announced like an enabled switch, but presses do not change
-   * state (distinct from `disabled` — React Native maps no readonly
-   * key, so the announcement is the normal switch state).
-   */
+  /** Whether the switch is read-only. */
   readOnly: boolean;
 };
 
-export type SwitchThumbState = {
-  /** Whether the switch is currently on. */
+export type SwitchThumbState = SwitchRootState;
+
+export type SwitchDisclosure = {
   checked: boolean;
-  /** Whether the switch is currently disabled. */
   disabled: boolean;
-  /** Whether the switch is read-only (presses do not change state). */
   readOnly: boolean;
 };
 
-export type SwitchThumbProps = {
-  testID?: string;
-  /** Thumb style: value or function of thumb state, caller-provided. */
-  style?: StateStyle<SwitchThumbState, StyleProp<ViewStyle>>;
-  /** Thumb content. */
-  children?: ReactNode;
-  /**
-   * Element or function substitution (Base UI parity): an element is
-   * cloned with the part props merged under its own; a function
-   * receives `(props, state)`.
-   */
-  render?: RenderProp<SwitchThumbState, SlotProps>;
-  /** Forwarded to the thumb `View` host element. */
-  ref?: Ref<ElementRef<typeof View>>;
-};
+export const SwitchDisclosureContext =
+  createContext<SwitchDisclosure | null>(null);
 
 export type SwitchRootProps = {
   /** Controlled state. Wins over `defaultChecked` when defined. */
@@ -81,14 +70,18 @@ export type SwitchRootProps = {
    * Read-only: focusable and announced like an enabled switch, but
    * presses do not change state and no callbacks fire. Default
    * `false`. Distinct from `disabled` (which blocks interaction and
-   * announces disabled) — React Native maps no readonly key, so the
-   * announcement is the normal switch state.
+   * announces disabled).
    */
   readOnly?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  /** Native labelled-by association where the platform supports it. */
-  accessibilityLabelledBy?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
+  /**
+   * Value text announcement (controls-D11, ADR-112). Defaults to "on"
+   * when checked and "off" when unchecked.
+   */
+  "aria-valuetext"?: string;
   testID?: string;
   /** Value or function of switch state, caller-provided. */
   style?: StateStyle<SwitchRootState, StyleProp<ViewStyle>>;
@@ -109,8 +102,7 @@ export type SwitchRootProps = {
  * Assign one value to every ref in the list. Inline here (not imported)
  * deliberately: the shared `mergeRefs` composition has no approved
  * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
+ * tested composition until its transfer gate passes.
  */
 function assignRef(
   ref: SwitchRootProps["ref"],
@@ -130,27 +122,15 @@ function assignRef(
   }
 }
 
-type SwitchDisclosure = {
-  checked: boolean;
-  disabled: boolean;
-  readOnly: boolean;
-};
-
-/**
- * Shared switch state for the thumb. Internal to this module (not
- * exported): the thumb reads it to style from; outside a root it
- * renders a plain `View` with default (off/enabled) state.
- */
-const SwitchDisclosureContext = createContext<SwitchDisclosure | null>(null);
-
 export function SwitchRoot({
   checked,
   defaultChecked = false,
   onCheckedChange,
   disabled = false,
   readOnly = false,
-  accessibilityLabel,
-  accessibilityLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-valuetext": ariaValueText,
   testID,
   style,
   render,
@@ -168,9 +148,6 @@ export function SwitchRoot({
     setOn((previous) => !(previous ?? false));
   }, [disabled, readOnly, setOn]);
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof Pressable> | null) => {
       assignRef(ref, node);
@@ -178,31 +155,35 @@ export function SwitchRoot({
     [ref],
   );
 
+  const isChecked = on ?? false;
   const state: SwitchRootState = {
-    checked: on ?? false,
+    checked: isChecked,
     disabled,
     readOnly,
   };
   const disclosure: SwitchDisclosure = {
-    checked: on ?? false,
+    checked: isChecked,
     disabled,
     readOnly,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "switch",
-      accessibilityState: { checked: on ?? false, disabled },
-      accessibilityLabel,
-      accessibilityLabelledBy,
-      testID,
-      disabled,
-      onPress: toggle,
-      style: resolveStyle(style, state),
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const valueText = ariaValueText ?? (isChecked ? "on" : "off");
+
+  const hostProps = {
+    role: "switch" as const,
+    "aria-checked": isChecked,
+    "aria-disabled": disabled,
+    "aria-valuetext": valueText,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    disabled,
+    onPress: toggle,
+    style: resolveStyle(style, state),
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) {
     return (
       <SwitchDisclosureContext.Provider value={disclosure}>
@@ -215,10 +196,12 @@ export function SwitchRoot({
     <SwitchDisclosureContext.Provider value={disclosure}>
       <Pressable
         ref={setHostRef}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: on ?? false, disabled }}
-        accessibilityLabel={accessibilityLabel}
-        accessibilityLabelledBy={accessibilityLabelledBy}
+        role="switch"
+        aria-checked={isChecked}
+        aria-disabled={disabled}
+        aria-valuetext={valueText}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled={disabled}
         onPress={toggle}
@@ -230,6 +213,14 @@ export function SwitchRoot({
   );
 }
 
+export type SwitchThumbProps = {
+  testID?: string;
+  style?: StateStyle<SwitchThumbState, StyleProp<ViewStyle>>;
+  children?: ReactNode;
+  render?: RenderProp<SwitchThumbState, SlotProps>;
+  ref?: Ref<ElementRef<typeof View>>;
+};
+
 export function SwitchThumb({
   testID,
   style,
@@ -238,8 +229,6 @@ export function SwitchThumb({
   ref,
 }: SwitchThumbProps): React.ReactNode {
   const disclosure = useContext(SwitchDisclosureContext);
-  // Outside a root there is no switch state to style from: render a
-  // plain `View` rather than dropping the node silently.
   const state: SwitchThumbState = {
     checked: disclosure?.checked ?? false,
     disabled: disclosure?.disabled ?? false,
@@ -256,8 +245,7 @@ export function SwitchThumb({
         try {
           (ref as { current: unknown }).current = node;
         } catch {
-          // A frozen ref object cannot take the write — leave it
-          // alone rather than failing the render over it.
+          // A frozen ref object cannot take the write
         }
       }
     },
@@ -282,3 +270,8 @@ export function SwitchThumb({
     </View>
   );
 }
+
+export const Switch = Object.assign(SwitchRoot, {
+  Root: SwitchRoot,
+  Thumb: SwitchThumb,
+});

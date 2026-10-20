@@ -129,7 +129,7 @@ press).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<DialogTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content. |
@@ -165,7 +165,7 @@ plain host with no label and no handler — no fake affordance.
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the surface. |
 | `role` | `"dialog" \| "alertdialog"` | no | `"dialog"` | Surface role; AlertDialog passes `"alertdialog"`. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the surface. |
 | `style` | `StateStyle<DialogPopupState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of popup state. |
@@ -201,7 +201,7 @@ outside a root and while closed.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never closes and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the close host. |
 | `style` | `StateStyle<DialogCloseState, StyleProp<ViewStyle>>` | no | — | Close style: a value or a function of close state. |
 | `children` | `ReactNode` | no | — | Button content. |
@@ -232,7 +232,7 @@ function Welcome() {
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup
-          accessibilityLabel="Welcome dialog"
+          aria-label="Welcome dialog"
           style={{ margin: 32, padding: 16 }}
         >
           <DialogTitle>Welcome</DialogTitle>
@@ -265,18 +265,18 @@ function DeleteConfirm() {
   const [open, setOpen] = useState(false);
   return (
       <DialogRoot open={open} onOpenChange={setOpen}>
-        <DialogTrigger accessibilityLabel="Delete item">
+        <DialogTrigger aria-label="Delete item">
           <Text>Delete</Text>
         </DialogTrigger>
         <DialogPortal>
           <DialogBackdrop />
           <DialogPopup
-            accessibilityLabel="Delete confirmation"
+            aria-label="Delete confirmation"
             style={{ margin: 32, padding: 16 }}
           >
             <DialogTitle>Delete this item?</DialogTitle>
             <Text>This cannot be undone.</Text>
-            <DialogClose accessibilityLabel="Confirm delete">
+            <DialogClose aria-label="Confirm delete">
               <Text>Delete</Text>
             </DialogClose>
           </DialogPopup>
@@ -305,18 +305,18 @@ import {
 function CompoundDialog() {
   return (
     <DialogRoot>
-      <DialogTrigger accessibilityLabel="Open settings dialog">
+      <DialogTrigger aria-label="Open settings dialog">
         <Text>Open</Text>
       </DialogTrigger>
       <DialogPortal>
         <DialogBackdrop />
         <DialogPopup
-          accessibilityLabel="Settings"
+          aria-label="Settings"
           style={{ margin: 32, padding: 16 }}
         >
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Adjust your preferences.</DialogDescription>
-          <DialogClose accessibilityLabel="Close settings">
+          <DialogClose aria-label="Close settings">
             <Text>Close</Text>
           </DialogClose>
         </DialogPopup>

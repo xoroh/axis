@@ -599,8 +599,7 @@ export function OverlayPortal({
   const zIndex = 1000 + Math.max(0, overlay.stackIndex) * 10;
 
   // Background isolation lives on the layer: lower layers hide from
-  // assistive tech (`accessibilityElementsHidden`,
-  // `importantForAccessibility="no-hide-descendants"`) and take no
+  // assistive tech (`aria-hidden={true}`) and take no
   // pointer events. The top layer's modal claim
   // (`accessibilityViewIsModal`) sits here so background siblings —
   // triggers included — hide from assistive tech AND from the test
@@ -618,7 +617,7 @@ export function OverlayPortal({
           <View
             testID={testID}
             pointerEvents={overlay.isTop ? "auto" : "box-none"}
-            accessibilityElementsHidden={!overlay.isTop}
+            aria-hidden={!overlay.isTop}
             importantForAccessibility={
               overlay.isTop ? "yes" : "no-hide-descendants"
             }
@@ -669,7 +668,7 @@ export function OverlayBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss",
+        "aria-label": "Dismiss",
         testID,
         onPress: handlePress,
         style: [FULL_FILL_STYLE, resolveStyle(style, state)],
@@ -680,7 +679,7 @@ export function OverlayBackdrop({
 
     return (
       <Pressable
-        accessibilityLabel="Dismiss"
+        aria-label="Dismiss"
         testID={testID}
         onPress={handlePress}
         style={[FULL_FILL_STYLE, resolveStyle(style, state)]}
@@ -712,7 +711,8 @@ export type OverlayPopupState = {
 };
 
 export type OverlayPopupProps = {
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   role?: "dialog" | "alertdialog";
   testID?: string;
   style?: StateStyle<OverlayPopupState, StyleProp<ViewStyle>>;
@@ -732,7 +732,8 @@ export type OverlayPopupProps = {
 };
 
 export function OverlayPopup({
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   role = "dialog",
   testID,
   style,
@@ -814,12 +815,12 @@ export function OverlayPopup({
     {
       accessible: true,
       role,
-      accessibilityRole: role,
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
-      ...(web && modalActive ? { "aria-modal": true } : null),
+      ...(modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
       ...webTabIndexProps(web),
       style: resolveStyle(style, state),
@@ -835,12 +836,12 @@ export function OverlayPopup({
       ref={setPopupRef}
       accessible
       role={role}
-      accessibilityRole={role}
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       onAccessibilityEscape={handleAccessibilityEscape}
       accessibilityViewIsModal={modalActive}
-      {...(web && modalActive ? { "aria-modal": true } : null)}
+      {...(modalActive ? { "aria-modal": true } : null)}
       onKeyDown={handleKeyDown}
       {...webTabIndexProps(web)}
       style={resolveStyle(style, state)}
@@ -857,7 +858,8 @@ export type OverlayTriggerState = {
 
 export type OverlayTriggerProps = {
   disabled?: boolean;
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   style?: StateStyle<OverlayTriggerState, StyleProp<ViewStyle>>;
   children?: ReactNode;
@@ -867,7 +869,8 @@ export type OverlayTriggerProps = {
 
 export function OverlayTrigger({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -899,9 +902,11 @@ export function OverlayTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: handlePress,
@@ -916,9 +921,11 @@ export function OverlayTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={open}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={handlePress}
@@ -935,7 +942,8 @@ export type OverlayCloseState = {
 
 export type OverlayCloseProps = {
   disabled?: boolean;
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   style?: StateStyle<OverlayCloseState, StyleProp<ViewStyle>>;
   children?: ReactNode;
@@ -944,7 +952,8 @@ export type OverlayCloseProps = {
 
 export function OverlayClose({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -962,9 +971,10 @@ export function OverlayClose({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: handlePress,
@@ -977,9 +987,10 @@ export function OverlayClose({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={handlePress}

@@ -33,7 +33,7 @@ export const ButtonDemo: Demo = {
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
             {/* Primary Button */}
             <Button
-              accessibilityLabel="Demo primary button"
+              aria-label="Demo primary button"
               onPress={() => {}}
               style={{
                 paddingVertical: 10,
@@ -55,7 +55,7 @@ export const ButtonDemo: Demo = {
 
             {/* Outline Button */}
             <Button
-              accessibilityLabel="Demo outline button"
+              aria-label="Demo outline button"
               onPress={() => {}}
               style={{
                 paddingVertical: 10,
@@ -79,7 +79,7 @@ export const ButtonDemo: Demo = {
 
             {/* Disabled Button */}
             <Button
-              accessibilityLabel="Disabled demo button"
+              aria-label="Disabled demo button"
               disabled
               style={{
                 paddingVertical: 10,
@@ -104,7 +104,7 @@ export const ButtonDemo: Demo = {
 
             {/* Loading Button */}
             <Button
-              accessibilityLabel="Loading demo button"
+              aria-label="Loading demo button"
               loading
               style={{
                 paddingVertical: 10,

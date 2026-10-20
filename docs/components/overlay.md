@@ -171,7 +171,7 @@ happens — never a throw.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: press never toggles. Inert outside a root. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<OverlayTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content. |
@@ -211,7 +211,7 @@ dismissal path); non-dismissable modal roots render a plain
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the surface. |
 | `role` | `"dialog" \| "alertdialog"` | no | `"dialog"` | Surface role, conveyed as both `role` and `accessibilityRole`. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the surface `View`. |
 | `style` | `StateStyle<OverlayPopupState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of popup state. |
@@ -232,7 +232,7 @@ modal is open in the shared registry — wire it to the app root's
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never closes and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the close host. |
 | `style` | `StateStyle<OverlayCloseState, StyleProp<ViewStyle>>` | no | — | Close style: a value or a function of close state. |
 | `children` | `ReactNode` | no | — | Button content. |
@@ -281,16 +281,16 @@ function App() {
   return (
     <PortalHost>
       <OverlayRoot>
-        <OverlayTrigger accessibilityLabel="Open custom overlay">
+        <OverlayTrigger aria-label="Open custom overlay">
           <Text>Open</Text>
         </OverlayTrigger>
         <OverlayPortal>
           <OverlayBackdrop />
           <OverlayPopup
-            accessibilityLabel="Custom surface"
+            aria-label="Custom surface"
             style={{ margin: 32, padding: 16 }}
           >
-            <OverlayClose accessibilityLabel="Close custom overlay">
+            <OverlayClose aria-label="Close custom overlay">
               <Text>Close</Text>
             </OverlayClose>
           </OverlayPopup>
@@ -321,17 +321,17 @@ function Confirm() {
   const [open, setOpen] = useState(false);
   return (
     <OverlayRoot open={open} onOpenChange={setOpen} dismissable={false}>
-      <OverlayTrigger accessibilityLabel="Delete item">
+      <OverlayTrigger aria-label="Delete item">
         <Text>Delete</Text>
       </OverlayTrigger>
       <OverlayPortal>
         <OverlayBackdrop />
         <OverlayPopup
           role="alertdialog"
-          accessibilityLabel="Delete confirmation"
+          aria-label="Delete confirmation"
           style={{ margin: 32, padding: 16 }}
         >
-          <OverlayClose accessibilityLabel="Confirm delete">
+          <OverlayClose aria-label="Confirm delete">
             <Text>Delete</Text>
           </OverlayClose>
         </OverlayPopup>

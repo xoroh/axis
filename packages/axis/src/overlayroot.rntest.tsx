@@ -59,7 +59,7 @@ function OverlayExample({
         <OverlayBackdrop testID={`${testPrefix}-backdrop`} />
         <OverlayPopup
           testID={`${testPrefix}-popup`}
-          accessibilityLabel={testPrefix}
+          aria-label={testPrefix}
         >
           <Text>Content of {testPrefix}</Text>
           <OverlayClose testID={`${testPrefix}-close`}>
@@ -309,8 +309,8 @@ describe("OverlayRoot on React Native", () => {
     expect(portal2.props.pointerEvents).toBe("auto");
     expect(portal1.props.pointerEvents).toBe("box-none");
 
-    expect(portal1.props.accessibilityElementsHidden).toBe(true);
-    expect(portal2.props.accessibilityElementsHidden).toBe(false);
+    expect(portal1.props["aria-hidden"]).toBe(true);
+    expect(portal2.props["aria-hidden"]).toBe(false);
   });
 
   it("promotes lower layer to top when top layer closes", async () => {
@@ -339,7 +339,7 @@ describe("OverlayRoot on React Native", () => {
 
     const portal1 = screen.getByTestId("layer1-portal");
     expect(portal1.props.pointerEvents).toBe("auto");
-    expect(portal1.props.accessibilityElementsHidden).toBe(false);
+    expect(portal1.props["aria-hidden"]).toBe(false);
   });
 
   it("tracks scroll lock state when modal overlay is open", async () => {

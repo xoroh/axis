@@ -58,7 +58,7 @@ render inside a `RadioGroup` to participate in selection.
 | `onValueChange` | `(value: string) => void` | no | — | Fires with the selected item value on every committed selection. Takes a plain `string` — `select` never offers `null` (clearing is not a selection). |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no selections, no callbacks. |
 | `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled group, but selections do not change and no callbacks fire. Items stay enabled (not disabled). Distinct from `disabled` — React Native maps no readonly key, so the announcement is the normal group state. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<RadioGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
 | `children` | `ReactNode` | yes | — | The group's items (`RadioRoot`). |
@@ -74,7 +74,7 @@ render inside a `RadioGroup` to participate in selection.
 | `value` | `string` | yes | — | Selection value contributed to the group when this item is activated. |
 | `disabled` | `boolean` | no | `false` | Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. Combines with root `disabled` (either disables). |
 | `readOnly` | `boolean` | no | `false` | Read-only for this item only: focusable and announced like an enabled option, but it never selects. OR'ed with the group's `readOnly` (either freezes it). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<RadioRootState, StyleProp<ViewStyle>>` | no | — | Item pressable style: a value or a function of item state. |
 | `children` | `ReactNode` | no | — | Item content (label + caller-styled selected mark). |
@@ -105,7 +105,7 @@ import { RadioGroup, RadioIndicator, RadioRoot } from "@xoroh/axis";
 
 function Sizes() {
   return (
-    <RadioGroup accessibilityLabel="Size">
+    <RadioGroup aria-label="Size">
       <RadioRoot value="s">
         <RadioIndicator>
           <Text>●</Text>
@@ -136,7 +136,7 @@ function ControlledSizes() {
     <RadioGroup
       value={value}
       onValueChange={setValue}
-      accessibilityLabel="Size"
+      aria-label="Size"
     >
       <RadioRoot
         value="s"

@@ -83,7 +83,7 @@ currently open item value (`null` closed).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. Inert outside a menu. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<NavigationMenuTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger pressable style: a value or a function of trigger state. |
 | `children` | `ReactNode` | yes | — | Trigger content (an empty trigger is a bug). |
@@ -122,7 +122,7 @@ function DocsBar() {
   return (
     <NavigationMenuRoot>
       <NavigationMenuItem value="guides">
-        <NavigationMenuTrigger accessibilityLabel="Guides">
+        <NavigationMenuTrigger aria-label="Guides">
           <Text>Guides</Text>
         </NavigationMenuTrigger>
         <NavigationMenuPanel>
@@ -130,7 +130,7 @@ function DocsBar() {
         </NavigationMenuPanel>
       </NavigationMenuItem>
       <NavigationMenuItem value="api">
-        <NavigationMenuTrigger accessibilityLabel="API reference">
+        <NavigationMenuTrigger aria-label="API reference">
           <Text>API</Text>
         </NavigationMenuTrigger>
         <NavigationMenuPanel>
@@ -160,7 +160,7 @@ function ControlledBar() {
   return (
     <NavigationMenuRoot openValue={openValue} onOpenValueChange={setOpenValue}>
       <NavigationMenuItem value="guides">
-        <NavigationMenuTrigger accessibilityLabel="Guides">
+        <NavigationMenuTrigger aria-label="Guides">
           <Text>Guides</Text>
         </NavigationMenuTrigger>
         <NavigationMenuPanel>

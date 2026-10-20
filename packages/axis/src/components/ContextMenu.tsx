@@ -47,8 +47,9 @@ export type ContextMenuRootProps = {
   onDismiss?: () => void;
   /** Preferred side. Default `"bottom"`. Clamped into the viewport. */
   placement?: Placement;
-  /** Accessible name source for the menu region. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the menu region (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Anchor wrapper style: value or function of menu state. */
   style?: StateStyle<ContextMenuRootState, StyleProp<ViewStyle>>;
@@ -91,7 +92,8 @@ export function ContextMenuRoot({
   onOpenChange,
   onDismiss,
   placement,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   menuStyle,
@@ -139,7 +141,8 @@ export function ContextMenuRoot({
       open: isOpen ?? false,
       content,
       menuStyle,
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       children,
       ref: setAnchorRef,
     } satisfies SlotProps,
@@ -153,7 +156,7 @@ export function ContextMenuRoot({
       {isOpen ? (
         <Portal>
           <Pressable
-            accessibilityLabel="Dismiss menu"
+            aria-label="Dismiss menu"
             onPress={dismiss}
             style={{
               position: "absolute",
@@ -166,8 +169,9 @@ export function ContextMenuRoot({
           />
           <View
             accessible
-            accessibilityRole="menu"
-            accessibilityLabel={accessibilityLabel}
+            role="menu"
+            {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+            {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
             onLayout={floating.onContentLayout}
             style={[floating.style, menuStyle]}
           >

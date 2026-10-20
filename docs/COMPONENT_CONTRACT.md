@@ -98,17 +98,25 @@ conditional — a time-picker does not inherit a Switch's contract.
   may use RN host primitives only. Future components use that rule as
   written; no bypass, no per-component exemptions.
 
-## 5. Accessibility (required, not later)
+## 5. Accessibility (required, not later — ADR-112 aria-only)
 
-- Every interactive component declares its `accessibilityRole`,
-  `accessibilityState` (disabled/checked/selected/expanded as
-  applicable), and accessible label source (label prop and/or
-  children). Control relationships are declared where the platform
-  supports them (e.g. labelled-by associations); a component that
-  cannot express its relationship documents the gap instead of
-  silently dropping it. Non-interactive containers expose
-  `accessible={false}` passthrough unless their section says
-  otherwise.
+- All rendered components emit ONLY web-aligned `role` and `aria-*`
+  props (`aria-label`, `aria-labelledby`, `aria-disabled`, `aria-checked`,
+  `aria-selected`, `aria-expanded`, `aria-valuenow`, `aria-valuemin`,
+  `aria-valuemax`, `aria-valuetext`, `aria-live`, `aria-hidden`, `aria-modal`).
+- Zero tolerance for legacy React Native accessibility props: never emit
+  `accessibilityRole`, `accessibilityState`, `accessibilityValue`,
+  `accessibilityLabel`, `accessibilityLabelledBy`, `accessibilityElementsHidden`,
+  or `accessibilityLiveRegion` from any component. React Native (0.71+)
+  maps `role` and `aria-*` internally to native platform accessibility APIs
+  on iOS and Android.
+- Every interactive component declares its `role`, appropriate `aria-*` state
+  (disabled/checked/selected/expanded as applicable), and accessible name source
+  (`aria-label` / `aria-labelledby` prop and/or children). Control relationships
+  are declared where supported (e.g. `aria-labelledby` associations); a component
+  that cannot express its relationship documents the gap instead of silently
+  dropping it. Non-interactive containers expose `accessible={false}` passthrough
+  unless their section says otherwise.
 - Focus: single tab-stop discipline via the `roving` model where a
   group manages focus; modal surfaces contain focus per
   `overlayModality` + `focusTrap` semantics adapted to RN (no DOM

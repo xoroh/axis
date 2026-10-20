@@ -106,8 +106,9 @@ export type NavigationMenuTriggerProps = {
   children: ReactNode;
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
@@ -193,7 +194,8 @@ export function NavigationMenuTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: NavigationMenuTriggerProps): React.ReactNode {
   const disclosure = useContext(NavigationDisclosureContext);
@@ -217,9 +219,11 @@ export function NavigationMenuTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": expanded,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: openTrigger,
@@ -232,9 +236,11 @@ export function NavigationMenuTrigger({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ expanded, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={expanded}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}
@@ -409,7 +415,7 @@ export function NavigationMenuRoot({
         {bar}
         {current !== null && current !== undefined ? (
           <Pressable
-            accessibilityLabel="Dismiss menu"
+            aria-label="Dismiss menu"
             testID={testID ? `${testID}-scrim` : undefined}
             onPress={dismiss}
             style={SCRIM_FILL}

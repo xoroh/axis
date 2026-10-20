@@ -7,68 +7,85 @@ import {
   useContext,
   useMemo,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * RadioGroup — an unstyled single-select group.
+ * RadioGroup — an unstyled single-selection group with mutually exclusive items.
  *
- * Structure only: a `View` carrying the radiogroup role, with
- * `RadioRoot` pressables carrying the radio role and checked state,
- * each composing a caller-provided `RadioIndicator` that mounts
- * while checked.
- * No default visuals — every visual value (`style`) is caller-provided.
- * State follows the `useControllableState` pattern: `value` (+
+ * Compound anatomy:
+ *
+ *   <RadioGroup>
+ *     <RadioRoot value="a">
+ *       <RadioIndicator />
+ *     </RadioRoot>
+ *   </RadioGroup>
+ *
+ * Structure only: a `View` host element carrying the `radiogroup` role,
+ * coordinating `RadioRoot` pressables carrying the `radio` role,
+ * state (`checked`, `disabled`), and an indicator `View` whose
+ * presence is state-driven. No default group layout, borders, or
+ * colors are imposed — every visual value is caller-provided. State
+ * follows the `useControllableState` pattern: `value` (+
  * `onValueChange`) for controlled use, `defaultValue` for uncontrolled.
- * Selection is single-select and replacing: activating the selected item
- * keeps it (never deselects to `null`), per the selection-model rule.
+ *
+ * ADR-112 aria-only: parts set accessibility state, role, and value
+ * ONLY through `aria-*` props and `role` (`role="radiogroup"`,
+ * `role="radio"`, `aria-checked`, `aria-disabled`, `aria-label`, `aria-hidden`).
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
+ *
+ * Compound export (Base UI parity): `RadioGroupRoot`, `RadioRoot`, and
+ * `RadioIndicator` are exported standalone and as `RadioGroup.Root`,
+ * `RadioGroup.Item`, and `RadioGroup.Indicator` (and on `Radio`).
  */
 
 export type RadioGroupState = {
-  /** Currently selected item value (`null` for none). */
+  /** Currently selected item value, or `null` if nothing selected. */
   value: string | null;
   /** Whether the whole group is disabled. */
   disabled: boolean;
-  /**
-   * Whether the whole group is read-only. Default `false`.
-   * Focusable and announced like an enabled group, but selections
-   * do not change (distinct from `disabled` — React Native maps no
-   * readonly key, so the announcement is the normal group state).
-   */
+  /** Whether the whole group is read-only. */
   readOnly: boolean;
 };
 
 export type RadioRootState = {
-  /** Whether this item is currently checked. */
+  /** Whether this item is currently selected. */
   checked: boolean;
-  /** Whether this item is currently disabled. */
+  /** Whether this item is disabled (own `disabled` OR group `disabled`). */
   disabled: boolean;
-  /** Whether the group is read-only (selections do not change). */
+  /** Whether this item is read-only (own `readOnly` OR group `readOnly`). */
   readOnly: boolean;
 };
 
+export type RadioIndicatorState = RadioRootState;
+
 export type RadioGroupProps = {
-  /** Controlled selection (an item value, or `null` for none). Wins over `defaultValue` when defined. */
+  /** Controlled selection. Wins over `defaultValue` when defined. */
   value?: string | null;
   /** Uncontrolled initial selection. Default `null` (nothing selected). */
   defaultValue?: string | null;
-  /** Fires with the selected item value on every committed selection. */
+  /** Fires with the selected item's value on every committed selection. */
   onValueChange?: (value: string) => void;
   /** Terminal: disables every item — no selections, no callbacks. */
   disabled?: boolean;
   /**
    * Read-only: focusable and announced like an enabled group, but
-   * selections do not change and no callbacks fire. Default `false`.
-   * Distinct from `disabled` (which blocks interaction and announces
-   * disabled) — React Native maps no readonly key, so the
-   * announcement is the normal group state.
+   * presses do not change selection and no callbacks fire. Default
+   * `false`.
    */
   readOnly?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root group view style: value or function of group state. */
   style?: StateStyle<RadioGroupState, StyleProp<ViewStyle>>;
@@ -81,7 +98,7 @@ export type RadioGroupProps = {
    */
   render?: RenderProp<RadioGroupState, SlotProps>;
   /** Forwarded to the root group host element. */
-  ref?: Ref<ElementRef<typeof Pressable>>;
+  ref?: Ref<ElementRef<typeof View>>;
 };
 
 export type RadioRootProps = {
@@ -92,13 +109,13 @@ export type RadioRootProps = {
   /**
    * Read-only for this item only: focusable and announced like an
    * enabled option, but it never selects. OR'ed with the group's
-   * `readOnly` (either freezes it). Default `false`. Distinct from
-   * `disabled` — React Native maps no readonly key, so the
-   * announcement is the normal option state.
+   * `readOnly` (either freezes it). Default `false`.
    */
   readOnly?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Item pressable style: value or function of item state. */
   style?: StateStyle<RadioRootState, StyleProp<ViewStyle>>;
@@ -111,45 +128,12 @@ export type RadioRootProps = {
   render?: RenderProp<RadioRootState, SlotProps>;
 };
 
-type RadioGroupSelection = {
-  selectedValue: string | null | undefined;
-  groupDisabled: boolean;
-  groupReadOnly: boolean;
-  select: (value: string) => void;
-};
-
-/**
- * Shared selection state for the group's items. Internal to this module
- * (not exported): items must render inside a `RadioGroup` to participate
- * in selection; outside one they render unchecked and inert.
- */
-const RadioGroupSelectionContext = createContext<RadioGroupSelection | null>(
-  null,
-);
-
-export type RadioIndicatorState = {
-  /** Whether the radio is currently checked. */
-  checked: boolean;
-  /** Whether the radio is currently disabled. */
-  disabled: boolean;
-  /** Whether the group is read-only (selections do not change). */
-  readOnly: boolean;
-};
-
 export type RadioIndicatorProps = {
   testID?: string;
   /** Indicator style, caller-provided. */
   style?: StyleProp<ViewStyle>;
   /** Indicator content. Mounts while the radio is checked (or always with `keepMounted`). */
   children?: ReactNode;
-  /**
-   * When `true`, the indicator stays mounted while the radio is
-   * unchecked: mounted but hidden from assistive tech (`aria-hidden`
-   * — ADR-112 aria-only), with `{ checked: false }` state. The
-   * indicator stays visible by design (Base UI parity — the caller
-   * styles it from state). Default `false` (mounts only while
-   * checked — keep-alive stays opt-in).
-   */
   keepMounted?: boolean;
   /**
    * Element or function substitution (Base UI parity): an element is
@@ -159,31 +143,28 @@ export type RadioIndicatorProps = {
   render?: RenderProp<RadioIndicatorState, SlotProps>;
 };
 
-type RadioItemDisclosure = {
+export type RadioGroupSelection = {
+  selectedValue: string | null;
+  groupDisabled: boolean;
+  groupReadOnly: boolean;
+  select: (itemValue: string) => void;
+};
+
+export const RadioGroupSelectionContext =
+  createContext<RadioGroupSelection | null>(null);
+
+export type RadioItemDisclosure = {
   checked: boolean;
   disabled: boolean;
   readOnly: boolean;
 };
 
-/**
- * Shared item state for the indicator. Internal to this module (not
- * exported): the indicator must render inside a `RadioRoot` to
- * participate; outside one it never mounts.
- */
-const RadioItemDisclosureContext = createContext<RadioItemDisclosure | null>(
-  null,
-);
+export const RadioItemDisclosureContext =
+  createContext<RadioItemDisclosure | null>(null);
 
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
 function assignRef(
   ref: RadioGroupProps["ref"],
-  value: ElementRef<typeof Pressable> | null,
+  value: ElementRef<typeof View> | null,
 ): void {
   if (typeof ref === "function") {
     ref(value);
@@ -193,28 +174,25 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // A frozen ref object cannot take the write
     }
   }
 }
 
-function RadioGroupRoot({
+export function RadioGroupRoot({
   value,
   defaultValue = null,
   onValueChange,
   disabled = false,
   readOnly = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
   render,
   ref,
 }: RadioGroupProps): React.ReactNode {
-  // `onValueChange` takes a plain `string` while the state domain includes
-  // `null` (nothing selected), so forward only committed selections —
-  // `select` below never offers `null`, the guard is type-level honesty.
   const handleChange = useCallback(
     (next: string | null) => {
       if (next !== null) {
@@ -230,26 +208,15 @@ function RadioGroupRoot({
   );
 
   const select = useCallback(
-    (next: string) => {
-      if (disabled || readOnly) return;
-      setSelectedValue(next);
+    (itemValue: string) => {
+      setSelectedValue(itemValue);
     },
-    [disabled, readOnly, setSelectedValue],
-  );
-
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
-  const setHostRef = useCallback(
-    (node: ElementRef<typeof Pressable> | null) => {
-      assignRef(ref, node);
-    },
-    [ref],
+    [setSelectedValue],
   );
 
   const selection = useMemo<RadioGroupSelection>(
     () => ({
-      selectedValue,
+      selectedValue: selectedValue ?? null,
       groupDisabled: disabled,
       groupReadOnly: readOnly,
       select,
@@ -257,35 +224,40 @@ function RadioGroupRoot({
     [selectedValue, disabled, readOnly, select],
   );
 
+  const setHostRef = useCallback(
+    (node: ElementRef<typeof View> | null) => {
+      assignRef(ref, node);
+    },
+    [ref],
+  );
+
   const state: RadioGroupState = {
     value: selectedValue ?? null,
     disabled,
     readOnly,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessible: true,
-      accessibilityRole: "radiogroup",
-      accessibilityLabel,
-      testID,
-      style: resolveStyle(style, state),
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    accessible: true,
+    role: "radiogroup" as const,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    style: resolveStyle(style, state),
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <View
       ref={setHostRef}
-      // The group must be an accessibility element for its role and
-      // label to reach assistive technology (and the `*ByRole` proofs):
-      // a plain `View` is not one by default, unlike `Pressable`.
       accessible
-      accessibilityRole="radiogroup"
-      accessibilityLabel={accessibilityLabel}
+      role="radiogroup"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >
@@ -300,7 +272,8 @@ export function RadioRoot({
   value,
   disabled = false,
   readOnly = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -321,20 +294,21 @@ export function RadioRoot({
     disabled: effectiveDisabled,
     readOnly: effectiveReadOnly,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "radio",
-      accessibilityState: { checked, disabled: effectiveDisabled },
-      accessibilityLabel,
-      testID,
-      disabled: effectiveDisabled,
-      onPress: selectItem,
-      style: resolveStyle(style, state),
-      children,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    role: "radio" as const,
+    "aria-checked": checked,
+    "aria-disabled": effectiveDisabled,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    disabled: effectiveDisabled,
+    onPress: selectItem,
+    style: resolveStyle(style, state),
+    children,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) {
     return (
       <RadioItemDisclosureContext.Provider
@@ -351,9 +325,11 @@ export function RadioRoot({
 
   return (
     <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked, disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
+      role="radio"
+      aria-checked={checked}
+      aria-disabled={effectiveDisabled}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={selectItem}
@@ -384,7 +360,11 @@ export function RadioIndicator({
   const { checked, disabled, readOnly } = disclosure;
   if (!checked && !keepMounted) return null;
 
-  const state: RadioIndicatorState = { checked, disabled, readOnly };
+  const state: RadioIndicatorState = {
+    checked,
+    disabled,
+    readOnly,
+  };
   const substituted = resolveRender(
     render,
     {
@@ -400,12 +380,6 @@ export function RadioIndicator({
     <View
       testID={testID}
       style={style}
-      // `aria-hidden` alone hides descendants on iOS and Android
-      // (resolved to accessibilityElementsHidden +
-      // importantForAccessibility in View.js lines 71-76); ADR-112
-      // aria-only — no legacy hiding props. Unlike
-      // `AccordionPanel`, the indicator stays visible by design
-      // (Base UI parity: the caller styles it from state).
       aria-hidden={!checked}
     >
       {children}
@@ -414,3 +388,7 @@ export function RadioIndicator({
 }
 
 export { RadioGroupRoot as RadioGroup };
+export const Radio = Object.assign(RadioRoot, {
+  Root: RadioRoot,
+  Indicator: RadioIndicator,
+});

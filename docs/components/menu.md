@@ -127,7 +127,7 @@ part takes `useModal` itself — the RN `Modal` host is an
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never toggles and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<MenuTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content. Optional when `render` supplies it. |
@@ -196,7 +196,7 @@ typed prefix highlights the matching item).
 |---|---|---|---|---|
 | `value` | `string` | no | — | Optional on its own; required for `onSelect` and for cascade identity in `DropdownMenu`. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never selects and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<MenuItemState, StyleProp<ViewStyle>>` | no | — | Value or function of item state. |
 | `children` | `ReactNode` | no | — | Item content. |
@@ -245,7 +245,7 @@ role:
 |---|---|---|---|---|
 | `value` | `string` | no | — | Optional, like `MenuItem`. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never selects and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<MenuItemState, StyleProp<ViewStyle>>` | no | — | Value or function of item state (shared state shape). |
 | `children` | `ReactNode` | no | — | Item content. |
@@ -272,7 +272,7 @@ role:
 | `defaultChecked` | `boolean` | no | `false` | Uncontrolled initial checked state. |
 | `onCheckedChange` | `(checked: boolean) => void` | no | — | Fires with the next checked state on every toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never toggles and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<MenuCheckboxItemState, StyleProp<ViewStyle>>` | no | — | Value or function of checkbox-item state. |
 | `children` | `ReactNode` | no | — | Indicator + label composed by the caller. |
@@ -306,7 +306,7 @@ role:
 |---|---|---|---|---|
 | `value` | `string` | yes | — | Item value identifying the option (group identity). |
 | `disabled` | `boolean` | no | `false` | Terminal: it never selects and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<MenuRadioItemState, StyleProp<ViewStyle>>` | no | — | Value or function of radio-item state. |
 | `children` | `ReactNode` | no | — | Indicator + label composed by the caller. |
@@ -329,7 +329,7 @@ role:
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `placeholder` | `string` | no | — | Placeholder for the filter entry. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the entry. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the entry. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StyleProp<TextStyle>` | no | — | Entry style, caller-provided. |
 | `disabled` | `boolean` | no | `false` | Terminal: the query never changes. |
@@ -344,7 +344,7 @@ Renders nothing outside a root (filter parts read only the root query).
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<MenuClearState, StyleProp<ViewStyle>>` | no | — | Value or function of clear state. |
 | `children` | `ReactNode` | no | — | Label composed by the caller. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `disabled` | `boolean` | no | `false` | Terminal: it never clears. |
 | `render` | `RenderProp<MenuClearState, SlotProps>` | no | — | Element or function substitution. |
 
@@ -376,7 +376,7 @@ children; textless items always show).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<{ open: boolean; disabled: boolean }, StyleProp<ViewStyle>>` | no | — | Value or function of submenu-trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content. |
@@ -406,7 +406,7 @@ import { MenuItem, MenuRoot, MenuTrigger } from "@xoroh/axis";
 function Actions() {
   return (
     <MenuRoot>
-      <MenuTrigger accessibilityLabel="Open actions menu">
+      <MenuTrigger aria-label="Open actions menu">
         <Text>Open</Text>
       </MenuTrigger>
       <MenuItem value="new" testID="action-new">
@@ -429,7 +429,7 @@ function ControlledActions() {
   const [open, setOpen] = useState(false);
   return (
     <MenuRoot open={open} onOpenChange={setOpen}>
-      <MenuTrigger accessibilityLabel="Open actions menu">
+      <MenuTrigger aria-label="Open actions menu">
         <Text>Open</Text>
       </MenuTrigger>
       <MenuItem value="new" onSelect={(value) => console.log(value)}>
@@ -463,7 +463,7 @@ import {
 function CompoundActions() {
   return (
     <MenuRoot>
-      <MenuTrigger accessibilityLabel="Open actions menu">
+      <MenuTrigger aria-label="Open actions menu">
         <Text>Open</Text>
       </MenuTrigger>
       <MenuPortal>
@@ -479,7 +479,7 @@ function CompoundActions() {
             <MenuEmpty>
               <Text>No matches</Text>
             </MenuEmpty>
-            <MenuClear accessibilityLabel="Clear filter">
+            <MenuClear aria-label="Clear filter">
               <Text>Clear</Text>
             </MenuClear>
           </MenuPopup>

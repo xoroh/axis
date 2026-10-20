@@ -27,14 +27,8 @@ import { useControllableState } from "../useControllableState";
  * `"horizontal"`) is structural documentation: it selects the
  * container's `flexDirection` as a base the caller style overrides.
  *
- * Pressed semantics (not checked semantics): items announce
- * `accessibilityState.selected`, never `checked` — this is a group
- * of toggle buttons, not a group of checkboxes. React Native maps
- * no `pressed` state key (verified against the installed RN
- * `ViewAccessibility` `AccessibilityState` union, which carries
- * `selected` and `checked` but nothing pressed): `selected` is the
- * Toggle-precedent mapping for toggle-pressed, while `checked`
- * stays reserved for checkbox/radio/switch commitments.
+ * ADR-112 aria-only: the group carries `role="group"`, `aria-orientation`,
+ * and caller `aria-label` / `aria-labelledby`. Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  */
 
 export type ToggleGroupState = {
@@ -52,65 +46,53 @@ export type ToggleGroupState = {
 };
 
 export type ToggleGroupProps = {
-  /** Controlled pressed keys. Wins over `defaultValue` when defined. */
+  /** Controlled pressed set. Wins over `defaultValue` when defined. */
   value?: readonly string[];
-  /** Uncontrolled initial pressed keys. Default `[]` (nothing pressed). */
+  /** Uncontrolled initial pressed set. Default `[]`. */
   defaultValue?: readonly string[];
-  /** Fires with the pressed keys on every committed toggle. */
+  /** Fires with the next pressed set on every committed change. */
   onValueChange?: (value: readonly string[]) => void;
+  /** Group-wide disabled terminal: disables every joined item. */
+  disabled?: boolean;
   /**
-   * When `false` only one item can be pressed: activating an
-   * unpressed item replaces the pressed one. When `true` multiple
-   * items can be pressed. Default `false` (Base UI parity).
+   * Whether multiple items can be pressed simultaneously. Default
+   * `false` (single-press replaces).
    */
   multiple?: boolean;
   /**
-   * Reading order of the grouped items. Default `"horizontal"`.
-   * Applied structurally as the container `flexDirection` (`row` /
-   * `column`); the caller `style` merges over it and wins on conflict.
+   * Visual and traversal reading order. Sets the default
+   * `flexDirection` (`row` for horizontal, `column` for vertical).
+   * Default `"horizontal"`.
    */
   orientation?: "horizontal" | "vertical";
-  /** Terminal: disables every item — no toggles, no callbacks. */
-  disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
-  /** Root group view style: value or function of group state. */
+  /** Value or function of group state, caller-provided. */
   style?: StateStyle<ToggleGroupState, StyleProp<ViewStyle>>;
-  /** The group's items (`Toggle` with `value`). */
-  children: ReactNode;
+  /** Group items composed by the caller. */
+  children?: ReactNode;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)`.
    */
   render?: RenderProp<ToggleGroupState, SlotProps>;
-  /** Forwarded to the root group host element. */
+  /** Forwarded to the container View host element. */
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-type ToggleGroupPressed = {
-  pressedValues: readonly string[] | undefined;
+export type ToggleGroupPressed = {
+  pressedValues: readonly string[];
   groupDisabled: boolean;
-  toggle: (value: string) => void;
+  toggle: (itemValue: string) => void;
 };
 
-/**
- * Shared pressed state for the group's items. Exported for `Toggle`
- * group-joining only — not part of the public barrel: `Toggle`
- * buttons with `value` must render inside a `ToggleGroup` to join;
- * outside one they behave standalone.
- */
 export const ToggleGroupPressedContext =
   createContext<ToggleGroupPressed | null>(null);
 
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
 function assignRef(
   ref: ToggleGroupProps["ref"],
   value: ElementRef<typeof View> | null,
@@ -123,20 +105,20 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // A frozen ref object cannot take the write
     }
   }
 }
 
-function ToggleGroupRoot({
+export function ToggleGroup({
   value,
   defaultValue = [],
   onValueChange,
+  disabled = false,
   multiple = false,
   orientation = "horizontal",
-  disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -148,23 +130,20 @@ function ToggleGroupRoot({
   >(value, defaultValue, onValueChange);
 
   const toggle = useCallback(
-    (next: string) => {
-      if (disabled) return;
-      setPressedValues((previous) => {
-        const current = previous ?? [];
-        if (current.includes(next)) {
-          return current.filter((item) => item !== next);
+    (itemValue: string) => {
+      setPressedValues((previous = []) => {
+        const has = previous.includes(itemValue);
+        if (multiple) {
+          return has
+            ? previous.filter((v) => v !== itemValue)
+            : [...previous, itemValue];
         }
-        // Single-press replaces; multi-press accumulates.
-        return multiple ? [...current, next] : [next];
+        return has ? [] : [itemValue];
       });
     },
-    [disabled, multiple, setPressedValues],
+    [multiple, setPressedValues],
   );
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
       assignRef(ref, node);
@@ -173,7 +152,7 @@ function ToggleGroupRoot({
   );
 
   const pressed = useMemo<ToggleGroupPressed>(
-    () => ({ pressedValues, groupDisabled: disabled, toggle }),
+    () => ({ pressedValues: pressedValues ?? [], groupDisabled: disabled, toggle }),
     [pressedValues, disabled, toggle],
   );
 
@@ -186,30 +165,30 @@ function ToggleGroupRoot({
   const baseDirection = {
     flexDirection: orientation === "vertical" ? "column" : "row",
   } as const;
-  const substituted = resolveRender(
-    render,
-    {
-      accessible: true,
-      accessibilityRole: "group",
-      accessibilityLabel,
-      testID,
-      style: [baseDirection, resolveStyle(style, state)],
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    accessible: true,
+    role: "group" as const,
+    "aria-orientation": orientation,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    style: [baseDirection, resolveStyle(style, state)],
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <View
       ref={setHostRef}
-      // The group must be an accessibility element for its role and
-      // label to reach assistive technology (and the `*ByRole` proofs):
-      // a plain `View` is not one by default, unlike `Pressable`.
       accessible
-      accessibilityRole="group"
-      accessibilityLabel={accessibilityLabel}
+      role="group"
+      aria-orientation={orientation}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={[baseDirection, resolveStyle(style, state)]}
     >
@@ -220,4 +199,4 @@ function ToggleGroupRoot({
   );
 }
 
-export { ToggleGroupRoot as ToggleGroup };
+export const ToggleGroupRoot = ToggleGroup;

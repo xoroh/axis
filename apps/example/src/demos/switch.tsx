@@ -35,7 +35,7 @@ export const SwitchDemo: Demo = {
           <Text style={{ fontSize: 13, color: theme.textSubtle }}>
             Starts off, toggles on click/tap with native accessibility state.
           </Text>
-          <SwitchRoot accessibilityLabel="Demo uncontrolled switch">
+          <SwitchRoot aria-label="Demo uncontrolled switch">
             <View
               style={{
                 width: 52,
@@ -77,7 +77,7 @@ export const SwitchDemo: Demo = {
             State: {checked ? "Active / Checked" : "Inactive / Unchecked"}
           </Text>
           <SwitchRoot
-            accessibilityLabel="Demo controlled switch"
+            aria-label="Demo controlled switch"
             checked={checked}
             onCheckedChange={setChecked}
           >
@@ -119,7 +119,7 @@ export const SwitchDemo: Demo = {
           <Text style={{ fontSize: 13, color: theme.textSubtle }}>
             The thumb part reads root state for function styles.
           </Text>
-          <SwitchRoot accessibilityLabel="Demo composed switch" defaultChecked>
+          <SwitchRoot aria-label="Demo composed switch" defaultChecked>
             <View
               style={{
                 width: 52,
@@ -161,7 +161,7 @@ export const SwitchDemo: Demo = {
             Focusable and announced as enabled, but presses change nothing.
           </Text>
           <SwitchRoot
-            accessibilityLabel="Demo read-only switch"
+            aria-label="Demo read-only switch"
             defaultChecked
             readOnly
           >

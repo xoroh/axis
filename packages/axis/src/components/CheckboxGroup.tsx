@@ -13,17 +13,20 @@ import type { SlotProps } from "../slot";
 import { useControllableState } from "../useControllableState";
 
 /**
- * CheckboxGroup — an unstyled multi-select group.
+ * CheckboxGroup — an unstyled multi-selection group for checkboxes.
  *
- * Structure only: a `View` carrying the group role, with
- * `CheckboxRoot` items (each with a `value`) carrying the checkbox
- * role and checked state. No default visuals — every visual value
- * (`style`) is caller-provided. State follows the
- * `useControllableState` pattern: `value` (+ `onValueChange`) for
- * controlled use, `defaultValue` for uncontrolled. Selection is
- * multi-select with toggle semantics: activating a selected item
- * removes it, per the selection-model rule (unlike `RadioGroup`,
- * which never deselects on re-activation).
+ * Structure only: a `View` host element carrying the `group` role,
+ * coordinating `CheckboxRoot` children through context. No default
+ * borders, gap, or padding are imposed — every visual value is
+ * caller-provided. State follows the `useControllableState` pattern:
+ * `value` (+ `onValueChange`) for controlled use, `defaultValue` for
+ * uncontrolled. Activating an item toggles its membership in the array.
+ * A group-wide `disabled` cascades to every joined item.
+ *
+ * ADR-112 aria-only: the group carries `role="group"` and caller
+ * `aria-label` / `aria-labelledby`. Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
+ *
+ * Base UI parity: exported as `CheckboxGroupRoot` and `CheckboxGroup`.
  */
 
 export type CheckboxGroupState = {
@@ -42,8 +45,10 @@ export type CheckboxGroupProps = {
   onValueChange?: (value: readonly string[]) => void;
   /** Terminal: disables every item — no toggles, no callbacks. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root group view style: value or function of group state. */
   style?: StateStyle<CheckboxGroupState, StyleProp<ViewStyle>>;
@@ -59,28 +64,15 @@ export type CheckboxGroupProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-type CheckboxGroupSelection = {
-  selectedValues: readonly string[] | undefined;
+export type CheckboxGroupSelection = {
+  selectedValues: readonly string[];
   groupDisabled: boolean;
-  toggle: (value: string) => void;
+  toggle: (itemValue: string) => void;
 };
 
-/**
- * Shared selection state for the group's items. Exported for
- * `CheckboxRoot` group-joining only — not part of the public barrel:
- * `CheckboxRoot` boxes with `value` must render inside a
- * `CheckboxGroup` to join; outside one they behave standalone.
- */
 export const CheckboxGroupSelectionContext =
   createContext<CheckboxGroupSelection | null>(null);
 
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
 function assignRef(
   ref: CheckboxGroupProps["ref"],
   value: ElementRef<typeof View> | null,
@@ -93,18 +85,18 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // A frozen ref object cannot take the write
     }
   }
 }
 
-function CheckboxGroupRoot({
+export function CheckboxGroupRoot({
   value,
   defaultValue = [],
   onValueChange,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -116,21 +108,26 @@ function CheckboxGroupRoot({
   >(value, defaultValue, onValueChange);
 
   const toggle = useCallback(
-    (next: string) => {
-      if (disabled) return;
-      setSelectedValues((previous) => {
-        const current = previous ?? [];
-        return current.includes(next)
-          ? current.filter((item) => item !== next)
-          : [...current, next];
+    (itemValue: string) => {
+      setSelectedValues((previous = []) => {
+        const has = previous.includes(itemValue);
+        return has
+          ? previous.filter((v) => v !== itemValue)
+          : [...previous, itemValue];
       });
     },
-    [disabled, setSelectedValues],
+    [setSelectedValues],
   );
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
+  const selection = useMemo<CheckboxGroupSelection>(
+    () => ({
+      selectedValues: selectedValues ?? [],
+      groupDisabled: disabled,
+      toggle,
+    }),
+    [selectedValues, disabled, toggle],
+  );
+
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
       assignRef(ref, node);
@@ -138,39 +135,32 @@ function CheckboxGroupRoot({
     [ref],
   );
 
-  const selection = useMemo<CheckboxGroupSelection>(
-    () => ({ selectedValues, groupDisabled: disabled, toggle }),
-    [selectedValues, disabled, toggle],
-  );
-
   const state: CheckboxGroupState = {
     value: selectedValues ?? [],
     disabled,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessible: true,
-      accessibilityRole: "group",
-      accessibilityLabel,
-      testID,
-      style: resolveStyle(style, state),
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    accessible: true,
+    role: "group" as const,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    style: resolveStyle(style, state),
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <View
       ref={setHostRef}
-      // The group must be an accessibility element for its role and
-      // label to reach assistive technology (and the `*ByRole` proofs):
-      // a plain `View` is not one by default, unlike `Pressable`.
       accessible
-      accessibilityRole="group"
-      accessibilityLabel={accessibilityLabel}
+      role="group"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >

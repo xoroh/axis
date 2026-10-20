@@ -59,7 +59,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 |---|---|---|---|---|
 | `orientation` | `"horizontal" \| "vertical"` | no | `"horizontal"` | Reading order of the grouped controls. Applied structurally as the container `flexDirection` (`row` / `column`); the caller `style` merges over it and wins on conflict. |
 | `disabled` | `boolean` | no | `false` | Observational only: announced on the container via `accessibilityState`, never forwarded to children and blocking nothing. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the group. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the group. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the container. |
 | `style` | `StateStyle<ToolbarRootState, StyleProp<ViewStyle>>` | no | — | Root view style: a value or a function of toolbar state. Merges over the orientation base direction. |
 | `children` | `ReactNode` | yes | — | Grouped controls rendered inside the container. |
@@ -150,12 +150,12 @@ import { Button, Separator, ToolbarRoot } from "@xoroh/axis";
 
 function EditorBar() {
   return (
-    <ToolbarRoot accessibilityLabel="Editor">
-      <Button accessibilityLabel="Bold">
+    <ToolbarRoot aria-label="Editor">
+      <Button aria-label="Bold">
         <Text>B</Text>
       </Button>
       <Separator style={{ width: 1 }} />
-      <Button accessibilityLabel="Italic">
+      <Button aria-label="Italic">
         <Text>I</Text>
       </Button>
     </ToolbarRoot>
@@ -172,11 +172,11 @@ import { Button, ToolbarRoot } from "@xoroh/axis";
 
 function SideBar() {
   return (
-    <ToolbarRoot orientation="vertical" accessibilityLabel="Tools">
-      <Button accessibilityLabel="Cut">
+    <ToolbarRoot orientation="vertical" aria-label="Tools">
+      <Button aria-label="Cut">
         <Text>Cut</Text>
       </Button>
-      <Button accessibilityLabel="Copy">
+      <Button aria-label="Copy">
         <Text>Copy</Text>
       </Button>
     </ToolbarRoot>
@@ -199,7 +199,7 @@ import {
 
 function PartsBar() {
   return (
-    <ToolbarRoot accessibilityLabel="Editor">
+    <ToolbarRoot aria-label="Editor">
       <ToolbarButton aria-label="Bold">
         <Text>B</Text>
       </ToolbarButton>

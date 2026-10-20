@@ -59,7 +59,7 @@ export const DropdownDemo: Demo = {
             }}
           >
             <DropdownMenuTrigger
-              accessibilityLabel="Open demo dropdown"
+              aria-label="Open demo dropdown"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 9,
@@ -89,7 +89,7 @@ export const DropdownDemo: Demo = {
 
             <DropdownMenuSub value="share">
               <DropdownMenuSubTrigger
-                accessibilityLabel="Share submenu"
+                aria-label="Share submenu"
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 10,

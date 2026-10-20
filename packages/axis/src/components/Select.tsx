@@ -66,18 +66,10 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * Dialog scrim precedent). Selection is single-select and replacing:
  * activating the selected item keeps it (never deselects to `null`).
  *
- * Accessibility: the trigger carries `accessibilityRole="button"`
- * with `accessibilityState { expanded, disabled }`; the list is an
- * accessibility element with `accessibilityRole="listbox"`; each
- * item carries `role="option"` with `accessibilityState { selected,
- * disabled }`. Role provenance, verified against the RN 0.87
- * generated types
- * (`types_generated/Libraries/Components/View/ViewAccessibility.d.ts`):
- * the native `AccessibilityRole` union has no `option`/`listbox`
- * keys, so the item uses the web `Role` prop (which DOES include
- * `option`) — the Dialog `role="dialog"` precedent — while the list
- * uses `accessibilityRole="listbox"`. Both props are read by the RN
- * test renderer's role queries.
+ * ADR-112 aria-only: the trigger carries `role="combobox"` with
+ * `aria-expanded` and `aria-disabled`; the list carries `role="listbox"`;
+ * each item carries `role="option"` with `aria-selected` and `aria-disabled`.
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  *
  * Deferred, each for a named reason (not oversight):
  * - No filtering/search text entry — that is Combobox, not Select.
@@ -115,8 +107,9 @@ export type SelectItemProps = {
   label?: string;
   /** Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of item state, caller-provided. */
   style?: StateStyle<SelectItemState, StyleProp<ViewStyle>>;
@@ -231,7 +224,8 @@ export function SelectItem({
   value,
   label,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -290,8 +284,10 @@ export function SelectItem({
 
   const pressableProps = {
     role: "option",
-    accessibilityState: { selected, disabled: effectiveDisabled },
-    accessibilityLabel,
+    "aria-selected": selected,
+    "aria-disabled": effectiveDisabled || undefined,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
     testID,
     disabled: effectiveDisabled,
     onPress: chooseItem,
@@ -316,7 +312,8 @@ export function SelectItem({
       {
         ...pressableProps,
         disabled: true,
-        accessibilityState: { selected: false, disabled: true },
+        "aria-selected": false,
+        "aria-disabled": true,
       },
       inertState,
     );
@@ -324,8 +321,10 @@ export function SelectItem({
     return (
       <Pressable
         role="option"
-        accessibilityState={{ selected: false, disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        aria-selected={false}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, inertState)}
@@ -339,8 +338,10 @@ export function SelectItem({
   const node = substituted ?? (
     <Pressable
       role="option"
-      accessibilityState={{ selected, disabled: effectiveDisabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-selected={selected}
+      aria-disabled={effectiveDisabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={chooseItem}
@@ -377,7 +378,7 @@ export function SelectItem({
 /* Separator, ScrollUpArrow, ScrollDownArrow — with `render`          */
 /* element/function composition and value-or-function `style` on       */
 /* every part. Omitted Base UI pieces are documented deviations,       */
-/* not oversights: no `Label` (the trigger's `accessibilityLabel`,     */
+/* not oversights: no `Label` (the trigger's `aria-label`,     */
 /* or the Axis `Label` component, names the control), no `Icon`        */
 /* (caller content inside `Trigger`), no `List` (the popup IS the      */
 /* list container, the `Menu` compound precedent), no form             */
@@ -457,8 +458,9 @@ export type SelectTriggerProps = {
   children?: ReactNode;
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity).
    */
@@ -905,7 +907,8 @@ export function SelectTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: SelectTriggerProps): React.ReactNode {
   const root = useContext(SelectRootContext);
@@ -933,12 +936,11 @@ export function SelectTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: {
-        expanded: open,
-        disabled: effectiveDisabled || inert,
-      },
-      accessibilityLabel,
+      role: "combobox",
+      "aria-expanded": open,
+      "aria-disabled": (effectiveDisabled || inert) || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: effectiveDisabled || inert,
       onPress: toggleTrigger,
@@ -952,12 +954,11 @@ export function SelectTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{
-        expanded: open,
-        disabled: effectiveDisabled || inert,
-      }}
-      accessibilityLabel={accessibilityLabel}
+      role="combobox"
+      aria-expanded={open}
+      aria-disabled={(effectiveDisabled || inert) || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled || inert}
       onPress={toggleTrigger}
@@ -1084,7 +1085,7 @@ export function SelectBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss select",
+        "aria-label": "Dismiss select",
         testID,
         onPress: root.dismiss,
         style: resolveStyle(style, state),
@@ -1094,7 +1095,7 @@ export function SelectBackdrop({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityLabel="Dismiss select"
+        aria-label="Dismiss select"
         testID={testID}
         onPress={root.dismiss}
         style={[scrimFillStyle, resolveStyle(style, state)]}
@@ -1255,7 +1256,7 @@ export function SelectPopup({
     render,
     {
       accessible: true,
-      accessibilityRole: "listbox",
+      role: "listbox" as never,
       testID,
       style: resolveStyle(style, state),
       children,
@@ -1271,7 +1272,7 @@ export function SelectPopup({
     <View
       ref={setPopupRef}
       accessible
-      accessibilityRole="listbox"
+      role={"listbox" as never}
       testID={testID}
       style={resolveStyle(style, state)}
       {...({ onKeyDown: handleKeyDown, onKeyPress: handleKeyDown } as Record<
@@ -1312,7 +1313,7 @@ export function SelectGroup({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "group",
+      role: "group",
       testID,
       style,
       children,
@@ -1321,7 +1322,7 @@ export function SelectGroup({
   );
   if (substituted !== null) return substituted;
   return (
-    <View accessibilityRole="group" testID={testID} style={style}>
+    <View role="group" testID={testID} style={style}>
       {children}
     </View>
   );
@@ -1418,8 +1419,8 @@ export type SelectScrollUpArrowProps = {
   children?: ReactNode;
   /** Terminal: it never scrolls and is announced as disabled. Default `false`. */
   disabled?: boolean;
-  /** Accessible name source. Default `"Scroll up"`. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). Default `"Scroll up"`. */
+  "aria-label"?: string;
   /**
    * Ref to the scrolling `ScrollView` the caller composes around the
    * items (usually inside the same `SelectPopup`). The default press
@@ -1446,8 +1447,8 @@ export type SelectScrollDownArrowProps = {
   children?: ReactNode;
   /** Terminal: it never scrolls and is announced as disabled. Default `false`. */
   disabled?: boolean;
-  /** Accessible name source. Default `"Scroll down"`. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). Default `"Scroll down"`. */
+  "aria-label"?: string;
   /**
    * Ref to the scrolling `ScrollView` the caller composes around the
    * items (usually inside the same `SelectPopup`). The default press
@@ -1509,7 +1510,7 @@ function SelectScrollArrow({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
   scrollRef,
   onPress,
   render,
@@ -1520,7 +1521,7 @@ function SelectScrollArrow({
   style?: StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>;
   children?: ReactNode;
   disabled?: boolean;
-  accessibilityLabel?: string;
+  "aria-label"?: string;
   scrollRef?: RefObject<unknown>;
   onPress?: () => void;
   render?: RenderProp<SelectScrollArrowState, SlotProps>;
@@ -1543,7 +1544,9 @@ function SelectScrollArrow({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel: accessibilityLabel ?? defaultLabel,
+      role: "button",
+      "aria-label": ariaLabel ?? defaultLabel,
+      "aria-disabled": disabled || undefined,
       testID,
       disabled,
       onPress: commitScroll,
@@ -1556,8 +1559,9 @@ function SelectScrollArrow({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? defaultLabel}
+      role="button"
+      aria-label={ariaLabel ?? defaultLabel}
+      aria-disabled={disabled || undefined}
       testID={testID}
       disabled={disabled}
       onPress={commitScroll}

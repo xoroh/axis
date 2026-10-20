@@ -18,7 +18,7 @@ import { TableCell, TableHeader, TableRoot, TableRow } from "./index";
 describe("TableRoot on React Native", () => {
   it("renders the header/body structure with a header-announced row", async () => {
     await render(
-      <TableRoot testID="tbl" accessibilityLabel="Order history">
+      <TableRoot testID="tbl" aria-label="Order history">
         <TableHeader testID="hdr">
           <TableRow header testID="hdr-row">
             <TableCell>
@@ -43,11 +43,9 @@ describe("TableRoot on React Native", () => {
     expect(screen.getByText("Price")).toBeTruthy();
     expect(screen.getByText("Apples")).toBeTruthy();
     expect(screen.getByText("$4")).toBeTruthy();
-    expect(screen.getByTestId("hdr-row").props.accessibilityRole).toBe(
-      "header",
-    );
-    expect(screen.getByTestId("row-1").props.accessibilityRole).toBeUndefined();
-    expect(screen.getByTestId("tbl").props.accessibilityRole).toBeUndefined();
+    expect(screen.getByTestId("hdr-row").props.role).toBe("columnheader");
+    expect(screen.getByTestId("row-1").props.role).toBeUndefined();
+    expect(screen.getByTestId("tbl").props.role).toBe("table");
   });
 
   it("keeps header before body rows in tree order", async () => {

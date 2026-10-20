@@ -16,6 +16,10 @@ import { useControllableState } from "../useControllableState";
  * Payloads stay primitive strings (`onValueChange`) — no event-object
  * types cross this boundary. Keyboard selection and masking beyond
  * `secureTextEntry` stay out, not hidden behavior here.
+ *
+ * ADR-112 aria-only: the input accepts `aria-label` and `aria-labelledby`
+ * (associated automatically by `FieldControl` from the field's label).
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  */
 
 export type InputState = {
@@ -75,13 +79,13 @@ export type InputProps = {
    * while `autoGrow` is set (the clamped value, after `minRows`/`maxRows`).
    */
   onHeightChange?: (height: number) => void;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
   /**
    * Label association id (set automatically by `FieldControl` from
-   * the field's label). Passed straight to the host.
+   * the field's label). Passed straight to the host (ADR-112).
    */
-  accessibilityLabelledBy?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Input style: value or function of input state, caller-provided. */
   style?: StateStyle<InputState, StyleProp<TextStyle>>;
@@ -113,46 +117,20 @@ function assignRef(
   }
 }
 
-/**
- * One row in dp for `minRows`/`maxRows` clamping: the caller style
- * `lineHeight`, else `fontSize`, else 14 (the RN default font size).
- * Walks plain objects/arrays only — registered styles cannot be
- * inspected, so they take the fallback (documented, not silent).
- */
 function rowHeightFor(style: StyleProp<TextStyle> | undefined): number {
-  const flat: Record<string, unknown> = {};
-  const walk = (node: unknown): void => {
-    if (Array.isArray(node)) {
-      for (const item of node) walk(item);
-      return;
-    }
-    if (node && typeof node === "object") {
-      for (const [key, val] of Object.entries(node)) flat[key] = val;
-    }
-  };
-  walk(style);
-  const lineHeight = flat.lineHeight;
-  if (
-    typeof lineHeight === "number" &&
-    Number.isFinite(lineHeight) &&
-    lineHeight > 0
-  ) {
-    return lineHeight;
-  }
-  const fontSize = flat.fontSize;
-  if (
-    typeof fontSize === "number" &&
-    Number.isFinite(fontSize) &&
-    fontSize > 0
-  ) {
-    return fontSize;
-  }
+  if (!style) return 14;
+  const merged: TextStyle = Object.assign(
+    {},
+    ...(Array.isArray(style) ? style : [style]),
+  );
+  if (typeof merged.lineHeight === "number") return merged.lineHeight;
+  if (typeof merged.fontSize === "number") return merged.fontSize;
   return 14;
 }
 
 export function Input({
   value,
-  defaultValue = "",
+  defaultValue,
   onValueChange,
   onSubmitEditing,
   onBlur,
@@ -166,8 +144,8 @@ export function Input({
   minRows,
   maxRows,
   onHeightChange,
-  accessibilityLabel,
-  accessibilityLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -214,29 +192,27 @@ export function Input({
     onHeightChange?.(next);
   };
 
-  const substituted = resolveRender(
-    render,
-    {
-      value: text ?? "",
-      onChangeText: editable ? setText : undefined,
-      onSubmitEditing: editable ? onSubmitEditing : undefined,
-      onBlur: editable ? onBlur : undefined,
-      onFocus: editable ? onFocus : undefined,
-      placeholder,
-      secureTextEntry,
-      editable,
-      multiline,
-      numberOfLines: lines,
-      onContentSizeChange: grow ? handleContentSizeChange : undefined,
-      onHeightChange,
-      accessibilityLabel,
-      accessibilityLabelledBy,
-      testID,
-      style: resolvedStyle,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+  const hostProps = {
+    value: text ?? "",
+    onChangeText: editable ? setText : undefined,
+    onSubmitEditing: editable ? onSubmitEditing : undefined,
+    onBlur: editable ? onBlur : undefined,
+    onFocus: editable ? onFocus : undefined,
+    placeholder,
+    secureTextEntry,
+    editable,
+    multiline,
+    numberOfLines: lines,
+    onContentSizeChange: grow ? handleContentSizeChange : undefined,
+    onHeightChange,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    style: resolvedStyle,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
@@ -253,8 +229,8 @@ export function Input({
       multiline={multiline}
       numberOfLines={lines}
       onContentSizeChange={grow ? handleContentSizeChange : undefined}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityLabelledBy={accessibilityLabelledBy}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={
         grow

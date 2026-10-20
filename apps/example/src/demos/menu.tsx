@@ -120,7 +120,7 @@ export const MenuDemo: Demo = {
     return (
       <View style={{ gap: 16 }}>
         <MenuRoot>
-          <MenuTrigger accessibilityLabel="Open demo menu" style={triggerStyle}>
+          <MenuTrigger aria-label="Open demo menu" style={triggerStyle}>
             <Text style={labelStyle}>Open</Text>
           </MenuTrigger>
           <MenuPortal>
@@ -141,7 +141,7 @@ export const MenuDemo: Demo = {
                 <MenuSeparator />
                 <MenuSubmenuRoot value="more">
                   <MenuSubmenuTrigger
-                    accessibilityLabel="More options"
+                    aria-label="More options"
                     style={itemStyle}
                   >
                     <Text style={labelStyle}>More</Text>
@@ -173,7 +173,7 @@ export const MenuDemo: Demo = {
         </MenuRoot>
         <MenuRoot modal={false}>
           <MenuTrigger
-            accessibilityLabel="Open inline"
+            aria-label="Open inline"
             style={wideTriggerStyle}
           >
             <Text style={labelStyle}>Inline</Text>
@@ -188,7 +188,7 @@ export const MenuDemo: Demo = {
         </MenuRoot>
         <MenuRoot>
           <MenuTrigger
-            accessibilityLabel="Open filterable menu"
+            aria-label="Open filterable menu"
             style={triggerStyle}
           >
             <Text style={labelStyle}>Filterable</Text>
@@ -198,7 +198,7 @@ export const MenuDemo: Demo = {
             <MenuPositioner align="start">
               <MenuPopup style={popupStyle}>
                 <MenuInput
-                  accessibilityLabel="Filter demo menu"
+                  aria-label="Filter demo menu"
                   placeholder="Filter"
                   style={inputStyle}
                 />
@@ -211,7 +211,7 @@ export const MenuDemo: Demo = {
                 <MenuEmpty>
                   <Text style={subtleStyle}>No matches</Text>
                 </MenuEmpty>
-                <MenuClear accessibilityLabel="Clear demo filter">
+                <MenuClear aria-label="Clear demo filter">
                   <Text style={subtleStyle}>Clear</Text>
                 </MenuClear>
               </MenuPopup>

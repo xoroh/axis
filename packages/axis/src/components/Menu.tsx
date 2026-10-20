@@ -109,8 +109,9 @@ export type MenuTriggerProps = {
   children?: ReactNode;
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
@@ -139,8 +140,9 @@ export type MenuItemProps = {
   value?: string;
   /** Terminal: it never selects and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of item state, caller-provided. */
   style?: StateStyle<MenuItemState, StyleProp<ViewStyle>>;
@@ -301,7 +303,8 @@ export function MenuTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: MenuTriggerProps): React.ReactNode {
   const disclosure = useContext(MenuDisclosureContext);
@@ -332,9 +335,11 @@ export function MenuTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -348,9 +353,11 @@ export function MenuTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={open}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -405,7 +412,8 @@ function useMenuItemActivation({
 export function MenuItem({
   value,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -440,8 +448,9 @@ export function MenuItem({
       render,
       {
         role: "menuitem",
-        accessibilityState: { disabled: true },
-        accessibilityLabel,
+        "aria-disabled": true,
+        ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, { disabled: true, highlighted: false }),
@@ -453,8 +462,9 @@ export function MenuItem({
     return (
       <Pressable
         role="menuitem"
-        accessibilityState={{ disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, { disabled: true, highlighted: false })}
@@ -476,8 +486,9 @@ export function MenuItem({
     render,
     {
       role: "menuitem",
-      accessibilityState: { disabled },
-      accessibilityLabel,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -493,8 +504,9 @@ export function MenuItem({
   return (
     <Pressable
       role="menuitem"
-      accessibilityState={{ disabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -949,7 +961,7 @@ export function MenuBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss menu",
+        "aria-label": "Dismiss menu",
         testID,
         onPress: disclosure.dismiss,
         style: resolveStyle(style, state),
@@ -959,7 +971,7 @@ export function MenuBackdrop({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityLabel="Dismiss menu"
+        aria-label="Dismiss menu"
         testID={testID}
         onPress={disclosure.dismiss}
         style={[SCRIM_FILL, resolveStyle(style, state)]}
@@ -1156,8 +1168,9 @@ export type MenuLinkItemProps = {
   value?: string;
   /** Terminal: it never activates and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of item state, caller-provided. */
   style?: StateStyle<MenuItemState, StyleProp<ViewStyle>>;
@@ -1211,7 +1224,7 @@ export function MenuGroup({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "group",
+      role: "group",
       testID,
       style,
       children,
@@ -1220,7 +1233,7 @@ export function MenuGroup({
   );
   if (substituted !== null) return substituted;
   return (
-    <View accessibilityRole="group" testID={testID} style={style}>
+    <View role="group" testID={testID} style={style}>
       {children}
     </View>
   );
@@ -1248,7 +1261,8 @@ export function MenuGroupLabel({
 export function MenuLinkItem({
   value,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -1284,8 +1298,9 @@ export function MenuLinkItem({
       render,
       {
         role: "link",
-        accessibilityState: { disabled: true },
-        accessibilityLabel,
+        "aria-disabled": true,
+        ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, { disabled: true, highlighted: false }),
@@ -1297,8 +1312,9 @@ export function MenuLinkItem({
     return (
       <Pressable
         role="link"
-        accessibilityState={{ disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, { disabled: true, highlighted: false })}
@@ -1319,8 +1335,9 @@ export function MenuLinkItem({
     render,
     {
       role: "link",
-      accessibilityState: { disabled },
-      accessibilityLabel,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -1336,8 +1353,9 @@ export function MenuLinkItem({
   return (
     <Pressable
       role="link"
-      accessibilityState={{ disabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -1391,8 +1409,9 @@ export type MenuCheckboxItemProps = {
   onCheckedChange?: (checked: boolean) => void;
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of item state, caller-provided. */
   style?: StateStyle<MenuCheckboxItemState, StyleProp<ViewStyle>>;
@@ -1456,8 +1475,9 @@ export type MenuRadioItemProps = {
   value: string;
   /** Terminal: it never selects and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of item state, caller-provided. */
   style?: StateStyle<MenuRadioItemState, StyleProp<ViewStyle>>;
@@ -1507,7 +1527,8 @@ export function MenuCheckboxItem({
   defaultChecked = false,
   onCheckedChange,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -1552,9 +1573,11 @@ export function MenuCheckboxItem({
     const substituted = resolveRender(
       render,
       {
-        accessibilityRole: "checkbox",
-        accessibilityState: { checked: false, disabled: true },
-        accessibilityLabel,
+        role: "checkbox",
+        "aria-checked": false,
+        "aria-disabled": true,
+        ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, {
@@ -1569,9 +1592,11 @@ export function MenuCheckboxItem({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: false, disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        role="checkbox"
+        aria-checked={false}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, {
@@ -1595,9 +1620,11 @@ export function MenuCheckboxItem({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "checkbox",
-      accessibilityState: { checked: active, disabled },
-      accessibilityLabel,
+      role: "checkbox",
+      "aria-checked": active,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: toggleChecked,
@@ -1613,9 +1640,11 @@ export function MenuCheckboxItem({
   return (
     <MenuCheckDisclosureContext.Provider value={{ active }}>
       <Pressable
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked: active, disabled }}
-        accessibilityLabel={accessibilityLabel}
+        role="checkbox"
+        aria-checked={active}
+        aria-disabled={disabled || undefined}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled={disabled}
         onPress={toggleChecked}
@@ -1696,7 +1725,8 @@ const MenuRadioGroupContext = createContext<MenuRadioGroupDisclosure | null>(
 export function MenuRadioItem({
   value,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -1726,9 +1756,11 @@ export function MenuRadioItem({
     const substituted = resolveRender(
       render,
       {
-        accessibilityRole: "radio",
-        accessibilityState: { selected: false, disabled: true },
-        accessibilityLabel,
+        role: "radio",
+        "aria-selected": false,
+        "aria-disabled": true,
+        ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, {
@@ -1743,9 +1775,11 @@ export function MenuRadioItem({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityRole="radio"
-        accessibilityState={{ selected: false, disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        role="radio"
+        aria-selected={false}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, {
@@ -1769,9 +1803,11 @@ export function MenuRadioItem({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "radio",
-      accessibilityState: { selected, disabled },
-      accessibilityLabel,
+      role: "radio",
+      "aria-selected": selected,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: selectOption,
@@ -1787,9 +1823,11 @@ export function MenuRadioItem({
   return (
     <MenuCheckDisclosureContext.Provider value={{ active: selected }}>
       <Pressable
-        accessibilityRole="radio"
-        accessibilityState={{ selected, disabled }}
-        accessibilityLabel={accessibilityLabel}
+        role="radio"
+        aria-selected={selected}
+        aria-disabled={disabled || undefined}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled={disabled}
         onPress={selectOption}
@@ -1842,8 +1880,9 @@ export function MenuRadioItemIndicator({
 export type MenuInputProps = {
   /** Placeholder text for the filter entry. */
   placeholder?: string;
-  /** Accessible name source for the filter entry. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the filter entry (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Filter entry style, caller-provided. */
   style?: StyleProp<TextStyle>;
@@ -1866,8 +1905,9 @@ export type MenuClearProps = {
   style?: StateStyle<MenuClearState, StyleProp<ViewStyle>>;
   /** Clear content (label composed by the caller). */
   children?: ReactNode;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /** Terminal: the query never clears. Default `false`. */
   disabled?: boolean;
   /**
@@ -1913,7 +1953,8 @@ function assignFilterInputRef(
 
 export function MenuInput({
   placeholder,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   disabled = false,
@@ -1941,7 +1982,8 @@ export function MenuInput({
       value={filter.query}
       onChangeText={filter.setQuery}
       placeholder={placeholder}
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       editable={!disabled}
       style={style}
@@ -1953,7 +1995,8 @@ export function MenuClear({
   testID,
   style,
   children,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   disabled = false,
   render,
 }: MenuClearProps): React.ReactNode {
@@ -1976,7 +2019,10 @@ export function MenuClear({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel,
+      role: "button",
+      "aria-disabled": effectiveDisabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: effectiveDisabled,
       onPress: clearQuery,
@@ -1989,7 +2035,10 @@ export function MenuClear({
 
   return (
     <Pressable
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-disabled={effectiveDisabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={clearQuery}
@@ -2079,7 +2128,8 @@ export type MenuSubmenuTriggerProps = {
   >;
   children?: ReactNode;
   disabled?: boolean;
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   render?: RenderProp<{ open: boolean; disabled: boolean }, SlotProps>;
 };
 
@@ -2092,7 +2142,8 @@ export function MenuSubmenuTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: MenuSubmenuTriggerProps): React.ReactNode {
   const dropdownDisclosure = useContext(DropdownDisclosureContext);
@@ -2120,7 +2171,8 @@ export function MenuSubmenuTrigger({
             | ((state: { open: boolean }) => StyleProp<ViewStyle>)
         }
         disabled={disabled}
-        accessibilityLabel={accessibilityLabel}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         render={render as RenderProp<{ open: boolean }, SlotProps>}
       >
         {children}
@@ -2133,9 +2185,11 @@ export function MenuSubmenuTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": expanded,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleSub,
@@ -2148,9 +2202,11 @@ export function MenuSubmenuTrigger({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ expanded, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={expanded}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleSub}

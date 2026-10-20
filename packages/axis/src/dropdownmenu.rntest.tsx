@@ -28,14 +28,14 @@ async function pressLabel(label: string) {
 function Tree({ onSelect }: { onSelect?: (value: string) => void }) {
   return (
     <DropdownMenuRoot testID="dd" defaultOpen={false}>
-      <DropdownMenuTrigger accessibilityLabel="Open menu">
+      <DropdownMenuTrigger aria-label="Open menu">
         <RNText>Open</RNText>
       </DropdownMenuTrigger>
       <DropdownMenuItem value="new" onSelect={onSelect}>
         <RNText>New</RNText>
       </DropdownMenuItem>
       <DropdownMenuSub value="share">
-        <DropdownMenuSubTrigger accessibilityLabel="Share submenu">
+        <DropdownMenuSubTrigger aria-label="Share submenu">
           <RNText>Share</RNText>
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent testID="share-panel">
@@ -43,7 +43,7 @@ function Tree({ onSelect }: { onSelect?: (value: string) => void }) {
             <RNText>Email</RNText>
           </DropdownMenuItem>
           <DropdownMenuSub value="more">
-            <DropdownMenuSubTrigger accessibilityLabel="More submenu">
+            <DropdownMenuSubTrigger aria-label="More submenu">
               <RNText>More</RNText>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent testID="more-panel">
@@ -140,7 +140,7 @@ describe("DropdownMenuRoot on React Native", () => {
           onDismiss={() => order.push("dismiss")}
           onOpenChange={() => order.push("change")}
         >
-          <DropdownMenuTrigger accessibilityLabel="Open">
+          <DropdownMenuTrigger aria-label="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
           <DropdownMenuItem value="x">
@@ -158,11 +158,11 @@ describe("DropdownMenuRoot on React Native", () => {
     await render(
       <PortalHost>
         <DropdownMenuRoot defaultOpen>
-          <DropdownMenuTrigger accessibilityLabel="Open">
+          <DropdownMenuTrigger aria-label="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
           <DropdownMenuSub value="share">
-            <DropdownMenuSubTrigger accessibilityLabel="Share" disabled>
+            <DropdownMenuSubTrigger aria-label="Share" disabled>
               <RNText>Share</RNText>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent testID="share-panel">
@@ -195,7 +195,7 @@ describe("DropdownMenuRoot on React Native", () => {
     await render(
       <PortalHost>
         <DropdownMenuRoot testID="dd" open={false}>
-          <DropdownMenuTrigger accessibilityLabel="Open">
+          <DropdownMenuTrigger aria-label="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
           <DropdownMenuItem value="x">
@@ -212,7 +212,7 @@ describe("DropdownMenuRoot on React Native", () => {
     await render(
       <PortalHost>
         <DropdownMenuRoot ref={ref}>
-          <DropdownMenuTrigger accessibilityLabel="Open">
+          <DropdownMenuTrigger aria-label="Open">
             <RNText>Open</RNText>
           </DropdownMenuTrigger>
         </DropdownMenuRoot>

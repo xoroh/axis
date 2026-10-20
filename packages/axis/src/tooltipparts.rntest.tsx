@@ -46,12 +46,12 @@ function TipCompound(props: {
         onOpenChange={props.onOpenChange}
         disabled={props.disabled}
       >
-        <TooltipTrigger testID="tip-trigger" accessibilityLabel="More info">
+        <TooltipTrigger testID="tip-trigger" aria-label="More info">
           <Text>Info</Text>
         </TooltipTrigger>
         <TooltipPortal>
           <TooltipPositioner>
-            <TooltipPopup testID="tip-popup" accessibilityLabel="Details">
+            <TooltipPopup testID="tip-popup" aria-label="Details">
               <TooltipArrow testID="tip-arrow" />
               <Text>Details here</Text>
             </TooltipPopup>

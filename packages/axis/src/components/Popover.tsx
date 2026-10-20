@@ -73,9 +73,8 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  *   `focusTrap` + `overlayModality` RN adaptation (parity D5).
  *
  * Accessibility notes: the box is an accessibility element
- * (`accessible`) carrying `accessibilityLabel` — but declares no
- * role. React Native defines no popover role (checked against the
- * installed RN `ViewAccessibility` union), and an unbacked role
+ * (`accessible`) carrying `aria-label` — but declares no
+ * role. React Native defines no popover role, and an unbacked role
  * claim is worse than honest silence (the Label precedent).
  *
  * Test ids follow Dialog: the box carries `testID`; the scrim
@@ -165,8 +164,9 @@ export type PopoverTriggerState = {
 export type PopoverTriggerProps = {
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of trigger state, caller-provided. */
   style?: StateStyle<PopoverTriggerState, StyleProp<ViewStyle>>;
@@ -225,7 +225,8 @@ export type PopoverPopupState = {
 
 export type PopoverPopupProps = {
   /** Accessible name source for the popover region (no role — see module note). */
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of popup state, caller-provided. */
   style?: StateStyle<PopoverPopupState, StyleProp<ViewStyle>>;
@@ -279,8 +280,9 @@ export type PopoverCloseState = {
 export type PopoverCloseProps = {
   /** Terminal: it never closes and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of close state, caller-provided. */
   style?: StateStyle<PopoverCloseState, StyleProp<ViewStyle>>;
@@ -444,7 +446,8 @@ export function PopoverRoot({
 
 export function PopoverTrigger({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -476,9 +479,11 @@ export function PopoverTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -492,9 +497,11 @@ export function PopoverTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={open}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -559,7 +566,7 @@ export function PopoverBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss",
+        "aria-label": "Dismiss",
         testID,
         onPress: handlePress,
         style: resolveStyle(style, state),
@@ -569,7 +576,7 @@ export function PopoverBackdrop({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityLabel="Dismiss"
+        aria-label="Dismiss"
         testID={testID}
         onPress={handlePress}
         style={[SCRIM_STYLE, resolveStyle(style, state)]}
@@ -637,7 +644,8 @@ export function PopoverPositioner({
 }
 
 export function PopoverPopup({
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -672,7 +680,7 @@ export function PopoverPopup({
   // element (marked, stops), else Title, else the box.
   useModalFocus({
     open,
-    enabled: accessibilityLabel !== undefined && disclosure !== null,
+    enabled: (ariaLabel !== undefined || ariaLabelledBy !== undefined) && disclosure !== null,
     initialFocus: initialFocus ?? overlay?.initialFocus,
     finalFocus: finalFocus ?? overlay?.finalFocus,
     scope: focusScope,
@@ -712,11 +720,12 @@ export function PopoverPopup({
     render,
     {
       accessible: true,
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
-      ...(web && modalActive ? { "aria-modal": true } : null),
+      ...(modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
       ...webTabIndexProps(web),
       style: resolveStyle(style, state),
@@ -735,11 +744,12 @@ export function PopoverPopup({
       <View
         ref={setPopupRef}
         accessible
-        accessibilityLabel={accessibilityLabel}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         onAccessibilityEscape={handleAccessibilityEscape}
         accessibilityViewIsModal={modalActive}
-        {...(web && modalActive ? { "aria-modal": true } : null)}
+        {...(modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
         {...webTabIndexProps(web)}
         style={resolveStyle(style, state)}
@@ -775,7 +785,7 @@ export function PopoverTitle({
   return (
     <Text
       ref={setTitleNode}
-      accessibilityRole="header"
+      role="heading"
       testID={testID}
       style={style}
       {...webTabIndexProps(web)}
@@ -806,7 +816,8 @@ export function PopoverDescription({
 
 export function PopoverClose({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -827,9 +838,10 @@ export function PopoverClose({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: closePopover,
@@ -844,9 +856,10 @@ export function PopoverClose({
   return (
     <Pressable
       ref={setCloseNode}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={closePopover}

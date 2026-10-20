@@ -87,8 +87,9 @@ export type TabsTriggerProps = {
   value: string;
   /** Terminal for this trigger only: it never selects and is announced as disabled. Siblings are unaffected. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Trigger pressable style: value or function of trigger state. */
   style?: StateStyle<TabsTriggerState, StyleProp<ViewStyle>>;
@@ -113,8 +114,7 @@ export type TabsPanelProps = {
    * invisible (`display: "none"` merged after the caller style — the
    * Base UI hidden-attribute equivalent) and hidden from assistive
    * tech via `aria-hidden` alone (RN 0.87 resolves `aria-hidden` to
-   * `accessibilityElementsHidden`, and `true` additionally sets
-   * `importantForAccessibility="no-hide-descendants"` — View.js lines
+   * `aria-hidden={true}` suppressing assistive tech — View.js lines
    * 71-76 — so descendants stay unannounced on iOS and Android;
    * ADR-112 aria-only, no legacy hiding props).
    * Default `false` (mounts only while selected).
@@ -241,7 +241,7 @@ export function TabsList({
     render,
     {
       accessible: true,
-      accessibilityRole: "tablist",
+      role: "tablist",
       testID,
       style,
       children,
@@ -256,7 +256,7 @@ export function TabsList({
       // assistive technology (and the `*ByRole` proofs): a plain `View`
       // is not one by default, unlike `Pressable`.
       accessible
-      accessibilityRole="tablist"
+      role="tablist"
       testID={testID}
       style={style}
     >
@@ -268,7 +268,8 @@ export function TabsList({
 export function TabsTrigger({
   value,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -286,9 +287,11 @@ export function TabsTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "tab",
-      accessibilityState: { selected, disabled },
-      accessibilityLabel,
+      role: "tab",
+      "aria-selected": selected,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: selectTab,
@@ -301,9 +304,11 @@ export function TabsTrigger({
 
   return (
     <Pressable
-      accessibilityRole="tab"
-      accessibilityState={{ selected, disabled }}
-      accessibilityLabel={accessibilityLabel}
+      role="tab"
+      aria-selected={selected}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectTab}
@@ -360,8 +365,7 @@ export function TabsPanel({
       testID={testID}
       style={[style, closedStyle]}
       // `aria-hidden` alone hides descendants on iOS and Android
-      // (resolved to accessibilityElementsHidden +
-      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // (resolved in RN View.js lines 71-76); ADR-112
       // aria-only — no legacy hiding props.
       aria-hidden={!selected}
     >

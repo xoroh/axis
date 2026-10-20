@@ -371,7 +371,7 @@ describe("Tooltip compound placement default", () => {
         nativeEvent: { layout: { width: 100, height: 40 } },
       });
     });
-    const tip = tree?.findByProps({ accessibilityRole: "tooltip" });
+    const tip = tree?.findByProps({ role: "tooltip" });
     expect(tip).toBeTruthy();
     const style = host()?.props.style;
     root?.unmount();

@@ -56,7 +56,7 @@ A `CheckboxRoot` without `value` inside a group stays standalone
 | `defaultValue` | `readonly string[]` | no | `[]` | Uncontrolled initial selection (nothing selected). |
 | `onValueChange` | `(value: readonly string[]) => void` | no | — | Fires with the selected item values on every committed toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no toggles, no callbacks. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<CheckboxGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
 | `children` | `ReactNode` | yes | — | The group's items (`CheckboxRoot` with `value`). |
@@ -88,7 +88,7 @@ import { CheckboxGroup, CheckboxRoot } from "@xoroh/axis";
 
 function Toppings() {
   return (
-    <CheckboxGroup accessibilityLabel="Toppings">
+    <CheckboxGroup aria-label="Toppings">
       <CheckboxRoot value="cheese">
         <Text>Cheese</Text>
       </CheckboxRoot>
@@ -113,7 +113,7 @@ function ControlledToppings() {
     <CheckboxGroup
       value={value}
       onValueChange={setValue}
-      accessibilityLabel="Toppings"
+      aria-label="Toppings"
     >
       <CheckboxRoot
         value="cheese"

@@ -28,16 +28,16 @@ function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
   return (
     <PortalHost>
       <PopoverRoot onOpenChange={onOpen}>
-        <PopoverTrigger accessibilityLabel="Open popover">
+        <PopoverTrigger aria-label="Open popover">
           <RNText>Open</RNText>
         </PopoverTrigger>
         <PopoverPortal>
           <PopoverPositioner testID="popover-positioner">
-            <PopoverPopup testID="popover-popup" accessibilityLabel="Example">
+            <PopoverPopup testID="popover-popup" aria-label="Example">
               <PopoverTitle>Example popover</PopoverTitle>
               <PopoverDescription>A description</PopoverDescription>
               <PopoverArrow testID="popover-arrow" />
-              <PopoverClose accessibilityLabel="Close popover">
+              <PopoverClose aria-label="Close popover">
                 <RNText>Close</RNText>
               </PopoverClose>
             </PopoverPopup>
@@ -125,7 +125,7 @@ describe("Popover compound parts on React Native", () => {
             <PopoverPositioner>
               <PopoverPopup
                 testID="popover-popup"
-                accessibilityLabel="Example"
+                aria-label="Example"
               />
             </PopoverPositioner>
           </PopoverPortal>
@@ -143,7 +143,7 @@ describe("Popover compound parts on React Native", () => {
             render={
               <Pressable
                 testID="custom-trigger"
-                accessibilityLabel="Custom open"
+                aria-label="Custom open"
               />
             }
           />
@@ -151,7 +151,7 @@ describe("Popover compound parts on React Native", () => {
             <PopoverPositioner>
               <PopoverPopup
                 testID="popover-popup"
-                accessibilityLabel="Example"
+                aria-label="Example"
               />
             </PopoverPositioner>
           </PopoverPortal>
@@ -178,7 +178,7 @@ describe("Popover compound parts on React Native", () => {
             <PopoverPositioner>
               <PopoverPopup
                 testID="popover-popup"
-                accessibilityLabel="Example"
+                aria-label="Example"
               />
             </PopoverPositioner>
           </PopoverPortal>
@@ -196,7 +196,7 @@ describe("Popover compound parts on React Native", () => {
             <PopoverPositioner>
               <PopoverPopup
                 testID="popover-popup"
-                accessibilityLabel="Example"
+                aria-label="Example"
                 style={(state) => ({ opacity: state.open ? 1 : 0 })}
               />
             </PopoverPositioner>
@@ -222,7 +222,7 @@ describe("Popover compound parts on React Native", () => {
             <PopoverPositioner>
               <PopoverPopup
                 testID="popover-popup"
-                accessibilityLabel="Example"
+                aria-label="Example"
               />
             </PopoverPositioner>
           </PopoverPortal>
@@ -236,12 +236,12 @@ describe("Popover compound parts on React Native", () => {
     await render(
       <PortalHost>
         <PopoverTrigger
-          accessibilityLabel="Orphan trigger"
+          aria-label="Orphan trigger"
           testID="orphan-trigger"
         >
           <RNText>Orphan</RNText>
         </PopoverTrigger>
-        <PopoverClose accessibilityLabel="Orphan close" testID="orphan-close">
+        <PopoverClose aria-label="Orphan close" testID="orphan-close">
           <RNText>Orphan</RNText>
         </PopoverClose>
       </PortalHost>,

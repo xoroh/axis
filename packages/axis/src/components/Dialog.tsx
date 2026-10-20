@@ -176,8 +176,9 @@ export type DialogTriggerState = {
 export type DialogTriggerProps = {
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of trigger state, caller-provided. */
   style?: StateStyle<DialogTriggerState, StyleProp<ViewStyle>>;
@@ -213,8 +214,9 @@ export type DialogPopupState = {
 };
 
 export type DialogPopupProps = {
-  /** Accessible name source for the surface. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the surface (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Surface role. Default `"dialog"`; `AlertDialog` passes
    * `"alertdialog"` (the upstream AlertDialog precedent — a blocking
@@ -276,8 +278,9 @@ export type DialogCloseState = {
 export type DialogCloseProps = {
   /** Terminal: it never closes and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of close state, caller-provided. */
   style?: StateStyle<DialogCloseState, StyleProp<ViewStyle>>;
@@ -396,7 +399,8 @@ export function DialogRoot({
 
 export function DialogTrigger({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -432,9 +436,11 @@ export function DialogTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -449,9 +455,11 @@ export function DialogTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={open}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -511,7 +519,7 @@ export function DialogBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss",
+        "aria-label": "Dismiss",
         testID,
         onPress: handlePress,
         style: resolveStyle(style, state),
@@ -521,7 +529,7 @@ export function DialogBackdrop({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityLabel="Dismiss"
+        aria-label="Dismiss"
         testID={testID}
         onPress={handlePress}
         style={resolveStyle(style, state)}
@@ -541,7 +549,8 @@ export function DialogBackdrop({
 }
 
 export function DialogPopup({
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   role = "dialog",
   testID,
   style,
@@ -623,12 +632,12 @@ export function DialogPopup({
     {
       accessible: true,
       role,
-      accessibilityRole: role,
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
-      ...(web && modalActive ? { "aria-modal": true } : null),
+      ...(modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
       ...webTabIndexProps(web),
       style: resolveStyle(style, state),
@@ -648,12 +657,12 @@ export function DialogPopup({
         ref={setPopupRef}
         accessible
         role={role}
-        accessibilityRole={role}
-        accessibilityLabel={accessibilityLabel}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         onAccessibilityEscape={handleAccessibilityEscape}
         accessibilityViewIsModal={modalActive}
-        {...(web && modalActive ? { "aria-modal": true } : null)}
+        {...(modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
         {...webTabIndexProps(web)}
         style={resolveStyle(style, state)}
@@ -689,7 +698,7 @@ export function DialogTitle({
   return (
     <Text
       ref={setTitleNode}
-      accessibilityRole="header"
+      role="heading"
       testID={testID}
       style={style}
       {...webTabIndexProps(web)}
@@ -720,7 +729,8 @@ export function DialogDescription({
 
 export function DialogClose({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -745,9 +755,10 @@ export function DialogClose({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: closeDialog,
@@ -762,9 +773,10 @@ export function DialogClose({
   return (
     <Pressable
       ref={setCloseNode}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={closeDialog}

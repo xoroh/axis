@@ -53,7 +53,7 @@ describe("Dialog focus on web", () => {
         <DialogRoot defaultOpen>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example">
+            <DialogPopup aria-label="Example">
               <button type="button" data-testid="first">
                 First
               </button>
@@ -73,7 +73,7 @@ describe("Dialog focus on web", () => {
         <DialogRoot defaultOpen>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example">
+            <DialogPopup aria-label="Example">
               <DialogTitle>Title</DialogTitle>
               <span>Body</span>
             </DialogPopup>
@@ -93,7 +93,7 @@ describe("Dialog focus on web", () => {
         <DialogRoot defaultOpen>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example">
+            <DialogPopup aria-label="Example">
               <button type="button" data-testid="first">
                 First
               </button>
@@ -122,7 +122,7 @@ describe("Dialog focus on web", () => {
           <DialogTrigger>Open</DialogTrigger>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example">
+            <DialogPopup aria-label="Example">
               <button type="button">Action</button>
               <DialogClose>Close</DialogClose>
             </DialogPopup>
@@ -137,7 +137,7 @@ describe("Dialog focus on web", () => {
           <DialogTrigger>Open</DialogTrigger>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example">
+            <DialogPopup aria-label="Example">
               <button type="button">Action</button>
               <DialogClose>Close</DialogClose>
             </DialogPopup>
@@ -156,7 +156,7 @@ describe("Dialog focus on web", () => {
             <DialogTrigger>Open</DialogTrigger>
             <DialogPortal>
               <DialogBackdrop />
-              <DialogPopup accessibilityLabel="Example">
+              <DialogPopup aria-label="Example">
                 <button type="button">Action</button>
               </DialogPopup>
             </DialogPortal>
@@ -173,7 +173,7 @@ describe("Dialog focus on web", () => {
           <DialogRoot open={false}>
             <DialogPortal>
               <DialogBackdrop />
-              <DialogPopup accessibilityLabel="Example">
+              <DialogPopup aria-label="Example">
                 <button type="button">Action</button>
               </DialogPopup>
             </DialogPortal>
@@ -190,7 +190,7 @@ describe("Dialog focus on web", () => {
         <DialogRoot defaultOpen>
           <DialogPortal>
             <DialogBackdrop />
-            <DialogPopup accessibilityLabel="Example" initialFocus={false}>
+            <DialogPopup aria-label="Example" initialFocus={false}>
               <button type="button" data-testid="first">
                 First
               </button>
@@ -211,7 +211,7 @@ describe("Dialog focus on web", () => {
           <DialogPortal>
             <DialogBackdrop />
             <DialogPopup
-              accessibilityLabel="Example"
+              aria-label="Example"
               initialFocus={(interaction) => {
                 seen.push(interaction);
                 return null;
@@ -243,7 +243,7 @@ describe("AlertDialog focus on web", () => {
       <PortalHost>
         <AlertDialogRoot defaultOpen>
           <AlertDialogPortal>
-            <AlertDialogPopup accessibilityLabel="Discard?">
+            <AlertDialogPopup aria-label="Discard?">
               <button type="button">Destructive</button>
               <AlertDialogTitle>Discard?</AlertDialogTitle>
               <AlertDialogClose initialFocus>Cancel</AlertDialogClose>
@@ -262,7 +262,7 @@ describe("Drawer focus on web", () => {
       <PortalHost>
         <DrawerRoot defaultOpen>
           <DrawerPortal>
-            <DrawerPopup accessibilityLabel="Navigation">
+            <DrawerPopup aria-label="Navigation">
               <button type="button">Destructive</button>
               <DrawerTitle>Navigation</DrawerTitle>
               <DrawerHandle />
@@ -284,7 +284,7 @@ describe("Popover focus on web", () => {
         <PopoverRoot defaultOpen>
           <PopoverTrigger>Open</PopoverTrigger>
           <PopoverPortal>
-            <PopoverPopup accessibilityLabel="Details">
+            <PopoverPopup aria-label="Details">
               <button type="button" data-testid="pop-first">
                 First
               </button>

@@ -12,28 +12,26 @@ import { AvatarFallback, AvatarImage, AvatarRoot, ProgressRoot } from "./index";
 describe("ProgressRoot on React Native", () => {
   it("announces role and clamped value", async () => {
     await render(
-      <ProgressRoot testID="pg" value={42} accessibilityLabel="Loading" />,
+      <ProgressRoot testID="pg" value={42} aria-label="Loading" />,
     );
     expect(screen.getByRole("progressbar")).toBeTruthy();
-    expect(screen.getByTestId("pg").props.accessibilityValue).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 42,
-    });
+    const props = screen.getByTestId("pg").props;
+    expect(props["aria-valuemin"]).toBe(0);
+    expect(props["aria-valuemax"]).toBe(100);
+    expect(props["aria-valuenow"]).toBe(42);
   });
 
   it("clamps out-of-range values and fills proportionally", async () => {
     await render(<ProgressRoot testID="pg" value={250} max={100} />);
-    expect(screen.getByTestId("pg").props.accessibilityValue).toMatchObject({
-      now: 100,
-    });
+    const props = screen.getByTestId("pg").props;
+    expect(props["aria-valuenow"]).toBe(100);
   });
 
   it("indeterminate announces busy with no value", async () => {
     await render(<ProgressRoot testID="pg" value={null} />);
     const props = screen.getByTestId("pg").props;
-    expect(props.accessibilityState).toMatchObject({ busy: true });
-    expect(props.accessibilityValue).toBeUndefined();
+    expect(props["aria-busy"]).toBe(true);
+    expect(props["aria-valuenow"]).toBeUndefined();
   });
 });
 
@@ -57,7 +55,7 @@ describe("Avatar on React Native", () => {
         <AvatarImage
           testID="av-img"
           source={{ uri: "https://example.com/ada.png" }}
-          accessibilityLabel="Ada"
+          aria-label="Ada"
         />
         <AvatarFallback testID="av-fb">
           <Text>AD</Text>
@@ -77,7 +75,7 @@ describe("Avatar on React Native", () => {
         <AvatarImage
           testID="av-img"
           source={{ uri: "https://example.com/ada.png" }}
-          accessibilityLabel="Ada"
+          aria-label="Ada"
         />
         <AvatarFallback testID="av-fb">
           <Text>AD</Text>

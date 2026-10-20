@@ -8,7 +8,7 @@ import type { SlotProps } from "../slot";
  *
  * Structure only: a `Text` host carrying caller content. Association
  * with a control is by `nativeID`: set the same id on the label and
- * the control's `accessibilityLabelledBy`. Focus behavior belongs to
+ * the control's `aria-labelledby`. Focus behavior belongs to
  * the control, never here. No role is declared — a label is read as
  * text; inventing a role the platform does not define would be a lie
  * a screen reader cannot cash.
@@ -17,7 +17,7 @@ import type { SlotProps } from "../slot";
 export type LabelProps = {
   /** Content of the label. */
   children?: ReactNode;
-  /** Association id, mirrored on the control's `accessibilityLabelledBy`. */
+  /** Association id, mirrored on the control's `aria-labelledby`. */
   nativeID?: string;
   testID?: string;
   /** Label text style, caller-provided. */

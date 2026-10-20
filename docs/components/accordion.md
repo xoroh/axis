@@ -83,7 +83,7 @@ recorded in `docs/BASE_UI_PARITY.md` (§ Accordion — aligned).
 | `multiple` | `boolean` | no | `false` | When `false` only one panel can be open: activating an open item collapses the group to `[]`, activating another replaces it. When `true` panels toggle independently. |
 | `orientation` | `"horizontal" \| "vertical"` | no | `"vertical"` | Reading order of the grouped items. Applied structurally as the container `flexDirection` (`column` / `row`); the caller `style` merges over it and wins on conflict. Carries no focus behavior. |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no toggles, no callbacks. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the root host. |
 | `style` | `StateStyle<AccordionRootState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
 | `children` | `ReactNode` | yes | — | The group's items (`AccordionItem`). |
@@ -121,7 +121,7 @@ recorded in `docs/BASE_UI_PARITY.md` (§ Accordion — aligned).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal for the trigger: it never toggles and is announced as disabled. Combines with item `disabled` (either disables). Inert outside an item. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<AccordionTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger pressable style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content. Optional — without it the trigger still renders, empty but accessible when labelled. |
@@ -158,10 +158,10 @@ import {
 
 function Settings() {
   return (
-    <AccordionRoot accessibilityLabel="Settings">
+    <AccordionRoot aria-label="Settings">
       <AccordionItem value="general">
         <AccordionHeader>
-          <AccordionTrigger accessibilityLabel="General">
+          <AccordionTrigger aria-label="General">
             <Text>General</Text>
           </AccordionTrigger>
         </AccordionHeader>
@@ -171,7 +171,7 @@ function Settings() {
       </AccordionItem>
       <AccordionItem value="privacy">
         <AccordionHeader>
-          <AccordionTrigger accessibilityLabel="Privacy">
+          <AccordionTrigger aria-label="Privacy">
             <Text>Privacy</Text>
           </AccordionTrigger>
         </AccordionHeader>
@@ -204,7 +204,7 @@ function Faq() {
     <AccordionRoot multiple value={value} onValueChange={setValue}>
       <AccordionItem value="shipping" onOpenChange={(open) => console.log(open)}>
         <AccordionHeader>
-          <AccordionTrigger accessibilityLabel="Shipping">
+          <AccordionTrigger aria-label="Shipping">
             <Text>Shipping</Text>
           </AccordionTrigger>
         </AccordionHeader>

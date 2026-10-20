@@ -53,7 +53,7 @@ describe("render composition: pressables", () => {
     let calls = 0;
     await render(
       <Button
-        accessibilityLabel="Save"
+        aria-label="Save"
         onPress={() => (calls += 1)}
         render={<Pressable testID="sub" />}
       >
@@ -68,7 +68,7 @@ describe("render composition: pressables", () => {
   it("Button function render receives state and function style resolves", async () => {
     await render(
       <Button
-        accessibilityLabel="Save"
+        aria-label="Save"
         loading
         style={(s) => ({ opacity: s.loading ? 0.5 : 1 })}
         render={(_props, state) => (
@@ -100,7 +100,7 @@ describe("render composition: pressables", () => {
     const seen: boolean[] = [];
     await render(
       <SwitchRoot
-        accessibilityLabel="Wifi"
+        aria-label="Wifi"
         onCheckedChange={(v) => seen.push(v)}
         render={<Pressable testID="sub" />}
       />,
@@ -112,7 +112,7 @@ describe("render composition: pressables", () => {
   it("SwitchRoot function render receives checked state", async () => {
     await render(
       <SwitchRoot
-        accessibilityLabel="Wifi"
+        aria-label="Wifi"
         defaultChecked
         render={(_props, state) => (
           <Text testID="st">{state.checked ? "on" : "off"}</Text>
@@ -126,7 +126,7 @@ describe("render composition: pressables", () => {
     const seen: boolean[] = [];
     await render(
       <CheckboxRoot
-        accessibilityLabel="Accept"
+        aria-label="Accept"
         onCheckedChange={(v) => seen.push(v)}
         render={<Pressable testID="sub" />}
       >
@@ -141,7 +141,7 @@ describe("render composition: pressables", () => {
     const seen: boolean[] = [];
     await render(
       <Toggle
-        accessibilityLabel="Bold"
+        aria-label="Bold"
         onPressedChange={(v) => seen.push(v)}
         render={(props, state) => (
           <Pressable
@@ -278,7 +278,7 @@ describe("render composition: display parts", () => {
   it("ToolbarRoot function render observes disabled state", async () => {
     await render(
       <ToolbarRoot
-        accessibilityLabel="Bar"
+        aria-label="Bar"
         disabled
         render={(_props, state) => (
           <Text testID="st">{state.disabled ? "off" : "on"}</Text>
@@ -295,7 +295,7 @@ describe("render composition: entries", () => {
   it("Input element render substitutes the host", async () => {
     await render(
       <Input
-        accessibilityLabel="Name"
+        aria-label="Name"
         defaultValue="Ada"
         render={<View testID="sub" />}
       />,
@@ -306,7 +306,7 @@ describe("render composition: entries", () => {
   it("Input function render observes value state", async () => {
     await render(
       <Input
-        accessibilityLabel="Name"
+        aria-label="Name"
         defaultValue="Ada"
         render={(_props, state) => <Text testID="st">{state.value}</Text>}
       />,

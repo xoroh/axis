@@ -56,7 +56,7 @@ function AppShell(): React.JSX.Element {
             <Pressable
               key={d.slug}
               accessibilityRole="button"
-              accessibilityLabel={`Open ${d.title} demo`}
+              aria-label={`Open ${d.title} demo`}
               onPress={() => setActive(d.slug)}
               style={({ pressed }) => ({
                 paddingVertical: 14,
@@ -85,7 +85,7 @@ function AppShell(): React.JSX.Element {
         <View style={{ flex: 1 }}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Back to demo list"
+            aria-label="Back to demo list"
             onPress={() => setActive(null)}
             style={({ pressed }) => ({
               paddingVertical: 10,

@@ -134,7 +134,7 @@ direct `Overlay` compositions (see `docs/components/overlay.md`).
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal: it never opens and is announced as disabled. Inert outside a root. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<SelectTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content (`SelectValue` + caller icon composed by the caller). |
@@ -236,7 +236,7 @@ share the same shape; only the direction and default label
 | `style` | `StateStyle<SelectScrollArrowState, StyleProp<ViewStyle>>` | no | — | Arrow style: a value or a function of arrow state. |
 | `children` | `ReactNode` | no | — | Arrow marker content (usually a chevron glyph). |
 | `disabled` | `boolean` | no | `false` | Terminal: it never scrolls and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | `"Scroll up"` / `"Scroll down"` | Accessible name source. |
+| `"aria-label"` | `string` | no | `"Scroll up"` / `"Scroll down"` | Accessible name source. |
 | `scrollRef` | `RefObject<unknown>` | no | — | Ref to the scrolling host the default press jumps (top / end). |
 | `onPress` | `() => void` | no | — | Runs after the default scroll-to-edge. Composes like the trigger `onPress` (internal first, then the caller's handler). |
 | `render` | `RenderProp<SelectScrollArrowState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -252,7 +252,7 @@ disabled.
 | `value` | `string` | yes | — | Selection value contributed to the group when this item is activated. |
 | `label` | `string` | no | — | Display label (Base UI `Item` `label` parity): the trigger value lookup and typeahead read this, not the rendered children. Defaults to string children (direct or inside one `SelectItemText`), else the raw `value`. |
 | `disabled` | `boolean` | no | `false` | Terminal for this item only: it never selects and is announced as disabled. Siblings are unaffected. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<SelectItemState, StyleProp<ViewStyle>>` | no | — | Value or function of item state, caller-provided. |
 | `children` | `ReactNode` | no | — | Item content. |
@@ -323,7 +323,7 @@ import {
 function SortPicker() {
   return (
     <SelectRoot defaultOpen>
-      <SelectTrigger accessibilityLabel="Sort by">
+      <SelectTrigger aria-label="Sort by">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectPopup>
@@ -369,7 +369,7 @@ function ControlledSort() {
       open={open}
       onOpenChange={setOpen}
     >
-      <SelectTrigger accessibilityLabel="Sort by">
+      <SelectTrigger aria-label="Sort by">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectPopup>
@@ -408,7 +408,7 @@ import {
 function CompoundSort() {
   return (
     <SelectRoot items={[{ value: "date", label: "Date" }]}>
-      <SelectTrigger accessibilityLabel="Sort by">
+      <SelectTrigger aria-label="Sort by">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectPortal>

@@ -10,7 +10,7 @@ semantics), `min` (default 0), `max` (default 100), role
 `progressbar` with `{min, max, now}` value, `accessibilityLabel`,
 `ref?` (container). Values clamp; the fill width is data-driven —
 computed by `ProgressIndicator` from root state. Example: `<ProgressRoot value={42}
-accessibilityLabel="Loading" />`.
+aria-label="Loading" />`.
 
 ### Anatomy
 
@@ -37,7 +37,7 @@ import {
 
 function Download() {
   return (
-    <ProgressRoot value={65} accessibilityLabel="Download">
+    <ProgressRoot value={65} aria-label="Download">
       <ProgressLabel>Download</ProgressLabel>
       <ProgressValue />
       <ProgressTrack>

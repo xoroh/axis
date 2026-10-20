@@ -40,7 +40,7 @@ describe("ContextMenuRoot on React Native", () => {
         <ContextMenuRoot
           testID="cm"
           content={<Text>Rename</Text>}
-          accessibilityLabel="File actions"
+          aria-label="File actions"
           onOpenChange={(v) => seen.push(v)}
           onDismiss={() => dismissed.push(1)}
         >

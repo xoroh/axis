@@ -48,7 +48,7 @@ function Example() {
         <Text>Open</Text>
       </DialogTrigger>
       <DialogPortal>
-        <DialogPopup accessibilityLabel="Example dialog">
+        <DialogPopup aria-label="Example dialog">
           <Text>Hello</Text>
         </DialogPopup>
       </DialogPortal>

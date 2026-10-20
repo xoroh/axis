@@ -196,13 +196,14 @@ export type ToolbarRootProps = {
   orientation?: "horizontal" | "vertical";
   /**
    * Observational only: announced on the container via
-   * `accessibilityState`, never forwarded to children and blocking
+   * `aria-disabled`, never forwarded to children and blocking
    * nothing — the container itself is not interactive. Each grouped
    * control owns its own `disabled` state.
    */
   disabled?: boolean;
-  /** Accessible name source for the group. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the group (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root view style: value or function of toolbar state. Merges over the orientation base direction. */
   style?: StateStyle<ToolbarRootState, StyleProp<ViewStyle>>;
@@ -267,7 +268,8 @@ function assignRef(
 export function ToolbarRoot({
   orientation = "horizontal",
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -292,9 +294,10 @@ export function ToolbarRoot({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "toolbar",
-      accessibilityState: { disabled },
-      accessibilityLabel,
+      role: "toolbar",
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: [baseDirection, resolveStyle(style, state)],
       children,
@@ -314,9 +317,10 @@ export function ToolbarRoot({
     <ToolbarDisclosureContext.Provider value={disclosure}>
       <View
         ref={setHostRef}
-        accessibilityRole="toolbar"
-        accessibilityState={{ disabled }}
-        accessibilityLabel={accessibilityLabel}
+        role="toolbar"
+        aria-disabled={disabled || undefined}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         style={[baseDirection, resolveStyle(style, state)]}
       >
@@ -369,8 +373,8 @@ export function ToolbarButton({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: effectiveDisabled },
+      role: "button",
+      "aria-disabled": effectiveDisabled || undefined,
       "aria-label": ariaLabel,
       testID,
       disabled: effectiveDisabled,
@@ -386,8 +390,8 @@ export function ToolbarButton({
   return (
     <Pressable
       ref={setButtonRef}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: effectiveDisabled }}
+      role="button"
+      aria-disabled={effectiveDisabled || undefined}
       aria-label={ariaLabel}
       testID={testID}
       disabled={effectiveDisabled}
@@ -423,8 +427,8 @@ export function ToolbarLink({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "link",
-      accessibilityState: { disabled: effectiveDisabled },
+      role: "link",
+      "aria-disabled": effectiveDisabled || undefined,
       "aria-label": ariaLabel,
       testID,
       disabled: effectiveDisabled,
@@ -438,8 +442,8 @@ export function ToolbarLink({
 
   return (
     <Text
-      accessibilityRole="link"
-      accessibilityState={{ disabled: effectiveDisabled }}
+      role="link"
+      aria-disabled={effectiveDisabled || undefined}
       aria-label={ariaLabel}
       testID={testID}
       disabled={effectiveDisabled}
@@ -488,8 +492,8 @@ export function ToolbarGroup({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "toolbar",
-      accessibilityState: { disabled: effectiveDisabled },
+      role: "toolbar",
+      "aria-disabled": effectiveDisabled || undefined,
       "aria-label": ariaLabel,
       testID,
       style: resolveStyle(style, state),
@@ -503,8 +507,8 @@ export function ToolbarGroup({
   return (
     <View
       ref={setGroupRef}
-      accessibilityRole="toolbar"
-      accessibilityState={{ disabled: effectiveDisabled }}
+      role="toolbar"
+      aria-disabled={effectiveDisabled || undefined}
       aria-label={ariaLabel}
       testID={testID}
       style={resolveStyle(style, state)}

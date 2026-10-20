@@ -36,7 +36,7 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
   return (
     <Menubar testID="bar" onOpenValueChange={onOpen}>
       <MenuRoot modal={false} value="file">
-        <MenuTrigger accessibilityLabel="File trigger">
+        <MenuTrigger aria-label="File trigger">
           <RNText>File</RNText>
         </MenuTrigger>
         <MenuPortal>
@@ -47,7 +47,7 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
                 <RNText>New</RNText>
               </MenuItem>
               <MenuSubmenuRoot value="recent">
-                <MenuSubmenuTrigger accessibilityLabel="Recent submenu">
+                <MenuSubmenuTrigger aria-label="Recent submenu">
                   <RNText>Recent</RNText>
                 </MenuSubmenuTrigger>
                 <MenuSubmenuContent testID="recent-panel">
@@ -61,7 +61,7 @@ function Bar({ onOpen }: { onOpen?: (value: string | null) => void }) {
         </MenuPortal>
       </MenuRoot>
       <MenuRoot modal={false} value="edit">
-        <MenuTrigger accessibilityLabel="Edit trigger">
+        <MenuTrigger aria-label="Edit trigger">
           <RNText>Edit</RNText>
         </MenuTrigger>
         <MenuPortal>
@@ -160,7 +160,7 @@ describe("Menubar on React Native", () => {
       <PortalHost>
         <Menubar testID="bar" openValue="edit">
           <MenuRoot modal={false} value="file">
-            <MenuTrigger accessibilityLabel="File trigger">
+            <MenuTrigger aria-label="File trigger">
               <RNText>File</RNText>
             </MenuTrigger>
             <MenuPortal>
@@ -174,7 +174,7 @@ describe("Menubar on React Native", () => {
             </MenuPortal>
           </MenuRoot>
           <MenuRoot modal={false} value="edit">
-            <MenuTrigger accessibilityLabel="Edit trigger">
+            <MenuTrigger aria-label="Edit trigger">
               <RNText>Edit</RNText>
             </MenuTrigger>
             <MenuPortal>
@@ -198,7 +198,7 @@ describe("Menubar on React Native", () => {
     await render(
       <PortalHost>
         <MenuRoot modal={false} value="orphan">
-          <MenuTrigger accessibilityLabel="Orphan trigger">
+          <MenuTrigger aria-label="Orphan trigger">
             <RNText>Orphan</RNText>
           </MenuTrigger>
           <MenuPopup testID="orphan">
@@ -221,7 +221,7 @@ describe("Menubar on React Native", () => {
       <PortalHost>
         <Menubar ref={ref}>
           <MenuRoot modal={false} value="file">
-            <MenuTrigger accessibilityLabel="File trigger">
+            <MenuTrigger aria-label="File trigger">
               <RNText>File</RNText>
             </MenuTrigger>
             <MenuPopup>

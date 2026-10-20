@@ -26,8 +26,8 @@ describe("TabsRoot on React Native", () => {
     await render(
       <TabsRoot testID="tabs">
         <TabsList testID="list">
-          <TabsTrigger value="a" testID="tab-a" accessibilityLabel="Alpha" />
-          <TabsTrigger value="b" testID="tab-b" accessibilityLabel="Beta" />
+          <TabsTrigger value="a" testID="tab-a" aria-label="Alpha" />
+          <TabsTrigger value="b" testID="tab-b" aria-label="Beta" />
         </TabsList>
         <TabsPanel value="a" testID="panel-a" />
         <TabsPanel value="b" testID="panel-b" />

@@ -92,8 +92,9 @@ export function AlertDialogRoot({
 export type AlertDialogTriggerProps = {
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of trigger state, caller-provided. */
   style?: StateStyle<AlertDialogTriggerState, StyleProp<ViewStyle>>;
@@ -162,8 +163,9 @@ export type AlertDialogPopupState = {
 };
 
 export type AlertDialogPopupProps = {
-  /** Accessible name source for the dialog surface. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the dialog surface (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of popup state, caller-provided. */
   style?: StateStyle<AlertDialogPopupState, StyleProp<ViewStyle>>;
@@ -191,7 +193,8 @@ export type AlertDialogPopupProps = {
 };
 
 export function AlertDialogPopup({
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -202,7 +205,8 @@ export function AlertDialogPopup({
 }: AlertDialogPopupProps): React.ReactNode {
   return (
     <DialogPopup
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       role="alertdialog"
       testID={testID}
       style={style}
@@ -256,8 +260,9 @@ export type AlertDialogCloseState = {
 export type AlertDialogCloseProps = {
   /** Terminal: it never closes and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of close state, caller-provided. */
   style?: StateStyle<AlertDialogCloseState, StyleProp<ViewStyle>>;

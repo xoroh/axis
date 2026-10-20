@@ -23,9 +23,9 @@ async function press(testID: string) {
 describe("ToggleGroup on React Native", () => {
   it("renders a group with unpressed button items", async () => {
     await render(
-      <ToggleGroup testID="tg" accessibilityLabel="Styles">
-        <Toggle value="a" testID="a" accessibilityLabel="A" />
-        <Toggle value="b" testID="b" accessibilityLabel="B" />
+      <ToggleGroup testID="tg" aria-label="Styles">
+        <Toggle value="a" testID="a" aria-label="A" />
+        <Toggle value="b" testID="b" aria-label="B" />
       </ToggleGroup>,
     );
     expect(screen.getByRole("group")).toBeTruthy();
@@ -115,7 +115,7 @@ describe("ToggleGroup on React Native", () => {
   it("announces pressed through selected, never checked", async () => {
     await render(
       <ToggleGroup testID="tg" multiple defaultValue={["a"]}>
-        <Toggle value="a" testID="a" accessibilityLabel="A" />
+        <Toggle value="a" testID="a" aria-label="A" />
       </ToggleGroup>,
     );
     const state = screen.getByTestId("a").props.accessibilityState;
@@ -200,5 +200,25 @@ describe("ToggleGroup on React Native", () => {
     expect(screen.getByTestId("solo").props.accessibilityState).toMatchObject({
       selected: true,
     });
+  });
+
+  it("delivers ADR-112 aria props to group slot render without legacy twins", async () => {
+    let capturedProps: any;
+    await render(
+      <ToggleGroup
+        testID="tg-slot"
+        aria-label="Format options"
+        orientation="vertical"
+        render={(props) => {
+          capturedProps = props;
+          return null;
+        }}
+      />,
+    );
+    expect(capturedProps.role).toBe("group");
+    expect(capturedProps["aria-orientation"]).toBe("vertical");
+    expect(capturedProps["aria-label"]).toBe("Format options");
+    expect(capturedProps.accessibilityRole).toBeUndefined();
+    expect(capturedProps.accessibilityLabel).toBeUndefined();
   });
 });

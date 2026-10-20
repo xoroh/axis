@@ -57,11 +57,11 @@ import { Input } from "./Input";
  * - External `valid` has no prop (computed from validation only);
  *   `actionsRef` has no counterpart (per-field validate travels
  *   through `Form.validate(name)`; field registration replaces it).
- * - `aria-invalid` and `accessibilityState.invalid` do not exist in
+ * - `aria-invalid` does not exist in
  *   this React Native version, so invalidity is announced only through
  *   the error live region (the `Table` role-gap precedent). Label and
  *   description association uses `nativeID` /
- *   `accessibilityLabelledBy`; the description is additionally plain
+ *   `aria-labelledby`; the description is additionally plain
  *   traversable text, since native labelled-by takes a single id.
  * - No `data-*` attributes (D1); state flows through `render`/`style`
  *   functions. No animation (Dialog precedent).
@@ -183,7 +183,7 @@ export type FieldControlChildProps = {
   onValueChange?: (value: unknown) => void;
   onBlur?: () => void;
   onFocus?: () => void;
-  accessibilityLabelledBy?: string;
+  "aria-labelledby"?: string;
   editable?: boolean;
   disabled?: boolean;
   testID?: string;
@@ -595,7 +595,7 @@ export function FieldControl({
           }
           reportFocus();
         },
-    accessibilityLabelledBy: labelId,
+    "aria-labelledby": labelId,
     editable: !terminal,
     disabled: terminal,
     testID,
@@ -634,7 +634,7 @@ export function FieldControl({
     merged.onValueChange = controlProps.onValueChange;
     merged.onBlur = controlProps.onBlur;
     merged.onFocus = controlProps.onFocus;
-    merged.accessibilityLabelledBy = labelId;
+    merged["aria-labelledby"] = labelId;
     merged.editable = !terminal;
     merged.disabled = terminal;
     return cloneElement(element, merged);
@@ -685,7 +685,7 @@ export function FieldError({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLiveRegion: "polite",
+        "aria-live": "polite",
         testID,
         style,
         children,
@@ -698,7 +698,7 @@ export function FieldError({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLiveRegion: "polite",
+      "aria-live": "polite",
       testID,
       style,
       children,
@@ -707,7 +707,7 @@ export function FieldError({
   );
   if (substituted !== null) return substituted;
   return (
-    <Text accessibilityLiveRegion="polite" testID={testID} style={style}>
+    <Text aria-live="polite" testID={testID} style={style}>
       {children}
     </Text>
   );

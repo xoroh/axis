@@ -133,7 +133,8 @@ export type NumberFieldInputProps = {
   /** Placeholder text. Visual only, caller-provided. */
   placeholder?: string;
   /** Accessible name source. */
-  accessibilityLabel?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Input style: value or function of field state, caller-provided. */
   style?: StateStyle<NumberFieldState, StyleProp<TextStyle>>;
@@ -147,10 +148,11 @@ export type NumberFieldInputProps = {
 };
 
 export type NumberFieldDecrementProps = {
-  /** Stepper content (icon). Announced via `accessibilityLabel`. */
+  /** Stepper content (icon). Announced via `aria-label`. */
   children?: ReactNode;
-  /** Accessible name source. Default `"Decrement"`. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). Default `"Decrement"`. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Stepper style: value or function of field state, caller-provided. */
   style?: StateStyle<NumberFieldState, StyleProp<ViewStyle>>;
@@ -164,10 +166,11 @@ export type NumberFieldDecrementProps = {
 };
 
 export type NumberFieldIncrementProps = {
-  /** Stepper content (icon). Announced via `accessibilityLabel`. */
+  /** Stepper content (icon). Announced via `aria-label`. */
   children?: ReactNode;
-  /** Accessible name source. Default `"Increment"`. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). Default `"Increment"`. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Stepper style: value or function of field state, caller-provided. */
   style?: StateStyle<NumberFieldState, StyleProp<ViewStyle>>;
@@ -210,6 +213,8 @@ const HOLD_REPEAT_INTERVAL_MS = 100;
 
 type NumberFieldContextValue = {
   state: NumberFieldState;
+  min?: number;
+  max?: number;
   formatSpec: { locale?: string; format?: Intl.NumberFormatOptions };
   stepBy: (direction: 1 | -1) => number | null;
   commitStep: (next?: number | null) => void;
@@ -391,6 +396,8 @@ export function NumberFieldRoot({
   const context = useMemo<NumberFieldContextValue>(
     () => ({
       state,
+      min,
+      max,
       formatSpec,
       stepBy,
       commitStep,
@@ -404,6 +411,8 @@ export function NumberFieldRoot({
       formatSpec,
       handleBlur,
       handleText,
+      max,
+      min,
       scrubByPixels,
       setScrubbing,
       state,
@@ -425,7 +434,7 @@ export function NumberFieldGroup({
   render,
   ref,
 }: NumberFieldGroupProps): React.ReactNode {
-  const { state, stepBy, commitStep } = useNumberField("NumberFieldGroup");
+  const { state, min, max, stepBy, commitStep } = useNumberField("NumberFieldGroup");
 
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
@@ -450,10 +459,11 @@ export function NumberFieldGroup({
     render,
     {
       accessible: true,
-      accessibilityRole: "adjustable",
-      accessibilityState: {
-        disabled: state.disabled || undefined,
-      },
+      role: "spinbutton",
+      "aria-valuenow": state.value ?? undefined,
+      "aria-valuemin": min,
+      "aria-valuemax": max,
+      "aria-disabled": state.disabled,
       accessibilityActions: [
         { name: "increment", label: "Increment value" },
         { name: "decrement", label: "Decrement value" },
@@ -472,8 +482,11 @@ export function NumberFieldGroup({
     <View
       ref={setHostRef}
       accessible
-      accessibilityRole="adjustable"
-      accessibilityState={{ disabled: state.disabled || undefined }}
+      role="spinbutton"
+      aria-valuenow={state.value ?? undefined}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-disabled={state.disabled}
       accessibilityActions={[
         { name: "increment", label: "Increment value" },
         { name: "decrement", label: "Decrement value" },
@@ -489,7 +502,8 @@ export function NumberFieldGroup({
 
 export function NumberFieldInput({
   placeholder,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -523,7 +537,8 @@ export function NumberFieldInput({
       onBlur: state.disabled || state.readOnly ? undefined : handleBlur,
       placeholder,
       editable: !state.disabled && !state.readOnly,
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: resolvedStyle,
       ref: setHostRef,
@@ -539,7 +554,8 @@ export function NumberFieldInput({
       onBlur={state.disabled || state.readOnly ? undefined : handleBlur}
       placeholder={placeholder}
       editable={!state.disabled && !state.readOnly}
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolvedStyle}
       ref={setHostRef}
@@ -604,7 +620,8 @@ function useHoldRepeat(options: {
 
 function StepperButton({
   direction,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -613,7 +630,8 @@ function StepperButton({
   children,
 }: {
   direction: 1 | -1;
-  accessibilityLabel: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   style?: StateStyle<NumberFieldState, StyleProp<ViewStyle>>;
   render?: RenderProp<NumberFieldState, SlotProps>;
@@ -651,9 +669,10 @@ function StepperButton({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityLabel,
-      accessibilityState: { disabled: terminal || undefined },
+      role: "button",
+      "aria-disabled": terminal,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: terminal,
       onPress: terminal ? undefined : onPress,
@@ -670,9 +689,10 @@ function StepperButton({
   return (
     <Pressable
       ref={setHostRef}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: terminal || undefined }}
+      role="button"
+      aria-disabled={terminal}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={terminal}
       onPress={onPress}
@@ -687,7 +707,8 @@ function StepperButton({
 
 export function NumberFieldDecrement({
   children,
-  accessibilityLabel = "Decrement",
+  "aria-label": ariaLabel = "Decrement",
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -697,7 +718,8 @@ export function NumberFieldDecrement({
   return (
     <StepperButton
       direction={-1}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       testID={testID}
       style={style}
       render={render}
@@ -711,7 +733,8 @@ export function NumberFieldDecrement({
 
 export function NumberFieldIncrement({
   children,
-  accessibilityLabel = "Increment",
+  "aria-label": ariaLabel = "Increment",
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -721,7 +744,8 @@ export function NumberFieldIncrement({
   return (
     <StepperButton
       direction={1}
-      accessibilityLabel={accessibilityLabel}
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       testID={testID}
       style={style}
       render={render}

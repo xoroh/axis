@@ -13,7 +13,7 @@ import type { SlotProps } from "../slot";
  * and zebra striping belong to the caller.
  *
  * No role is declared on `TableRoot`, `TableHeader`, or `TableCell`:
- * React Native's screen-reader-mapped `accessibilityRole` defines no
+ * React Native's native a11y roles define no
  * table, rowgroup, row, cell, or columnheader value (verified against
  * `ViewAccessibility.d.ts` in the pinned `react-native` — the
  * `AccessibilityRole` union has `header`, `list`, `grid`, `pager`, but
@@ -42,8 +42,9 @@ export type TableRowState = {
 export type TableRootProps = {
   /** Table content: a `TableHeader` followed by body `TableRow`s, in order. */
   children: ReactNode;
-  /** Accessible name source (e.g. "Order history"). */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112, e.g. "Order history"). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root container style, caller-provided. */
   style?: StyleProp<ViewStyle>;
@@ -133,7 +134,8 @@ function assignRef(
 
 export function TableRoot({
   children,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -152,7 +154,9 @@ export function TableRoot({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel,
+      role: "table",
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style,
       children,
@@ -165,7 +169,9 @@ export function TableRoot({
   return (
     <View
       ref={setHostRef}
-      accessibilityLabel={accessibilityLabel}
+      role="table"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={style}
     >
@@ -205,7 +211,7 @@ export function TableRow({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: header ? "header" : undefined,
+      role: header ? ("columnheader" as const) : undefined,
       testID,
       style,
       children,
@@ -216,7 +222,7 @@ export function TableRow({
 
   return (
     <View
-      accessibilityRole={header ? "header" : undefined}
+      role={header ? "columnheader" : undefined}
       testID={testID}
       style={style}
     >

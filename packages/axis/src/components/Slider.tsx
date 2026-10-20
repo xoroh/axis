@@ -929,9 +929,8 @@ export function SliderThumb({
 
   // Aria-only (ADR-112): one internal state derives every
   // announced prop — `role` + split `aria-value*`/`aria-orientation`/
-  // `aria-disabled`/`aria-label`. No `accessibilityState`,
-  // `accessibilityValue`, `accessibilityLabel`, or
-  // `accessibilityRole` is ever emitted. Consumer overrides ride
+  // `aria-disabled`/`aria-label`. No legacy RN a11y props
+  // are ever emitted (ADR-112 aria-only). Consumer overrides ride
   // through the `render` element path, merged last via
   // `mergeSlotProps` inside `resolveRender`.
   const hostProps = {

@@ -25,15 +25,15 @@ import {
 function Compound({ onOpen }: { onOpen?: (open: boolean) => void }) {
   return (
     <DialogRoot onOpenChange={onOpen}>
-      <DialogTrigger accessibilityLabel="Open dialog">
+      <DialogTrigger aria-label="Open dialog">
         <RNText>Open</RNText>
       </DialogTrigger>
       <DialogPortal>
         <DialogBackdrop testID="dlg-backdrop" />
-        <DialogPopup testID="dlg-popup" accessibilityLabel="Example">
+        <DialogPopup testID="dlg-popup" aria-label="Example">
           <DialogTitle>Example dialog</DialogTitle>
           <DialogDescription>A description</DialogDescription>
-          <DialogClose accessibilityLabel="Close dialog">
+          <DialogClose aria-label="Close dialog">
             <RNText>Close</RNText>
           </DialogClose>
         </DialogPopup>
@@ -96,13 +96,13 @@ describe("Dialog compound parts on React Native", () => {
             seen.push({ open: v, reason: details?.reason })
           }
         >
-          <DialogTrigger accessibilityLabel="Open dialog">
+          <DialogTrigger aria-label="Open dialog">
             <RNText>Open</RNText>
           </DialogTrigger>
           <DialogPortal>
             <DialogBackdrop testID="dlg-backdrop" />
-            <DialogPopup testID="dlg-popup" accessibilityLabel="Example">
-              <DialogClose accessibilityLabel="Close dialog">
+            <DialogPopup testID="dlg-popup" aria-label="Example">
+              <DialogClose aria-label="Close dialog">
                 <RNText>Close</RNText>
               </DialogClose>
             </DialogPopup>
@@ -132,12 +132,12 @@ describe("Dialog compound parts on React Native", () => {
           onOpenChange={(v) => seen.push(v)}
           onDismiss={() => dismissed.push(true)}
         >
-          <DialogTrigger accessibilityLabel="Open dialog">
+          <DialogTrigger aria-label="Open dialog">
             <RNText>Open</RNText>
           </DialogTrigger>
           <DialogPortal>
             <DialogBackdrop testID="dlg-backdrop" />
-            <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+            <DialogPopup testID="dlg-popup" aria-label="Example" />
           </DialogPortal>
         </DialogRoot>
       </PortalHost>,
@@ -159,7 +159,7 @@ describe("Dialog compound parts on React Native", () => {
         <DialogRoot defaultOpen disablePointerDismissal>
           <DialogPortal>
             <DialogBackdrop testID="dlg-backdrop" />
-            <DialogPopup accessibilityLabel="Example" />
+            <DialogPopup aria-label="Example" />
           </DialogPortal>
         </DialogRoot>
       </PortalHost>,
@@ -177,7 +177,7 @@ describe("Dialog compound parts on React Native", () => {
     await render(
       <PortalHost>
         <DialogPortal testID="dlg-portal">
-          <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+          <DialogPopup testID="dlg-popup" aria-label="Example" />
         </DialogPortal>
       </PortalHost>,
     );
@@ -194,12 +194,12 @@ describe("Dialog compound parts on React Native", () => {
             render={
               <Pressable
                 testID="custom-trigger"
-                accessibilityLabel="Custom open"
+                aria-label="Custom open"
               />
             }
           />
           <DialogPortal>
-            <DialogPopup accessibilityLabel="Example" />
+            <DialogPopup aria-label="Example" />
           </DialogPortal>
         </DialogRoot>
       </PortalHost>,
@@ -221,7 +221,7 @@ describe("Dialog compound parts on React Native", () => {
             }}
           />
           <DialogPortal>
-            <DialogPopup accessibilityLabel="Example" />
+            <DialogPopup aria-label="Example" />
           </DialogPortal>
         </DialogRoot>
       </PortalHost>,
@@ -236,7 +236,7 @@ describe("Dialog compound parts on React Native", () => {
           <DialogPortal>
             <DialogPopup
               testID="dlg-popup"
-              accessibilityLabel="Example"
+              aria-label="Example"
               style={(state) => ({ opacity: state.open ? 1 : 0 })}
             />
           </DialogPortal>
@@ -258,7 +258,7 @@ describe("Dialog compound parts on React Native", () => {
       <PortalHost>
         <DialogRoot open={false}>
           <DialogPortal>
-            <DialogPopup testID="dlg-popup" accessibilityLabel="Example" />
+            <DialogPopup testID="dlg-popup" aria-label="Example" />
           </DialogPortal>
         </DialogRoot>
       </PortalHost>,
@@ -269,15 +269,13 @@ describe("Dialog compound parts on React Native", () => {
   it("renders trigger inert outside a root", async () => {
     await render(
       <PortalHost>
-        <DialogTrigger accessibilityLabel="Orphan" testID="orphan">
+        <DialogTrigger aria-label="Orphan" testID="orphan">
           <RNText>Orphan</RNText>
         </DialogTrigger>
       </PortalHost>,
     );
     await pressLabel("Orphan");
-    expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject(
-      { disabled: true },
-    );
+    expect(screen.getByTestId("orphan").props.accessibilityState).toMatchObject({ disabled: true });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

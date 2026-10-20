@@ -191,7 +191,7 @@ export const FormsDemo: Demo = {
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Create account"
+              aria-label="Create account"
               onPress={() => formActions.current?.submit()}
               style={{
                 paddingVertical: 12,

@@ -396,7 +396,7 @@ export const RangesDemo: Demo = {
           >
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Previous month"
+              aria-label="Previous month"
               onPress={() => goMonth(-1)}
               style={{
                 paddingVertical: 6,
@@ -416,7 +416,7 @@ export const RangesDemo: Demo = {
             </Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Next month"
+              aria-label="Next month"
               onPress={() => goMonth(1)}
               style={{
                 paddingVertical: 6,
@@ -459,7 +459,7 @@ export const RangesDemo: Demo = {
                   <Pressable
                     key={cell.iso}
                     accessibilityRole="button"
-                    accessibilityLabel={cell.iso}
+                    aria-label={cell.iso}
                     onPress={() => tapDay(cell.iso)}
                     onFocus={() => setFocused(cell.iso)}
                     style={{
@@ -498,7 +498,7 @@ export const RangesDemo: Demo = {
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Previous day"
+              aria-label="Previous day"
               onPress={() => stepDay("ArrowLeft")}
               style={{
                 paddingVertical: 6,
@@ -513,7 +513,7 @@ export const RangesDemo: Demo = {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Next day"
+              aria-label="Next day"
               onPress={() => stepDay("ArrowRight")}
               style={{
                 paddingVertical: 6,

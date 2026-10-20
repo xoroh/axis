@@ -61,7 +61,7 @@ give each menu a `value` to join.
 | `openValue` | `string \| null` | no | — | Controlled open menu value (`null` closed). Wins over `defaultOpenValue`. |
 | `defaultOpenValue` | `string \| null` | no | `null` | Uncontrolled initial open menu value (closed). |
 | `onOpenValueChange` | `(value: string \| null) => void` | no | — | Fires with the next open value on every committed open or dismissal. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the menu bar. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the menu bar. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the bar container. |
 | `style` | `StateStyle<MenubarState, StyleProp<ViewStyle>>` | no | — | Bar container style: a value or a function of menubar state (row layout is default). |
 | `children` | `ReactNode` | no | — | `MenuRoot` elements (each with a `value`). |
@@ -98,9 +98,9 @@ import {
 
 function FileBar() {
   return (
-    <Menubar accessibilityLabel="File commands">
+    <Menubar aria-label="File commands">
       <MenuRoot value="file" modal={false}>
-        <MenuTrigger accessibilityLabel="File">
+        <MenuTrigger aria-label="File">
           <Text>File</Text>
         </MenuTrigger>
         <MenuPortal>
@@ -114,7 +114,7 @@ function FileBar() {
         </MenuPortal>
       </MenuRoot>
       <MenuRoot value="edit" modal={false}>
-        <MenuTrigger accessibilityLabel="Edit">
+        <MenuTrigger aria-label="Edit">
           <Text>Edit</Text>
         </MenuTrigger>
         <MenuPortal>
@@ -144,10 +144,10 @@ function ControlledBar() {
     <Menubar
       openValue={openValue}
       onOpenValueChange={setOpenValue}
-      accessibilityLabel="File commands"
+      aria-label="File commands"
     >
       <MenuRoot value="file" modal={false}>
-        <MenuTrigger accessibilityLabel="File">
+        <MenuTrigger aria-label="File">
           <Text>File</Text>
         </MenuTrigger>
         <MenuPopup>

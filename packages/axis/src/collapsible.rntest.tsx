@@ -25,7 +25,7 @@ describe("CollapsibleRoot on React Native", () => {
   it("renders closed: no panel, expanded false", async () => {
     await render(
       <CollapsibleRoot testID="cl">
-        <CollapsibleTrigger testID="trigger" accessibilityLabel="More options">
+        <CollapsibleTrigger testID="trigger" aria-label="More options">
           <Text>More options</Text>
         </CollapsibleTrigger>
         <CollapsiblePanel testID="panel">

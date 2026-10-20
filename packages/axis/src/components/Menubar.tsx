@@ -48,8 +48,9 @@ export type MenubarProps = {
   defaultOpenValue?: string | null;
   /** Fires with the next open value on every committed open or dismissal. */
   onOpenValueChange?: (value: string | null) => void;
-  /** Accessible name source for the menu bar. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the menu bar (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Bar container style: value or function of menubar state (row layout is default). */
   style?: StateStyle<MenubarState, StyleProp<ViewStyle>>;
@@ -111,7 +112,8 @@ export function Menubar({
   openValue,
   defaultOpenValue = null,
   onOpenValueChange,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -150,8 +152,9 @@ export function Menubar({
     render,
     {
       accessible: true,
-      accessibilityRole: "menubar",
-      accessibilityLabel,
+      role: "menubar",
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: [{ flexDirection: "row" }, resolveStyle(style, state)],
       children,
@@ -165,8 +168,9 @@ export function Menubar({
     <View
       ref={setBarRef}
       accessible
-      accessibilityRole="menubar"
-      accessibilityLabel={accessibilityLabel}
+      role="menubar"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={[{ flexDirection: "row" }, resolveStyle(style, state)]}
     >

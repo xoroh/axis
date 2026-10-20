@@ -52,7 +52,7 @@ function FilterMenu(props: {
       defaultFilterValue={props.defaultFilterValue}
       onFilterChange={props.onFilterChange}
     >
-      <MenuTrigger accessibilityLabel="Open">
+      <MenuTrigger aria-label="Open">
         <Text>Open</Text>
       </MenuTrigger>
       <MenuPortal>
@@ -62,7 +62,7 @@ function FilterMenu(props: {
             <MenuInput
               testID="menu-filter"
               placeholder="Filter"
-              accessibilityLabel="Filter items"
+              aria-label="Filter items"
             />
             <MenuItem value="apple" filterText="Apple" testID="item-apple">
               <Text>Apple</Text>
@@ -91,7 +91,7 @@ function FilterMenu(props: {
             <MenuEmpty testID="menu-empty">
               <Text>No matches</Text>
             </MenuEmpty>
-            <MenuClear testID="menu-clear" accessibilityLabel="Clear filter">
+            <MenuClear testID="menu-clear" aria-label="Clear filter">
               <Text>Clear</Text>
             </MenuClear>
           </MenuPopup>
@@ -166,7 +166,7 @@ describe("Menu filter parts on React Native", () => {
     await render(
       <PortalHost>
         <MenuRoot defaultOpen>
-          <MenuTrigger accessibilityLabel="Open">
+          <MenuTrigger aria-label="Open">
             <Text>Open</Text>
           </MenuTrigger>
           <MenuPortal>
@@ -217,7 +217,7 @@ describe("Menu filter parts on React Native", () => {
     await render(
       <PortalHost>
         <MenuRoot defaultOpen onOpenChange={onOpenChange}>
-          <MenuTrigger accessibilityLabel="Open">
+          <MenuTrigger aria-label="Open">
             <Text>Open</Text>
           </MenuTrigger>
           <MenuPortal>

@@ -21,7 +21,7 @@ import { DialogRoot, DialogTrigger, DialogPortal, DialogPopup } from "@xoroh/axi
     <Text>Open</Text>
   </DialogTrigger>
   <DialogPortal>
-    <DialogPopup accessibilityLabel="Example dialog">
+    <DialogPopup aria-label="Example dialog">
       <Text>Hello</Text>
     </DialogPopup>
   </DialogPortal>

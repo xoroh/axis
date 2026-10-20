@@ -53,7 +53,7 @@ export const PopoverDemo: Demo = {
           </Text>
           <PopoverRoot modal>
             <PopoverTrigger
-              accessibilityLabel="Inline demo popover"
+              aria-label="Inline demo popover"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 8,
@@ -108,7 +108,7 @@ export const PopoverDemo: Demo = {
           </Text>
           <PopoverRoot>
             <PopoverTrigger
-              accessibilityLabel="Open demo popover"
+              aria-label="Open demo popover"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 9,
@@ -130,7 +130,7 @@ export const PopoverDemo: Demo = {
             <PopoverPortal>
               <PopoverPositioner align="start">
                 <PopoverPopup
-                  accessibilityLabel="Demo popover"
+                  aria-label="Demo popover"
                   style={{
                     backgroundColor: theme.surface,
                     borderRadius: 10,
@@ -159,7 +159,7 @@ export const PopoverDemo: Demo = {
                   </PopoverDescription>
                   <PopoverArrow style={{ borderTopColor: theme.border }} />
                   <PopoverClose
-                    accessibilityLabel="Close demo popover"
+                    aria-label="Close demo popover"
                     style={{
                       alignSelf: "flex-end",
                       marginTop: 4,
@@ -201,7 +201,7 @@ export const PopoverDemo: Demo = {
           </Text>
           <PopoverRoot modal>
             <PopoverTrigger
-              accessibilityLabel="Open modal demo popover"
+              aria-label="Open modal demo popover"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 9,
@@ -231,7 +231,7 @@ export const PopoverDemo: Demo = {
               />
               <PopoverPositioner align="start">
                 <PopoverPopup
-                  accessibilityLabel="Modal demo popover"
+                  aria-label="Modal demo popover"
                   style={{
                     backgroundColor: theme.surface,
                     borderRadius: 10,

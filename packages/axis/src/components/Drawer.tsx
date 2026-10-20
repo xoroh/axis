@@ -492,8 +492,9 @@ export type DrawerTriggerState = {
 export type DrawerTriggerProps = {
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of trigger state, caller-provided. */
   style?: StateStyle<DrawerTriggerState, StyleProp<ViewStyle>>;
@@ -509,7 +510,8 @@ export type DrawerTriggerProps = {
 
 export function DrawerTrigger({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -545,9 +547,11 @@ export function DrawerTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded: open, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": open,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: toggleTrigger,
@@ -562,9 +566,11 @@ export function DrawerTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityRole="button"
-      accessibilityState={{ expanded: open, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={open}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={toggleTrigger}
@@ -655,7 +661,7 @@ export function DrawerBackdrop({
     const substituted = resolveRender(
       render,
       {
-        accessibilityLabel: "Dismiss",
+        "aria-label": "Dismiss",
         testID,
         onPress: handlePress,
         style: [{ flex: 1 }, resolveStyle(style, state)],
@@ -665,7 +671,7 @@ export function DrawerBackdrop({
     if (substituted !== null) return substituted;
     return (
       <Pressable
-        accessibilityLabel="Dismiss"
+        aria-label="Dismiss"
         testID={testID}
         onPress={handlePress}
         style={[{ flex: 1 }, resolveStyle(style, state)]}
@@ -697,8 +703,9 @@ export type DrawerPopupState = {
 };
 
 export type DrawerPopupProps = {
-  /** Accessible name source for the drawer surface. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the drawer surface (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of popup state, caller-provided. */
   style?: StateStyle<DrawerPopupState, StyleProp<ViewStyle>>;
@@ -727,7 +734,8 @@ export type DrawerPopupProps = {
 };
 
 export function DrawerPopup({
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -825,12 +833,12 @@ export function DrawerPopup({
     {
       accessible: true,
       role: "dialog",
-      accessibilityRole: "dialog",
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       accessibilityViewIsModal: modalActive,
-      ...(web && modalActive ? { "aria-modal": true } : null),
+      ...(modalActive ? { "aria-modal": true } : null),
       onKeyDown: handleKeyDown,
       ...webTabIndexProps(web),
       style: [
@@ -854,12 +862,12 @@ export function DrawerPopup({
         ref={setPopupRef}
         accessible
         role="dialog"
-        accessibilityRole="dialog"
-        accessibilityLabel={accessibilityLabel}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         onAccessibilityEscape={handleAccessibilityEscape}
         accessibilityViewIsModal={modalActive}
-        {...(web && modalActive ? { "aria-modal": true } : null)}
+        {...(modalActive ? { "aria-modal": true } : null)}
         onKeyDown={handleKeyDown}
         {...webTabIndexProps(web)}
         style={[
@@ -909,7 +917,7 @@ export function DrawerTitle({
   return (
     <Text
       ref={setTitleNode}
-      accessibilityRole="header"
+      role="heading"
       testID={testID}
       style={style}
       {...webTabIndexProps(web)}
@@ -956,8 +964,9 @@ export type DrawerCloseState = {
 export type DrawerCloseProps = {
   /** Terminal: it never closes and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of close state, caller-provided. */
   style?: StateStyle<DrawerCloseState, StyleProp<ViewStyle>>;
@@ -973,7 +982,8 @@ export type DrawerCloseProps = {
 
 export function DrawerClose({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -996,9 +1006,10 @@ export function DrawerClose({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: closeDrawer,
@@ -1013,9 +1024,10 @@ export function DrawerClose({
   return (
     <Pressable
       ref={setCloseNode}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={closeDrawer}
@@ -1084,8 +1096,8 @@ export function DrawerHandle({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { disabled: inert },
+      role: "button",
+      "aria-disabled": inert || undefined,
       testID,
       disabled: inert,
       accessibilityActions: [
@@ -1104,8 +1116,8 @@ export function DrawerHandle({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: inert }}
+      role="button"
+      aria-disabled={inert || undefined}
       testID={testID}
       disabled={inert}
       accessibilityActions={[

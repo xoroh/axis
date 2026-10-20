@@ -20,7 +20,7 @@ import {
 describe("ProgressRoot parts on React Native", () => {
   it("fills the indicator to the clamped value", async () => {
     await render(
-      <ProgressRoot testID="pg" value={42} accessibilityLabel="Loading">
+      <ProgressRoot testID="pg" value={42} aria-label="Loading">
         <ProgressTrack testID="pg-track">
           <ProgressIndicator testID="pg-fill" />
         </ProgressTrack>
@@ -98,7 +98,7 @@ describe("ProgressRoot parts on React Native", () => {
 
   it("root renders no built-in bar, only composed children", async () => {
     await render(
-      <ProgressRoot testID="pg" value={50} accessibilityLabel="Loading">
+      <ProgressRoot testID="pg" value={50} aria-label="Loading">
         <Text testID="pg-note">Halfway</Text>
       </ProgressRoot>,
     );

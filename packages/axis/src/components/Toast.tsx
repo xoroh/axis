@@ -33,13 +33,8 @@ import { useControllableState } from "../useControllableState";
  * for controlled use, `defaultOpen` for uncontrolled. No animation;
  * presence is binary (renders `null` when closed).
  *
- * Accessibility: the root carries `accessibilityLiveRegion="polite"` so
- * the message is announced on appearance. No `accessibilityRole="alert"`:
- * the installed react-native 0.87 types do list `"alert"` in
- * `AccessibilityRole`, but the role is omitted deliberately to keep the
- * surface to the specified props — the live region alone covers the
- * announcement, and callers needing a stronger semantic can wrap the
- * message themselves.
+ * ADR-112 aria-only: the root carries `role="status"` and `aria-live="polite"`
+ * so the message is announced on appearance. Never emit legacy RN a11y props.
  *
  * Refs: none. The toast exposes no host handle — parents show and hide
  * it through `open`/`defaultOpen`/`onOpenChange`, and the action button
@@ -77,8 +72,9 @@ export type ToastRootProps = {
    * part of the same press.
    */
   onAction?: () => void;
-  /** Accessible name source for the toast surface. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the toast surface (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root view style: value or function of toast state. */
   style?: StateStyle<ToastRootState, StyleProp<ViewStyle>>;
@@ -125,7 +121,8 @@ export function ToastRoot({
   children,
   actionLabel,
   onAction,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -175,8 +172,10 @@ export function ToastRoot({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLiveRegion: "polite",
-      accessibilityLabel,
+      role: "status",
+      "aria-live": "polite",
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: resolveStyle(style, state),
       onDismiss: dismiss,
@@ -192,16 +191,18 @@ export function ToastRoot({
   return (
     <View
       ref={setHostRef}
-      accessibilityLiveRegion="polite"
-      accessibilityLabel={accessibilityLabel}
+      role="status"
+      aria-live="polite"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >
       <Text>{children}</Text>
       {actionLabel ? (
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={actionLabel}
+          role="button"
+          aria-label={actionLabel}
           onPress={handleAction}
         >
           <Text>{actionLabel}</Text>
@@ -238,8 +239,9 @@ export type ToastOptions = {
   actionLabel?: string;
   /** Fires when the action button is pressed (the toast dismisses too). */
   onAction?: () => void;
-  /** Accessible name source for the toast surface. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the toast surface (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Auto-dismiss delay in milliseconds. Default `4000`; `0` or less
    * disables auto-dismiss.
@@ -435,7 +437,7 @@ function ToastViewportInner({
         duration={payload.duration}
         actionLabel={payload.actionLabel}
         onAction={payload.onAction}
-        accessibilityLabel={payload.accessibilityLabel}
+        aria-label={payload["aria-label"]}
         testID={testID ? `${testID}-${id}` : undefined}
       >
         {payload.message}

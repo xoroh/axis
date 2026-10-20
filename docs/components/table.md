@@ -52,7 +52,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `children` | `ReactNode` | yes | — | TableRoot content: a `TableHeader` followed by body `TableRow`s, in order. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source (e.g. "Order history"). |
+| `"aria-label"` | `string` | no | — | Accessible name source (e.g. "Order history"). |
 | `testID` | `string` | no | — | Test identifier, forwarded to the root host. |
 | `style` | `StyleProp<ViewStyle>` | no | — | Root container style, caller-provided. |
 | `render` | `RenderProp<Record<string, never>, SlotProps>` | no | — | Element or function substitution (Base UI parity); the function form receives an empty state object. |
@@ -99,7 +99,7 @@ import { TableRoot, TableCell, TableHeader, TableRow } from "@xoroh/axis";
 
 function Orders() {
   return (
-    <TableRoot accessibilityLabel="Order history">
+    <TableRoot aria-label="Order history">
       <TableHeader>
         <TableRow header>
           <TableCell>

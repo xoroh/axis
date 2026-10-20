@@ -75,8 +75,8 @@ import { FieldsetRoot, Input } from "@xoroh/axis";
 function Address() {
   return (
     <FieldsetRoot legend="Address">
-      <Input placeholder="Street" accessibilityLabel="Street" />
-      <Input placeholder="City" accessibilityLabel="City" />
+      <Input placeholder="Street" aria-label="Street" />
+      <Input placeholder="City" aria-label="City" />
     </FieldsetRoot>
   );
 }

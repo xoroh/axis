@@ -19,7 +19,7 @@ async function press(testID: string) {
 describe("Toggle on React Native", () => {
   it("renders unpressed with the button role and unselected state", async () => {
     await render(
-      <Toggle testID="tg" accessibilityLabel="Bold">
+      <Toggle testID="tg" aria-label="Bold">
         <Text>Bold</Text>
       </Toggle>,
     );
@@ -102,5 +102,27 @@ describe("Toggle on React Native", () => {
     expect(screen.getByTestId("tg").props.style).toMatchObject({
       opacity: 0.5,
     });
+  });
+
+  it("delivers ADR-112 aria props to slot render without legacy twins", async () => {
+    let capturedProps: any;
+    await render(
+      <Toggle
+        testID="tg-slot"
+        aria-label="Italic"
+        defaultPressed
+        render={(props) => {
+          capturedProps = props;
+          return null;
+        }}
+      />,
+    );
+    expect(capturedProps.role).toBe("button");
+    expect(capturedProps["aria-pressed"]).toBe(true);
+    expect(capturedProps["aria-selected"]).toBe(true);
+    expect(capturedProps["aria-disabled"]).toBe(false);
+    expect(capturedProps["aria-label"]).toBe("Italic");
+    expect(capturedProps.accessibilityRole).toBeUndefined();
+    expect(capturedProps.accessibilityState).toBeUndefined();
   });
 });

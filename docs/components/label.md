@@ -66,7 +66,7 @@ function NameField() {
   return (
     <>
       <Label nativeID="name-input">Name</Label>
-      <Input accessibilityLabel="Name" placeholder="Ada" />
+      <Input aria-label="Name" placeholder="Ada" />
     </>
   );
 }

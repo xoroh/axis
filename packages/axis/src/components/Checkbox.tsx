@@ -6,7 +6,12 @@ import {
   useCallback,
   useContext,
 } from "react";
-import { Pressable, type StyleProp, View, type ViewStyle } from "react-native";
+import {
+  Pressable,
+  type StyleProp,
+  View,
+  type ViewStyle,
+} from "react-native";
 import type { StateStyle } from "../render";
 import { type RenderProp, resolveRender, resolveStyle } from "../render";
 import type { SlotProps } from "../slot";
@@ -14,75 +19,68 @@ import { useControllableState } from "../useControllableState";
 import { CheckboxGroupSelectionContext } from "./CheckboxGroup";
 
 /**
- * CheckboxRoot — an unstyled binary selection control (with its
- * `CheckboxIndicator` part).
+ * Checkbox — an unstyled three-state checkbox (checked, unchecked,
+ * indeterminate).
  *
- * Structure only: a `CheckboxRoot` `Pressable` carrying the checkbox
- * role and state, with a caller-composed `CheckboxIndicator` that
- * mounts when the box is checked or indeterminate. No default
- * visuals — every visual value (`style` on each part) is
- * caller-provided. State follows the `useControllableState`
- * pattern: `checked` (+ `onCheckedChange`) for controlled use,
- * `defaultChecked` for uncontrolled.
+ * Compound anatomy:
  *
- * `indeterminate` (default `false`) marks the mixed state: neither
- * ticked nor unticked (a "select all" box over a partial
- * selection). It is announced through the `mixed` checked mapping —
- * React Native's `AccessibilityState` types `checked` as `boolean |
- * 'mixed'` (verified against the installed RN `ViewAccessibility`
- * union), so the platform mapping is type-honest, not smuggled past
- * the typechecker. The indicator mounts for both `checked` and
- * indeterminate; the caller styles the difference through the
- * indicator's `indeterminate` state. Toggling reports through
- * `onCheckedChange`; `indeterminate` itself is caller-owned state
- * (the caller clears it when committing a choice). Inside a
- * `CheckboxGroup`, a `CheckboxRoot` with `value` joins the group
- * (checked from membership, activation toggles membership);
- * without `value` it stays standalone.
+ *   <CheckboxRoot>
+ *     <CheckboxIndicator />
+ *   </CheckboxRoot>
+ *
+ * Structure only: a `Pressable` host element with the `checkbox` role
+ * and state (`checked` — boolean or `"mixed"`, `disabled`), carrying an
+ * indicator `View` whose presence is state-driven. No default box
+ * dimensions, borders, or colors are imposed — every visual value is
+ * caller-provided. State follows the `useControllableState` pattern:
+ * `checked` (+ `onCheckedChange`) for controlled use, `defaultChecked`
+ * for uncontrolled. `indeterminate` is a separate boolean that forces
+ * `"mixed"` checked semantics and keeps the indicator mounted; it is
+ * caller-owned and not cleared by toggles.
+ *
+ * ADR-112 aria-only: parts set accessibility state, role, and value
+ * ONLY through `aria-*` props and `role` (`role="checkbox"`,
+ * `aria-checked`, `aria-disabled`, `aria-label`, `aria-hidden`).
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
+ *
+ * Compound export (Base UI parity): `CheckboxRoot` and
+ * `CheckboxIndicator` are exported standalone and as `Checkbox.Root` /
+ * `Checkbox.Indicator`.
  */
 
 export type CheckboxRootState = {
-  /** Whether the checkbox is currently checked. */
+  /** Current checked state of the box. */
   checked: boolean;
-  /** Whether the checkbox is currently disabled. */
+  /** Whether the box is disabled. */
   disabled: boolean;
-  /** Whether the checkbox is in the mixed state. Default `false`. */
+  /** Whether the box is in an indeterminate state. */
   indeterminate: boolean;
-  /**
-   * Whether the checkbox is read-only. Default `false`. Focusable
-   * and announced like an enabled checkbox, but presses do not
-   * change state (distinct from `disabled`, which blocks interaction
-   * and announces disabled — React Native maps no readonly key, so
-   * the announcement is the normal checkbox state).
-   */
+  /** Whether the box is read-only. */
   readOnly: boolean;
 };
 
-export type CheckboxIndicatorState = {
-  /** Whether the checkbox is currently checked. */
+export type CheckboxIndicatorState = CheckboxRootState;
+
+export type CheckboxDisclosure = {
   checked: boolean;
-  /** Whether the checkbox is currently disabled. */
   disabled: boolean;
-  /** Whether the checkbox is in the mixed state. */
   indeterminate: boolean;
-  /** Whether the checkbox is read-only. */
   readOnly: boolean;
 };
+
+export const CheckboxDisclosureContext =
+  createContext<CheckboxDisclosure | null>(null);
 
 export type CheckboxRootProps = {
   /**
-   * Group key: when rendered inside a `CheckboxGroup`, the box joins
-   * the group under this value — checked derives from group
-   * membership and activation toggles membership (multi-select
-   * toggle semantics). Without `value` (or outside a group) the box
-   * behaves standalone. `checked`/`defaultChecked` are ignored for
-   * a joined box: the group owns the state (the `Toggle`
-   * group-joining precedent).
+   * Group value: when rendered inside a `CheckboxGroup`, this string
+   * identifies the box within the group's selection set.
+   * Standalone checkboxes omit this.
    */
   value?: string;
-  /** Controlled state. Wins over `defaultChecked` when defined. */
+  /** Controlled checked state. Wins over `defaultChecked` when defined. */
   checked?: boolean;
-  /** Uncontrolled initial state. Default `false`. */
+  /** Uncontrolled initial checked state. Default `false`. */
   defaultChecked?: boolean;
   /** Fires with the next state on every committed toggle. */
   onCheckedChange?: (checked: boolean) => void;
@@ -98,14 +96,13 @@ export type CheckboxRootProps = {
    * Read-only: focusable and announced like an enabled checkbox,
    * but presses do not change state and no callbacks fire. Default
    * `false`. Distinct from `disabled` (which blocks interaction and
-   * announces disabled) — React Native maps no readonly key, so the
-   * announcement is the normal checkbox state.
+   * announces disabled).
    */
   readOnly?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  /** Native labelled-by association where the platform supports it. */
-  accessibilityLabelledBy?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of checkbox state, caller-provided. */
   style?: StateStyle<CheckboxRootState, StyleProp<ViewStyle>>;
@@ -129,49 +126,21 @@ export type CheckboxIndicatorProps = {
   children?: ReactNode;
   /**
    * When `true`, the indicator stays mounted while the box is
-   * unchecked: mounted but hidden from assistive tech
-   * (`accessibilityElementsHidden` on iOS,
-   * `importantForAccessibility="no-hide-descendants"` on Android,
-   * `aria-hidden` on web), with `{ checked: false,
-   * indeterminate: false }` state. The indicator stays visible by
-   * design (Base UI parity — the caller styles it from state).
-   * Default `false` (mounts only while checked or indeterminate —
-   * D3: keep-alive stays opt-in).
+   * unchecked: mounted but hidden from assistive tech via `aria-hidden`,
+   * with `{ checked: false, indeterminate: false }` state. The indicator
+   * stays visible by design (Base UI parity — the caller styles it from state).
+   * Default `false`.
    */
   keepMounted?: boolean;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
    * receives `(props, state)` with `{ checked, disabled,
-   * indeterminate, readOnly }` so the caller can style checked and
-   * mixed differently.
+   * indeterminate, readOnly }`.
    */
   render?: RenderProp<CheckboxIndicatorState, SlotProps>;
 };
 
-type CheckboxDisclosure = {
-  checked: boolean;
-  disabled: boolean;
-  indeterminate: boolean;
-  readOnly: boolean;
-};
-
-/**
- * Shared box state for the indicator. Internal to this module (not
- * exported): the indicator must render inside a `CheckboxRoot` to
- * participate; outside one it never mounts.
- */
-const CheckboxDisclosureContext = createContext<CheckboxDisclosure | null>(
-  null,
-);
-
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
 function assignRef(
   ref: CheckboxRootProps["ref"],
   value: ElementRef<typeof Pressable> | null,
@@ -184,8 +153,7 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // A frozen ref object cannot take the write
     }
   }
 }
@@ -198,8 +166,8 @@ export function CheckboxRoot({
   indeterminate = false,
   disabled = false,
   readOnly = false,
-  accessibilityLabel,
-  accessibilityLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -212,10 +180,6 @@ export function CheckboxRoot({
     onCheckedChange,
   );
 
-  // Group joining (the `Toggle` precedent): a `value` inside a
-  // `CheckboxGroup` makes the group own checked state. Standalone
-  // behavior — no group above, or no `value` — is unchanged. A
-  // standalone box never inherits the group's disabled flag.
   const group = useContext(CheckboxGroupSelectionContext);
   const joined = group !== null && value !== undefined;
   const groupChecked =
@@ -242,9 +206,6 @@ export function CheckboxRoot({
     setChecked,
   ]);
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof Pressable> | null) => {
       assignRef(ref, node);
@@ -258,37 +219,32 @@ export function CheckboxRoot({
     indeterminate: joined ? false : indeterminate,
     readOnly,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "checkbox",
-      accessibilityState: {
-        checked: state.indeterminate ? "mixed" : state.checked,
-        disabled: effectiveDisabled,
-      },
-      accessibilityLabel,
-      accessibilityLabelledBy,
-      testID,
-      disabled: effectiveDisabled,
-      onPress: toggle,
-      style: resolveStyle(style, state),
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    role: "checkbox" as const,
+    "aria-checked": state.indeterminate ? ("mixed" as const) : state.checked,
+    "aria-disabled": effectiveDisabled,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    disabled: effectiveDisabled,
+    onPress: toggle,
+    style: resolveStyle(style, state),
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <Pressable
       ref={setHostRef}
-      accessibilityRole="checkbox"
-      accessibilityState={{
-        checked: state.indeterminate ? "mixed" : state.checked,
-        disabled: effectiveDisabled,
-      }}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityLabelledBy={accessibilityLabelledBy}
+      role="checkbox"
+      aria-checked={state.indeterminate ? "mixed" : state.checked}
+      aria-disabled={effectiveDisabled}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggle}
@@ -342,16 +298,14 @@ export function CheckboxIndicator({
     <View
       testID={testID}
       style={style}
-      // `accessible={false}` alone does NOT hide children from
-      // VoiceOver/TalkBack — hide the mounted-but-unchecked
-      // indicator on all three platforms explicitly. Unlike
-      // `AccordionPanel`, the indicator stays visible by design
-      // (Base UI parity: the caller styles it from state).
-      accessibilityElementsHidden={!shown}
-      importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
       aria-hidden={!shown}
     >
       {children}
     </View>
   );
 }
+
+export const Checkbox = Object.assign(CheckboxRoot, {
+  Root: CheckboxRoot,
+  Indicator: CheckboxIndicator,
+});

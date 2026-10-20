@@ -72,23 +72,11 @@ import { useFloatingPlacement } from "./useFloatingPlacement";
  * `PortalHost` — above sibling content, never trapped in the anchor's
  * box.
  *
- * Accessibility: the entry `Input` carries `accessibilityLabel` when
- * given; the toggle carries `accessibilityRole="button"` with
- * `accessibilityState { expanded, disabled }` and the fixed labels
- * `"Show options"`/`"Hide options"` (used as both visible text and
- * accessible name — a `Pressable` without label content is useless,
- * the NumberField stepper precedent); the list is an accessibility
- * element with `accessibilityRole="listbox"`; each option carries
- * `role="option"` with `accessibilityState { selected, disabled }`.
- * Role provenance, verified against the RN 0.87 generated types
- * (`types_generated/Libraries/Components/View/ViewAccessibility.d.ts`):
- * the native `AccessibilityRole` union has no `option`/`listbox`
- * keys, so the option uses the web `Role` prop (which DOES include
- * `option`) — the Dialog `role="dialog"` precedent — while the list
- * uses `accessibilityRole="listbox"`, which typechecks through that
- * union's `| string` tail. `listbox` is absent from the web `Role`
- * union too, so `role="listbox"` would NOT typecheck. Both props are
- * read by the RN test renderer's role queries.
+ * ADR-112 aria-only: the entry `Input` carries `aria-label` / `aria-labelledby`
+ * when given; the toggle carries `role="button"` with `aria-expanded`,
+ * `aria-disabled`, and `aria-label`; the list carries `role="listbox"`; each
+ * option carries `role="option"` with `aria-selected` and `aria-disabled`.
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  *
  * Deferred, each for a named reason (not oversight):
  * - No multi-select — single value only.
@@ -132,8 +120,9 @@ export type ComboboxProps = {
   placeholder?: string;
   /** Terminal: the entry never edits, the toggle never opens, options never select, no callbacks. Default `false`. */
   disabled?: boolean;
-  /** Accessible name source for the entry input. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the entry input (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Entry row (input + toggle) box style: value or function of combobox state. */
   style?: StateStyle<ComboboxState, StyleProp<ViewStyle>>;
@@ -210,7 +199,8 @@ export function Combobox({
   onOpenChange,
   placeholder,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   listStyle,
@@ -331,7 +321,8 @@ export function Combobox({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
       testID,
       style: resolveStyle(style, state),
       value: selectedValue ?? null,
@@ -358,14 +349,16 @@ export function Combobox({
           onValueChange={handleChangeText}
           placeholder={placeholder}
           editable={!disabled}
-          accessibilityLabel={accessibilityLabel}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
           testID={testID}
           style={inputStyle}
         />
         <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ expanded: isOpen ?? false, disabled }}
-          accessibilityLabel={toggleLabel}
+          role="button"
+          aria-expanded={isOpen ?? false}
+          aria-disabled={disabled || undefined}
+          aria-label={toggleLabel}
           testID={testID ? `${testID}-toggle` : undefined}
           disabled={disabled}
           onPress={toggle}
@@ -376,7 +369,7 @@ export function Combobox({
       {isOpen ? (
         <Portal>
           <Pressable
-            accessibilityLabel="Dismiss"
+            aria-label="Dismiss"
             testID={testID ? `${testID}-scrim` : undefined}
             onPress={closeWithoutSelection}
             style={scrimFillStyle}
@@ -386,11 +379,8 @@ export function Combobox({
       {isOpen ? (
         <Portal>
           <View
-            // The list must be an accessibility element for its role to
-            // reach assistive technology (and the `*ByRole` proofs): a
-            // plain `View` is not one by default, unlike `Pressable`.
             accessible
-            accessibilityRole="listbox"
+            role={"listbox" as never}
             onLayout={floating.onContentLayout}
             style={[floating.style, listStyle]}
           >
@@ -400,11 +390,9 @@ export function Combobox({
                 <Pressable
                   key={option.value}
                   role="option"
-                  accessibilityState={{
-                    selected: selectedValue === option.value,
-                    disabled: optionDisabled,
-                  }}
-                  accessibilityLabel={option.label}
+                  aria-selected={selectedValue === option.value}
+                  aria-disabled={optionDisabled || undefined}
+                  aria-label={option.label}
                   testID={
                     testID ? `${testID}-option-${option.value}` : undefined
                   }

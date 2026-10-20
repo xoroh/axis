@@ -57,7 +57,7 @@ export const DialogDemo: Demo = {
 
           <DialogRoot>
             <DialogTrigger
-              accessibilityLabel="Open demo dialog"
+              aria-label="Open demo dialog"
               style={{
                 alignSelf: "flex-start",
                 paddingVertical: 10,
@@ -97,7 +97,7 @@ export const DialogDemo: Demo = {
                 }}
               >
                 <DialogPopup
-                  accessibilityLabel="Demo dialog"
+                  aria-label="Demo dialog"
                   style={{
                     width: "100%",
                     maxWidth: 440,
@@ -137,7 +137,7 @@ export const DialogDemo: Demo = {
                     }}
                   >
                     <DialogClose
-                      accessibilityLabel="Close demo dialog"
+                      aria-label="Close demo dialog"
                       style={{
                         paddingVertical: 8,
                         paddingHorizontal: 14,
@@ -183,7 +183,7 @@ export const DialogDemo: Demo = {
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open inline demo dialog"
+            aria-label="Open inline demo dialog"
             onPress={() => setInlineOpen(true)}
             style={{
               alignSelf: "flex-start",
@@ -213,7 +213,7 @@ export const DialogDemo: Demo = {
                 }}
               >
                 <DialogPopup
-                  accessibilityLabel="Inline demo dialog"
+                  aria-label="Inline demo dialog"
                   style={{
                     alignSelf: "center",
                     width: "90%",
@@ -245,7 +245,7 @@ export const DialogDemo: Demo = {
                     }}
                   >
                     <DialogClose
-                      accessibilityLabel="Close inline demo dialog"
+                      aria-label="Close inline demo dialog"
                       style={{
                         alignSelf: "flex-end",
                         paddingVertical: 8,

@@ -111,8 +111,9 @@ export type DropdownMenuTriggerProps = {
   children: ReactNode;
   /** Terminal: it never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
@@ -126,8 +127,9 @@ export type DropdownMenuItemProps = {
   value: string;
   /** Terminal: it never selects and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Item pressable style: value or function of item state. */
   style?: StateStyle<DropdownMenuItemState, StyleProp<ViewStyle>>;
@@ -158,8 +160,9 @@ export type DropdownMenuSubTriggerProps = {
   children: ReactNode;
   /** Terminal: it never opens and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity): an element is
    * cloned with the part props merged under its own; a function
@@ -255,7 +258,8 @@ export function DropdownMenuTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: DropdownMenuTriggerProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
@@ -270,9 +274,11 @@ export function DropdownMenuTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded, disabled },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": expanded,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: toggleTrigger,
@@ -285,9 +291,11 @@ export function DropdownMenuTrigger({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ expanded, disabled }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={expanded}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={toggleTrigger}
@@ -301,7 +309,8 @@ export function DropdownMenuTrigger({
 export function DropdownMenuItem({
   value,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -324,8 +333,9 @@ export function DropdownMenuItem({
       render,
       {
         role: "menuitem",
-        accessibilityState: { disabled: true },
-        accessibilityLabel,
+        "aria-disabled": true,
+        ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+        ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
         testID,
         disabled: true,
         style: resolveStyle(style, inertState),
@@ -337,8 +347,9 @@ export function DropdownMenuItem({
     return (
       <Pressable
         role="menuitem"
-        accessibilityState={{ disabled: true }}
-        accessibilityLabel={accessibilityLabel}
+        aria-disabled={true}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         disabled
         style={resolveStyle(style, inertState)}
@@ -356,8 +367,9 @@ export function DropdownMenuItem({
     render,
     {
       role: "menuitem",
-      accessibilityState: { disabled },
-      accessibilityLabel,
+      "aria-disabled": disabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled,
       onPress: selectItem,
@@ -371,8 +383,9 @@ export function DropdownMenuItem({
   return (
     <Pressable
       role="menuitem"
-      accessibilityState={{ disabled }}
-      accessibilityLabel={accessibilityLabel}
+      aria-disabled={disabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={selectItem}
@@ -388,7 +401,8 @@ export function DropdownMenuSubTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
 }: DropdownMenuSubTriggerProps): React.ReactNode {
   const disclosure = useContext(DropdownDisclosureContext);
@@ -414,9 +428,11 @@ export function DropdownMenuSubTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: { expanded, disabled: disabled || inert },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": expanded,
+      "aria-disabled": disabled || inert || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: disabled || inert,
       onPress: openTrigger,
@@ -429,9 +445,11 @@ export function DropdownMenuSubTrigger({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ expanded, disabled: disabled || inert }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={expanded}
+      aria-disabled={disabled || inert || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled || inert}
       onPress={openTrigger}
@@ -638,7 +656,7 @@ export function DropdownMenuRoot({
           <Portal>
             <DropdownDisclosureContext.Provider value={disclosure}>
               <Pressable
-                accessibilityLabel="Dismiss menu"
+                aria-label="Dismiss menu"
                 testID={testID ? `${testID}-scrim` : undefined}
                 onPress={dismiss}
                 style={SCRIM_FILL}

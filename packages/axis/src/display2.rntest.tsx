@@ -17,18 +17,17 @@ import {
 describe("Meter on React Native", () => {
   it("announces gauge value with min/max", async () => {
     await render(
-      <MeterRoot testID="m" value={70} accessibilityLabel="Battery">
+      <MeterRoot testID="m" value={70} aria-label="Battery">
         <MeterTrack testID="m-track">
           <MeterIndicator testID="m-fill" />
         </MeterTrack>
       </MeterRoot>,
     );
     expect(screen.getByRole("meter")).toBeTruthy();
-    expect(screen.getByTestId("m").props.accessibilityValue).toMatchObject({
-      min: 0,
-      max: 100,
-      now: 70,
-    });
+    const props = screen.getByTestId("m").props;
+    expect(props["aria-valuemin"]).toBe(0);
+    expect(props["aria-valuemax"]).toBe(100);
+    expect(props["aria-valuenow"]).toBe(70);
     expect(screen.getByTestId("m-fill")).toBeTruthy();
   });
 
@@ -56,14 +55,13 @@ describe("Meter on React Native", () => {
         </MeterTrack>
       </MeterRoot>,
     );
-    expect(screen.getByTestId("m").props.accessibilityValue).toMatchObject({
-      now: 0,
-    });
+    const props = screen.getByTestId("m").props;
+    expect(props["aria-valuenow"]).toBe(0);
   });
 
   it("label names and value displays, including function children", async () => {
     await render(
-      <MeterRoot testID="m" value={70} accessibilityLabel="Battery">
+      <MeterRoot testID="m" value={70} aria-label="Battery">
         <MeterLabel testID="m-label">
           <Text>Battery</Text>
         </MeterLabel>

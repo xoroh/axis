@@ -52,8 +52,8 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `onCheckedChange` | `(checked: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks, announced as disabled. |
 | `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled switch, but presses do not change state and no callbacks fire. Distinct from `disabled` (which blocks interaction and announces disabled) — React Native maps no readonly key, so the announcement is the normal switch state. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
+| `"aria-labelledby"` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
 | `style` | `StateStyle<SwitchRootState, StyleProp<ViewStyle>>` | no | — | Value or function of switch state, caller-provided. |
 | `render` | `RenderProp<SwitchRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -86,7 +86,7 @@ Notifications opt-in, uncontrolled:
 import { SwitchRoot } from "@xoroh/axis";
 
 function Notifications() {
-  return <SwitchRoot accessibilityLabel="Email notifications" />;
+  return <SwitchRoot aria-label="Email notifications" />;
 }
 ```
 
@@ -102,7 +102,7 @@ function ControlledNotifications() {
     <SwitchRoot
       checked={checked}
       onCheckedChange={setChecked}
-      accessibilityLabel="Email notifications"
+      aria-label="Email notifications"
       style={(state) => ({ opacity: state.checked ? 1 : 0.5 })}
     />
   );
@@ -117,7 +117,7 @@ import { SwitchRoot, SwitchThumb } from "@xoroh/axis";
 
 function StyledSwitch() {
   return (
-    <SwitchRoot accessibilityLabel="Dark mode" defaultChecked>
+    <SwitchRoot aria-label="Dark mode" defaultChecked>
       <View
         style={{
           width: 48,

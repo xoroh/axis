@@ -12,7 +12,7 @@ describe("FieldsetRoot on React Native", () => {
   it("renders legend and grouped children", async () => {
     await render(
       <FieldsetRoot testID="fs" legend="Address">
-        <Input testID="ta" accessibilityLabel="Street" />
+        <Input testID="ta" aria-label="Street" />
       </FieldsetRoot>,
     );
     expect(screen.getByText("Address")).toBeTruthy();
@@ -41,7 +41,7 @@ describe("FieldsetRoot ref forwarding", () => {
     await render(
       <FieldsetRoot testID="fs">
         <FieldsetLegend testID="fs-legend">Address</FieldsetLegend>
-        <Input testID="ta" accessibilityLabel="Street" />
+        <Input testID="ta" aria-label="Street" />
       </FieldsetRoot>,
     );
     expect(screen.getByTestId("fs-legend")).toBeTruthy();

@@ -76,7 +76,7 @@ is disabled.
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `disabled` | `boolean` | no | `false` | Terminal for the trigger: it never toggles and is announced as disabled. Combines with root `disabled` (either disables). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `style` | `StateStyle<CollapsibleTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger pressable style: a value or a function of trigger state. |
 | `children` | `ReactNode` | no | — | Trigger content, rendered inside the `Pressable`. |
@@ -108,7 +108,7 @@ import {
 function Details() {
   return (
     <CollapsibleRoot>
-      <CollapsibleTrigger accessibilityLabel="Show details">
+      <CollapsibleTrigger aria-label="Show details">
         <Text>Details</Text>
       </CollapsibleTrigger>
       <CollapsiblePanel>
@@ -138,7 +138,7 @@ function ControlledDetails() {
       onOpenChange={setOpen}
       style={(state) => ({ opacity: state.open ? 1 : 0.9 })}
     >
-      <CollapsibleTrigger accessibilityLabel="Show details">
+      <CollapsibleTrigger aria-label="Show details">
         <Text>Details</Text>
       </CollapsibleTrigger>
       <CollapsiblePanel>
@@ -162,7 +162,7 @@ import {
 function LockedDetails() {
   return (
     <CollapsibleRoot disabled>
-      <CollapsibleTrigger accessibilityLabel="Show details">
+      <CollapsibleTrigger aria-label="Show details">
         <Text>Details</Text>
       </CollapsibleTrigger>
       <CollapsiblePanel>

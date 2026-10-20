@@ -76,7 +76,7 @@ compound parts with a long-press trigger instead — see
 | `onOpenChange` | `(open: boolean) => void` | no | — | Fires with the next open state on every visibility change. |
 | `onDismiss` | `() => void` | no | — | Fires on scrim dismissal, before `onOpenChange(false)`. |
 | `placement` | `Placement` | no | `"bottom"` | Preferred side for the menu box. Clamped into the viewport. Press-point positioning is deferred, not faked — the box anchors below the anchor. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the menu region. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the menu region. |
 | `testID` | `string` | no | — | Test identifier; the scrim carries `<testID>-scrim`. |
 | `style` | `StateStyle<ContextMenuRootState, StyleProp<ViewStyle>>` | no | — | Anchor wrapper style: a value or a function of menu state. |
 | `menuStyle` | `StyleProp<ViewStyle>` | no | — | Menu box style, caller-provided. |
@@ -100,7 +100,7 @@ function FileRow() {
   return (
     <ContextMenuRoot
       content={<Text>Rename · Duplicate · Delete</Text>}
-      accessibilityLabel="File actions"
+      aria-label="File actions"
     >
       <Text>Report.pdf</Text>
     </ContextMenuRoot>
@@ -123,7 +123,7 @@ function ControlledRow() {
       onOpenChange={setOpen}
       placement="bottom"
       content={<Text>Rename · Duplicate · Delete</Text>}
-      accessibilityLabel="File actions"
+      aria-label="File actions"
       menuStyle={{ padding: 12 }}
     >
       <Text>Report.pdf</Text>
@@ -142,7 +142,7 @@ function StyledRow() {
   return (
     <ContextMenuRoot
       content={<Text>Cut · Copy · Paste</Text>}
-      accessibilityLabel="Row actions"
+      aria-label="Row actions"
       style={{ padding: 12 }}
       menuStyle={{ padding: 8 }}
     >

@@ -172,7 +172,7 @@ describe("FieldRoot on React Native", () => {
     await render(
       <FieldRoot testID="f" invalid>
         <FieldLabel testID="f-label">Email</FieldLabel>
-        <Input testID="in" accessibilityLabel="Email" />
+        <Input testID="in" aria-label="Email" />
         <FieldError testID="f-error">Required</FieldError>
       </FieldRoot>,
     );
@@ -206,7 +206,7 @@ describe("FieldRoot parts on React Native", () => {
       <FieldRoot testID="f" invalid>
         <FieldLabel testID="f-label">Email</FieldLabel>
         <FieldControl>
-          <Input testID="in" accessibilityLabel="Email" />
+          <Input testID="in" aria-label="Email" />
         </FieldControl>
         <FieldDescription testID="f-desc">We never share it.</FieldDescription>
         <FieldError testID="f-error">Required</FieldError>

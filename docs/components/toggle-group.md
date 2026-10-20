@@ -68,7 +68,7 @@ each item a `value` to join.
 | `multiple` | `boolean` | no | `false` | When `false` only one item can be pressed: activating an unpressed item replaces the pressed one. When `true` multiple items can be pressed (Base UI parity). |
 | `orientation` | `"horizontal" \| "vertical"` | no | `"horizontal"` | Reading order of the grouped items. Applied structurally as the container `flexDirection` (`row` / `column`); the caller `style` merges over it and wins on conflict. |
 | `disabled` | `boolean` | no | `false` | Terminal: disables every item — no toggles, no callbacks. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the group host. |
 | `style` | `StateStyle<ToggleGroupState, StyleProp<ViewStyle>>` | no | — | Root group view style: a value or a function of group state. |
 | `children` | `ReactNode` | yes | — | The group's items (`Toggle` with `value`). |
@@ -96,7 +96,7 @@ import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function FormatBar() {
   return (
-    <ToggleGroup accessibilityLabel="Format">
+    <ToggleGroup aria-label="Format">
       <Toggle value="bold">
         <Text>B</Text>
       </Toggle>
@@ -121,7 +121,7 @@ function ControlledFormat() {
     <ToggleGroup
       value={value}
       onValueChange={setValue}
-      accessibilityLabel="Format"
+      aria-label="Format"
     >
       <Toggle
         value="bold"
@@ -142,7 +142,7 @@ import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function LockedFormat() {
   return (
-    <ToggleGroup disabled accessibilityLabel="Format">
+    <ToggleGroup disabled aria-label="Format">
       <Toggle value="bold">
         <Text>B</Text>
       </Toggle>
@@ -160,7 +160,7 @@ import { Toggle, ToggleGroup } from "@xoroh/axis";
 
 function Toppings() {
   return (
-    <ToggleGroup multiple orientation="vertical" accessibilityLabel="Toppings">
+    <ToggleGroup multiple orientation="vertical" aria-label="Toppings">
       <Toggle value="cheese">
         <Text>Cheese</Text>
       </Toggle>

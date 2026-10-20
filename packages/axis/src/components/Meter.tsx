@@ -109,8 +109,9 @@ export type MeterRootProps = {
   min?: number;
   /** Maximum value. Default `100`. */
   max?: number;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root container style: value or function of meter state, caller-provided. */
   style?: StateStyle<MeterRootState, StyleProp<ViewStyle>>;
@@ -170,7 +171,8 @@ export function MeterRoot({
   value,
   min = 0,
   max = 100,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -193,9 +195,12 @@ export function MeterRoot({
     render,
     {
       accessible: true,
-      accessibilityRole: "meter",
-      accessibilityValue: { min, max, now: clamped },
-      accessibilityLabel,
+      role: "meter",
+      "aria-valuemin": min,
+      "aria-valuemax": max,
+      "aria-valuenow": clamped,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: resolveStyle(style, state),
       children,
@@ -209,9 +214,12 @@ export function MeterRoot({
     <View
       ref={setHostRef}
       accessible
-      accessibilityRole="meter"
-      accessibilityValue={{ min, max, now: clamped }}
-      accessibilityLabel={accessibilityLabel}
+      role="meter"
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={clamped}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >

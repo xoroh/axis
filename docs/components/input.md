@@ -62,7 +62,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `minRows` | `number` | no | — | Minimum grown rows: rows × one row (`lineHeight`, else `fontSize`, else 14). Ignored without `autoGrow`. |
 | `maxRows` | `number` | no | — | Maximum grown rows (same row rule; wins over `minRows`). Ignored without `autoGrow`. |
 | `onHeightChange` | `(height: number) => void` | no | — | Fires with the measured content height on every content-size change while `autoGrow` is set (clamped value). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
 | `style` | `StateStyle<InputState, StyleProp<TextStyle>>` | no | — | Input style: a value or a function of input state, caller-provided. |
 | `render` | `RenderProp<InputState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -79,7 +79,7 @@ Minimal uncontrolled entry:
 import { Input } from "@xoroh/axis";
 
 function Name() {
-  return <Input placeholder="Ada" accessibilityLabel="Name" />;
+  return <Input placeholder="Ada" aria-label="Name" />;
 }
 ```
 
@@ -97,7 +97,7 @@ function ControlledName() {
       onValueChange={setValue}
       onSubmitEditing={() => console.log(value)}
       placeholder="Ada"
-      accessibilityLabel="Name"
+      aria-label="Name"
     />
   );
 }
@@ -115,7 +115,7 @@ function Password() {
       secureTextEntry
       editable={false}
       defaultValue="hunter2"
-      accessibilityLabel="Password"
+      aria-label="Password"
     />
   );
 }
@@ -138,7 +138,7 @@ function Notes() {
       onHeightChange={(height) => console.log(height)}
       defaultValue=""
       placeholder="Enter notes..."
-      accessibilityLabel="Notes"
+      aria-label="Notes"
     />
   );
 }

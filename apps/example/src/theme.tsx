@@ -103,7 +103,7 @@ export function ThemeToggle(): React.JSX.Element {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Switch to ${mode === "light" ? "dark" : "light"} mode`}
+      aria-label={`Switch to ${mode === "light" ? "dark" : "light"} mode`}
       onPress={toggleTheme}
       style={{
         paddingHorizontal: 12,

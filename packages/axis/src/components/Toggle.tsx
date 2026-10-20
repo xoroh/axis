@@ -13,49 +13,50 @@ import { useControllableState } from "../useControllableState";
 import { ToggleGroupPressedContext } from "./ToggleGroup";
 
 /**
- * Toggle — an unstyled pressed-state button.
+ * Toggle — an unstyled two-state button (on/off).
  *
- * Structure only: a `Pressable` carrying the button role with the
- * selected state, rendering caller-provided label content
- * (`children`). No default visuals — every visual value (`style`)
- * is caller-provided. State follows the `useControllableState`
- * pattern: `pressed` (+ `onPressedChange`) for controlled use,
- * `defaultPressed` for uncontrolled. Inside a `ToggleGroup`, a
- * `Toggle` with `value` joins the group (pressed from membership,
- * activation toggles membership); without `value` it stays
- * standalone.
+ * Structure only: a `Pressable` host element carrying the `button` role
+ * and `aria-selected` / `aria-pressed` state, with caller-provided label content
+ * inside. No default padding, background, border, or text styles are
+ * imposed — every visual value is caller-provided. State follows the
+ * `useControllableState` pattern: `pressed` (+ `onPressedChange`) for
+ * controlled use, `defaultPressed` for uncontrolled.
+ *
+ * ADR-112 aria-only: parts set accessibility state, role, and value
+ * ONLY through `aria-*` props and `role` (`role="button"`,
+ * `aria-selected`, `aria-pressed`, `aria-disabled`, `aria-label`).
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
+ *
+ * Compound export (Base UI parity): `Toggle` is exported standalone and
+ * as `Toggle.Root` so both `Toggle` and `Toggle.Root` work identically.
  */
 
 export type ToggleState = {
-  /** Whether the toggle is currently pressed. */
+  /** Current pressed state of the toggle. */
   pressed: boolean;
-  /** Whether the toggle is currently disabled. */
+  /** Whether the toggle is disabled. */
   disabled: boolean;
 };
 
 export type ToggleProps = {
   /**
-   * Group key: when rendered inside a `ToggleGroup`, the toggle joins
-   * the group under this value — pressed derives from group
-   * membership and activation toggles membership (single-press
-   * replaces, multi-press accumulates per the group's `multiple`).
-   * Without `value` (or outside a group) the toggle behaves
-   * standalone. `pressed`/`defaultPressed` are ignored for a joined
-   * toggle: the group owns the state (the Base UI `Toggle` pattern).
+   * Group value: when rendered inside a `ToggleGroup`, this string
+   * identifies the toggle within the group's selection set.
+   * Standalone toggles omit this.
    */
   value?: string;
-  /** Controlled state. Wins over `defaultPressed` when defined. */
+  /** Controlled pressed state. Wins over `defaultPressed` when defined. */
   pressed?: boolean;
-  /** Uncontrolled initial state. Default `false`. */
+  /** Uncontrolled initial pressed state. Default `false`. */
   defaultPressed?: boolean;
   /** Fires with the next state on every committed toggle. */
   onPressedChange?: (pressed: boolean) => void;
   /** Terminal: no transitions, no callbacks, announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  /** Native labelled-by association where the platform supports it. */
-  accessibilityLabelledBy?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Value or function of toggle state, caller-provided. */
   style?: StateStyle<ToggleState, StyleProp<ViewStyle>>;
@@ -75,8 +76,7 @@ export type ToggleProps = {
  * Assign one value to every ref in the list. Inline here (not imported)
  * deliberately: the shared `mergeRefs` composition has no approved
  * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
+ * tested composition until its transfer gate passes.
  */
 function assignRef(
   ref: ToggleProps["ref"],
@@ -102,8 +102,8 @@ export function Toggle({
   defaultPressed = false,
   onPressedChange,
   disabled = false,
-  accessibilityLabel,
-  accessibilityLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -116,15 +116,10 @@ export function Toggle({
     onPressedChange,
   );
 
-  // Group joining (the Base UI `Toggle` pattern): a `value` inside a
-  // `ToggleGroup` makes the group own pressed state. Standalone
-  // behavior — no group above, or no `value` — is unchanged.
   const group = useContext(ToggleGroupPressedContext);
   const joined = group !== null && value !== undefined;
   const groupPressed =
     value !== undefined && (group?.pressedValues?.includes(value) ?? false);
-  // A standalone toggle never inherits the group's terminal: only a
-  // joined toggle (with `value`) is disabled by the group.
   const effectiveDisabled =
     disabled || (joined && (group?.groupDisabled ?? false));
 
@@ -146,9 +141,6 @@ export function Toggle({
     setPressed,
   ]);
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof Pressable> | null) => {
       assignRef(ref, node);
@@ -160,37 +152,34 @@ export function Toggle({
     pressed: joined ? groupPressed : (isPressed ?? false),
     disabled: effectiveDisabled,
   };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "button",
-      accessibilityState: {
-        selected: state.pressed,
-        disabled: effectiveDisabled,
-      },
-      accessibilityLabel,
-      accessibilityLabelledBy,
-      testID,
-      disabled: effectiveDisabled,
-      onPress: toggle,
-      style: resolveStyle(style, state),
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+
+  const hostProps = {
+    role: "button" as const,
+    "aria-pressed": state.pressed,
+    "aria-selected": state.pressed,
+    "aria-disabled": effectiveDisabled,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    disabled: effectiveDisabled,
+    onPress: toggle,
+    style: resolveStyle(style, state),
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <Pressable
       ref={setHostRef}
-      accessibilityRole="button"
-      accessibilityState={{
-        selected: state.pressed,
-        disabled: effectiveDisabled,
-      }}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityLabelledBy={accessibilityLabelledBy}
+      role="button"
+      aria-pressed={state.pressed}
+      aria-selected={state.pressed}
+      aria-disabled={effectiveDisabled}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggle}
@@ -200,3 +189,5 @@ export function Toggle({
     </Pressable>
   );
 }
+
+export const ToggleRoot = Toggle;

@@ -102,7 +102,7 @@ it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 | `style` | `StateStyle<DropdownMenuTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | yes | — | Trigger content (an empty trigger is a bug). |
 | `disabled` | `boolean` | no | `false` | Terminal: it never toggles and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `render` | `RenderProp<DropdownMenuTriggerState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
 
 `DropdownMenuTriggerState`: `{ open: boolean; disabled: boolean }`.
@@ -113,7 +113,7 @@ it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 |---|---|---|---|---|
 | `value` | `string` | yes | — | Passed to `onSelect` on activation (cascade identity). |
 | `disabled` | `boolean` | no | `false` | Terminal: it never selects and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier. |
 | `style` | `StateStyle<DropdownMenuItemState, StyleProp<ViewStyle>>` | no | — | Value or function of item state. |
 | `children` | `ReactNode` | no | — | Item content. |
@@ -137,7 +137,7 @@ it from the `Menu` compound parts (or `MenuSubmenu*` wrapping
 | `style` | `StateStyle<DropdownMenuTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `children` | `ReactNode` | yes | — | Trigger content. |
 | `disabled` | `boolean` | no | `false` | Terminal: the branch never opens and is announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `render` | `RenderProp<DropdownMenuTriggerState, SlotProps>` | no | — | Element or function substitution. |
 
 #### `DropdownMenuSubContent`
@@ -167,12 +167,12 @@ import {
 function ShareMenu() {
   return (
     <DropdownMenuRoot>
-      <DropdownMenuTrigger accessibilityLabel="Open share menu">
+      <DropdownMenuTrigger aria-label="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
       <DropdownMenuItem value="copy">Copy link</DropdownMenuItem>
       <DropdownMenuSub value="more">
-        <DropdownMenuSubTrigger accessibilityLabel="More options">
+        <DropdownMenuSubTrigger aria-label="More options">
           <Text>More</Text>
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent>
@@ -196,7 +196,7 @@ function ControlledShare() {
   const [open, setOpen] = useState(false);
   return (
     <DropdownMenuRoot open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger accessibilityLabel="Open share menu">
+      <DropdownMenuTrigger aria-label="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
       <DropdownMenuItem value="copy" onSelect={() => setOpen(false)}>
@@ -224,16 +224,16 @@ import {
 function NestedShare() {
   return (
     <DropdownMenuRoot>
-      <DropdownMenuTrigger accessibilityLabel="Open share menu">
+      <DropdownMenuTrigger aria-label="Open share menu">
         <Text>Share</Text>
       </DropdownMenuTrigger>
       <DropdownMenuSub value="more">
-        <DropdownMenuSubTrigger accessibilityLabel="More options">
+        <DropdownMenuSubTrigger aria-label="More options">
           <Text>More</Text>
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent>
           <DropdownMenuSub value="social">
-            <DropdownMenuSubTrigger accessibilityLabel="Social apps">
+            <DropdownMenuSubTrigger aria-label="Social apps">
               <Text>Social</Text>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>

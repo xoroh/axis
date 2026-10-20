@@ -18,7 +18,7 @@ async function press(testID: string) {
 
 describe("SwitchRoot on React Native", () => {
   it("renders off with the switch role and unchecked state", async () => {
-    await render(<SwitchRoot testID="sw" accessibilityLabel="Airplane mode" />);
+    await render(<SwitchRoot testID="sw" aria-label="Airplane mode" />);
     expect(screen.getByRole("switch")).toBeTruthy();
     expect(screen.getByTestId("sw").props.accessibilityState).toMatchObject({
       checked: false,
@@ -95,7 +95,7 @@ describe("SwitchRoot on React Native", () => {
     await render(
       <SwitchRoot
         testID="sw"
-        accessibilityLabel="Airplane mode"
+        aria-label="Airplane mode"
         readOnly
         onCheckedChange={() => (calls += 1)}
       />,
@@ -170,5 +170,27 @@ describe("SwitchRoot on React Native", () => {
   it("thumb outside a root renders with default state", async () => {
     await render(<SwitchThumb testID="orphan" />);
     expect(screen.getByTestId("orphan")).toBeTruthy();
+  });
+
+  it("delivers ADR-112 aria props to slot render and defaults aria-valuetext", async () => {
+    let capturedProps: any;
+    await render(
+      <SwitchRoot
+        testID="sw-slot"
+        aria-label="Wi-Fi"
+        defaultChecked
+        render={(props) => {
+          capturedProps = props;
+          return null;
+        }}
+      />,
+    );
+    expect(capturedProps.role).toBe("switch");
+    expect(capturedProps["aria-checked"]).toBe(true);
+    expect(capturedProps["aria-disabled"]).toBe(false);
+    expect(capturedProps["aria-valuetext"]).toBe("on");
+    expect(capturedProps["aria-label"]).toBe("Wi-Fi");
+    expect(capturedProps.accessibilityRole).toBeUndefined();
+    expect(capturedProps.accessibilityState).toBeUndefined();
   });
 });

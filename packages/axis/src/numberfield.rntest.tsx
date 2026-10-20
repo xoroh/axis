@@ -239,9 +239,7 @@ describe("NumberFieldRoot", () => {
     await press("Increment");
     expect(seen).toEqual([]);
     expect(screen.getByDisplayValue("5")).toBeTruthy();
-    expect(screen.getByTestId("group").props.accessibilityState).toMatchObject({
-      disabled: true,
-    });
+    expect(screen.getByTestId("group").props["aria-disabled"]).toBe(true);
   });
 
   it("readOnly blocks entry without announcing disabled", async () => {
@@ -258,9 +256,7 @@ describe("NumberFieldRoot", () => {
     await press("Decrement");
     expect(seen).toEqual([]);
     expect(screen.getByDisplayValue("5")).toBeTruthy();
-    expect(
-      screen.getByTestId("group").props.accessibilityState?.disabled,
-    ).toBeUndefined();
+    expect(screen.getByTestId("group").props["aria-disabled"]).toBeFalsy();
   });
 
   it("formats the display through locale", async () => {
@@ -342,9 +338,8 @@ describe("NumberFieldGroup", () => {
     await render(
       <StepperField defaultValue={5} onValueChange={(v) => seen.push(v)} />,
     );
-    expect(screen.getByTestId("group").props.accessibilityRole).toBe(
-      "adjustable",
-    );
+    expect(screen.getByRole("spinbutton")).toBeTruthy();
+    expect(screen.getByTestId("group").props.role).toBe("spinbutton");
     await act(async () => {
       await fireEvent(screen.getByTestId("group"), "accessibilityAction", {
         nativeEvent: { actionName: "increment" },
@@ -466,11 +461,11 @@ describe("NumberField steppers", () => {
     await render(
       <NumberFieldRoot>
         <NumberFieldGroup>
-          <NumberFieldDecrement accessibilityLabel="Less">
+          <NumberFieldDecrement aria-label="Less">
             <Text>−</Text>
           </NumberFieldDecrement>
           <NumberFieldInput />
-          <NumberFieldIncrement accessibilityLabel="More">
+          <NumberFieldIncrement aria-label="More">
             <Text>+</Text>
           </NumberFieldIncrement>
         </NumberFieldGroup>

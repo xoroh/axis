@@ -196,7 +196,7 @@ export const ListSelectDemo: Demo = {
             if (!Array.isArray(next)) setSort(next);
           }}
         >
-          <SelectTrigger accessibilityLabel="Demo select" style={rowStyle}>
+          <SelectTrigger aria-label="Demo select" style={rowStyle}>
             <SelectValue
               placeholder={<Text style={placeholderStyle}>Sort by</Text>}
             />
@@ -223,7 +223,7 @@ export const ListSelectDemo: Demo = {
           ]}
         >
           <SelectTrigger
-            accessibilityLabel="Demo compound select"
+            aria-label="Demo compound select"
             style={triggerStyle}
           >
             <SelectValue placeholder="Sort by" style={axisLabelStyle} />
@@ -269,7 +269,7 @@ export const ListSelectDemo: Demo = {
           }
         >
           <SelectTrigger
-            accessibilityLabel="Demo multiple select"
+            aria-label="Demo multiple select"
             style={multiRowStyle}
           >
             <SelectValue
@@ -306,7 +306,7 @@ export const ListSelectDemo: Demo = {
           items={[...LONG_OPTIONS]}
         >
           <SelectTrigger
-            accessibilityLabel="Demo compound multiple select"
+            aria-label="Demo compound multiple select"
             style={triggerStyle}
           >
             <SelectValue placeholder="Pick fruits" style={axisLabelStyle} />
@@ -316,7 +316,7 @@ export const ListSelectDemo: Demo = {
             <SelectPositioner align="start">
               <SelectPopup style={popupStyle}>
                 <SelectScrollUpArrow
-                  accessibilityLabel="Scroll list to top"
+                  aria-label="Scroll list to top"
                   scrollRef={longListRef}
                   style={arrowStyle}
                 >
@@ -325,7 +325,7 @@ export const ListSelectDemo: Demo = {
                 <ScrollView
                   ref={longListRef}
                   style={{ maxHeight: 220 }}
-                  accessibilityLabel="Fruit options"
+                  aria-label="Fruit options"
                 >
                   {LONG_OPTIONS.map((option) => (
                     <SelectItem
@@ -344,7 +344,7 @@ export const ListSelectDemo: Demo = {
                   ))}
                 </ScrollView>
                 <SelectScrollDownArrow
-                  accessibilityLabel="Scroll list to bottom"
+                  aria-label="Scroll list to bottom"
                   scrollRef={longListRef}
                   style={arrowStyle}
                 >
@@ -356,7 +356,7 @@ export const ListSelectDemo: Demo = {
         </SelectRoot>
         <Text style={headingStyle}>Combobox:</Text>
         <Combobox
-          accessibilityLabel="Demo combobox"
+          aria-label="Demo combobox"
           options={[
             { value: "apple", label: "Apple" },
             { value: "apricot", label: "Apricot" },
@@ -370,7 +370,7 @@ export const ListSelectDemo: Demo = {
         />
         <Text style={headingStyle}>Autocomplete:</Text>
         <Autocomplete
-          accessibilityLabel="Demo autocomplete"
+          aria-label="Demo autocomplete"
           options={["Apple", "Banana"]}
           value={berry}
           onValueChange={setBerry}

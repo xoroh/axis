@@ -84,7 +84,7 @@ load; unmount-on-error is automatic); no `data-*` attributes
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
 | `source` | `ImageSourcePropType` | yes | — | Image source (required — without one the root stays `idle`). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source (e.g. the person's name). Announced only while loaded. |
+| `"aria-label"` | `string` | no | — | Accessible name source (e.g. the person's name). Announced only while loaded. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the image host. |
 | `style` | `StyleProp<ImageStyle>` | no | — | Image style, caller-provided. |
 | `onLoadingStatusChange` | `(status: ImageLoadingStatus) => void` | no | — | Fires with the next loading status on every transition. |
@@ -124,7 +124,7 @@ function Profile() {
     <AvatarRoot>
       <AvatarImage
         source={{ uri: "https://example.com/ada.png" }}
-        accessibilityLabel="Ada Lovelace"
+        aria-label="Ada Lovelace"
         style={{ width: 48, height: 48, borderRadius: 24 }}
       />
       <AvatarFallback

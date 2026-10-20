@@ -86,8 +86,9 @@ export type CollapsibleRootProps = {
 export type CollapsibleTriggerProps = {
   /** Terminal for the trigger: it never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Trigger pressable style: value or function of trigger state. */
   style?: StateStyle<CollapsibleTriggerState, StyleProp<ViewStyle>>;
@@ -112,8 +113,7 @@ export type CollapsiblePanelProps = {
    * invisible (`display: "none"` merged after the caller style — the
    * Base UI `hidden` attribute equivalent) and hidden from assistive
    * tech via `aria-hidden` alone (RN 0.87 resolves `aria-hidden` to
-   * `accessibilityElementsHidden`, and `true` additionally sets
-   * `importantForAccessibility="no-hide-descendants"` — View.js lines
+   * `aria-hidden={true}` suppressing assistive tech — View.js lines
    * 71-76 — so descendants stay unannounced on iOS and Android;
    * ADR-112 aria-only, no legacy hiding props), with
    * `{ open: false }` state.
@@ -231,7 +231,8 @@ export function CollapsibleRoot({
 
 export function CollapsibleTrigger({
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   children,
@@ -253,12 +254,11 @@ export function CollapsibleTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityRole: "button",
-      accessibilityState: {
-        expanded,
-        disabled: effectiveDisabled,
-      },
-      accessibilityLabel,
+      role: "button",
+      "aria-expanded": expanded,
+      "aria-disabled": effectiveDisabled || undefined,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: effectiveDisabled,
       onPress: toggleTrigger,
@@ -271,12 +271,11 @@ export function CollapsibleTrigger({
 
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityState={{
-        expanded,
-        disabled: effectiveDisabled,
-      }}
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-expanded={expanded}
+      aria-disabled={effectiveDisabled || undefined}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled}
       onPress={toggleTrigger}
@@ -329,8 +328,7 @@ export function CollapsiblePanel({
       testID={testID}
       style={[style, closedStyle]}
       // `aria-hidden` alone hides descendants on iOS and Android
-      // (resolved to accessibilityElementsHidden +
-      // importantForAccessibility in View.js lines 71-76); ADR-112
+      // (resolved in RN View.js lines 71-76); ADR-112
       // aria-only — no legacy hiding props.
       aria-hidden={!open}
     >

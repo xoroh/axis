@@ -24,9 +24,9 @@ async function press(testID: string) {
 describe("RadioGroup on React Native", () => {
   it("renders a radiogroup with unchecked radio items", async () => {
     await render(
-      <RadioGroup testID="rg" accessibilityLabel="Size">
-        <RadioRoot value="s" testID="s" accessibilityLabel="Small" />
-        <RadioRoot value="m" testID="m" accessibilityLabel="Medium" />
+      <RadioGroup testID="rg" aria-label="Size">
+        <RadioRoot value="s" testID="s" aria-label="Small" />
+        <RadioRoot value="m" testID="m" aria-label="Medium" />
       </RadioGroup>,
     );
     expect(screen.getByRole("radiogroup")).toBeTruthy();
@@ -150,7 +150,7 @@ describe("RadioGroup on React Native", () => {
     await render(
       <RadioGroup
         testID="rg"
-        accessibilityLabel="Size"
+        aria-label="Size"
         readOnly
         onValueChange={() => (calls += 1)}
       >

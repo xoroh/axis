@@ -165,7 +165,7 @@ otherwise an inert host.
 
 | Prop | Type | Required | Default | Behavior |
 |---|---|---|---|---|
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the drawer surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the drawer surface. |
 | `testID` | `string` | no | — | Test identifier; the container carries `<testID>-container`, the scrim `<testID>-scrim` when set on the portal/backdrop. |
 | `style` | value or function of `{ open, side, snapPoint }` | no | — | Surface style, caller-provided (positioned absolute by the part). |
 | `children` | `ReactNode` | no | — | Surface content. |
@@ -228,7 +228,7 @@ function SettingsDrawer() {
         <DrawerBackdrop testID="settings-scrim" />
         <DrawerPopup
           testID="settings-popup"
-          accessibilityLabel="Settings"
+          aria-label="Settings"
         >
           <DrawerHandle />
           <DrawerTitle>Settings</DrawerTitle>

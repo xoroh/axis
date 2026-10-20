@@ -75,7 +75,7 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `value` | `string` | yes | — | Selection value contributed to the group when this trigger is activated. |
 | `disabled` | `boolean` | no | `false` | Terminal for this trigger only: it never selects and is announced as disabled. Siblings are unaffected. |
 | `children` | `ReactNode` | no | — | Trigger content. With no children, pass `accessibilityLabel` — an unnamed tab is unusable. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `style` | `StateStyle<TabsTriggerState, StyleProp<ViewStyle>>` | no | — | Trigger style: a value or a function of trigger state. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the trigger host. |
 | `render` | `RenderProp<TabsTriggerState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |

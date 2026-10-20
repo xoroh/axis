@@ -65,7 +65,7 @@ fill without a range is meaningless.
 | `value` | `number` | yes | — | Current value (required — a meter without a value is a bug). Clamped into `[min, max]`. |
 | `min` | `number` | no | `0` | Minimum value. |
 | `max` | `number` | no | `100` | Maximum value. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the container. |
 | `style` | `StateStyle<MeterRootState, StyleProp<ViewStyle>>` | no | — | Root container style: a value or a function of meter state, caller-provided. |
 | `children` | `ReactNode` | no | — | Meter content (`MeterLabel`, `MeterTrack`, `MeterValue`). |
@@ -126,7 +126,7 @@ import {
 
 function Battery() {
   return (
-    <MeterRoot value={70} accessibilityLabel="Battery">
+    <MeterRoot value={70} aria-label="Battery">
       <MeterLabel>
         <Text>Battery</Text>
       </MeterLabel>
@@ -147,7 +147,7 @@ import { MeterIndicator, MeterRoot, MeterTrack } from "@xoroh/axis";
 
 function Signal() {
   return (
-    <MeterRoot value={9} min={0} max={5} accessibilityLabel="Signal">
+    <MeterRoot value={9} min={0} max={5} aria-label="Signal">
       <MeterTrack>
         <MeterIndicator />
       </MeterTrack>

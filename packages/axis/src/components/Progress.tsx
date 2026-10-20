@@ -126,8 +126,9 @@ export type ProgressRootProps = {
   max?: number;
   /** Minimum value. Default `0`. */
   min?: number;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Outer container style: value or function of progress state. */
   style?: StateStyle<ProgressRootState, StyleProp<ViewStyle>>;
@@ -207,7 +208,8 @@ export function ProgressRoot({
   value = 0,
   max = 100,
   min = 0,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   render,
@@ -242,12 +244,13 @@ export function ProgressRoot({
     render,
     {
       accessible: true,
-      accessibilityRole: "progressbar",
-      accessibilityState: { busy: indeterminate || undefined },
-      accessibilityValue: indeterminate
-        ? undefined
-        : { min, max, now: clamped },
-      accessibilityLabel,
+      role: "progressbar",
+      "aria-busy": indeterminate || undefined,
+      "aria-valuemin": indeterminate ? undefined : min,
+      "aria-valuemax": indeterminate ? undefined : max,
+      "aria-valuenow": indeterminate ? undefined : clamped,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style: resolveStyle(style, state),
       ref: setHostRef,
@@ -270,12 +273,13 @@ export function ProgressRoot({
         // accessibility element, so the role and value below would never
         // reach assistive tech (or the role queries that prove it).
         accessible
-        accessibilityRole="progressbar"
-        accessibilityState={{ busy: indeterminate || undefined }}
-        accessibilityValue={
-          indeterminate ? undefined : { min, max, now: clamped }
-        }
-        accessibilityLabel={accessibilityLabel}
+        role="progressbar"
+        aria-busy={indeterminate || undefined}
+        aria-valuemin={indeterminate ? undefined : min}
+        aria-valuemax={indeterminate ? undefined : max}
+        aria-valuenow={indeterminate ? undefined : clamped}
+        {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+        {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
         testID={testID}
         style={resolveStyle(style, state)}
       >

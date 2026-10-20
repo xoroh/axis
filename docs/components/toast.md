@@ -60,7 +60,7 @@ the two.
 | `children` | `ReactNode` | no | — | Message content. |
 | `actionLabel` | `string` | no | — | Action button label. The action button renders only when this is provided — no label, no action button. |
 | `onAction` | `() => void` | no | — | Fires when the action button is pressed; the toast dismisses as part of the same press. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the toast surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the toast surface. |
 | `style` | `StateStyle<ToastRootState, StyleProp<ViewStyle>>` | no | — | Surface style: a value or a function of toast state. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the surface. |
 | `render` | `RenderProp<ToastRootState, SlotProps>` | no | — | Element or function substitution (Base UI parity). |
@@ -95,7 +95,7 @@ manager with no queue would silently drop toasts):
 | `message` | `ReactNode` | yes | — | Message content rendered inside the queued toast. |
 | `actionLabel` | `string` | no | — | Action button label. No label, no action button. |
 | `onAction` | `() => void` | no | — | Fires when the action button is pressed (the toast dismisses too). |
-| `accessibilityLabel` | `string` | no | — | Accessible name source for the toast surface. |
+| `"aria-label"` | `string` | no | — | Accessible name source for the toast surface. |
 | `duration` | `number` | no | `4000` | Auto-dismiss delay in milliseconds; `0` or less disables it. |
 
 #### `ToastViewport`
@@ -125,7 +125,7 @@ function SavedNotice() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button accessibilityLabel="Save" onPress={() => setOpen(true)}>
+      <Button aria-label="Save" onPress={() => setOpen(true)}>
         <Text>Save</Text>
       </Button>
       <ToastRoot
@@ -151,7 +151,7 @@ import { ToastRoot } from "@xoroh/axis";
 
 function PersistentHint() {
   return (
-    <ToastRoot defaultOpen duration={0} accessibilityLabel="Hint">
+    <ToastRoot defaultOpen duration={0} aria-label="Hint">
       Press and hold any row for options
     </ToastRoot>
   );
@@ -177,7 +177,7 @@ function CopyButton() {
   const toast = useToast();
   return (
     <Button
-      accessibilityLabel="Copy to clipboard"
+      aria-label="Copy to clipboard"
       onPress={() => {
         toast.add({ message: "Copied", actionLabel: "Undo" });
       }}

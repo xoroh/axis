@@ -30,6 +30,9 @@ import { useControllableState } from "../useControllableState";
  * uncontrolled. With `autoSubmit`, `onComplete` fires exactly once per
  * completion (guarded by the last-completed value: a rerender at full
  * length never refires, and only a change away and back resubmits).
+ *
+ * ADR-112 aria-only: the container accepts `aria-label` and `aria-labelledby`.
+ * Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  */
 
 export type OTPFieldRootState = {
@@ -56,8 +59,10 @@ export type OTPFieldRootProps = {
   autoSubmit?: boolean;
   /** Fires once per completion while `autoSubmit` is set. */
   onComplete?: (value: string) => void;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
   testID?: string;
   /** Container style: value or function of field state. */
   style?: StateStyle<OTPFieldRootState, StyleProp<ViewStyle>>;
@@ -82,25 +87,6 @@ export type OTPFieldRootProps = {
   ref?: Ref<ElementRef<typeof View>>;
 };
 
-/**
- * Assign one value to every ref in the list. Inline here (not imported)
- * deliberately: the shared `mergeRefs` composition has no approved
- * consumer yet, and the contract requires an inline, documented,
- * tested composition until its transfer gate passes. When it does,
- * this body is its first consumer.
- */
-/**
- * The capture input is behavior-hidden but focusable: absolutely
- * positioned, invisible, and 1×1 so it never disturbs layout, while
- * staying in the focus order for entry. Caller `inputStyle` merges
- * over it (the caller wins).
- */
-const HIDDEN_INPUT_STYLE: TextStyle = {
-  position: "absolute",
-  opacity: 0,
-  width: 1,
-  height: 1,
-};
 function assignRef(
   ref: OTPFieldRootProps["ref"],
   value: ElementRef<typeof View> | null,
@@ -113,11 +99,17 @@ function assignRef(
     try {
       (ref as { current: unknown }).current = value;
     } catch {
-      // A frozen ref object cannot take the write — leave it alone
-      // rather than failing the render over it.
+      // A frozen ref object cannot take the write
     }
   }
 }
+
+const HIDDEN_INPUT_STYLE: TextStyle = {
+  position: "absolute",
+  opacity: 0,
+  width: 1,
+  height: 1,
+};
 
 export function OTPFieldRoot({
   value,
@@ -128,7 +120,8 @@ export function OTPFieldRoot({
   secureTextEntry = false,
   autoSubmit = false,
   onComplete,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   cellStyle,
@@ -147,9 +140,6 @@ export function OTPFieldRoot({
   );
   const current = (stored ?? "").slice(0, safeLength);
 
-  // Last value `onComplete` fired for. Cleared whenever the code drops
-  // below full length, so a rerender at full length never refires while
-  // a change away and back (even to the same code) resubmits.
   const lastCompleted = useRef<string | null>(null);
   useEffect(() => {
     if (!autoSubmit) return;
@@ -170,9 +160,6 @@ export function OTPFieldRoot({
     [safeLength, setStored],
   );
 
-  // Stable identity so the host element is not detached and re-attached
-  // on every render — the ref callback reads through `ref`, never
-  // closing over render-scoped values besides it.
   const setHostRef = useCallback(
     (node: ElementRef<typeof View> | null) => {
       assignRef(ref, node);
@@ -181,34 +168,31 @@ export function OTPFieldRoot({
   );
 
   const state: OTPFieldRootState = { value: current, disabled };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityLabel,
-      testID,
-      style: resolveStyle(style, state),
-      cellStyle,
-      textStyle,
-      inputStyle: [HIDDEN_INPUT_STYLE, inputStyle],
-      value: current,
-      onValueChange: disabled ? undefined : handleChangeText,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+  const hostProps = {
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    style: resolveStyle(style, state),
+    cellStyle,
+    textStyle,
+    inputStyle: [HIDDEN_INPUT_STYLE, inputStyle],
+    value: current,
+    onValueChange: disabled ? undefined : handleChangeText,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <View
       ref={setHostRef}
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={resolveStyle(style, state)}
     >
       {Array.from({ length: safeLength }, (_, index) => {
-        // Cells are positional and fixed-length: the index IS the stable
-        // identity (no reorder/insert/remove exists), so index keys are
-        // correct here, not a shortcut.
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: positional fixed-length cells.
           <View key={index} style={cellStyle}>
@@ -225,11 +209,14 @@ export function OTPFieldRoot({
         testID={testID ? `${testID}-input` : undefined}
         value={current}
         onChangeText={disabled ? undefined : handleChangeText}
-        keyboardType="number-pad"
-        secureTextEntry={secureTextEntry}
+        maxLength={safeLength}
         editable={!disabled}
+        secureTextEntry={secureTextEntry}
+        keyboardType="number-pad"
         style={[HIDDEN_INPUT_STYLE, inputStyle]}
       />
     </View>
   );
 }
+
+export { OTPFieldRoot as OtpField };

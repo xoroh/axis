@@ -82,8 +82,9 @@ export type AvatarRootProps = {
 export type AvatarImageProps = {
   /** Image source (required — without one the root stays `idle`). */
   source: ImageSourcePropType;
-  /** Accessible name source (e.g. the person's name). Announced only while loaded. */
-  accessibilityLabel?: string;
+  /** Accessible name source (ADR-112, e.g. the person's name). Announced only while loaded. */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Image style, caller-provided. */
   style?: StyleProp<ImageStyle>;
@@ -242,7 +243,8 @@ export function AvatarRoot({
 
 export function AvatarImage({
   source,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   onLoadingStatusChange,
@@ -285,8 +287,9 @@ export function AvatarImage({
       // provides the accessible name on its own (the Base UI
       // stacking guidance).
       accessible: loaded,
-      accessibilityRole: "image",
-      accessibilityLabel,
+      role: "img",
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       style,
       ref: setHostRef,
@@ -300,8 +303,9 @@ export function AvatarImage({
       ref={setHostRef}
       source={source}
       accessible={loaded}
-      accessibilityRole="image"
-      accessibilityLabel={accessibilityLabel}
+      role="img"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       style={style}
       onLoadStart={() => report("loading")}

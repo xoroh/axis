@@ -32,10 +32,12 @@ export type ButtonProps = {
    * `children` to reflect the busy state — nothing renders here.
    */
   loading?: boolean;
-  /** Accessible name source. */
-  accessibilityLabel?: string;
-  /** Native labelled-by association where the platform supports it. */
-  accessibilityLabelledBy?: string;
+  /** Accessible name source (ADR-112). */
+  "aria-label"?: string;
+  /** Native labelled-by association where the platform supports it (ADR-112). */
+  "aria-labelledby"?: string;
+  /** Explicit busy override (ADR-112). */
+  "aria-busy"?: boolean;
   testID?: string;
   /** Value or function of button state, caller-provided. */
   style?: StateStyle<ButtonState, StyleProp<ViewStyle>>;
@@ -80,8 +82,9 @@ export function Button({
   onPress,
   disabled = false,
   loading = false,
-  accessibilityLabel,
-  accessibilityLabelledBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
+  "aria-busy": ariaBusy,
   testID,
   style,
   children,
@@ -104,31 +107,32 @@ export function Button({
   );
 
   const state: ButtonState = { disabled, loading };
-  const substituted = resolveRender(
-    render,
-    {
-      accessibilityRole: "button",
-      accessibilityState: { disabled, busy: loading },
-      accessibilityLabel,
-      accessibilityLabelledBy,
-      testID,
-      disabled,
-      onPress: handlePress,
-      style: resolveStyle(style, state),
-      children,
-      ref: setHostRef,
-    } satisfies SlotProps,
-    state,
-  );
+  const busy = ariaBusy ?? loading;
+  const hostProps = {
+    role: "button" as const,
+    "aria-disabled": disabled,
+    "aria-busy": busy,
+    ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+    ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
+    testID,
+    disabled,
+    onPress: handlePress,
+    style: resolveStyle(style, state),
+    children,
+    ref: setHostRef,
+  } satisfies SlotProps;
+
+  const substituted = resolveRender(render, hostProps, state);
   if (substituted !== null) return substituted;
 
   return (
     <Pressable
       ref={setHostRef}
-      accessibilityRole="button"
-      accessibilityState={{ disabled, busy: loading }}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityLabelledBy={accessibilityLabelledBy}
+      role="button"
+      aria-disabled={disabled}
+      aria-busy={busy}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={disabled}
       onPress={handlePress}

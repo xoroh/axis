@@ -84,7 +84,7 @@ export const EntryDemo: Demo = {
               Full Name
             </FieldLabel>
             <Input
-              accessibilityLabel="Name input"
+              aria-label="Name input"
               value={name}
               onValueChange={setName}
               placeholder="e.g. Ada"
@@ -100,7 +100,7 @@ export const EntryDemo: Demo = {
             </FieldLabel>
             <FieldControl>
               <Input
-                accessibilityLabel="Notes input"
+                aria-label="Notes input"
                 value={notes}
                 onValueChange={setNotes}
                 placeholder="Enter notes..."
@@ -158,7 +158,7 @@ export const EntryDemo: Demo = {
                     }}
                   >
                     <NumberFieldDecrement
-                      accessibilityLabel="Decrease count"
+                      aria-label="Decrease count"
                       style={{
                         width: 44,
                         height: 44,
@@ -173,11 +173,11 @@ export const EntryDemo: Demo = {
                       <Text style={{ color: theme.text }}>−</Text>
                     </NumberFieldDecrement>
                     <NumberFieldInput
-                      accessibilityLabel="Count input"
+                      aria-label="Count input"
                       style={[inputStyle, { flex: 1, textAlign: "center" }]}
                     />
                     <NumberFieldIncrement
-                      accessibilityLabel="Increase count"
+                      aria-label="Increase count"
                       style={{
                         width: 44,
                         height: 44,
@@ -238,7 +238,7 @@ export const EntryDemo: Demo = {
                     }}
                   >
                     <NumberFieldDecrement
-                      accessibilityLabel="Decrease capped"
+                      aria-label="Decrease capped"
                       style={(s) => [
                         {
                           width: 44,
@@ -256,11 +256,11 @@ export const EntryDemo: Demo = {
                       <Text style={{ color: theme.text }}>−</Text>
                     </NumberFieldDecrement>
                     <NumberFieldInput
-                      accessibilityLabel="capped input"
+                      aria-label="capped input"
                       style={[inputStyle, { flex: 1, textAlign: "center" }]}
                     />
                     <NumberFieldIncrement
-                      accessibilityLabel="Increase capped"
+                      aria-label="Increase capped"
                       style={{
                         width: 44,
                         height: 44,
@@ -298,7 +298,7 @@ export const EntryDemo: Demo = {
                     }}
                   >
                     <NumberFieldDecrement
-                      accessibilityLabel="Decrease read-only"
+                      aria-label="Decrease read-only"
                       style={{
                         width: 44,
                         height: 44,
@@ -313,11 +313,11 @@ export const EntryDemo: Demo = {
                       <Text style={{ color: theme.text }}>−</Text>
                     </NumberFieldDecrement>
                     <NumberFieldInput
-                      accessibilityLabel="read-only input"
+                      aria-label="read-only input"
                       style={[inputStyle, { flex: 1, textAlign: "center" }]}
                     />
                     <NumberFieldIncrement
-                      accessibilityLabel="Increase read-only"
+                      aria-label="Increase read-only"
                       style={{
                         width: 44,
                         height: 44,
@@ -358,7 +358,7 @@ export const EntryDemo: Demo = {
                     ]}
                   >
                     <NumberFieldDecrement
-                      accessibilityLabel="Decrease disabled"
+                      aria-label="Decrease disabled"
                       style={{
                         width: 44,
                         height: 44,
@@ -373,11 +373,11 @@ export const EntryDemo: Demo = {
                       <Text style={{ color: theme.text }}>−</Text>
                     </NumberFieldDecrement>
                     <NumberFieldInput
-                      accessibilityLabel="disabled input"
+                      aria-label="disabled input"
                       style={[inputStyle, { flex: 1, textAlign: "center" }]}
                     />
                     <NumberFieldIncrement
-                      accessibilityLabel="Increase disabled"
+                      aria-label="Increase disabled"
                       style={{
                         width: 44,
                         height: 44,
@@ -405,7 +405,7 @@ export const EntryDemo: Demo = {
                   4-Digit OTP Code:
                 </Text>
                 <OTPFieldRoot
-                  accessibilityLabel="Code input"
+                  aria-label="Code input"
                   value={code}
                   onValueChange={setCode}
                   length={4}

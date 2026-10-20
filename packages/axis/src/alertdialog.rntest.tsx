@@ -40,7 +40,7 @@ function Blocking({
         <AlertDialogBackdrop testID={`${testID}-scrim`} />
         <AlertDialogPopup
           testID={testID}
-          accessibilityLabel="Discard confirmation"
+          aria-label="Discard confirmation"
         >
           <AlertDialogTitle>Discard changes?</AlertDialogTitle>
           <AlertDialogDescription>
@@ -144,7 +144,7 @@ describe("AlertDialog compound parts on React Native", () => {
           </AlertDialogTrigger>
           <AlertDialogPortal>
             <AlertDialogBackdrop testID="ad-scrim" />
-            <AlertDialogPopup testID="ad" accessibilityLabel="Confirm">
+            <AlertDialogPopup testID="ad" aria-label="Confirm">
               <AlertDialogTitle>Confirm</AlertDialogTitle>
               <AlertDialogClose testID="ad-close">
                 <Text>Close</Text>
@@ -174,7 +174,7 @@ describe("AlertDialog compound parts on React Native", () => {
         <AlertDialogRoot open={false} onOpenChange={(v) => changed.push(v)}>
           <AlertDialogPortal>
             <AlertDialogBackdrop testID="ad-scrim" />
-            <AlertDialogPopup testID="ad" accessibilityLabel="Confirm">
+            <AlertDialogPopup testID="ad" aria-label="Confirm">
               <AlertDialogTitle>Confirm</AlertDialogTitle>
             </AlertDialogPopup>
           </AlertDialogPortal>
@@ -188,7 +188,7 @@ describe("AlertDialog compound parts on React Native", () => {
           <AlertDialogRoot open onOpenChange={(v) => changed.push(v)}>
             <AlertDialogPortal>
               <AlertDialogBackdrop testID="ad-scrim" />
-              <AlertDialogPopup testID="ad" accessibilityLabel="Confirm">
+              <AlertDialogPopup testID="ad" aria-label="Confirm">
                 <AlertDialogTitle>Confirm</AlertDialogTitle>
               </AlertDialogPopup>
             </AlertDialogPortal>
@@ -212,7 +212,7 @@ describe("AlertDialog compound parts on React Native", () => {
             <AlertDialogBackdrop testID="ad-scrim" />
             <AlertDialogPopup
               testID="ad"
-              accessibilityLabel="Confirm"
+              aria-label="Confirm"
               ref={(node) => {
                 if (node) {
                   (node as { focus?: () => void }).focus = focusSpy;
@@ -238,7 +238,7 @@ describe("AlertDialog compound parts on React Native", () => {
             <AlertDialogBackdrop testID="ad-scrim" />
             <AlertDialogPopup
               testID="ad"
-              accessibilityLabel="Confirm"
+              aria-label="Confirm"
               ref={ref}
             >
               <AlertDialogTitle>Confirm</AlertDialogTitle>

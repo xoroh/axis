@@ -122,8 +122,9 @@ export type TooltipTriggerProps = {
   children?: ReactNode;
   /** Terminal: long-press never toggles and is announced as disabled. */
   disabled?: boolean;
-  /** Accessible name source for the anchor. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the anchor (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Long-press duration in milliseconds before the toggle fires,
    * forwarded to the host `Pressable` (`delayLongPress`). Absent
@@ -181,8 +182,9 @@ export type TooltipPopupProps = {
   style?: StateStyle<TooltipPopupState, StyleProp<ViewStyle>>;
   /** Tip content. */
   children?: ReactNode;
-  /** Accessible name source for the tip. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the tip (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   /**
    * Element or function substitution (Base UI parity). Replaces the
    * tip host; the tooltip role stays on the part.
@@ -362,7 +364,8 @@ export function TooltipTrigger({
   style,
   children,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   delayLongPress,
   render,
 }: TooltipTriggerProps): React.ReactNode {
@@ -391,7 +394,8 @@ export function TooltipTrigger({
   const substituted = resolveRender(
     render,
     {
-      accessibilityLabel,
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       disabled: effectiveDisabled || inert,
       delayLongPress,
@@ -406,7 +410,8 @@ export function TooltipTrigger({
   return (
     <Pressable
       ref={setTriggerRef}
-      accessibilityLabel={accessibilityLabel}
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       disabled={effectiveDisabled || inert}
       delayLongPress={delayLongPress}
@@ -525,7 +530,8 @@ export function TooltipPopup({
   testID,
   style,
   children,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   render,
   ref,
 }: TooltipPopupProps): React.ReactNode {
@@ -550,7 +556,7 @@ export function TooltipPopup({
   const web = isWebEnvironment();
   useModalFocus({
     open,
-    enabled: accessibilityLabel !== undefined && root !== null,
+    enabled: (ariaLabel !== undefined || ariaLabelledBy !== undefined) && root !== null,
     popupRef: tipNodeRef,
     restoreRef: root?.anchorHostRef ?? { current: null },
     sharedState: root?.focusState,
@@ -565,8 +571,9 @@ export function TooltipPopup({
     render,
     {
       accessible: true,
-      accessibilityRole: "tooltip",
-      accessibilityLabel,
+      role: "tooltip",
+      ...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {}),
+      ...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {}),
       testID,
       onAccessibilityEscape: handleAccessibilityEscape,
       ...webTabIndexProps(web),
@@ -582,8 +589,9 @@ export function TooltipPopup({
     <View
       ref={setTipRef}
       accessible
-      accessibilityRole="tooltip"
-      accessibilityLabel={accessibilityLabel}
+      role="tooltip"
+      {...(ariaLabel !== undefined ? { "aria-label": ariaLabel } : {})}
+      {...(ariaLabelledBy !== undefined ? { "aria-labelledby": ariaLabelledBy } : {})}
       testID={testID}
       onAccessibilityEscape={handleAccessibilityEscape}
       {...webTabIndexProps(web)}

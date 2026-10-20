@@ -27,7 +27,7 @@ function Adder({
   return (
     <Pressable
       testID={`add-${label}`}
-      accessibilityLabel={`Add ${label}`}
+      aria-label={`Add ${label}`}
       onPress={() => onAdded(toast.add({ message: label, duration: 0 }))}
     >
       <Text>{`Add ${label}`}</Text>
@@ -62,7 +62,7 @@ describe("Toast queue on React Native", () => {
       return (
         <Pressable
           testID="dismiss-first"
-          accessibilityLabel="Dismiss first"
+          aria-label="Dismiss first"
           onPress={() => toast.dismiss(first)}
         >
           <Text>Dismiss</Text>
@@ -96,7 +96,7 @@ describe("Toast queue on React Native", () => {
       return (
         <Pressable
           testID="clear"
-          accessibilityLabel="Clear"
+          aria-label="Clear"
           onPress={() => toast.clear()}
         >
           <Text>Clear</Text>
@@ -130,7 +130,7 @@ describe("Toast queue on React Native", () => {
       return (
         <Pressable
           testID="add-quick"
-          accessibilityLabel="Add quick"
+          aria-label="Add quick"
           onPress={() => toast.add({ message: "quick", duration: 50 })}
         >
           <Text>Add</Text>
@@ -159,7 +159,7 @@ describe("Toast queue on React Native", () => {
       return (
         <Pressable
           testID="add-action"
-          accessibilityLabel="Add action"
+          aria-label="Add action"
           onPress={() =>
             toast.add({
               message: "with action",

@@ -38,17 +38,13 @@ import { Input } from "./Input";
  * committing (the Dialog scrim precedent: a `Pressable` labelled
  * `"Dismiss"`).
  *
- * Accessibility: the toggle carries `accessibilityRole="button"` with
- * `accessibilityState { expanded, disabled }`. Options are commit
- * actions, NOT a selection set — each carries
- * `accessibilityRole="button"` with NO selected state, and the list
- * is a plain container with NO `listbox` role. `option`/`listbox`
- * roles would promise selection semantics (a chosen member of a value
- * domain) that this component deliberately lacks: pressing a
- * suggestion commits text exactly like submitting typed text. A
- * component that cannot express its relationship documents the gap
- * instead of silently dropping it (contract §5) — this paragraph is
- * that documentation.
+ * ADR-112 aria-only: the toggle carries `role="button"` with
+ * `aria-expanded` and `aria-disabled`. Options are commit
+ * actions, NOT a selection set — each carries `role="button"` with
+ * NO selected state, and the list is a plain container with NO
+ * `listbox` role. `option`/`listbox` roles would promise selection
+ * semantics (a chosen member of a value domain) that this component
+ * deliberately lacks. Never emit legacy RN a11y props (ADR-112 aria-only: role and aria-* only).
  *
  * Deferred, each for a named reason (not oversight):
  * - No multi-commit — the value is one string.
@@ -93,8 +89,9 @@ export type AutocompleteProps = {
   placeholder?: string;
   /** Terminal: no text changes, no open/close, no commits, no callbacks. Default `false`. */
   disabled?: boolean;
-  /** Accessible name source for the entry. */
-  accessibilityLabel?: string;
+  /** Accessible name source for the entry (ADR-112). */
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   testID?: string;
   /** Root (entry box) style: value or function of autocomplete state. */
   style?: StateStyle<AutocompleteState, StyleProp<ViewStyle>>;
@@ -149,7 +146,8 @@ export function Autocomplete({
   onOpenChange,
   placeholder,
   disabled = false,
-  accessibilityLabel,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   testID,
   style,
   listStyle,
@@ -243,7 +241,8 @@ export function Autocomplete({
       onCommit: commitOption,
       onSubmit: submit,
       placeholder,
-      accessibilityLabel,
+      "aria-label": ariaLabel,
+      "aria-labelledby": ariaLabelledBy,
       inputStyle,
       listStyle,
       options: matches,
@@ -261,13 +260,15 @@ export function Autocomplete({
         onValueChange={changeText}
         onSubmitEditing={submit}
         placeholder={placeholder}
-        accessibilityLabel={accessibilityLabel}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
         style={inputStyle}
       />
       <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded, disabled }}
-        accessibilityLabel={expanded ? "Hide suggestions" : "Show suggestions"}
+        role="button"
+        aria-expanded={expanded}
+        aria-disabled={disabled || undefined}
+        aria-label={expanded ? "Hide suggestions" : "Show suggestions"}
         disabled={disabled}
         onPress={toggle}
       >
@@ -277,7 +278,7 @@ export function Autocomplete({
       </Pressable>
       {expanded ? (
         <Pressable
-          accessibilityLabel="Dismiss"
+          aria-label="Dismiss"
           testID={testID ? `${testID}-scrim` : undefined}
           disabled={disabled}
           onPress={dismiss}
@@ -289,9 +290,9 @@ export function Autocomplete({
             <Pressable
               // biome-ignore lint/suspicious/noArrayIndexKey: duplicate option strings need positional disambiguation.
               key={`${option}-${index}`}
-              accessibilityRole="button"
-              accessibilityState={{ disabled }}
-              accessibilityLabel={option}
+              role="button"
+              aria-disabled={disabled || undefined}
+              aria-label={option}
               disabled={disabled}
               onPress={() => commitOption(option)}
             >

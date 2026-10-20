@@ -54,8 +54,8 @@ substitution covers them.
 | `onPress` | `() => void` | no | — | Fires on press. Suppressed while `disabled` or `loading`. |
 | `disabled` | `boolean` | no | `false` | Terminal: no callbacks, announced as disabled. |
 | `loading` | `boolean` | no | `false` | Busy: suppresses `onPress`, announced as busy. The caller swaps `children` to reflect the busy state — nothing renders here. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
+| `"aria-labelledby"` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the pressable host. |
 | `style` | `StateStyle<ButtonState, StyleProp<ViewStyle>>` | no | — | Pressable style: a value or a function of button state. |
 | `children` | `ReactNode` | no | — | Caller-provided content. A button without label content is unusable — name it or fill it. |
@@ -76,7 +76,7 @@ import { Button } from "@xoroh/axis";
 
 function Save({ onSave }: { onSave: () => void }) {
   return (
-    <Button onPress={onSave} accessibilityLabel="Save">
+    <Button onPress={onSave} aria-label="Save">
       <Text>Save</Text>
     </Button>
   );
@@ -95,7 +95,7 @@ function Submit({ saving, onSubmit }: { saving: boolean; onSubmit: () => void })
     <Button
       onPress={onSubmit}
       loading={saving}
-      accessibilityLabel={saving ? "Saving" : "Submit"}
+      aria-label={saving ? "Saving" : "Submit"}
       style={{ padding: 12 }}
     >
       <Text>{saving ? "Saving…" : "Submit"}</Text>
@@ -116,7 +116,7 @@ function StatefulButton({ onPress }: { onPress: () => void }) {
   return (
     <Button
       onPress={onPress}
-      accessibilityLabel="Refresh"
+      aria-label="Refresh"
       style={(state) => ({
         padding: 12,
         opacity: state.disabled || state.loading ? 0.5 : 1,

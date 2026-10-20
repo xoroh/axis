@@ -32,7 +32,7 @@ function item(value: string, label: string, panel: string) {
   return (
     <AccordionItem value={value} key={value}>
       <AccordionHeader>
-        <AccordionTrigger testID={value} accessibilityLabel={label}>
+        <AccordionTrigger testID={value} aria-label={label}>
           <Text>{label}</Text>
         </AccordionTrigger>
       </AccordionHeader>
@@ -46,7 +46,7 @@ function item(value: string, label: string, panel: string) {
 describe("Accordion on React Native", () => {
   it("renders collapsed: no panel, expanded false", async () => {
     await render(
-      <AccordionRoot testID="acc" accessibilityLabel="Settings">
+      <AccordionRoot testID="acc" aria-label="Settings">
         {item("a", "General", "General panel")}
         {item("b", "Privacy", "Privacy panel")}
       </AccordionRoot>,
@@ -156,7 +156,7 @@ describe("Accordion on React Native", () => {
       <AccordionRoot>
         <AccordionItem value="a">
           <AccordionHeader testID="h">
-            <AccordionTrigger testID="t" accessibilityLabel="General">
+            <AccordionTrigger testID="t" aria-label="General">
               <Text>General</Text>
             </AccordionTrigger>
           </AccordionHeader>
@@ -166,7 +166,7 @@ describe("Accordion on React Native", () => {
         </AccordionItem>
       </AccordionRoot>,
     );
-    expect(screen.getByTestId("h").props.accessibilityRole).toBe("header");
+    expect(screen.getByTestId("h").props.role).toBe("heading");
     expect(screen.getByRole("button")).toBeTruthy();
   });
 
@@ -175,7 +175,7 @@ describe("Accordion on React Native", () => {
       <AccordionRoot>
         <AccordionItem value="a">
           <AccordionHeader>
-            <AccordionTrigger testID="a" accessibilityLabel="General">
+            <AccordionTrigger testID="a" aria-label="General">
               <Text>General</Text>
             </AccordionTrigger>
           </AccordionHeader>
@@ -198,9 +198,9 @@ describe("Accordion on React Native", () => {
     const hidden = screen.getByTestId("a-panel", {
       includeHiddenElements: true,
     }).props;
-    expect(hidden.accessibilityElementsHidden).toBe(true);
-    expect(hidden.importantForAccessibility).toBe("no-hide-descendants");
     expect(hidden["aria-hidden"]).toBe(true);
+    expect(hidden.accessibilityElementsHidden).toBeUndefined();
+    expect(hidden.importantForAccessibility).toBeUndefined();
     const flatHidden = Object.assign(
       {},
       ...(Array.isArray(hidden.style)
@@ -215,9 +215,9 @@ describe("Accordion on React Native", () => {
     expect(screen.queryByText("General panel")).toBeNull();
     await press("a");
     const shown = screen.getByTestId("a-panel").props;
-    expect(shown.accessibilityElementsHidden).toBe(false);
-    expect(shown.importantForAccessibility).toBe("auto");
     expect(shown["aria-hidden"]).toBe(false);
+    expect(shown.accessibilityElementsHidden).toBeUndefined();
+    expect(shown.importantForAccessibility).toBeUndefined();
     const flatShown = Object.assign(
       {},
       ...(Array.isArray(shown.style)

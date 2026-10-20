@@ -55,7 +55,7 @@ export const SelectionDemo: Demo = {
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
             <CheckboxRoot
-              accessibilityLabel="Demo standalone checkbox"
+              aria-label="Demo standalone checkbox"
               checked={checked}
               onCheckedChange={setChecked}
               style={{
@@ -91,7 +91,7 @@ export const SelectionDemo: Demo = {
             }}
           >
             <CheckboxRoot
-              accessibilityLabel="Demo select-all checkbox"
+              aria-label="Demo select-all checkbox"
               checked={allChecked}
               onCheckedChange={(next) => {
                 setAllChecked(next);
@@ -127,7 +127,7 @@ export const SelectionDemo: Demo = {
               marginTop: 12,
             }}
           >
-            <CheckboxRoot accessibilityLabel="Demo locked checkbox" readOnly>
+            <CheckboxRoot aria-label="Demo locked checkbox" readOnly>
               <CheckboxIndicator
                 keepMounted
                 testID="demo-locked-mark"
@@ -164,7 +164,7 @@ export const SelectionDemo: Demo = {
             Checkbox Group:
           </Text>
           <CheckboxGroup
-            accessibilityLabel="Demo checkbox group"
+            aria-label="Demo checkbox group"
             defaultValue={["a"]}
             style={{ gap: 10 }}
           >
@@ -184,12 +184,10 @@ export const SelectionDemo: Demo = {
                       : undefined;
                   return (
                     <Pressable
-                      accessibilityRole="checkbox"
-                      accessibilityState={{
-                        checked: state.checked,
-                        disabled: state.disabled,
-                      }}
-                      accessibilityLabel={label}
+                      role="checkbox"
+                      aria-checked={state.checked}
+                      aria-disabled={state.disabled}
+                      aria-label={label}
                       testID={`demo-opt-${itemValue}`}
                       disabled={state.disabled}
                       onPress={onPress}
@@ -262,7 +260,7 @@ export const SelectionDemo: Demo = {
             Radio Group:
           </Text>
           <RadioGroup
-            accessibilityLabel="Demo radio group"
+            aria-label="Demo radio group"
             defaultValue="x"
             style={{ flexDirection: "row", gap: 12 }}
           >
@@ -282,12 +280,10 @@ export const SelectionDemo: Demo = {
                       : undefined;
                   return (
                     <Pressable
-                      accessibilityRole="radio"
-                      accessibilityState={{
-                        checked: state.checked,
-                        disabled: state.disabled,
-                      }}
-                      accessibilityLabel={label}
+                      role="radio"
+                      aria-checked={state.checked}
+                      aria-disabled={state.disabled}
+                      aria-label={label}
                       testID={`demo-plan-${itemValue}`}
                       disabled={state.disabled}
                       onPress={onPress}
@@ -354,7 +350,7 @@ export const SelectionDemo: Demo = {
             Frozen (read-only — presses change nothing):
           </Text>
           <RadioGroup
-            accessibilityLabel="Demo frozen radio group"
+            aria-label="Demo frozen radio group"
             defaultValue="x"
             readOnly
             style={{ flexDirection: "row", gap: 12 }}
@@ -408,7 +404,7 @@ export const SelectionDemo: Demo = {
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
             <Toggle
-              accessibilityLabel="Demo standalone toggle"
+              aria-label="Demo standalone toggle"
               pressed={pressed}
               onPressedChange={setPressed}
               style={{
@@ -432,7 +428,7 @@ export const SelectionDemo: Demo = {
             </Toggle>
 
             <ToggleGroup
-              accessibilityLabel="Demo toggle group"
+              aria-label="Demo toggle group"
               defaultValue={["m"]}
               style={{
                 flexDirection: "row",
@@ -482,7 +478,7 @@ export const SelectionDemo: Demo = {
               </Toggle>
             </ToggleGroup>
             <ToggleGroup
-              accessibilityLabel="Demo multiple toggle group"
+              aria-label="Demo multiple toggle group"
               multiple
               defaultValue={["bold"]}
               style={{
@@ -526,7 +522,7 @@ export const SelectionDemo: Demo = {
               ))}
             </ToggleGroup>
             <ToggleGroup
-              accessibilityLabel="Demo vertical toggle group"
+              aria-label="Demo vertical toggle group"
               orientation="vertical"
               defaultValue={["left"]}
               style={{

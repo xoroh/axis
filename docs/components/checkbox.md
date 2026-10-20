@@ -74,8 +74,8 @@ aligned).
 | `indeterminate` | `boolean` | no | `false` | Mixed state: neither ticked nor unticked. Announced as the `mixed` checked mapping; the indicator mounts while set. Caller-owned: toggling does not clear it. |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks, announced as disabled. |
 | `readOnly` | `boolean` | no | `false` | Read-only: focusable and announced like an enabled checkbox, but presses do not change state and no callbacks fire. Distinct from `disabled` (which blocks interaction and announces disabled) — React Native maps no readonly key, so the announcement is the normal checkbox state. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
+| `"aria-labelledby"` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
 | `style` | `StateStyle<CheckboxRootState, StyleProp<ViewStyle>>` | no | — | Value or function of checkbox state, caller-provided. |
 | `children` | `ReactNode` | no | — | Box content (`CheckboxIndicator` composed by the caller). |
@@ -111,7 +111,7 @@ import { CheckboxIndicator, CheckboxRoot } from "@xoroh/axis";
 
 function Consent() {
   return (
-    <CheckboxRoot accessibilityLabel="Accept the terms">
+    <CheckboxRoot aria-label="Accept the terms">
       <CheckboxIndicator>
         <Text>✓</Text>
       </CheckboxIndicator>
@@ -133,7 +133,7 @@ function ControlledConsent() {
     <CheckboxRoot
       checked={checked}
       onCheckedChange={setChecked}
-      accessibilityLabel="Accept the terms"
+      aria-label="Accept the terms"
       style={(state) => ({ opacity: state.checked ? 1 : 0.6 })}
     >
       <CheckboxIndicator>
@@ -163,7 +163,7 @@ function SelectAll() {
         setIndeterminate(false);
       }}
       indeterminate={indeterminate}
-      accessibilityLabel="Select all"
+      aria-label="Select all"
     >
       <CheckboxIndicator>
         <Text>{indeterminate ? "–" : "✓"}</Text>
@@ -184,7 +184,7 @@ import { CheckboxIndicator, CheckboxRoot } from "@xoroh/axis";
 function Locked() {
   return (
     <CheckboxRoot
-      accessibilityLabel="Terms version"
+      aria-label="Terms version"
       readOnly
     >
       <CheckboxIndicator keepMounted testID="terms-mark" />

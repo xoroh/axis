@@ -69,7 +69,7 @@ function FruitCompound(props: {
         { value: "mango", label: "Mango (Alphonso)" },
       ]}
     >
-      <SelectTrigger testID={testID} accessibilityLabel="Fruit">
+      <SelectTrigger testID={testID} aria-label="Fruit">
         <SelectValue placeholder="Pick a fruit" />
       </SelectTrigger>
       <SelectPortal>
@@ -560,7 +560,7 @@ describe("Select multiple on React Native", () => {
           { value: "mango", label: "Mango" },
         ]}
       >
-        <SelectTrigger testID="msel" accessibilityLabel="Fruit">
+        <SelectTrigger testID="msel" aria-label="Fruit">
           <SelectValue placeholder="Pick fruits" />
         </SelectTrigger>
         <SelectPortal>
@@ -667,7 +667,7 @@ describe("Select scroll arrows on React Native", () => {
     ArrowCase.lastScroller = scroller;
     return (
       <SelectRoot defaultOpen>
-        <SelectTrigger testID="ar-trigger" accessibilityLabel="Fruit">
+        <SelectTrigger testID="ar-trigger" aria-label="Fruit">
           <Text>Pick</Text>
         </SelectTrigger>
         <SelectPortal>
@@ -724,7 +724,7 @@ describe("Select scroll arrows on React Native", () => {
     await render(
       <PortalHost>
         <SelectRoot defaultOpen>
-          <SelectTrigger testID="ar2-trigger" accessibilityLabel="Fruit">
+          <SelectTrigger testID="ar2-trigger" aria-label="Fruit">
             <Text>Pick</Text>
           </SelectTrigger>
           <SelectPortal>
@@ -751,7 +751,7 @@ describe("Select scroll arrows on React Native", () => {
     await render(
       <PortalHost>
         <SelectRoot defaultOpen>
-          <SelectTrigger testID="ar3-trigger" accessibilityLabel="Fruit">
+          <SelectTrigger testID="ar3-trigger" aria-label="Fruit">
             <Text>Pick</Text>
           </SelectTrigger>
           <SelectPortal>

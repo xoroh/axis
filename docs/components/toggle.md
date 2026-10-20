@@ -57,8 +57,8 @@ bun add /tmp/axis-vendor/axis-<short-sha>.tgz react react-native
 | `defaultPressed` | `boolean` | no | `false` | Uncontrolled initial state. |
 | `onPressedChange` | `(pressed: boolean) => void` | no | — | Fires with the next state on every committed toggle. |
 | `disabled` | `boolean` | no | `false` | Terminal: no transitions, no callbacks, announced as disabled. |
-| `accessibilityLabel` | `string` | no | — | Accessible name source. |
-| `accessibilityLabelledBy` | `string` | no | — | Native labelled-by association where the platform supports it. |
+| `"aria-label"` | `string` | no | — | Accessible name source. |
+| `"aria-labelledby"` | `string` | no | — | Native labelled-by association where the platform supports it. |
 | `testID` | `string` | no | — | Test identifier, forwarded to the host. |
 | `style` | `StateStyle<ToggleState, StyleProp<ViewStyle>>` | no | — | Value or function of toggle state, caller-provided. |
 | `children` | `ReactNode` | no | — | Label content rendered inside the pressable. |
@@ -79,7 +79,7 @@ import { Toggle } from "@xoroh/axis";
 
 function Bold() {
   return (
-    <Toggle accessibilityLabel="Bold">
+    <Toggle aria-label="Bold">
       <Text>B</Text>
     </Toggle>
   );
@@ -99,7 +99,7 @@ function ControlledBold() {
     <Toggle
       pressed={pressed}
       onPressedChange={setPressed}
-      accessibilityLabel="Bold"
+      aria-label="Bold"
       style={(state) => ({ opacity: state.pressed ? 1 : 0.5 })}
     >
       <Text>B</Text>

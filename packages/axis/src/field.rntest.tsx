@@ -47,7 +47,7 @@ function Entry(props: {
       <FieldLabel>Full name</FieldLabel>
       <FieldControl testID={props.testID}>
         <Input
-          accessibilityLabel="Name input"
+          aria-label="Name input"
           onValueChange={props.onValueChange as never}
           onBlur={props.onBlur}
           onFocus={props.onFocus}
@@ -63,7 +63,7 @@ describe("FieldRoot", () => {
     await render(<Entry testID="in" />);
     const labelId = screen.getByText("Full name").props.nativeID;
     expect(typeof labelId).toBe("string");
-    expect(screen.getByTestId("in").props.accessibilityLabelledBy).toBe(
+    expect(screen.getByTestId("in").props["aria-labelledby"]).toBe(
       labelId,
     );
   });
@@ -311,7 +311,7 @@ describe("FieldControl", () => {
         <FieldLabel>Full name</FieldLabel>
         <FieldControl>
           {(props) => {
-            sawLabelledBy = props.accessibilityLabelledBy;
+            sawLabelledBy = props["aria-labelledby"];
             return <View testID="custom" />;
           }}
         </FieldControl>
