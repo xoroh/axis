@@ -1,5 +1,15 @@
 # @xoroh/axis
 
+## 0.1.2
+
+### Patch Changes
+
+- Fix a broken 0.1.1 publish: the release job packed the package before
+  building, shipping a tarball without `dist/` (no importable entries).
+  The job now builds and asserts the build output (entry points present)
+  before the publish step, so this version ships the full dist with
+  Sigstore provenance.
+
 ## 0.1.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@xoroh/axis",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Unstyled, accessible UI components and native interaction primitives for React Native.",
   "keywords": [
     "react-native",
@@ -77,6 +77,7 @@
     "LICENSE"
   ],
   "scripts": {
+    "prepack": "bun run build",
     "build": "tsup src/index.ts src/models.ts --format esm,cjs --dts --dts-resolve --external react --external react-native --out-dir dist --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

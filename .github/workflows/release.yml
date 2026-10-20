@@ -94,6 +94,15 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
+      # The release job checks out fresh: nothing built dist yet, and a
+      # tarball without dist silently publishes an empty shell. Build
+      # here, then the changesets action packs exactly this dist.
+      - name: Build publishable package
+        run: bun run --filter @xoroh/axis build
+
+      - name: Assert build output exists
+        run: test -d packages/axis/dist && test -f packages/axis/dist/models.cjs && test -f packages/axis/dist/index.js
+
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
