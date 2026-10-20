@@ -1,6 +1,6 @@
 {
   "name": "@xoroh/axis",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Design-system-neutral, native-first behavior and interaction primitives for React Native.",
   "keywords": [
     "react-native",
