@@ -53,8 +53,8 @@ describe("resolvePortalTarget", () => {
     ).toBe("host-a");
   });
 
-  it("falls back to the default, then the kern root", () => {
+  it("falls back to the default, then the Axis root", () => {
     expect(resolvePortalTarget({ defaultTarget: "root" })).toBe("root");
-    expect(resolvePortalTarget({})).toBe("kern-portal-root");
+    expect(resolvePortalTarget({})).toBe("axis-portal-root");
   });
 });

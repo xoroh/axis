@@ -1,5 +1,5 @@
 /**
- * The owned Portal registry — kern's own overlay host, alongside Base UI.
+ * The owned Portal registry — Axis's own overlay host, alongside Base UI.
  *
  * ## Why this is a primitive, and why it does NOT replace Base UI on web
  *
@@ -7,8 +7,8 @@
  * parent: that "somewhere else" needs an owner (ordering, mount/unmount,
  * cleanup on unmount). Today the web renderer borrows that owner from Base UI's
  * `Portal` and native borrows it from `Modal`. D12 rules the extraction as
- * DUAL-PATH: kern gains its OWN portal registry that both renderers can host
- * through, while web KEEPS its Base UI usage. Removing the borrowed owner
+ * DUAL-PATH: native hosts its overlay stack through the OWN registry here,
+ * while web KEEPS its Base UI usage. Removing the borrowed owner
  * before the owned one is proven would strand every overlay on a host nobody
  * exercises; adding alongside lets the owned path prove itself per surface.
  *
@@ -81,5 +81,5 @@ export function resolvePortalTarget(options: {
   ownerProvided?: string;
   defaultTarget?: string;
 }): string {
-  return options.ownerProvided ?? options.defaultTarget ?? "kern-portal-root";
+  return options.ownerProvided ?? options.defaultTarget ?? "axis-portal-root";
 }

@@ -12,10 +12,10 @@
  *   bindings (`boundary-policy.mjs`), and relative paths inside
  *   `src/` — nothing else.
  *
- * Everywhere forbidden: Kern packages, `react-dom`, `expo`, browser
+ * Everywhere forbidden: design-system packages, `react-dom`, `expo`, browser
  * globals, design-token references, and design-system code. The public
  * barrel must not export contract-internal symbols. Mirrors the intent
- * of Kern's `check:primitives` graph rule for the Axis-owned tree.
+ * of the design-system graph rule for the Axis-owned tree.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -244,7 +244,7 @@ try {
 
 // Native proofs consume the PUBLIC entry only: a deep relative import
 // (`./press`, `../src/x`) would prove a private path, not the contract
-// Kern Native will adopt. Test-library, react, and react-native imports
+// Downstream design systems will adopt. Test-library, react, and react-native imports
 // are the proof harness itself and are allowed here (unlike in src/).
 for (const entry of readdirSync(SRC)) {
   if (!entry.endsWith(".rntest.tsx")) continue;
@@ -256,7 +256,11 @@ for (const entry of readdirSync(SRC)) {
       );
     }
   }
-  for (const needle of ["@xoroh/kern", "kern-primitives", "document."]) {
+  for (const needle of [
+    "@acme/design-system",
+    "design-system-primitives",
+    "document.",
+  ]) {
     if (text.includes(needle)) {
       failures.push(`${entry}: forbidden reference ${JSON.stringify(needle)}`);
     }

@@ -8,7 +8,7 @@ import { expect, test } from "vitest";
  *
  * Where Base UI 1.9.0 has `X.Root` with sibling parts, Axis exports
  * `XRoot` plus `X<Part>` and no bare `X` beside them (rule a;
- * no monolith wrappers — composites belong in Kern). Where Base UI's
+ * no monolith wrappers — composites are out of scope). Where Base UI's
  * component is bare, the Axis export is bare (rule b). A compound
  * family with no Base UI counterpart follows (a) (rule c). Types
  * follow their component (`XRootProps`, `XRootState`).

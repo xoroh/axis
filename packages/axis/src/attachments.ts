@@ -19,7 +19,7 @@
  * surfaces. The PICKING and the UPLOAD are not — image pickers,
  * drag-drop, paste, and the async transfer are platform code the app
  * owns; the app marks uploads finished through `update`. Rendering
- * (chips, previews, progress bars) is styled composition in Kern.
+ * (chips, previews, progress bars) is styled composition in the host design system.
  */
 
 import { useCallback } from "react";

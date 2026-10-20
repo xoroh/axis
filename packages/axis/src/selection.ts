@@ -2,14 +2,14 @@ import { useCallback, useMemo } from "react";
 import { useControllableState } from "./useControllableState";
 
 /**
- * The collection/selection model shared by every Kern control that selects.
+ * The collection/selection model shared by every collection-driven control that selects.
  *
  * ## Why this is a primitive
  *
  * SegmentedButton, ToggleGroup, Accordion and Select all reduce to the same two
  * questions: is this key selected, and what happens when it is activated. The
  * answer differs in exactly one way — whether selection is exclusive or additive
- * — and that difference is a Kern decision (M3's segmented button is multi-select;
+ * — and that difference is a design decision (for example, one system's segmented button is multi-select;
  * its radio group is not), not a platform detail.
  *
  * So the model is shared and the rendering is not. On web the selection axis is

@@ -4,7 +4,7 @@
  * Every behavior model and hook, without the native components: pure
  * TypeScript/React, no `react-native` import anywhere in its
  * transitive closure (enforced by `check:boundary`). Web consumers
- * (including Kern web) import models from here and never pull the
+ * (web renderers included) import models from here and never pull the
  * native runtime. Rendered components live under the `.` entry only.
  *
  * The export list mirrors the model sections of `./index.ts` exactly:

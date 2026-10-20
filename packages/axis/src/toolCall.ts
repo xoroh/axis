@@ -20,7 +20,7 @@
  * as denied). The REGISTRY is not — which tools exist and how they
  * execute is app state; this model tracks one call the transport
  * owns, never the catalogue. Rendering (header/content/input/output
- * cards) is styled composition in Kern.
+ * cards) is styled composition in the host design system.
  */
 
 import { useCallback } from "react";

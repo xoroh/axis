@@ -18,7 +18,7 @@
  * `submitMode`, Escape cancellation, and the clamped composer height.
  * The FIELD is not — the text host, autosize measurement, focus, and
  * the model-picker / tools-menu / mic chrome are styled composition
- * in Kern. Sending itself stays app-owned: `submit` reports the draft
+ * in the host design system. Sending itself stays app-owned: `submit` reports the draft
  * through `onSubmit` and leaves clearing to the caller, so controlled
  * and uncontrolled drafts behave identically.
  */

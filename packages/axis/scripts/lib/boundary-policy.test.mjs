@@ -68,8 +68,8 @@ describe("classifyComponentImports", () => {
 
   test("forbidden design-system and web-only imports fail", () => {
     for (const mod of [
-      "@xoroh/kern-primitives",
-      "@xoroh/kern-tokens",
+      "@acme/design-system-primitives",
+      "@acme/design-system-tokens",
       "react-dom",
       "expo",
     ]) {

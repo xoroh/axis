@@ -13,7 +13,7 @@
  * once settled. A one-line resolver expresses that; a new primitive
  * would duplicate `Collapsible` to own a single conditional.
  *
- * ## How Kern wires it
+ * ## How a host wires it
  *
  * `open={resolveReasoningOpen(callerOpen, status)}` on the
  * `Collapsible`, with the caller's toggle feeding back through

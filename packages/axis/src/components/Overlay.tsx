@@ -56,7 +56,7 @@ import {
 
 /**
  * Overlay — the native overlay root on PortalHost (ADR 001/006/007,
- * Base UI layer parity, Kern P0-1 counterpart).
+ * Base UI layer parity).
  *
  * Provides a unified foundation for dismissable, modal, layered surfaces:
  * 1. Dismissable layer: outside press (the backdrop) and Android system

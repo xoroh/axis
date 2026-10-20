@@ -15,9 +15,9 @@ describe("VISUALLY_HIDDEN_STYLE", () => {
 
 describe("createIdScope", () => {
   it("issues prefixed 1-based ids", () => {
-    const scope = createIdScope("kern-dialog");
-    expect(scope.nextId()).toBe("kern-dialog-1");
-    expect(scope.nextId()).toBe("kern-dialog-2");
+    const scope = createIdScope("axis-dialog");
+    expect(scope.nextId()).toBe("axis-dialog-1");
+    expect(scope.nextId()).toBe("axis-dialog-2");
   });
 
   it("keeps scopes independent", () => {

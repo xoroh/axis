@@ -1,5 +1,5 @@
 /**
- * The dismissal POLICY for a kern surface — what closes it, and whether a
+ * The dismissal POLICY for an overlay surface — what closes it, and whether a
  * visible close affordance must be rendered.
  *
  * ## Why this is a primitive

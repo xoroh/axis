@@ -7,15 +7,15 @@
  * - Models (`src/*.ts`, re-exported alone as `@xoroh/axis/models`):
  *   UNIVERSAL behavior — pure TypeScript/React, no `react-native`
  *   import anywhere in the transitive closure (boundary gate
- *   enforced). Usable by Kern web and native alike.
+ *   enforced). Usable by web renderers and native alike.
  * - Components (`src/components/`, `.` entry only): NATIVE-ONLY
  *   rendered controls. No DOM renderer will ever be added.
  *
- * Provenance: slices transfer from `xoroh/kern` (`libs/kern-primitives`)
- * byte-identical; see `axis-contract.md` in Kern for the per-symbol
- * provenance and the AX0 dispositions. Later slices add remaining models
- * with native bindings. No symbol transfers without a consumer or an
- * explicit gate.
+ * Provenance: every slice predates the public package; behavior models
+ * were extracted from first-consumer implementations and hardened into
+ * the per-component contract (`docs/COMPONENT_CONTRACT.md`). Later
+ * slices add remaining models with native bindings. No symbol enters
+ * without a consumer or an explicit gate.
  *
  * Public surface discipline: only adopted behavior is exported here.
  * Factory internals (`createPressModel`, `createRovingModel`,

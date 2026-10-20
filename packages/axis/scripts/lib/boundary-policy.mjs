@@ -58,11 +58,11 @@ export const RN_HOST_BINDINGS = [
 ];
 
 export const ALWAYS_FORBIDDEN_MODULES = [
-  "@xoroh/kern",
-  "@xoroh/kern-primitives",
-  "@xoroh/kern-tokens",
-  "@xoroh/kern-native",
-  "@xoroh/kern-material-3",
+  "@acme/design-system",
+  "@acme/design-system-primitives",
+  "@acme/design-system-tokens",
+  "@acme/design-system-native",
+  "@acme/design-system-material-3",
   "react-dom",
   "expo",
 ];

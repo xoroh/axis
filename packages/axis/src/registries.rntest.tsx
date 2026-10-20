@@ -28,7 +28,7 @@ describe("portal registry on React Native", () => {
     expect(resolvePortalTarget({ ownerProvided: "custom-host" })).toBe(
       "custom-host",
     );
-    expect(resolvePortalTarget({})).toBe("kern-portal-root");
+    expect(resolvePortalTarget({})).toBe("axis-portal-root");
   });
 });
 

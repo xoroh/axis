@@ -15,7 +15,7 @@
  * The SHAPE and the NAME are shared: the role vocabulary, the message
  * identity, and the speaker label both renderers announce. The LAYOUT
  * is not — bubbles, rows, grouping, and markdown rendering are styled
- * composition in Kern (there is no markdown renderer here by design:
+ * composition in the host design system (there is no markdown renderer here by design:
  * renderer/highlighter dependencies would break the token-free,
  * platform-neutral boundary). Message PARTS (text/image/reasoning/
  * tool-call part trees) are transport-owned and stay out: this model

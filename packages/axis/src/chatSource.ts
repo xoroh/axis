@@ -7,7 +7,7 @@
  * references: an `href` with an optional human title. The shared part
  * is deliberately thin — a shape plus list hygiene — because
  * everything visual (chips, cards, footnotes, inline citations) is
- * styled composition in Kern. Thin is not nothing: without the shared
+ * styled composition in the host design system. Thin is not nothing: without the shared
  * dedupe rule, the same URL cited twice renders two chips on one
  * renderer and one on the other.
  *

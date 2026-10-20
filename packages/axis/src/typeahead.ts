@@ -17,7 +17,7 @@
  * cycling with wrap-around. The KEY PLUMBING is not — no Axis list
  * part receives character key events on touch hardware (there is no
  * text field to type into), so no rendered part consumes this yet:
- * the first consumer is hardware-keyboard forwarding (Kern P1),
+ * the first consumer is hardware-keyboard forwarding,
  * which reads this model without pulling any renderer. Filtering
  * while typing (combobox entry, menu filter input) already flows
  * through the `collection` match; this covers highlight-to-match,
