@@ -18,6 +18,8 @@ Axis is standalone and design-system neutral: it contains no hardcoded tokens, t
 bun add @xoroh/axis react react-native
 # or
 npm install @xoroh/axis react react-native
+# or
+yarn add @xoroh/axis react react-native # Yarn Classic does not install peer dependencies automatically
 ```
 
 Peers: `react >= 18`; rendered components additionally need `react-native >=0.86 <0.89`. State models and behavior modules under `@xoroh/axis/models` are pure JavaScript and run anywhere React/Node/Web runs.
